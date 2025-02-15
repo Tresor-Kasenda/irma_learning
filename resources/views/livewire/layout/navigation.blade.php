@@ -3,8 +3,7 @@
 use App\Livewire\Actions\Logout;
 use Livewire\Volt\Component;
 
-new class extends Component
-{
+new class extends Component {
     /**
      * Log the current user out of the application.
      */
@@ -16,95 +15,95 @@ new class extends Component
     }
 }; ?>
 
-<nav x-data="{ open: false }" class="bg-white border-b border-gray-100">
-    <!-- Primary Navigation Menu -->
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="flex justify-between h-16">
-            <div class="flex">
-                <!-- Logo -->
-                <div class="shrink-0 flex items-center">
-                    <a href="{{ route('dashboard') }}" wire:navigate>
-                        <x-application-logo class="block h-9 w-auto fill-current text-gray-800" />
+<header class="sticky top-0 z-10 bg-bg-lighter text-fg h-16 border-b border-border-light flex items-center w-full">
+    <nav
+        class="mx-auto w-full px-4 sm:px-10 lg:px-5 xl:px-8 xl:max-w-[88rem] flex items-center justify-between gap-8 h-full">
+        <div class="">
+            <a href="{{ route('dashboard') }}" aria-label="Page Accueil du Site Betterlife"
+               class="flex items-center w-max gap-1">
+                <img src="{{ asset('images/irma-logo-base.svg') }}" alt="logo Irma" width="200" height="100"
+                     class="h-12 w-auto">
+                <img src="{{ asset('images/irma-text-primary.svg') }}" alt="Irma Text" width="131" height="51.53"
+                     class="h-12 w-auto max-[500px]:hidden">
+            </a>
+        </div>
+        <div class="flex-1 flex justify-start items-center md:h-full">
+            <ul class="flex gap-2 md:h-full text-fg">
+                <li data-state="active"
+                    class="md:h-full flex items-center group fx-active:border-primary border-b-2 border-transparent fx-active:text-fg-title">
+                    <a href="./"
+                       class="flex px-3 py-1.5 rounded-md hover:bg-bg-light group-fx-active:bg-bg border border-transparent group-fx-active:border-border/40">
+                        Dashboard
                     </a>
-                </div>
+                </li>
+                <li data-state="inactive"
+                    class="md:h-full flex items-center group fx-active:border-primary border-b-2 border-transparent fx-active:text-fg-title">
+                    <a href="./certificats.html"
+                       class="flex px-3 py-1.5 rounded-md hover:bg-bg-light group-fx-active:bg-bg border border-transparent group-fx-active:border-border/40">
+                        Certificats
+                    </a>
+                </li>
+            </ul>
+        </div>
 
-                <!-- Navigation Links -->
-                <div class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
-                    <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')" wire:navigate>
-                        {{ __('Dashboard') }}
-                    </x-nav-link>
-                </div>
-            </div>
-
-            <!-- Settings Dropdown -->
-            <div class="hidden sm:flex sm:items-center sm:ms-6">
-                <x-dropdown align="right" width="48">
-                    <x-slot name="trigger">
-                        <button class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-gray-500 bg-white hover:text-gray-700 focus:outline-none transition ease-in-out duration-150">
-                            <div x-data="{{ json_encode(['name' => auth()->user()->name]) }}" x-text="name" x-on:profile-updated.window="name = $event.detail.name"></div>
-
-                            <div class="ms-1">
-                                <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
-                                    <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
-                                </svg>
+        <div>
+            <button aria-label="Afficher dropdown profile" data-dropdown-trigger data-dropdown-id="user-dropd"
+                    class="border-4 border-border-high size-10 rounded-full overflow-hidden">
+                <img src="{{ asset('images/avatar.webp') }}" width="200" height="200" alt="User avatar"
+                     class="size-full object-cover">
+            </button>
+            <div role="menu" data-ui-dropdown id="user-dropd" aria-labelledby="pm-dropdown"
+                 class="ui-popper z-10 w-60 bg-bg origin-top-right p-2 border border-border backdrop-blur-xl rounded-lg invisible fx-open:visible opacity-0 fx-open:opacity-100 translate-y-5 fx-open:translate-y-0 ease-linear duration-100 transition-[visibility_opacity_transform]">
+                <ul class="flex flex-col space-y-3" role="menu" aria-orientation="vertical"
+                    aria-labelledby="dropdown-avatar">
+                    <li class="flex items-center gap-3 px-2 border-b pb-2 border-b-border">
+                        <div class="w-max">
+                            <div class="w-10 rounded-full overflow-hidden">
+                                <img src="{{ asset('images/avatar.webp') }}" alt="User Avatar"
+                                     class="size-10 rounded-full object-cover"/>
                             </div>
+                        </div>
+                        <div class="flex-1">
+                            <h6 class="text-fg-subtitle text-base font-semibold truncate">John Doe</h6>
+                            <small class="text-fg-subtext text-sm font-normal truncate flex">jhon@doe.com</small>
+                        </div>
+                    </li>
+                    <li>
+                        <a class="ui-dropdown-item gap-x-2" href="{{ route('profile') }}" wire:navigate>
+                            <svg id="Layer_1" data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+                                 stroke-width="1.5" width="24" height="24" color="currentColor"
+                                 class="size-5 *:stroke-current *:fill-none">
+                                <circle cx="12" cy="7.25" r="5.73"></circle>
+                                <path
+                                    d="M1.5,23.48l.37-2.05A10.3,10.3,0,0,1,12,13h0a10.3,10.3,0,0,1,10.13,8.45l.37,2.05">
+                                </path>
+                            </svg>
+                            <span>
+                              Profile
+                            </span>
+                        </a>
+                    </li>
+                    <li>
+                        <button wire:click="logout"
+                                class="ui-dropdown-item text-red-600 hover:bg-red-100/60 w-full focus:outline-red-600 focus:bg-red-50 gap-x-2"
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"
+                                 class="size-5">
+                                <path fill-rule="evenodd"
+                                      d="M17 4.25A2.25 2.25 0 0 0 14.75 2h-5.5A2.25 2.25 0 0 0 7 4.25v2a.75.75 0 0 0 1.5 0v-2a.75.75 0 0 1 .75-.75h5.5a.75.75 0 0 1 .75.75v11.5a.75.75 0 0 1-.75.75h-5.5a.75.75 0 0 1-.75-.75v-2a.75.75 0 0 0-1.5 0v2A2.25 2.25 0 0 0 9.25 18h5.5A2.25 2.25 0 0 0 17 15.75V4.25Z"
+                                      clip-rule="evenodd"/>
+                                <path fill-rule="evenodd"
+                                      d="M14 10a.75.75 0 0 0-.75-.75H3.704l1.048-.943a.75.75 0 1 0-1.004-1.114l-2.5 2.25a.75.75 0 0 0 0 1.114l2.5 2.25a.75.75 0 1 0 1.004-1.114l-1.048-.943h9.546A.75.75 0 0 0 14 10Z"
+                                      clip-rule="evenodd"/>
+                            </svg>
+                            <span>
+                              Se deconnerter
+                            </span>
                         </button>
-                    </x-slot>
-
-                    <x-slot name="content">
-                        <x-dropdown-link :href="route('profile')" wire:navigate>
-                            {{ __('Profile') }}
-                        </x-dropdown-link>
-
-                        <!-- Authentication -->
-                        <button wire:click="logout" class="w-full text-start">
-                            <x-dropdown-link>
-                                {{ __('Log Out') }}
-                            </x-dropdown-link>
-                        </button>
-                    </x-slot>
-                </x-dropdown>
-            </div>
-
-            <!-- Hamburger -->
-            <div class="-me-2 flex items-center sm:hidden">
-                <button @click="open = ! open" class="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:bg-gray-100 focus:text-gray-500 transition duration-150 ease-in-out">
-                    <svg class="h-6 w-6" stroke="currentColor" fill="none" viewBox="0 0 24 24">
-                        <path :class="{'hidden': open, 'inline-flex': ! open }" class="inline-flex" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
-                        <path :class="{'hidden': ! open, 'inline-flex': open }" class="hidden" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                </button>
+                    </li>
+                </ul>
             </div>
         </div>
-    </div>
 
-    <!-- Responsive Navigation Menu -->
-    <div :class="{'block': open, 'hidden': ! open}" class="hidden sm:hidden">
-        <div class="pt-2 pb-3 space-y-1">
-            <x-responsive-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')" wire:navigate>
-                {{ __('Dashboard') }}
-            </x-responsive-nav-link>
-        </div>
-
-        <!-- Responsive Settings Options -->
-        <div class="pt-4 pb-1 border-t border-gray-200">
-            <div class="px-4">
-                <div class="font-medium text-base text-gray-800" x-data="{{ json_encode(['name' => auth()->user()->name]) }}" x-text="name" x-on:profile-updated.window="name = $event.detail.name"></div>
-                <div class="font-medium text-sm text-gray-500">{{ auth()->user()->email }}</div>
-            </div>
-
-            <div class="mt-3 space-y-1">
-                <x-responsive-nav-link :href="route('profile')" wire:navigate>
-                    {{ __('Profile') }}
-                </x-responsive-nav-link>
-
-                <!-- Authentication -->
-                <button wire:click="logout" class="w-full text-start">
-                    <x-responsive-nav-link>
-                        {{ __('Log Out') }}
-                    </x-responsive-nav-link>
-                </button>
-            </div>
-        </div>
-    </div>
-</nav>
+    </nav>
+</header>

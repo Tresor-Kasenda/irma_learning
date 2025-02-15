@@ -1,3 +1,235 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+:root {
+    --color-white: 0 0% 100;
+    --color-primary-50: 150 100% 97;
+    --color-white: 0 0% 100%;
+    --color-primary-50: 150 100% 97%;
+    --color-primary-100: 152 100% 93%;
+    --color-primary-200: 154 92% 85%;
+    --color-primary-300: 156 90% 73%;
+    --color-primary-400: 158 83% 58%;
+    --color-primary-500: 160 82% 45%;
+    --color-primary-600: 162 90% 33%;
+    --color-primary-700: 164 84% 29%;
+    --color-primary-800: 166 75% 24%;
+    --color-primary-900: 168 71% 20%;
+    --color-primary-950: 170 96% 10%;
+
+    --color-gray-50: 200 20% 98%;
+    --color-gray-100: 200 16% 94%;
+    --color-gray-200: 200 14% 88%;
+    --color-gray-300: 200 12% 78%;
+    --color-gray-400: 200 10% 64%;
+    --color-gray-500: 200 8% 50%;
+    --color-gray-600: 200 10% 40%;
+    --color-gray-700: 200 12% 32%;
+    --color-gray-800: 200 14% 24%;
+    --color-gray-900: 200 16% 16%;
+    --color-gray-950: 200 18% 8%;
+
+    --color-bg: var(--color-white);
+    --color-fg: var(--color-gray-700);
+    --color-border: var(--color-gray-200);
+    --color-fg-title: var(--color-gray-900);
+    --color-fg-subtitle: var(--color-gray-800);
+    --color-fg-subtext: var(--color-gray-600);
+    --color-fg-light: var(--color-gray-500);
+
+    --color-bg-lighter: var(--color-gray-50);
+    --color-bg-light: var(--color-gray-100);
+    --color-bg-high: var(--color-gray-200);
+    --color-bg-higher: var(--color-gray-300);
+
+    --color-border-lighter: var(--color-gray-50);
+    --color-border-light: var(--color-gray-100);
+    --color-border-high: var(--color-gray-300);
+    --color-border-higher: var(--color-gray-400);
+}
+
+@layer base {
+    * {
+        text-rendering: optimizeLegibility;
+        scrollbar-width: thin;
+    }
+
+    *::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+    }
+
+    *::-webkit-scrollbar-track {
+        background: transparent;
+        border-radius: 5px;
+    }
+
+    *::-webkit-scrollbar-thumb {
+        border-radius: 14px;
+        border: 3px solid transparent;
+    }
+
+    html,
+    body {
+        font-family: "Onest", sans-serif;
+        scroll-behavior: smooth;
+    }
+
+}
+
+
+@layer components {
+
+    .navbar-before {
+        @apply before:backdrop-blur-[6px] before:rounded-xl before:absolute before:inset-0 before:border before:border-gray-200/90 before:bg-gray-100/90 lg:before:invisible lg:before:opacity-0
+    }
+
+    .navbar-base {
+        @apply fixed left-1/2 -translate-x-1/2 top-5 h-[calc(100dvh-40px)] w-[calc(100%-30px)] lg:top-0 lg:relative lg:translate-x-0 lg:h-max lg:w-max lg:left-0
+    }
+
+    .navbar-visibility {
+        @apply invisible opacity-0 scale-[.8] lg:scale-100 lg:opacity-100 lg:visible lg:left-0
+    }
+
+    .navbar-opened {
+        @apply fx-open:opacity-100 fx-open:scale-100 fx-open:visible fx-open:ease-linear fx-open:transition-all lg:transition-none
+    }
+
+    .ui-dropdown-item {
+        @apply px-4 py-2 rounded-lg flex items-center ease-linear hover:bg-bg-high text-fg focus:outline focus:outline-2 focus:outline-gray-200 focus:bg-gray-50
+    }
+
+    .btn {
+        @apply flex items-center disabled:opacity-90 disabled:cursor-not-allowed disabled:hover:opacity-70 transition-colors ease-linear focus-visible:outline-offset-2 focus-visible:outline-2 focus-visible:outline-[--btn-focus-outline-color];
+    }
+
+    .btn-xs {
+        @apply h-6 px-3.5 text-xs;
+    }
+
+    .btn-sm {
+        @apply h-8 px-4 text-sm
+    }
+
+    .btn-icon-sm {
+        @apply size-8 justify-center
+    }
+
+    .btn-md {
+        @apply h-10 px-5 text-sm;
+    }
+
+    .btn-icon-md {
+        @apply size-10 justify-center
+    }
+
+    .btn-lg {
+        @apply h-12 px-6 text-sm
+    }
+
+    .btn-xl {
+        @apply h-14 px-7 text-sm;
+    }
+
+    .btn-styled-y {
+        @apply relative overflow-hidden before:absolute before:inset-0 before:origin-bottom hover:before:scale-y-100 before:scale-y-0 before:ease-linear before:transition-transform
+    }
+
+    .plus-signe {
+        @apply relative before:absolute after:absolute before:inset-x-0 before:top-1/2 before:-translate-y-1/2 after:left-1/2 after:-translate-x-1/2 after:inset-y-0 before:w-0.5 after:h-0.5 before:rounded-full after:rounded-full group-aria-expanded:after:rotate-45 before:bg-bg-high after:bg-bg-high before:flex after:flex
+    }
+
+    .side-nav-course {
+        @apply lg:sticky lg:top-0 lg:h-dvh lg:flex lg:flex-col
+    }
+
+    .ui-side-chapter-nav {
+        @apply fixed max-[1024px]:max-w-[420px] max-[1024px]:w-[88%] max-[1024px]:invisible z-[80] lg:z-auto max-[1024px]:opacity-0 max-[1024px]:fx-open:visible max-[1024px]:fx-open:opacity-100 lg:static lg:h-[calc(100vh-4rem)] lg:border-transparent lg:bg-bg bg-bg border border-border rounded-lg max-lg:inset-y-2 max-lg:left-2 lg:rounded-none;
+    }
+
+    .markdow-content-block {
+        @apply pb-14
+    }
+
+    .markdow-content-block h1 {
+        @apply text-xl md:text-2xl font-semibold text-fg-title mt-10 first:mt-0
+    }
+
+    .markdow-content-block h2 {
+        @apply text-lg md:text-xl font-semibold text-fg-title mt-7 first:mt-0
+    }
+
+    .markdow-content-block h3 {
+        @apply md:text-lg font-semibold text-fg-subtitle mt-6 first:mt-0
+    }
+
+    .markdow-content-block h4 {
+        @apply font-medium text-fg-subtitle mt-6 first:mt-0
+    }
+
+    .markdow-content-block p {
+        @apply text-fg mt-5 first:mt-0
+    }
+
+    .markdow-content-block a {
+        @apply font-semibold text-primary
+    }
+
+    .markdow-content-block .alert-message {
+        @apply bg-primary-50 border border-primary-600/50 p-4 rounded-md my-6 first:mt-0 text-primary
+    }
+
+    .course-chater-item {
+        @apply flex items-center gap-3 p-2 rounded-md hover:bg-bg border border-transparent fx-active:border-border/70 transition-colors fx-active:bg-bg fx-active:text-fg-title shadow shadow-transparent fx-active:shadow-gray-100/30;
+    }
+
+
+    .ui-form-checkbox {
+        @apply form-checkbox bg-white border border-border mt-0.5 checked:bg-current checked:border-transparent indeterminate:bg-current indeterminate:border-transparent disabled:opacity-50 disabled:cursor-not-allowed focus:ring-0 focus:ring-transparent focus:ring-offset-transparent focus-visible:ring-2 focus-visible:ring-[hsl(var(--color-primary-500))] dark:focus-visible:ring-[hsl(var(--color-primary-400))] focus-visible:ring-offset-2 focus-visible:ring-offset-white
+    }
+
+    .ui-form-radio {
+        @apply form-radio bg-white border border-border mt-0.5 checked:bg-current checked:border-transparent indeterminate:bg-current indeterminate:border-transparent disabled:opacity-50 disabled:cursor-not-allowed focus:ring-0 focus:ring-transparent focus:ring-offset-transparent focus-visible:ring-2 focus-visible:ring-[hsl(var(--color-primary-500))] dark:focus-visible:ring-[hsl(var(--color-primary-400))] focus-visible:ring-offset-2 focus-visible:ring-offset-white
+    }
+
+
+    .ui-form-input {
+        @apply border border-border px-[var(--form-input-px)] py-[var(--form-input-py)] text-[var(--form-input-text-size)] focus:outline-none focus:ring-[hsl(var(--color-primary-600))] focus:border-[hsl(var(--color-primary-500))] invalid:outline-[hsl(var(--color-danger-600))] text-sm placeholder:font-thin placeholder:text-gray-500;
+    }
+
+    .form-input-sm {
+        --form-input-px: 0.5rem;
+        --form-input-py: 0.25rem;
+        --form-input-text-size: 0.875rem;
+    }
+
+    .form-input-md {
+        --form-input-px: 0.775rem;
+        --form-input-py: 0.55rem;
+        --form-input-text-size: 1rem;
+    }
+
+    .form-input-lg {
+        --form-input-px: 1rem;
+        --form-input-py: 0.75rem;
+        --form-input-text-size: 0.875rem;
+    }
+
+    .btn-solid {
+        @apply relative overflow-hidden overflow-x-hidden rounded-md
+    }
+
+    [data-btn-layer] {
+        @apply absolute inset-0 overflow-hidden rounded-md;
+    }
+
+    .btn-solid [data-btn-layer]::before {
+        @apply absolute left-0 aspect-square w-full origin-center translate-x-full rounded-full transition-all duration-500
+    }
+
+    .btn-solid:hover [data-btn-layer]::before {
+        @apply translate-x-0 scale-150
+    }
+}

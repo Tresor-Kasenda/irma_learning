@@ -1,15 +1,23 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+use App\Enums\UserRoleEnum;
+use Database\Factories\UserFactory;
+use Exception;
+use Filament\Models\Contracts\FilamentUser;
+use Filament\Panel;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
-class User extends Authenticatable
+final class User extends Authenticatable implements FilamentUser
 {
-    /** @use HasFactory<\Database\Factories\UserFactory> */
+    /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable;
 
     /**
@@ -32,6 +40,48 @@ class User extends Authenticatable
         'password',
         'remember_token',
     ];
+
+    public function subscriptions(): HasMany
+    {
+        return $this->hasMany(Subscription::class);
+    }
+
+    public function isSuperAdmin(): bool
+    {
+        return $this->isRoot();
+    }
+
+    public function isRoot(): bool
+    {
+        return $this->role === 'ROOT';
+    }
+
+    /**
+     * @throws Exception
+     */
+    public function canAccessPanel(Panel $panel): bool
+    {
+        if ($panel->getId() === 'admin') {
+            return $this->isAdmin() || $this->isManager();
+        }
+
+        return $this->isAdmin();
+    }
+
+    public function isAdmin(): bool
+    {
+        return $this->role === UserRoleEnum::ADMIN->value;
+    }
+
+    public function isManager(): bool
+    {
+        return $this->role === UserRoleEnum::MANAGER->value;
+    }
+
+    public function isStudent(): bool
+    {
+        return $this->role === UserRoleEnum::STUDENT->value;
+    }
 
     /**
      * Get the attributes that should be cast.
