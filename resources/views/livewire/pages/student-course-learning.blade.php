@@ -56,18 +56,35 @@
                         @foreach($masterClass->chapters as $chapter)
                             <a href="#"
                                wire:click.prevent="setActiveChapter({{ $chapter->id }})"
-                               data-state="{{ $activeChapter?->id === $chapter->id ? 'active' : 'inactive' }}"
-                               class="course-chater-item {{ $activeChapter?->id === $chapter->id ? 'active' : '' }}">
+                                @class([
+                                    'course-chater-item',
+                                    'active' => $activeChapter?->id === $chapter->id,
+                                    'disabled' => !$chapter->isCompleted() && $loop->index > 0 && !$masterClass->chapters[$loop->index - 1]->isCompleted()
+                                ])>
                                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
                                      fill="none"
                                      stroke="currentColor" stroke-width="2" stroke-linecap="round"
                                      stroke-linejoin="round"
-                                     class="h-4 w-4 {{ $activeChapter?->id === $chapter->id ? 'text-primary' : 'text-gray-400' }}">
-                                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
-                                    <path d="m9 11 3 3L22 4"></path>
+                                    @class([
+                                        'h-4 w-4',
+                                        'text-primary' => $chapter->isCompleted(),
+                                        'text-success' => $activeChapter?->id === $chapter->id,
+                                        'text-gray-400' => !$chapter->isCompleted() && $activeChapter?->id !== $chapter->id
+                                    ])>
+                                    @if($chapter->isCompleted())
+                                        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                                        <path d="m9 11 3 3L22 4"></path>
+                                    @else
+                                        <circle cx="12" cy="12" r="10"></circle>
+                                        <line x1="12" y1="16" x2="12" y2="12"></line>
+                                        <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                                    @endif
                                 </svg>
-                                <span
-                                    class="text-sm {{ $activeChapter?->id === $chapter->id ? 'text-fg-title font-medium' : 'text-gray-600' }}">
+                                <span @class([
+                                    'text-sm',
+                                    'text-fg-title font-medium' => $activeChapter?->id === $chapter->id,
+                                    'text-gray-600' => $activeChapter?->id !== $chapter->id
+                                ])>
                                     {{ $chapter->title }}
                                 </span>
                             </a>
@@ -107,6 +124,20 @@
 
                     <h2 class="text-2xl font-bold text-fg-title mb-6">Presentation</h2>
 
+                    <a href="#"
+                       class="flex items-center w-max mt-5 bg-bg-lighter p-2 rounded-md pr-3 border border-border-lighter hover:border-border hover:bg-bg-high/70 ease-linear duration-300">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="currentColor"
+                             viewBox="0 0 256 256" class="size-6 mr-4 text-red-600">
+                            <path
+                                d="M224,152a8,8,0,0,1-8,8H192v16h16a8,8,0,0,1,0,16H192v16a8,8,0,0,1-16,0V152a8,8,0,0,1,8-8h32A8,8,0,0,1,224,152ZM92,172a28,28,0,0,1-28,28H56v8a8,8,0,0,1-16,0V152a8,8,0,0,1,8-8H64A28,28,0,0,1,92,172Zm-16,0a12,12,0,0,0-12-12H56v24h8A12,12,0,0,0,76,172Zm88,8a36,36,0,0,1-36,36H112a8,8,0,0,1-8-8V152a8,8,0,0,1,8-8h16A36,36,0,0,1,164,180Zm-16,0a20,20,0,0,0-20-20h-8v40h8A20,20,0,0,0,148,180ZM40,112V40A16,16,0,0,1,56,24h96a8,8,0,0,1,5.66,2.34l56,56A8,8,0,0,1,216,88v24a8,8,0,0,1-16,0V96H152a8,8,0,0,1-8-8V40H56v72a8,8,0,0,1-16,0ZM160,80h28.69L160,51.31Z">
+                            </path>
+                        </svg>
+                        <div class="flex flex-col flex-1">
+                            <span class="text-sm font-semibold text-fg-title">Document details</span>
+                            <span class="text-sm text-gray-500">Cliquer pour telecharger</span>
+                        </div>
+                    </a>
+
                     <p class="markdow-content-block max-w-none mt-8 flex flex-col prose prose-invert">
                         {{ $activeChapter->content }}
                     </p>
@@ -127,6 +158,69 @@
                             pluginspage="http://www.adobe.com/products/acrobat/readstep2.html"
                         />
                     </div>
+
+                    <div class="mt-4">
+                        <div class="markdow-content-block max-w-none mt-28 flex flex-col space-y-4">
+                            <h2>Passation d'examens</h2>
+                            <p>{!! $activeChapter->examination?->description !!}</p>
+
+                            @if ($activeChapter->examination?->deadline && now()->isAfter($activeChapter->examination?->deadline))
+                                <div class="alert-message">
+                                    The submission deadline has passed.
+                                </div>
+                            @elseif (!$examSubmitted)
+                                <a href="{{ asset('storage/'. $activeChapter->examination?->path) }}" download
+                                   class="inline-flex items-center gap-2 px-4 py-2 bg-bg-lighter text-fg hover:bg-bg-light rounded-lg transition-colors mt-4">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+                                         fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                         stroke-linejoin="round" class="size-5">
+                                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                        <polyline points="7 10 12 15 17 10"></polyline>
+                                    </svg>
+                                    Telecharge l'examen
+                                </a>
+
+                                <div class="alert-message">
+                                    Apres telechargement veilez travailler sur et soumettre votre examen dans le
+                                    formulaire
+                                    sous-dessous
+                                </div>
+
+                                <div>
+                                    <form wire:submit="submitExam" class="space-y-3">
+                                        {{ $this->form }}
+
+                                        <button type="submit" class="px-4 py-2 bg-primary-600 text-white rounded-lg">
+                                            Submit
+                                        </button>
+                                    </form>
+
+                                    <x-filament-actions::modals/>
+                                </div>
+                            @else
+                                <div class="alert-message">
+                                    Votre examen a été soumis avec succès.
+                                </div>
+                            @endif
+                        </div>
+                        @if($this->hasSubmittedExam())
+                            <button?
+                            wire:click.prevent="completeChapter({{ $activeChapter }})"
+                            class="w-full bg-primary-600 text-white btn btn-md rounded-lg flex items-center
+                            justify-center gap-2 hover:bg-primary-700 transition-colors">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+                                 fill="none"
+                                 stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                 stroke-linejoin="round"
+                                 class="lucide lucide-award h-5 w-5">
+                                <circle cx="12" cy="8" r="6"></circle>
+                                <path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11"></path>
+                            </svg>
+                            Mark as Completed
+                            </button>
+                        @endif
+                    </div>
+
                     <div class="mt-12 grid grid-cols-2 gap-4">
 
                         <button
