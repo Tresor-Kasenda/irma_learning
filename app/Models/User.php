@@ -41,6 +41,11 @@ final class User extends Authenticatable implements FilamentUser
         'remember_token',
     ];
 
+    public function submissions(): HasMany
+    {
+        return $this->hasMany(ExamSubmission::class);
+    }
+
     public function subscriptions(): HasMany
     {
         return $this->hasMany(Subscription::class);

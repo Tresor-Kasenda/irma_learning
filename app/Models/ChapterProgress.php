@@ -23,6 +23,11 @@ class ChapterProgress extends Model
         return $this->belongsTo(Chapter::class, 'chapter_id');
     }
 
+    public function isCompleted(): bool
+    {
+        return $this->status === ChapterProgressEnum::COMPLETED;
+    }
+
     protected function casts(): array
     {
         return [

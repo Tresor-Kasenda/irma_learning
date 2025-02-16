@@ -4,12 +4,14 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Enums\ChapterProgressEnum;
 use App\Observers\ChapterObserver;
 use Database\Factories\ChapterFactory;
 use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 #[ObservedBy(ChapterObserver::class)]
 final class Chapter extends Model
@@ -22,22 +24,28 @@ final class Chapter extends Model
         return $this->belongsTo(MasterClass::class, 'master_class_id');
     }
 
-    // ajouter la relation entre chapter et chapterProgress
-    
-
-    public function previousChapter()
+    public function examination(): HasOne
     {
-        return static::where('master_class_id', $this->master_class_id)
-            ->where('order_sequence', '>', $this->order_sequence)
-            ->orderBy('order_sequence', 'asc')
-            ->first();
+        return $this->hasOne(Examination::class);
     }
 
-    public function nextChapter()
+    public function hasProgress(): bool
     {
-        return static::where('master_class_id', $this->master_class_id)
-            ->where('order_sequence', '>', $this->order_sequence)
-            ->orderBy('position', 'asc')
-            ->first();
+        return $this->progress()->exists();
+    }
+
+    public function progress(): HasOne
+    {
+        return $this->hasOne(ChapterProgress::class);
+    }
+
+    public function submission(): HasOne
+    {
+        return $this->hasOne(ExamSubmission::class);
+    }
+
+    public function isCompleted(): bool
+    {
+        return $this->progress()->where('status', ChapterProgressEnum::COMPLETED)->exists();
     }
 }
