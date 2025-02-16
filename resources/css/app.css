@@ -1,6 +1,7 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+@tailwind variants;
 
 :root {
     --color-white: 0 0% 100;
@@ -83,6 +84,12 @@
 
     .navbar-before {
         @apply before:backdrop-blur-[6px] before:rounded-xl before:absolute before:inset-0 before:border before:border-gray-200/90 before:bg-gray-100/90 lg:before:invisible lg:before:opacity-0
+    }
+
+    .course-chater-item.disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        pointer-events: none;
     }
 
     .navbar-base {
