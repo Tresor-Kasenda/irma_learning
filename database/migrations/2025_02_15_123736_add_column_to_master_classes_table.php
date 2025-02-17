@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -12,7 +14,7 @@ return new class extends Migration {
     {
         Schema::table('master_classes', function (Blueprint $table) {
             $table->string('sub_title')->nullable();
-            $table->text("presentation")->nullable();
+            $table->text('presentation')->nullable();
         });
     }
 

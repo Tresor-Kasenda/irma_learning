@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Filament\Resources\MasterClassResource\RelationManagers;
 
 use App\Enums\MasterClassResourceEnum;
@@ -9,7 +11,7 @@ use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Tables;
 use Filament\Tables\Table;
 
-class ResourcesRelationManager extends RelationManager
+final class ResourcesRelationManager extends RelationManager
 {
     protected static string $relationship = 'resources';
 
@@ -22,25 +24,25 @@ class ResourcesRelationManager extends RelationManager
                     ->schema([
                         Forms\Components\TextInput::make('title')
                             ->label('Titre du resources')
-                            ->placeholder("Titre du chapitre")
+                            ->placeholder('Titre du chapitre')
                             ->required()
                             ->maxLength(255),
                         Forms\Components\Select::make('type')
                             ->label('Type de ressource')
                             ->required()
                             ->searchable()
-                            ->placeholder("Sélectionner le type de ressource")
+                            ->placeholder('Sélectionner le type de ressource')
                             ->options([
                                 MasterClassResourceEnum::PDF->value => 'PDF',
                                 MasterClassResourceEnum::VIDEO->value => 'Vidéo',
-                                MasterClassResourceEnum::LINK->value => 'Lien'
+                                MasterClassResourceEnum::LINK->value => 'Lien',
                             ])
                             ->reactive(),
                         Forms\Components\TextInput::make('file_path')
                             ->label('Lien')
                             ->url()
                             ->required()
-                            ->placeholder("Lien de la ressource")
+                            ->placeholder('Lien de la ressource')
                             ->columnSpanFull()
                             ->visible(fn($get) => $get('type') === 'link'),
                         Forms\Components\FileUpload::make('file_path')
@@ -48,7 +50,7 @@ class ResourcesRelationManager extends RelationManager
                             ->directory('resources')
                             ->downloadable()
                             ->previewable()
-                            ->placeholder("Fichier de la ressource")
+                            ->placeholder('Fichier de la ressource')
                             ->acceptedFileTypes(fn($get) => match ($get('type')) {
                                 'pdf' => ['application/pdf'],
                                 'video' => ['video/*'],
@@ -60,7 +62,7 @@ class ResourcesRelationManager extends RelationManager
                             ->columnSpanFull(),
                         Forms\Components\MarkdownEditor::make('content')
                             ->label('Contenu')
-                            ->placeholder("Contenu de la ressource")
+                            ->placeholder('Contenu de la ressource')
                             ->fileAttachmentsDirectory('events')
                             ->columnSpanFull()
                             ->disableGrammarly(),
@@ -95,8 +97,8 @@ class ResourcesRelationManager extends RelationManager
             ])
             ->headerActions([
                 Tables\Actions\CreateAction::make()
-                    ->label("Ajouter une ressource")
-                    ->icon("heroicon-m-plus-circle"),
+                    ->label('Ajouter une ressource')
+                    ->icon('heroicon-m-plus-circle'),
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),

@@ -1,13 +1,16 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Database\Factories;
 
+use App\Models\ChapterProgress;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\ChapterProgress>
+ * @extends Factory<ChapterProgress>
  */
-class ChapterProgressFactory extends Factory
+final class ChapterProgressFactory extends Factory
 {
     /**
      * Define the model's default state.

@@ -30,7 +30,6 @@ final class LearningCourse extends Component
         return view('livewire.pages.courses.learning-course');
     }
 
-
     public function subscribeToCourses(MasterClass $masterClass): void
     {
         $masterClass->subscription()->create([
@@ -41,9 +40,9 @@ final class LearningCourse extends Component
         ]);
 
         $this->dispatch(
-            "notify",
-            message: "Vous êtes maintenant inscrit à cette formation !",
-            type: "success"
+            'notify',
+            message: 'Vous êtes maintenant inscrit à cette formation !',
+            type: 'success'
         );
 
         $this->redirect(route('learning-course-student', $masterClass), navigate: true);

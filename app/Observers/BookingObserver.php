@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Observers;
 
+use App\Enums\UserRoleEnum;
 use App\Models\Booking;
 use App\Models\User;
 use App\Notifications\BookingUpdatedNotification;
@@ -21,7 +22,8 @@ final class BookingObserver
                 'name' => $booking->name,
                 'email' => $booking->email,
                 'password' => bcrypt($booking->reference),
-                'role' => 'STUDENT',
+                'role' => UserRoleEnum::STUDENT->value,
+                'must_change_password' => true,
             ]);
 
         \Illuminate\Support\defer(function () use ($booking, $user) {

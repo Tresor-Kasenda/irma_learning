@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Notifications;
 
 use App\Models\ExamSubmission;
@@ -7,7 +9,7 @@ use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
-class ExamSubmissionNotification extends Notification
+final class ExamSubmissionNotification extends Notification
 {
     use Queueable;
 
@@ -35,8 +37,8 @@ class ExamSubmissionNotification extends Notification
     public function toMail(object $notifiable): MailMessage
     {
         return (new MailMessage)
-            ->greeting("Bonjour")
-            ->line("")
+            ->greeting('Bonjour')
+            ->line('')
             ->action('Notification Action', url('/'))
             ->line('Thank you for using our application!');
     }

@@ -22,7 +22,7 @@
                         </div>
                     </div>
                     <div class="flex items-end gap-2">
-                        <p class="text-3xl sm:text-4xl font-semibold text-fg-subtitle">2</p>
+                        <p class="text-3xl sm:text-4xl font-semibold text-fg-subtitle">{{ $this->statistics()['total'] }}</p>
                         <p class="text-fg-subtext">Participations</p>
                     </div>
                 </div>
@@ -38,7 +38,7 @@
                         </div>
                     </div>
                     <div class="flex items-end gap-2">
-                        <p class="text-3xl sm:text-4xl font-semibold text-fg-subtitle">1</p>
+                        <p class="text-3xl sm:text-4xl font-semibold text-fg-subtitle">{{ $this->statistics()['in_progress'] }}</p>
                         <p class="text-fg-subtext">En cours</p>
                     </div>
                 </div>
@@ -54,7 +54,7 @@
                         </div>
                     </div>
                     <div class="flex items-end gap-2">
-                        <p class="text-3xl sm:text-4xl font-semibold text-fg-subtitle">1</p>
+                        <p class="text-3xl sm:text-4xl font-semibold text-fg-subtitle">{{ $this->statistics()['completed'] }}</p>
                         <p class="text-fg-subtext">Completed</p>
                     </div>
                 </div>
@@ -89,11 +89,12 @@
                             </div>
                             <div class="mt-3 flex flex-col gap-1.5">
                                 <div class="justify-between w-full flex items-center text-sm text-fg-subtext">
-                                    <span>8/12</span>
-                                    <span>60%</span>
+                                    <span>{{ $masterClass->completed_chapters_count }}/{{ $masterClass->chapters_count }}</span>
+                                    <span>{{ $masterClass->progress }}%</span>
                                 </div>
                                 <div class="w-full flex bg-bg-high rounded-full h-1">
-                                    <span class="bg-primary-600 h-full rounded-full" style="width: 60%;"></span>
+                                    <span class="bg-primary-600 h-full rounded-full"
+                                          style="width: {{ $masterClass->progress }}%;"></span>
                                 </div>
                             </div>
                             <div class="flex w-full mt-7 pb-2">

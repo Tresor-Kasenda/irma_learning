@@ -67,7 +67,7 @@ final class User extends Authenticatable implements FilamentUser
     public function canAccessPanel(Panel $panel): bool
     {
         if ($panel->getId() === 'admin') {
-            return $this->isAdmin() || $this->isManager();
+            return $this->isAdmin() || $this->isManager() || $this->isRoot();
         }
 
         return $this->isAdmin();
@@ -98,6 +98,7 @@ final class User extends Authenticatable implements FilamentUser
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'must_change_password' => 'boolean',
         ];
     }
 }

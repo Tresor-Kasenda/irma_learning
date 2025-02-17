@@ -7,6 +7,10 @@ import {Collapse} from "@flexilla/collapse";
 
 import {notificationSystem} from "./utilities/notification";
 
+import confetti from 'canvas-confetti';
+
+window.confetti = confetti;
+
 Dropdown.autoInit("[data-ui-dropdown]");
 
 window.notificationSystem = notificationSystem;

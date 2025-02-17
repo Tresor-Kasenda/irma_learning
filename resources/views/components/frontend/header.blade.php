@@ -1,0 +1,85 @@
+<span
+    data-nav-overlay data-navbar-id="app-main"
+    aria-hidden="true"
+    class="flex invisible opacity-0 bg-gray-800/50 backdrop-blur-xl fx-open:visible fx-open:opacity-100 fixed inset-0 z-40 lg:invisible lg:hidden"
+></span>
+<header class="flex items-center absolute top-0 w-full z-50 pt-5 px-5 xl:pt-7">
+    <nav
+        class="mx-auto w-full max-w-7xl flex items-center justify-between gap-10 px-5 bg-bg/10 border border-border-light/30 shadow shadow-bg-light/40 py-1.5 rounded-lg">
+        <div class="lg:min-w-max flex">
+            <a href="{{ route('home-page') }}" wire:navigate aria-label="Page Accueil du Site Betterlife"
+               class="flex items-center w-max gap-1">
+                <img src="{{ asset('images/irma-logo-base.svg') }}" alt="logo Irma" width="200" height="100"
+                     class="h-12 w-auto">
+                <img src="{{ asset('images/irma-text-primary.svg') }}" alt="Irma Text" width="131" height="51.53"
+                     class="h-12 w-auto max-[500px]:hidden">
+            </a>
+        </div>
+        <div data-main-navbar id="app-main"
+             class="lg:flex-1 lg:justify-start flex items-center gap-3 rounded-xl p-3 lg:p-0 z-[80] lg:z-auto navbar-before navbar-base navbar-visibility navbar-opened lg:rounded-none navbar-content-scrollable">
+            <ul class="flex items-center flex-col lg:flex-row gap-3 lg:gap-5 text-fg *:flex w-full h-max">
+                <li class="relative flex w-full lg:w-max group">
+                    <a href="{{ route('formations') }}" wire:navigate aria-label="Lien vers la page : Accueil"
+                       class="py-2 ease-linear duration-100 inline-flex hover:text-primary-700">
+                        Formations
+                    </a>
+                </li>
+                <li class="relative flex w-full lg:w-max group">
+                    <a href="{{ route('certifications') }}" wire:navigate aria-label="Lien vers la page : Accueil"
+                       class="py-2 ease-linear duration-100 inline-flex hover:text-primary-700">
+                        Certification
+                    </a>
+                </li>
+                <li class="relative flex w-full lg:w-max group">
+                    <a href="{{ route('formations-lists') }}" wire:navigate aria-label="Lien vers la page : Accueil"
+                       class="py-2 ease-linear duration-100 inline-flex hover:text-primary-700">
+                        Formation continue
+                    </a>
+                </li>
+                <li class="relative flex w-full lg:w-max group">
+                    <a target="_blank" href="#" aria-label="Lien vers la page : Accueil"
+                       class="py-2 ease-linear duration-100 inline-flex hover:text-primary-700">
+                        iRMA Association
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"
+                             class="size-3 ml-0.5 mb-2">
+                            <path fill-rule="evenodd"
+                                  d="M4.25 5.5a.75.75 0 0 0-.75.75v8.5c0 .414.336.75.75.75h8.5a.75.75 0 0 0 .75-.75v-4a.75.75 0 0 1 1.5 0v4A2.25 2.25 0 0 1 12.75 17h-8.5A2.25 2.25 0 0 1 2 14.75v-8.5A2.25 2.25 0 0 1 4.25 4h5a.75.75 0 0 1 0 1.5h-5Z"
+                                  clip-rule="evenodd"/>
+                            <path fill-rule="evenodd"
+                                  d="M6.194 12.753a.75.75 0 0 0 1.06.053L16.5 4.44v2.81a.75.75 0 0 0 1.5 0v-4.5a.75.75 0 0 0-.75-.75h-4.5a.75.75 0 0 0 0 1.5h2.553l-9.056 8.194a.75.75 0 0 0-.053 1.06Z"
+                                  clip-rule="evenodd"/>
+                        </svg>
+                    </a>
+                </li>
+            </ul>
+        </div>
+        <div class="lg:min-w-max flex justify-end items-center gap-x-2">
+            <a
+                href="{{ route('login') }}"
+                wire:navigate
+                class="btn btn-sm sm:btn-md btn-solid bg-primary-600 text-white group">
+                <span class="relative z-10">
+                    Se connecter
+                </span>
+                <span data-btn-layer class=" before:bg-primary-800"></span>
+            </a>
+            <div class="flex lg:hidden pr-0.5 py-1 border-l border-gray-200/80 -mr-2.5">
+                <button
+                    data-nav-trigger
+                    data-toggle-nav="app-main"
+                    data-expanded="false"
+                    class="px-2.5 relative z-[90] space-y-2 group"
+                    aria-label="toggle navbar">
+                    <span
+                        class="h-0.5 flex w-6 rounded bg-fg transition duration-300 group-aria-expanded:rotate-45"
+                        id="line-1"
+                        aria-hidden="true"></span>
+                    <span
+                        class="h-0.5 flex w-6 rounded bg-fg transition duration-300 group-aria-expanded:rotate-45"
+                        id="line-2"
+                        aria-hidden="true"></span>
+                </button>
+            </div>
+        </div>
+    </nav>
+</header>

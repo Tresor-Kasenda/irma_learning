@@ -1,13 +1,16 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Service;
 
 use App\Models\Chapter;
 use App\Models\ChapterProgress;
 use App\Models\Subscription;
+use Exception;
 use Illuminate\Support\Facades\DB;
 
-class ProgressTrackingService
+final class ProgressTrackingService
 {
     public function completeChapter(Subscription $subscription, Chapter $chapter)
     {
@@ -15,19 +18,19 @@ class ProgressTrackingService
             // Check if the previous chapter is completed
             $previousChapter = $chapter->previousChapter();
             if ($previousChapter && !$this->isChapterCompleted($subscription, $previousChapter)) {
-                throw new \Exception('Previous chapter must be completed first.');
+                throw new Exception('Previous chapter must be completed first.');
             }
 
             // Mark the chapter as completed
             ChapterProgress::updateOrCreate(
                 [
                     'subscription_id' => $subscription->id,
-                    'chapter_id' => $chapter->id
+                    'chapter_id' => $chapter->id,
                 ],
                 [
                     'status' => 'completed',
                     'points_earned' => $chapter->points,
-                    'completed_at' => now()
+                    'completed_at' => now(),
                 ]
             );
 
@@ -38,7 +41,7 @@ class ProgressTrackingService
         return $this->getDetailedProgress($subscription);
     }
 
-    protected function isChapterCompleted(Subscription $subscription, Chapter $chapter)
+    private function isChapterCompleted(Subscription $subscription, Chapter $chapter)
     {
         return $subscription->chapterProgress()
             ->where('chapter_id', $chapter->id)
@@ -46,13 +49,13 @@ class ProgressTrackingService
             ->exists();
     }
 
-    protected function updateOverallProgress(Subscription $subscription)
+    private function updateOverallProgress(Subscription $subscription): void
     {
         $progress = $this->getDetailedProgress($subscription);
 
         $subscription->update([
             'progress' => $progress['progress_percentage'],
-            'completed_at' => $progress['progress_percentage'] == 100 ? now() : null
+            'completed_at' => $progress['progress_percentage'] === 100 ? now() : null,
         ]);
     }
 
@@ -80,7 +83,7 @@ class ProgressTrackingService
                 'chapters.title',
                 'chapters.points',
                 'chapter_progress.status',
-                'chapter_progress.completed_at'
+                'chapter_progress.completed_at',
             ])
             ->get();
 
@@ -96,7 +99,7 @@ class ProgressTrackingService
                 ? round(($earnedPoints / $totalPoints) * 100, 2)
                 : 0,
             'chapter_details' => $chapterProgress,
-            'can_take_exam' => $this->canTakeExam($subscription)
+            'can_take_exam' => $this->canTakeExam($subscription),
         ];
     }
 
@@ -106,6 +109,7 @@ class ProgressTrackingService
 
         // Check if the student has completed at least 80% of the course
         $minimumProgress = 80;
+
         return $progress['progress_percentage'] >= $minimumProgress;
     }
 }

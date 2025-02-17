@@ -78,13 +78,13 @@ final class ChaptersRelationManager extends RelationManager
                     ->action(function (array $data, Chapter $record) {
                         if ($record->examination()->exists()) {
                             $record->examination()->update($data);
-                            $message = "Examen modifié";
+                            $message = 'Examen modifié';
                         } else {
                             $this->getOwnerRecord()->examinations()->create([
                                 ...$data,
                                 'chapter_id' => $record->id,
                             ]);
-                            $message = "Examen créé";
+                            $message = 'Examen créé';
                         }
 
                         Notification::make()
@@ -93,9 +93,9 @@ final class ChaptersRelationManager extends RelationManager
                             ->send();
                     }),
                 Tables\Actions\EditAction::make()
-                    ->icon("heroicon-o-pencil")
-                    ->color("primary")
-                    ->label("Modifier"),
+                    ->icon('heroicon-o-pencil')
+                    ->color('primary')
+                    ->label('Modifier'),
                 Tables\Actions\DeleteAction::make(),
             ])
             ->bulkActions([

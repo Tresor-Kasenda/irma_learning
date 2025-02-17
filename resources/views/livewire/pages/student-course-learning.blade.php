@@ -1,3 +1,4 @@
+@php use App\Enums\MasterClassResourceEnum; @endphp
 <div>
     <div aria-hidden="true" data-overlay-slid-chapter
          class="fixed inset-0 bg-fg-title/50 z-[70] backdrop-blur-sm lg:hidden lg:invisible invisible opacity-0 fx-open:opacity-100 fx-open:visible">
@@ -7,7 +8,7 @@
             <div
                 class="h-16 border-b border-border px-4 flex items-center justify-between sticky lg:static top-0 bg-bg">
                 <div class="flex items-center gap-2">
-                    <a href="./" aria-label="Retour dashboard"
+                    <a href="{{ route('dashboard') }}" wire:navigate aria-label="Retour dashboard"
                        class="text-fg hover:bg-bg-light ease-linear duration-100 size-10 flex items-center justify-center rounded-md">
                         <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="currentColor"
                              class="size-5"
@@ -17,7 +18,7 @@
                             </path>
                         </svg>
                     </a>
-                    <a href="./profile.html" aria-label="Retour dashboard"
+                    <a href="{{ route('profile') }}" wire:navigate aria-label="Retour dashboard"
                        class="text-fg hover:bg-bg-light ease-linear duration-100 size-10 hidden sm:flex items-center justify-center rounded-md">
                         <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="currentColor"
                              class="size-5"
@@ -85,7 +86,7 @@
                                     'text-fg-title font-medium' => $activeChapter?->id === $chapter->id,
                                     'text-gray-600' => $activeChapter?->id !== $chapter->id
                                 ])>
-                                    {{ $chapter->title }}
+                                    {{ str($chapter->title)->ucfirst() }}
                                 </span>
                             </a>
                         @endforeach
@@ -120,25 +121,11 @@
                         </div>
                     </div>
                 @else
-                    <h1 class="text-4xl font-bold text-fg-title mb-6">{{ $activeChapter->title }}</h1>
+                    <h1 class="text-4xl font-bold text-fg-title mb-8">{{ $activeChapter->title }}</h1>
 
-                    <h2 class="text-2xl font-bold text-fg-title mb-6">Presentation</h2>
+                    <h2 class="text-2xl font-bold text-fg-title">Presentation</h2>
 
-                    <a href="#"
-                       class="flex items-center w-max mt-5 bg-bg-lighter p-2 rounded-md pr-3 border border-border-lighter hover:border-border hover:bg-bg-high/70 ease-linear duration-300">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="currentColor"
-                             viewBox="0 0 256 256" class="size-6 mr-4 text-red-600">
-                            <path
-                                d="M224,152a8,8,0,0,1-8,8H192v16h16a8,8,0,0,1,0,16H192v16a8,8,0,0,1-16,0V152a8,8,0,0,1,8-8h32A8,8,0,0,1,224,152ZM92,172a28,28,0,0,1-28,28H56v8a8,8,0,0,1-16,0V152a8,8,0,0,1,8-8H64A28,28,0,0,1,92,172Zm-16,0a12,12,0,0,0-12-12H56v24h8A12,12,0,0,0,76,172Zm88,8a36,36,0,0,1-36,36H112a8,8,0,0,1-8-8V152a8,8,0,0,1,8-8h16A36,36,0,0,1,164,180Zm-16,0a20,20,0,0,0-20-20h-8v40h8A20,20,0,0,0,148,180ZM40,112V40A16,16,0,0,1,56,24h96a8,8,0,0,1,5.66,2.34l56,56A8,8,0,0,1,216,88v24a8,8,0,0,1-16,0V96H152a8,8,0,0,1-8-8V40H56v72a8,8,0,0,1-16,0ZM160,80h28.69L160,51.31Z">
-                            </path>
-                        </svg>
-                        <div class="flex flex-col flex-1">
-                            <span class="text-sm font-semibold text-fg-title">Document details</span>
-                            <span class="text-sm text-gray-500">Cliquer pour telecharger</span>
-                        </div>
-                    </a>
-
-                    <p class="markdow-content-block max-w-none mt-8 flex flex-col prose prose-invert">
+                    <p class="markdow-content-block max-w-none mt-3 flex flex-col prose prose-invert">
                         {{ $activeChapter->content }}
                     </p>
 
@@ -159,9 +146,43 @@
                         />
                     </div>
 
+                    <div class="flex flex-col space-y-4 mt-4">
+                        <h2 class="text-2xl font-semibold">Ressources</h2>
+                        <div class="flex items-center flex-row gap-4">
+                            @foreach($masterClass->resources as $resource)
+                                <a href="{{ asset('storage/'. $resource->file_path) }}"
+                                   download="{{ $resource->type === MasterClassResourceEnum::PDF }}"
+                                   class="flex items-center w-max mt-5 bg-bg-lighter p-2 rounded-md pr-3 border border-border-lighter hover:border-border hover:bg-bg-high/70 ease-linear duration-300">
+                                    @if($resource->type === MasterClassResourceEnum::VIDEO)
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32"
+                                             fill="currentColor"
+                                             viewBox="0 0 256 256" class="size-6 mr-4 text-blue-600">
+                                            <path
+                                                d="M216,72V184a16,16,0,0,1-16,16H56a16,16,0,0,1-16-16V72A16,16,0,0,1,56,56H200A16,16,0,0,1,216,72Zm-16,0H56V184H200Zm-72,28a32,32,0,0,0-13.09,61.4,8,8,0,0,0,6.18-14.72A16,16,0,1,1,128,116a15.91,15.91,0,0,1,9.6,3.2L128,128a8,8,0,0,0,5.66,13.66A8.25,8.25,0,0,0,136,141.33l14.4-13.12A8,8,0,0,0,152,120,32,32,0,0,0,128,100Z"/>
+                                        </svg>
+                                    @else
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32"
+                                             fill="currentColor"
+                                             viewBox="0 0 256 256" class="size-6 mr-4 text-red-600">
+                                            <path
+                                                d="M224,152a8,8,0,0,1-8,8H192v16h16a8,8,0,0,1,0,16H192v16a8,8,0,0,1-16,0V152a8,8,0,0,1,8-8h32A8,8,0,0,1,224,152ZM92,172a28,28,0,0,1-28,28H56v8a8,8,0,0,1-16,0V152a8,8,0,0,1,8-8H64A28,28,0,0,1,92,172Zm-16,0a12,12,0,0,0-12-12H56v24h8A12,12,0,0,0,76,172Zm88,8a36,36,0,0,1-36,36H112a8,8,0,0,1-8-8V152a8,8,0,0,1,8-8h16A36,36,0,0,1,164,180Zm-16,0a20,20,0,0,0-20-20h-8v40h8A20,20,0,0,0,148,180ZM40,112V40A16,16,0,0,1,56,24h96a8,8,0,0,1,5.66,2.34l56,56A8,8,0,0,1,216,88v24a8,8,0,0,1-16,0V96H152a8,8,0,0,1-8-8V40H56v72a8,8,0,0,1-16,0ZM160,80h28.69L160,51.31Z"/>
+                                        </svg>
+                                    @endif
+                                    <div class="flex flex-col flex-1">
+                                        <span
+                                            class="text-sm font-semibold text-fg-title">{{ str($resource->title)->ucfirst() }}</span>
+                                        <span class="text-sm text-gray-500">
+                                            {{ $resource->type === MasterClassResourceEnum::VIDEO ? 'Cliquer pour regarder' : 'Cliquer pour télécharger' }}
+                                        </span>
+                                    </div>
+                                </a>
+                            @endforeach
+                        </div>
+                    </div>
+
                     <div class="mt-4">
-                        <div class="markdow-content-block max-w-none mt-28 flex flex-col space-y-4">
-                            <h2>Passation d'examens</h2>
+                        <div class="markdow-content-block max-w-none flex flex-col space-y-4">
+                            <h2 class="text-2xl font-semibold">Passation d'examens</h2>
                             <p>{!! $activeChapter->examination?->description !!}</p>
 
                             @if ($activeChapter->examination?->deadline && now()->isAfter($activeChapter->examination?->deadline))
@@ -181,9 +202,8 @@
                                 </a>
 
                                 <div class="alert-message">
-                                    Apres telechargement veilez travailler sur et soumettre votre examen dans le
-                                    formulaire
-                                    sous-dessous
+                                    Apres téléchargement veillez travailler sur et soumettre
+                                    votre examen dans le formulaire sous-dessous
                                 </div>
 
                                 <div>
@@ -204,19 +224,27 @@
                             @endif
                         </div>
                         @if($this->hasSubmittedExam())
-                            <button?
-                            wire:click.prevent="completeChapter({{ $activeChapter }})"
-                            class="w-full bg-primary-600 text-white btn btn-md rounded-lg flex items-center
-                            justify-center gap-2 hover:bg-primary-700 transition-colors">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
-                                 fill="none"
-                                 stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                 stroke-linejoin="round"
-                                 class="lucide lucide-award h-5 w-5">
-                                <circle cx="12" cy="8" r="6"></circle>
-                                <path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11"></path>
-                            </svg>
-                            Mark as Completed
+                            <button
+                                x-data
+                                wire:click.prevent="completeChapter({{ $activeChapter }})"
+                                x-on:click="
+                                    confetti({
+                                        particleCount: 1000,
+                                        spread: 70,
+                                        origin: { y: 0.6 }
+                                    });
+                                "
+                                class="w-full bg-primary-600 text-white btn btn-md rounded-lg flex items-center
+                                justify-center gap-2 hover:bg-primary-700 transition-colors">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+                                     fill="none"
+                                     stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                     stroke-linejoin="round"
+                                     class="lucide lucide-award h-5 w-5">
+                                    <circle cx="12" cy="8" r="6"></circle>
+                                    <path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11"></path>
+                                </svg>
+                                Mark as Completed
                             </button>
                         @endif
                     </div>
@@ -224,7 +252,9 @@
                     <div class="mt-12 grid grid-cols-2 gap-4">
 
                         <button
-                            class="flex items-center gap-2 text-fg-subtext hover:text-fg-title transition-colors">
+                            wire:click.prevent="setPreviousChapter"
+                            class="flex items-center gap-2 text-fg-subtext hover:text-fg-title transition-colors"
+                            @if($activeChapter && $activeChapter->id === $masterClass->chapters->first()->id) disabled @endif>
                             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
                                  fill="none"
                                  stroke="currentColor" stroke-width="2" stroke-linecap="round"
@@ -236,9 +266,10 @@
                             Previous Chapter
                         </button>
 
-
                         <button
-                            class="flex items-center justify-end gap-2 text-fg-subtext hover:text-fg-title transition-colors">
+                            wire:click.prevent="setNextChapter"
+                            class="flex items-center justify-end gap-2 text-fg-subtext hover:text-fg-title transition-colors"
+                            @if(!$activeChapter->isCompleted() || $activeChapter->id === $masterClass->chapters->last()->id) disabled @endif>
                             Next Chapter
                             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
                                  fill="none"

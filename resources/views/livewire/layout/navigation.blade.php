@@ -18,8 +18,8 @@ new class extends Component {
 <header class="sticky top-0 z-10 bg-bg-lighter text-fg h-16 border-b border-border-light flex items-center w-full">
     <nav
         class="mx-auto w-full px-4 sm:px-10 lg:px-5 xl:px-8 xl:max-w-[88rem] flex items-center justify-between gap-8 h-full">
-        <div class="">
-            <a href="{{ route('dashboard') }}" aria-label="Page Accueil du Site Betterlife"
+        <div>
+            <a href="{{ route('dashboard') }}" wire:navigate aria-label="Page Accueil du Site Betterlife"
                class="flex items-center w-max gap-1">
                 <img src="{{ asset('images/irma-logo-base.svg') }}" alt="logo Irma" width="200" height="100"
                      class="h-12 w-auto">
@@ -31,14 +31,14 @@ new class extends Component {
             <ul class="flex gap-2 md:h-full text-fg">
                 <li data-state="active"
                     class="md:h-full flex items-center group fx-active:border-primary border-b-2 border-transparent fx-active:text-fg-title">
-                    <a href="./"
+                    <a href="{{ route('dashboard') }}"
                        class="flex px-3 py-1.5 rounded-md hover:bg-bg-light group-fx-active:bg-bg border border-transparent group-fx-active:border-border/40">
                         Dashboard
                     </a>
                 </li>
                 <li data-state="inactive"
                     class="md:h-full flex items-center group fx-active:border-primary border-b-2 border-transparent fx-active:text-fg-title">
-                    <a href="./certificats.html"
+                    <a href="#"
                        class="flex px-3 py-1.5 rounded-md hover:bg-bg-light group-fx-active:bg-bg border border-transparent group-fx-active:border-border/40">
                         Certificats
                     </a>

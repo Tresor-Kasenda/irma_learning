@@ -8,6 +8,7 @@ use App\Enums\MasterClassEnum;
 use App\Filament\Resources\MasterClassResource\Pages;
 use App\Filament\Resources\MasterClassResource\RelationManagers;
 use App\Models\MasterClass;
+use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\RichEditor;
 use Filament\Forms\Components\Section;
 use Filament\Forms\Components\Select;
@@ -62,6 +63,12 @@ final class MasterClassResource extends Resource
                                 MasterClassEnum::PUBLISHED->value => 'Publié',
                             ])
                             ->required(),
+                        FileUpload::make('path')
+                            ->label('Photo de couverture')
+                            ->image()
+                            ->required()
+                            ->circleCropper()
+                            ->nullable(),
                         RichEditor::make('presentation')
                             ->label('Presentation')
                             ->fileAttachmentsDirectory('events')
@@ -122,7 +129,7 @@ final class MasterClassResource extends Resource
     {
         return [
             RelationManagers\ChaptersRelationManager::class,
-            RelationManagers\ResourcesRelationManager::class
+            RelationManagers\ResourcesRelationManager::class,
         ];
     }
 

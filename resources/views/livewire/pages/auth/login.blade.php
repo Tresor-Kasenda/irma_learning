@@ -31,8 +31,10 @@ new #[Layout('layouts.guest')] class extends Component {
         class="border border-border/40 w-full max-w-md p-1 shadow-lg shadow-gray-200/40 bg-white rounded-lg"
     >
         <div class="p-5 sm:p-8">
-            <img src="{{ asset('images/irma-logo-base.svg') }}" alt="logo Irma" width="200" height="100"
-                 class="h-12 w-auto mb-5 mx-auto">
+            <a href="{{ route('home-page') }}" wire:navigate>
+                <img src="{{ asset('images/irma-logo-base.svg') }}" alt="logo Irma" width="200" height="100"
+                     class="h-16 w-auto mb-5 mx-auto">
+            </a>
             <div class="text-center">
                 <h1 class="text-fg-title mb-1 text-xl font-semibold">Bienvenue sur Irma</h1>
                 <p class="text-sm">Identifiez-vous pour accéder à votre compte</p>

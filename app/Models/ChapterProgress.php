@@ -1,17 +1,19 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Models;
 
 use App\Enums\ChapterProgressEnum;
+use Database\Factories\ChapterProgressFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class ChapterProgress extends Model
+final class ChapterProgress extends Model
 {
-    /** @use HasFactory<\Database\Factories\ChapterProgressFactory> */
+    /** @use HasFactory<ChapterProgressFactory> */
     use HasFactory;
-
 
     public function subscription(): BelongsTo
     {
@@ -33,7 +35,7 @@ class ChapterProgress extends Model
         return [
             'status' => ChapterProgressEnum::class,
             'completed_at' => 'datetime',
-            'points_earned' => 'integer'
+            'points_earned' => 'integer',
         ];
     }
 }

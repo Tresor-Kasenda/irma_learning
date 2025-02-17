@@ -6,18 +6,21 @@
         "dev": "vite"
     },
     "devDependencies": {
+        "@flexilla/collapse": "^2.0.6",
+        "@flexilla/dropdown": "^2.0.4",
+        "@flexilla/tailwind-plugin": "^0.0.10",
+        "@flexilla/utilities": "^2.0.71",
         "@tailwindcss/forms": "^0.5.2",
+        "@tailwindcss/vite": "^4.0.6",
         "autoprefixer": "^10.4.2",
         "axios": "^1.7.4",
         "concurrently": "^9.0.1",
         "laravel-vite-plugin": "^1.2.0",
         "postcss": "^8.4.31",
         "tailwindcss": "^3.1.0",
-        "vite": "^6.0.11",
-        "@flexilla/collapse": "^2.0.6",
-        "@flexilla/dropdown": "^2.0.4",
-        "@flexilla/tailwind-plugin": "^0.0.10",
-        "@flexilla/utilities": "^2.0.71",
-        "@tailwindcss/vite": "^4.0.6"
+        "vite": "^6.0.11"
+    },
+    "dependencies": {
+        "canvas-confetti": "^1.9.3"
     }
 }

@@ -1,14 +1,17 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Models;
 
+use Database\Factories\ExamSubmissionFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class ExamSubmission extends Model
+final class ExamSubmission extends Model
 {
-    /** @use HasFactory<\Database\Factories\ExamSubmissionFactory> */
+    /** @use HasFactory<ExamSubmissionFactory> */
     use HasFactory;
 
     public function user(): BelongsTo
@@ -29,7 +32,7 @@ class ExamSubmission extends Model
     protected function casts(): array
     {
         return [
-            'submitted_at' => 'datetime'
+            'submitted_at' => 'datetime',
         ];
     }
 }
