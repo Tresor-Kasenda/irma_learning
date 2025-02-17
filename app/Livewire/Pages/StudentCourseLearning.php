@@ -28,7 +28,7 @@ class StudentCourseLearning extends Component implements HasForms
 
     public ?array $data = [];
 
-    public ?string $path;
+    public $file_path = null;
 
     public bool $examSubmitted = false;
 
@@ -66,9 +66,13 @@ class StudentCourseLearning extends Component implements HasForms
             ->schema([
                 Section::make("Soumettre l'examen")
                     ->schema([
-                        FileUpload::make('path')
+                        FileUpload::make('file_path')
                             ->label("Uploader le fichier")
                             ->required()
+                            ->acceptedFileTypes(['application/pdf'])
+                            ->directory('submission')
+                            ->maxSize(10240)
+                            ->downloadable()
                     ])
             ])
             ->statePath('data');
@@ -84,19 +88,17 @@ class StudentCourseLearning extends Component implements HasForms
         }
 
         $this->validate([
-            'data.path' => ['required'],
+            'data.file_path' => ['required', 'file', 'mimes:pdf,doc,docx', 'max:10240'], // 10MB max size
         ]);
 
-
-        foreach ($this->data['path'] as $key => $path) {
-            $this->path = $path->storePublicly(['disk' => 'submissions']);
+        foreach ($this->data['file_path'] as $key => $path) {
+            $this->file_path = $path->storePublicly(['disk' => 'submissions']);
         }
-
 
         $submission = $this->activeChapter->examination->submission()->create([
             'user_id' => Auth::user()->id,
             'chapter_id' => $this->activeChapter->id,
-            'file_path' => $this->path,
+            'file_path' => $this->file_path,
             'submitted_at' => now()
         ]);
 
@@ -114,7 +116,8 @@ class StudentCourseLearning extends Component implements HasForms
         // Update the current chapter's progress to completed
         $chapter->progress()->update([
             'status' => 'completed',
-            'points_earned' => 100
+            'points_earned' => 100,
+            'completed_at' => now()
         ]);
 
         // Find the next chapter
