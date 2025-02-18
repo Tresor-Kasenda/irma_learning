@@ -14,17 +14,13 @@
                             d="M229.66,218.34l-50.07-50.06a88.11,88.11,0,1,0-11.31,11.31l50.06,50.07a8,8,0,0,0,11.32-11.32ZM40,112a72,72,0,1,1,72,72A72.08,72.08,0,0,1,40,112Z">
                         </path>
                     </svg>
-                    <input type="text" name="app_user_name" id="app_user_name" placeholder="Rechercher"
-                           class="ui-form-input px-4 h-9 rounded-md peer w-full ps-9"/>
+                    <input
+                        type="text"
+                        wire:model.live.debounce.300ms="search"
+                        placeholder="Rechercher"
+                        class="ui-form-input px-4 h-9 rounded-md peer w-full ps-9"
+                    />
                 </div>
-                <select class="ui-form-input px-4 h-9 rounded-md peer pe-9 text-fg">
-                    <option>Type de formations</option>
-                    <option value="type">Type 1</option>
-                    <option value="type">Type 1</option>
-                    <option value="type">Type 1</option>
-                    <option value="type">Type 1</option>
-                    <option value="type">Type 1</option>
-                </select>
             </div>
         </div>
         <div class="mx-auto max-w-7xl w-full px-5 sm:px-10 grid">

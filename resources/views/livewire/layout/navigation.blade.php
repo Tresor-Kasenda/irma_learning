@@ -47,12 +47,12 @@ new class extends Component {
         </div>
 
         <div>
-            <button aria-label="Afficher dropdown profile" data-dropdown-trigger data-dropdown-id="user-dropd"
+            <button aria-label="Afficher dropdown profile" data-dropdown-trigger data-dropdown-id="user-dropdown"
                     class="border-4 border-border-high size-10 rounded-full overflow-hidden">
                 <img src="{{ asset('images/avatar.webp') }}" width="200" height="200" alt="User avatar"
                      class="size-full object-cover">
             </button>
-            <div role="menu" data-ui-dropdown id="user-dropd" aria-labelledby="pm-dropdown"
+            <div role="menu" data-ui-dropdown id="user-dropdown" aria-labelledby="pm-dropdown"
                  class="ui-popper z-10 w-60 bg-bg origin-top-right p-2 border border-border backdrop-blur-xl rounded-lg invisible fx-open:visible opacity-0 fx-open:opacity-100 translate-y-5 fx-open:translate-y-0 ease-linear duration-100 transition-[visibility_opacity_transform]">
                 <ul class="flex flex-col space-y-3" role="menu" aria-orientation="vertical"
                     aria-labelledby="dropdown-avatar">
@@ -64,8 +64,9 @@ new class extends Component {
                             </div>
                         </div>
                         <div class="flex-1">
-                            <h6 class="text-fg-subtitle text-base font-semibold truncate">John Doe</h6>
-                            <small class="text-fg-subtext text-sm font-normal truncate flex">jhon@doe.com</small>
+                            <h6 class="text-fg-subtitle text-base font-semibold truncate">{{ auth()->user()?->name }}</h6>
+                            <small
+                                class="text-fg-subtext text-sm font-normal truncate flex">{{ auth()->user()?->email }}</small>
                         </div>
                     </li>
                     <li>

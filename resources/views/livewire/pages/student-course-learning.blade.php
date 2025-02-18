@@ -31,9 +31,10 @@
                 </div>
                 <div class="flex items-center gap-2">
                     <div class="flex items-center gap-2">
-                        <div class="text-sm text-gray-600">Progress: 40%</div>
+                        <div class="text-sm text-gray-600">Progress: {{ $this->getProgressPercentage() }}%</div>
                         <div class="w-20 h-2 bg-bg-high rounded-full">
-                            <div class="h-full bg-primary rounded-full" style="width: 40%;"></div>
+                            <div class="h-full bg-primary rounded-full"
+                                 style="width: {{ $this->getProgressPercentage() }}%;"></div>
                         </div>
                     </div>
                     <div class="flex lg:hidden">
@@ -93,16 +94,19 @@
                     </div>
                 </div>
                 <div class="h-16 flex items-center w-full p-4 border-t border-gray-200 bg-bg">
-                    <button
-                        class="w-full bg-primary-600 text-white btn btn-md rounded-lg flex items-center justify-center gap-2 hover:bg-primary-700 transition-colors">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-                             stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                             class="lucide lucide-award h-5 w-5">
-                            <circle cx="12" cy="8" r="6"></circle>
-                            <path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11"></path>
-                        </svg>
-                        View Certificate
-                    </button>
+                    @if($masterClass->chapters->every(fn ($chapter) => $chapter->isCompleted()))
+                        <button
+                            class="w-full bg-primary-600 text-white btn btn-md rounded-lg flex items-center justify-center gap-2 hover:bg-primary-700 transition-colors">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+                                 fill="none"
+                                 stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                                 class="lucide lucide-award h-5 w-5">
+                                <circle cx="12" cy="8" r="6"></circle>
+                                <path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11"></path>
+                            </svg>
+                            View Certificate
+                        </button>
+                    @endif
                 </div>
             </div>
         </aside>
@@ -253,8 +257,13 @@
 
                         <button
                             wire:click.prevent="setPreviousChapter"
-                            class="flex items-center gap-2 text-fg-subtext hover:text-fg-title transition-colors"
-                            @if($activeChapter && $activeChapter->id === $masterClass->chapters->first()->id) disabled @endif>
+                            @class([
+                                'flex items-center gap-2 transition-colors',
+                                'text-fg-subtext hover:text-fg-title cursor-pointer' => !($activeChapter && $activeChapter->id === $masterClass->chapters->first()->id),
+                                'text-fg-subtext/50 cursor-not-allowed' => $activeChapter && $activeChapter->id === $masterClass->chapters->first()->id
+                            ])
+                            @if($activeChapter && $activeChapter->id === $masterClass->chapters->first()->id) disabled
+                            wire:loading.attr="disabled" @endif>
                             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
                                  fill="none"
                                  stroke="currentColor" stroke-width="2" stroke-linecap="round"
