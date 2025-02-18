@@ -32,18 +32,20 @@ final class LearningCourse extends Component
 
     public function subscribeToCourses(MasterClass $masterClass): void
     {
-        $masterClass->subscription()->create([
-            'user_id' => Auth::user()->id,
-            'status' => SubscriptionEnum::ACTIVE,
-            'progress' => 0,
-            'started_at' => now(),
-        ]);
+        if (! $masterClass->subscription()->where('user_id', Auth::id())->exists()) {
+            $masterClass->subscription()->create([
+                'user_id' => Auth::user()->id,
+                'status' => SubscriptionEnum::ACTIVE,
+                'progress' => 0,
+                'started_at' => now(),
+            ]);
 
-        $this->dispatch(
-            'notify',
-            message: 'Vous êtes maintenant inscrit à cette formation !',
-            type: 'success'
-        );
+            $this->dispatch(
+                'notify',
+                message: 'Vous êtes maintenant inscrit à cette formation !',
+                type: 'success'
+            );
+        }
 
         $this->redirect(route('learning-course-student', $masterClass), navigate: true);
     }

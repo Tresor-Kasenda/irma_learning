@@ -11,14 +11,10 @@ final class ChapterObserver
     /**
      * Handle the Chapter "created" event.
      */
-    public function created(Chapter $chapter): void
-    {
-    }
+    public function created(Chapter $chapter): void {}
 
     /**
      * Handle the Chapter "updated" event.
      */
-    public function updated(Chapter $chapter): void
-    {
-    }
+    public function updated(Chapter $chapter): void {}
 }

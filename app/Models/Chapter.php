@@ -8,6 +8,7 @@ use App\Enums\ChapterProgressEnum;
 use App\Observers\ChapterObserver;
 use Database\Factories\ChapterFactory;
 use Illuminate\Database\Eloquent\Attributes\ObservedBy;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -37,6 +38,17 @@ final class Chapter extends Model
     public function progress(): HasOne
     {
         return $this->hasOne(ChapterProgress::class);
+    }
+
+    public function scopeSearchByActive(Builder $query, self $activeChapter): Builder
+    {
+        return $query->where('id', $activeChapter->id)
+            ->orderBy('position');
+    }
+
+    public function scopeGetChapterIndex(Builder $query, self $activeChapter): int
+    {
+        return $query->pluck('id')->search($activeChapter->id);
     }
 
     public function submission(): HasOne

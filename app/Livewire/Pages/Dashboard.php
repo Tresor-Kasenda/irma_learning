@@ -58,19 +58,19 @@ final class Dashboard extends Component
 
         return [
             'total' => MasterClass::query()
-                ->whereHas('subscription', fn($query) => $query->where('user_id', $userId))
+                ->whereHas('subscription', fn ($query) => $query->where('user_id', $userId))
                 ->count(),
 
             'in_progress' => MasterClass::query()
-                ->whereHas('subscription', fn($query) => $query->where('user_id', $userId))
-                ->whereHas('chapters.progress', fn($query) => $query->where('user_id', $userId)
+                ->whereHas('subscription', fn ($query) => $query->where('user_id', $userId))
+                ->whereHas('chapters.progress', fn ($query) => $query->where('user_id', $userId)
                     ->where('status', '!=', 'completed')
                 )
                 ->count(),
 
             'completed' => MasterClass::query()
-                ->whereHas('subscription', fn($query) => $query->where('user_id', $userId))
-                ->whereDoesntHave('chapters', fn($query) => $query->whereDoesntHave('progress', fn($q) => $q->where('user_id', $userId)
+                ->whereHas('subscription', fn ($query) => $query->where('user_id', $userId))
+                ->whereDoesntHave('chapters', fn ($query) => $query->whereDoesntHave('progress', fn ($q) => $q->where('user_id', $userId)
                     ->where('status', 'completed')
                 )
                 )

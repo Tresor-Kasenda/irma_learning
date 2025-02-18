@@ -17,7 +17,7 @@ final class ProgressTrackingService
         DB::transaction(function () use ($subscription, $chapter) {
             // Check if the previous chapter is completed
             $previousChapter = $chapter->previousChapter();
-            if ($previousChapter && !$this->isChapterCompleted($subscription, $previousChapter)) {
+            if ($previousChapter && ! $this->isChapterCompleted($subscription, $previousChapter)) {
                 throw new Exception('Previous chapter must be completed first.');
             }
 
@@ -39,24 +39,6 @@ final class ProgressTrackingService
         });
 
         return $this->getDetailedProgress($subscription);
-    }
-
-    private function isChapterCompleted(Subscription $subscription, Chapter $chapter)
-    {
-        return $subscription->chapterProgress()
-            ->where('chapter_id', $chapter->id)
-            ->where('status', 'completed')
-            ->exists();
-    }
-
-    private function updateOverallProgress(Subscription $subscription): void
-    {
-        $progress = $this->getDetailedProgress($subscription);
-
-        $subscription->update([
-            'progress' => $progress['progress_percentage'],
-            'completed_at' => $progress['progress_percentage'] === 100 ? now() : null,
-        ]);
     }
 
     public function getDetailedProgress(Subscription $subscription): array
@@ -111,5 +93,23 @@ final class ProgressTrackingService
         $minimumProgress = 80;
 
         return $progress['progress_percentage'] >= $minimumProgress;
+    }
+
+    private function isChapterCompleted(Subscription $subscription, Chapter $chapter)
+    {
+        return $subscription->chapterProgress()
+            ->where('chapter_id', $chapter->id)
+            ->where('status', 'completed')
+            ->exists();
+    }
+
+    private function updateOverallProgress(Subscription $subscription): void
+    {
+        $progress = $this->getDetailedProgress($subscription);
+
+        $subscription->update([
+            'progress' => $progress['progress_percentage'],
+            'completed_at' => $progress['progress_percentage'] === 100 ? now() : null,
+        ]);
     }
 }
