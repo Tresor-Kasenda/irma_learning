@@ -144,7 +144,7 @@
                             src="{{ asset('storage/'. $activeChapter->path)  }}"
                             type="application/pdf"
                             width="100%"
-                            height="800px"
+                            height="860px"
                             class="w-full border border-border rounded-lg"
                             pluginspage="http://www.adobe.com/products/acrobat/readstep2.html"
                         />

@@ -28,7 +28,7 @@ new #[Layout('layouts.guest')] class extends Component {
 
     <form
         wire:submit="login"
-        class="border border-border/40 w-full max-w-md p-1 shadow-lg shadow-gray-200/40 bg-white rounded-lg"
+        class="border border-border/60 w-full max-w-md p-1 shadow-lg shadow-gray-200/40 bg-white rounded-lg"
     >
         <div class="p-5 sm:p-8">
             <a href="{{ route('home-page') }}" wire:navigate>

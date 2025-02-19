@@ -14,7 +14,7 @@
     <!-- Scripts -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
-<body class="bg-bg-lighter/40 font-sans">
+<body class="bg-bg-lighter/50 font-sans">
 <main class="flex min-h-screen justify-center items-center">
     {{ $slot }}
 </main>
