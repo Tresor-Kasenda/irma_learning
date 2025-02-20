@@ -18,7 +18,6 @@
         "livewire/volt": "^1.6.6",
         "smalot/pdfparser": "^2.11",
         "spatie/pdf-to-text": "^1.54",
-        "ext-imagick": "*"
     },
     "require-dev": {
         "fakerphp/faker": "^1.23",
