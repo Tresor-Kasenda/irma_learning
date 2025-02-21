@@ -44,26 +44,27 @@
                     </a>
                 </div>
             </div>
-            <div
-                class="max-w-4xl flex lg:flex-1 relative before:absolute before:inset-y-3 md:before:inset-y-10 before:border-y before:border-border-light after:border-border-light before:w-full after:absolute after:inset-x-3 md:after:inset-x-10 after:border-x after:h-full">
-                <div class="flex items-center justify-center relative px-4 py-6 w-full h-full">
-                    <div
-                        class="w-full flex flex-col max-w-sm bg-bg-lighter backdrop-blur-lg border border-border/30 rounded-lg shadow-sm shadow-gray-100/40 hover:shadow-gray-200/60 ease-linear p-6 relative z-[5]">
-                        <img
-                            src="{{ asset('storage', $course->path) }}"
-                            alt="{{ $course->title }}"
-                            width="2000"
-                            height="1333"
-                            class="w-full aspect-video rounded-md object-cover">
-                        <div class="mt-6">
-                            <h1 class="font-semibold text-fg-title text-xl line-clamp-2">
-                                {{ $course->title }}
-                            </h1>
-                            <h2 class=" mt-4 line-clamp-2 text-fg">
-                                {!! str($course->description)->limit(88) !!}
-                            </h2>
-                            <div class="flex flex-col gap-1 mt-4">
-                                <div class="flex items-center gap-3 text-fg-subtext">
+            @if($course)
+                <div
+                    class="max-w-4xl flex lg:flex-1 relative before:absolute before:inset-y-3 md:before:inset-y-10 before:border-y before:border-border-light after:border-border-light before:w-full after:absolute after:inset-x-3 md:after:inset-x-10 after:border-x after:h-full">
+                    <div class="flex items-center justify-center relative px-4 py-6 w-full h-full">
+                        <div
+                            class="w-full flex flex-col max-w-sm bg-bg-lighter backdrop-blur-lg border border-border/30 rounded-lg shadow-sm shadow-gray-100/40 hover:shadow-gray-200/60 ease-linear p-6 relative z-[5]">
+                            <img
+                                src="{{ asset('storage', $course->path) }}"
+                                alt="{{ $course->title }}"
+                                width="2000"
+                                height="1333"
+                                class="w-full aspect-video rounded-md object-cover">
+                            <div class="mt-6">
+                                <h1 class="font-semibold text-fg-title text-xl line-clamp-2">
+                                    {{ $course->title }}
+                                </h1>
+                                <h2 class=" mt-4 line-clamp-2 text-fg">
+                                    {!! str($course->description)->limit(88) !!}
+                                </h2>
+                                <div class="flex flex-col gap-1 mt-4">
+                                    <div class="flex items-center gap-3 text-fg-subtext">
                                     <span class="text-fg-title text-sm font-light">
                                           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
                                                stroke-width="1.5"
@@ -72,25 +73,26 @@
                                                   d="M6.75 2.994v2.25m10.5-2.25v2.25m-14.252 13.5V7.491a2.25 2.25 0 0 1 2.25-2.25h13.5a2.25 2.25 0 0 1 2.25 2.25v11.251m-18 0a2.25 2.25 0 0 0 2.25 2.25h13.5a2.25 2.25 0 0 0 2.25-2.25m-18 0v-7.5a2.25 2.25 0 0 1 2.25-2.25h13.5a2.25 2.25 0 0 1 2.25 2.25v7.5m-6.75-6h2.25m-9 2.25h4.5m.002-2.25h.005v.006H12v-.006Zm-.001 4.5h.006v.006h-.006v-.005Zm-2.25.001h.005v.006H9.75v-.006Zm-2.25 0h.005v.005h-.006v-.005Zm6.75-2.247h.005v.005h-.005v-.005Zm0 2.247h.006v.006h-.006v-.006Zm2.25-2.248h.006V15H16.5v-.005Z"/>
                                           </svg>
                                     </span>
-                                    <span class="text-sm">{{ $course->created_at->format('d/m/Y') }}</span>
-                                </div>
-                                <div class="mt-5 flex w-full">
-                                    <a
-                                        href="{{ route('master-class', ['masterClass' => $course]) }}"
-                                        wire:navigate
-                                        class="w-full justify-center btn btn-sm sm:btn-md btn-solid bg-primary-600 text-white group">
+                                        <span class="text-sm">{{ $course->created_at->format('d/m/Y') }}</span>
+                                    </div>
+                                    <div class="mt-5 flex w-full">
+                                        <a
+                                            href="{{ route('master-class', ['masterClass' => $course]) }}"
+                                            wire:navigate
+                                            class="w-full justify-center btn btn-sm sm:btn-md btn-solid bg-primary-600 text-white group">
                                       <span class="relative z-10">
                                         En savoir plus
                                       </span>
-                                        <span data-btn-layer class=" before:bg-primary-800"></span>
-                                    </a>
-                                </div>
+                                            <span data-btn-layer class=" before:bg-primary-800"></span>
+                                        </a>
+                                    </div>
 
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
-            </div>
+            @endif
         </div>
     </section>
 
