@@ -8,9 +8,11 @@ use App\Enums\MasterClassEnum;
 use App\Models\MasterClass;
 use Illuminate\Contracts\View\View;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\Title;
 use Livewire\Component;
 
 #[Layout('welcome')]
+#[Title("Home Page")]
 final class HomePage extends Component
 {
     public function render(): View

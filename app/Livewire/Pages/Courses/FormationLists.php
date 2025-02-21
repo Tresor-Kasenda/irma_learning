@@ -8,10 +8,12 @@ use App\Enums\MasterClassEnum;
 use App\Models\MasterClass;
 use Illuminate\Contracts\View\View;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\Title;
 use Livewire\Attributes\Url;
 use Livewire\Component;
 
 #[Layout('welcome')]
+#[Title('Formations')]
 final class FormationLists extends Component
 {
     #[Url(as: 'q')]

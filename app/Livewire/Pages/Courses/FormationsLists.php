@@ -6,9 +6,11 @@ namespace App\Livewire\Pages\Courses;
 
 use Illuminate\Contracts\View\View;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\Title;
 use Livewire\Component;
 
 #[Layout('welcome')]
+#[Title('Formations')]
 final class FormationsLists extends Component
 {
     public function render(): View
