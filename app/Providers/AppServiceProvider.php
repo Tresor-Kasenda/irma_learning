@@ -31,9 +31,9 @@ final class AppServiceProvider extends ServiceProvider
     {
         $this->configureCommands();
         // $this->configureUrl();
-        $this->configureVite();
+        //$this->configureVite();
         $this->shouldBeStrict();
-        $this->configureDates();
+        //$this->configureDates();
         $this->configurePasswordValidation();
 
         $this->app->singleton(PdfConverterService::class, function ($app) {
@@ -48,15 +48,23 @@ final class AppServiceProvider extends ServiceProvider
         );
     }
 
+    public function shouldBeStrict(): void
+    {
+        Model::shouldBeStrict(!$this->app->isProduction());
+        Model::unguard();
+    }
+
+    /**
+     * Configure the password validation rules.
+     */
+    private function configurePasswordValidation(): void
+    {
+        Password::defaults(fn() => $this->app->isProduction() ? Password::min(8)->uncompromised() : null);
+    }
+
     public function configureVite(): void
     {
         Vite::usePrefetchStrategy('aggressive');
-    }
-
-    public function shouldBeStrict(): void
-    {
-        Model::shouldBeStrict(! $this->app->isProduction());
-        Model::unguard();
     }
 
     public function configureUrl(): void
@@ -70,13 +78,5 @@ final class AppServiceProvider extends ServiceProvider
     private function configureDates(): void
     {
         Date::use(CarbonImmutable::class);
-    }
-
-    /**
-     * Configure the password validation rules.
-     */
-    private function configurePasswordValidation(): void
-    {
-        Password::defaults(fn () => $this->app->isProduction() ? Password::min(8)->uncompromised() : null);
     }
 }
