@@ -4,7 +4,10 @@ declare(strict_types=1);
 
 namespace Database\Factories;
 
+use App\Enums\ChapterProgressEnum;
+use App\Models\Chapter;
 use App\Models\ChapterProgress;
+use App\Models\Subscription;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -20,7 +23,11 @@ final class ChapterProgressFactory extends Factory
     public function definition(): array
     {
         return [
-            //
+            'subscription_id' => Subscription::factory(),
+            'chapter_id' => Chapter::factory(),
+            'status' => $this->faker->randomElement(ChapterProgressEnum::cases()),
+            'points_earned' => $this->faker->numberBetween(0, 100),
+            'completed_at' => $this->faker->dateTimeThisYear(),
         ];
     }
 }

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Database\Seeders;
 
+use App\Models\Subscription;
 use Illuminate\Database\Seeder;
 
 final class SubscriptionSeeder extends Seeder
@@ -13,6 +14,8 @@ final class SubscriptionSeeder extends Seeder
      */
     public function run(): void
     {
-        //
+        Subscription::factory()
+            ->count(10)
+            ->create();
     }
 }
