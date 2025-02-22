@@ -15,7 +15,7 @@ Route::get('/certifications', Certifications::class)->name('certifications');
 Route::get('/formations-continue', FormationsLists::class)->name('formations-lists');
 Route::get('/master-class/{masterClass}/formations', LearningCourse::class)->name('master-class');
 
-Route::middleware(['auth', 'force.password.change'])->group(function () {
+Route::middleware(['auth', 'verified', 'force.password.change'])->group(function () {
     Route::get('dashboard', Dashboard::class)->name('dashboard');
     Route::get('/courses/{masterClass}/start', StudentCourseLearning::class)->name('learning-course-student');
     Route::view('profile', 'profile')->name('profile');
