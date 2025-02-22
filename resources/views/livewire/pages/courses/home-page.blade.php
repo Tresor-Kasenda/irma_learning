@@ -23,7 +23,7 @@
                 </p>
                 <div class="flex items-center justify-center lg:justify-start flex-wrap gap-3">
                     <a
-                        href="{{ route('login') }}"
+                        href="{{ route('certifications') }}"
                         wire:navigate
                         class="btn btn-md md:btn-lg btn-solid bg-primary-600 text-white group">
                         <span class="relative z-10">
@@ -31,7 +31,7 @@
                         </span>
                         <span data-btn-layer class=" before:bg-primary-800"></span>
                     </a>
-                    <a href="{{ route('formations') }}" wire:navigate
+                    <a href="{{ route('formations-lists') }}" wire:navigate
                        class="btn btn-md md:btn-lg flex items-center gap-2">
                         Formation continue
                         <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="currentColor"
@@ -80,9 +80,9 @@
                                             href="{{ route('master-class', ['masterClass' => $course]) }}"
                                             wire:navigate
                                             class="w-full justify-center btn btn-sm sm:btn-md btn-solid bg-primary-600 text-white group">
-                                      <span class="relative z-10">
-                                        En savoir plus
-                                      </span>
+                                              <span class="relative z-10">
+                                                En savoir plus
+                                              </span>
                                             <span data-btn-layer class=" before:bg-primary-800"></span>
                                         </a>
                                     </div>
@@ -233,7 +233,7 @@
             </span>
                 </li>
             </ul>
-            <a href="{{ route('formations') }}"
+            <a href="{{ route('certifications') }}"
                class="mt-8 btn btn-md md:btn-lg btn-solid bg-primary-600 w-max text-white group">
                   <span class="relative z-10">
                     Voir nos formations
@@ -266,8 +266,8 @@
                         <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5"/>
                     </svg>
                     <span class="inline-flex flex-1">
-              Limiter l’impact des contraintes temporelles, logistiques et géographiques;
-            </span>
+                      Limiter l’impact des contraintes temporelles, logistiques et géographiques;
+                    </span>
                 </li>
                 <li class="flex items-start gap-3">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="3"
@@ -275,8 +275,8 @@
                         <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5"/>
                     </svg>
                     <span class="inline-flex flex-1">
-              Proposer des modes d’apprentissages innovants et plus engageants ;
-            </span>
+                      Proposer des modes d’apprentissages innovants et plus engageants ;
+                    </span>
                 </li>
                 <li class="flex items-start gap-3">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="3"

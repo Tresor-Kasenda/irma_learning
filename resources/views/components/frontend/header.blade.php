@@ -3,6 +3,7 @@
     aria-hidden="true"
     class="flex invisible opacity-0 bg-gray-800/50 backdrop-blur-xl fx-open:visible fx-open:opacity-100 fixed inset-0 z-40 lg:invisible lg:hidden"
 ></span>
+
 <header class="flex items-center absolute top-0 w-full z-50 pt-5 px-5 xl:pt-7">
     <nav
         class="mx-auto w-full max-w-7xl flex items-center justify-between gap-10 px-5 bg-bg/10 border border-border-light/30 shadow shadow-bg-light/40 py-1.5 rounded-lg">
@@ -18,12 +19,6 @@
         <div data-main-navbar id="app-main"
              class="lg:flex-1 lg:justify-start flex items-center gap-3 rounded-xl p-3 lg:p-0 z-[80] lg:z-auto navbar-before navbar-base navbar-visibility navbar-opened lg:rounded-none navbar-content-scrollable">
             <ul class="flex items-center flex-col lg:flex-row gap-3 lg:gap-5 text-fg *:flex w-full h-max">
-                <li class="relative flex w-full lg:w-max group">
-                    <a href="{{ route('formations') }}" wire:navigate aria-label="Lien vers la page : Accueil"
-                       class="py-2 ease-linear duration-100 inline-flex {{ Request::routeIs('formations') ? 'text-primary-700' : 'hover:text-primary-700' }}">
-                        Formations
-                    </a>
-                </li>
                 <li class="relative flex w-full lg:w-max group">
                     <a href="{{ route('certifications') }}" wire:navigate aria-label="Lien vers la page : Accueil"
                        class="py-2 ease-linear duration-100 inline-flex {{ Request::routeIs('certifications') ? 'text-primary-700' : 'hover:text-primary-700' }}">
@@ -79,20 +74,13 @@
                 </div>
             @endauth
             <div class="flex lg:hidden pr-0.5 py-1 border-l border-gray-200/80 -mr-2.5">
-                <button
-                    data-nav-trigger
-                    data-toggle-nav="app-main"
-                    data-expanded="false"
-                    class="px-2.5 relative z-[90] space-y-2 group"
-                    aria-label="toggle navbar">
-                    <span
-                        class="h-0.5 flex w-6 rounded bg-fg transition duration-300 group-aria-expanded:rotate-45"
-                        id="line-1"
-                        aria-hidden="true"></span>
-                    <span
-                        class="h-0.5 flex w-6 rounded bg-fg transition duration-300 group-aria-expanded:rotate-45"
-                        id="line-2"
-                        aria-hidden="true"></span>
+                <button data-nav-trigger data-toggle-nav="app-main" data-expanded="false"
+                        class="px-2.5 relative z-[90] space-y-2 group" aria-label="toggle navbar">
+            <span class="h-0.5 flex w-6 rounded bg-fg transition duration-300 group-aria-expanded:rotate-45" id="line-1"
+                  aria-hidden="true"></span>
+                    <span class="h-0.5 flex w-6 rounded bg-fg transition duration-300 group-aria-expanded:rotate-45"
+                          id="line-2"
+                          aria-hidden="true"></span>
                 </button>
             </div>
         </div>

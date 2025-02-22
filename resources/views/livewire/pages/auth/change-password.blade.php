@@ -110,25 +110,6 @@ new #[Layout('layouts.guest')] class extends Component {
 
                         <x-input-error :messages="$errors->get('password_confirmation')" class="mt-2"/>
                     </div>
-                    <div class="flex justify-between w-full pt-3">
-                        <div class="flex items-center gap-2">
-                            <input
-                                wire:model="form.remember"
-                                id="remember"
-                                type="checkbox"
-                                class="ui-form-checkbox rounded text-primary-600"
-                                name="remember"
-                            />
-                            <label for="remember-me" class="text-sm text-fg-text">{{ __('Remember me') }}</label>
-                        </div>
-                        @if (Route::has('password.request'))
-                            <a
-                                href="{{ route('password.request') }}"
-                                class="inline text-primary hover:text-primary-700 text-sm" wire:navigate>
-                                {{ __('Forgot your password?') }}
-                            </a>
-                        @endif
-                    </div>
                 </div>
                 <button class="btn btn-md rounded-md w-full justify-center text-white bg-primary">
                     {{ __('Update Password') }}
