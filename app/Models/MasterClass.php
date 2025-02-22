@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Enums\MasterClassEnum;
 use Database\Factories\MasterClassFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -39,5 +40,14 @@ final class MasterClass extends Model
     public function chapters(): HasMany
     {
         return $this->hasMany(Chapter::class);
+    }
+
+    protected function casts(): array
+    {
+        return [
+            'ended_at' => 'datetime',
+            'status' => MasterClassEnum::class,
+            'certifiable' => 'boolean'
+        ];
     }
 }

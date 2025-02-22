@@ -22,8 +22,8 @@ use Spatie\LivewireFilepond\WithFilePond;
 #[Title('Apprendre')]
 final class StudentCourseLearning extends Component
 {
-    use WithFileUploads;
     use WithFilePond;
+    use WithFileUploads;
 
     #[Locked]
     public MasterClass $masterClass;
@@ -57,7 +57,7 @@ final class StudentCourseLearning extends Component
             return $chapter->isCompleted();
         })->count();
 
-        return (int)round(($completedChapters / $this->masterClass->chapters->count()) * 100);
+        return (int) round(($completedChapters / $this->masterClass->chapters->count()) * 100);
     }
 
     public function setPreviousChapter(): void
@@ -80,7 +80,7 @@ final class StudentCourseLearning extends Component
     {
         $previousChapter = $this->getPreviousChapter($chapterId);
 
-        if ($previousChapter && !$previousChapter->isCompleted()) {
+        if ($previousChapter && ! $previousChapter->isCompleted()) {
             $this->dispatch(
                 'notify',
                 message: 'You must complete the previous chapter exam first.',
@@ -93,7 +93,7 @@ final class StudentCourseLearning extends Component
         $chapter = $this->masterClass->chapters->find($chapterId)->load('examination');
         $this->activeChapter = $chapter;
 
-        if (!$chapter->hasProgress()) {
+        if (! $chapter->hasProgress()) {
             $chapter->progress()->create([
                 'subscription_id' => $this->masterClass->subscription->id,
                 'status' => 'in_progress',
@@ -104,17 +104,9 @@ final class StudentCourseLearning extends Component
         session()->put("active_chapter_{$this->masterClass->id}", $chapterId);
     }
 
-    private function getPreviousChapter($currentChapterId): ?Chapter
-    {
-        $chapters = $this->masterClass->chapters;
-        $currentIndex = $chapters->search(fn($chapter) => $chapter->id === $currentChapterId);
-
-        return $currentIndex > 0 ? $chapters[$currentIndex - 1] : null;
-    }
-
     public function setNextChapter(): void
     {
-        if (!$this->activeChapter->isCompleted()) {
+        if (! $this->activeChapter->isCompleted()) {
             $this->dispatch(
                 'notify',
                 message: 'You must complete the current chapter before moving to the next one.',
@@ -149,7 +141,7 @@ final class StudentCourseLearning extends Component
         $examination = $this->activeChapter->examination;
 
         if ($examination->deadline && now()->isAfter($examination->deadline)) {
-            $this->dispatch('notify', message: "Le delai est deja depasser pour soumettre votre examen", type: 'error');
+            $this->dispatch('notify', message: 'Le delai est deja depasser pour soumettre votre examen', type: 'error');
 
             return;
         }
@@ -174,7 +166,7 @@ final class StudentCourseLearning extends Component
     public function completeChapter(Chapter $chapter): void
     {
         // Vérifier si le chapitre a un examen et s'il n'a pas été soumis
-        if ($chapter->examination && !$chapter->submission()->where('user_id', Auth::id())->exists()) {
+        if ($chapter->examination && ! $chapter->submission()->where('user_id', Auth::id())->exists()) {
             $this->dispatch(
                 'notify',
                 message: 'Vous devez soumettre l\'examen avant de terminer ce chapitre.',
@@ -196,7 +188,7 @@ final class StudentCourseLearning extends Component
 
         // Optimisation de la recherche du prochain chapitre
         $chapters = $this->masterClass->chapters;
-        $currentIndex = $chapters->search(fn($ch) => $ch->id === $chapter->id);
+        $currentIndex = $chapters->search(fn ($ch) => $ch->id === $chapter->id);
         $nextChapter = $currentIndex < $chapters->count() - 1 ? $chapters[$currentIndex + 1] : null;
 
         if ($nextChapter) {
@@ -220,5 +212,13 @@ final class StudentCourseLearning extends Component
         return $this->activeChapter->submission()
             ->where('user_id', Auth::id())
             ->exists();
+    }
+
+    private function getPreviousChapter($currentChapterId): ?Chapter
+    {
+        $chapters = $this->masterClass->chapters;
+        $currentIndex = $chapters->search(fn ($chapter) => $chapter->id === $currentChapterId);
+
+        return $currentIndex > 0 ? $chapters[$currentIndex - 1] : null;
     }
 }

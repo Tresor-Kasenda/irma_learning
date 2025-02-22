@@ -13,7 +13,7 @@ use Livewire\Attributes\Locked;
 use Livewire\Attributes\Title;
 use Livewire\Component;
 
-#[Layout('layouts.app')]
+#[Layout('welcome')]
 #[Title('Formations detailler')]
 final class LearningCourse extends Component
 {
@@ -34,6 +34,7 @@ final class LearningCourse extends Component
     {
         if (!auth()->check()) {
             $this->redirect(route('login'), navigate: true);
+
             return;
         }
 

@@ -51,7 +51,7 @@
                         <div
                             class="w-full flex flex-col max-w-sm bg-bg-lighter backdrop-blur-lg border border-border/30 rounded-lg shadow-sm shadow-gray-100/40 hover:shadow-gray-200/60 ease-linear p-6 relative z-[5]">
                             <img
-                                src="{{ asset('storage', $course->path) }}"
+                                src="{{ asset('storage/' . $course->path) }}"
                                 alt="{{ $course->title }}"
                                 width="2000"
                                 height="1333"

@@ -46,9 +46,21 @@ final class User extends Authenticatable implements FilamentUser
         return $this->hasMany(ExamSubmission::class);
     }
 
+    public function isSubscribedTo(MasterClass $masterClass): bool
+    {
+        return $this->subscriptions()
+            ->where('master_class_id', $masterClass->id)
+            ->exists();
+    }
+
     public function subscriptions(): HasMany
     {
         return $this->hasMany(Subscription::class);
+    }
+
+    public function progressions(): HasMany
+    {
+        return $this->hasMany(ChapterProgress::class);
     }
 
     public function isSuperAdmin(): bool

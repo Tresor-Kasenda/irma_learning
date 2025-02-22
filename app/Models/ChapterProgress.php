@@ -20,6 +20,11 @@ final class ChapterProgress extends Model
         return $this->belongsTo(Subscription::class, 'subscription_id');
     }
 
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'user_id');
+    }
+
     public function chapter(): BelongsTo
     {
         return $this->belongsTo(Chapter::class, 'chapter_id');
