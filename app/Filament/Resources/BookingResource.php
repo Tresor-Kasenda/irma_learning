@@ -18,7 +18,6 @@ use Filament\Tables\Actions\ViewAction;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Str;
 
 final class BookingResource extends Resource
 {
@@ -89,6 +88,7 @@ final class BookingResource extends Resource
                                 ->searchable()
                                 ->label("Nom de l'évènement")
                                 ->relationship('event', 'title')
+                                ->placeholder("Nom de l'évènement")
                                 ->columnSpanFull()
                                 ->required(),
                             Forms\Components\Select::make('title')
@@ -109,14 +109,16 @@ final class BookingResource extends Resource
                         ->schema([
                             Forms\Components\TextInput::make('position')
                                 ->label('Votre poste')
+                                ->placeholder('Poste occuper')
                                 ->columnSpanFull()
                                 ->required(),
                             Forms\Components\TextInput::make('reference')
-                                ->default(Str::random(16))
-                                ->disabled()
-                                ->dehydrated()
+//                                ->default(Str::random(16))
+//                                ->disabled()
+//                                ->dehydrated()
                                 ->required()
-                                ->maxLength(32)
+                                ->placeholder('Code reservation')
+                                ->maxLength(16)
                                 ->label('Référence de la reservation')
                                 ->unique(Booking::class, 'reference', ignoreRecord: true)
                                 ->columnSpanFull(),

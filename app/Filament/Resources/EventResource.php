@@ -259,7 +259,6 @@ final class EventResource extends Resource
                         return Carbon::parse(data_get($record, 'date'))->format(Table::$defaultDateDisplayFormat);
                     })
                     ->collapsible(),
-
                 Tables\Grouping\Group::make('type_event_id')
                     ->label("Type d'événement")
                     ->getTitleFromRecordUsing(function ($record) {

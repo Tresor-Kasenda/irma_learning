@@ -42,6 +42,7 @@ final class ChaptersRelationManager extends RelationManager
             ->headerActions([
                 Tables\Actions\CreateAction::make()
                     ->icon('heroicon-m-plus-circle')
+                    ->slideOver()
                     ->label('Ajouter un chapitre'),
             ])
             ->actions([
@@ -49,6 +50,7 @@ final class ChaptersRelationManager extends RelationManager
                     ->label(fn (Chapter $record) => $record->examination()->exists() ? 'Modifier l\'examen' : 'Créer un examen')
                     ->icon(fn (Chapter $record) => $record->examination()->exists() ? 'heroicon-o-pencil' : 'heroicon-o-plus')
                     ->button()
+                    ->slideOver()
                     ->form([
                         Forms\Components\TextInput::make('title')
                             ->label('Titre de l\'examen')
@@ -61,6 +63,7 @@ final class ChaptersRelationManager extends RelationManager
                         Forms\Components\TextInput::make('duration')
                             ->label('Durée')
                             ->required()
+                            ->helperText("Durée de l'examen en minutes")
                             ->default(fn (Chapter $record) => $record->examination?->duration),
                         Forms\Components\FileUpload::make('path')
                             ->label('Fichier')

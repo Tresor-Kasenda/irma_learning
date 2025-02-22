@@ -98,6 +98,7 @@ final class ResourcesRelationManager extends RelationManager
             ->headerActions([
                 Tables\Actions\CreateAction::make()
                     ->label('Ajouter une ressource')
+                    ->slideOver()
                     ->icon('heroicon-m-plus-circle'),
             ])
             ->actions([
