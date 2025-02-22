@@ -31,6 +31,8 @@ final class StudentCourseLearning extends Component implements HasForms
 
     public ?array $data = [];
 
+    public bool $isFinalChapter = false;
+
     public $file_path = null;
 
     public bool $examSubmitted = false;
@@ -194,7 +196,7 @@ final class StudentCourseLearning extends Component implements HasForms
         if ($chapter->examination && ! $chapter->submission()->where('user_id', Auth::id())->exists()) {
             $this->dispatch(
                 'notify',
-                message: 'You must submit the exam before completing this chapter.',
+                message: 'Vous devez soumettre l\'examen avant de terminer ce chapitre.',
                 type: 'error'
             );
 
