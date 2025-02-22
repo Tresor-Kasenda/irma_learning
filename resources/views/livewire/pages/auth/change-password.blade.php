@@ -105,7 +105,8 @@ new #[Layout('layouts.guest')] class extends Component {
                             class="block mt-1 w-full"
                             type="password"
                             name="password_confirmation"
-                            required autocomplete="password_confirmation"
+                            required
+                            autocomplete="password_confirmation"
                         />
 
                         <x-input-error :messages="$errors->get('password_confirmation')" class="mt-2"/>
