@@ -11,7 +11,8 @@
                         class="relative max-w-lg lg:max-w-2xl space-y-7 flex flex-col w-full text-center lg:text-left">
                         <div
                             class="mb-14 text-sm pt-8 text-fg-subtitle flex items-center divide-x divide-fg/50 *:px-4 first:*:pl-0 last:*:pr-0 overflow-hidden max-w-full">
-                            <a href="{{ route('formations') }}" wire:navigate aria-label="Lien vers la page principale">
+                            <a href="{{ route('formations-lists') }}" wire:navigate
+                               aria-label="Lien vers la page principale">
                                 <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none"
                                      viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
                                     <path stroke-linecap="round" stroke-linejoin="round"
