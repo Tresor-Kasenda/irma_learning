@@ -8,7 +8,9 @@ use App\Enums\MasterClassEnum;
 use App\Filament\Resources\MasterClassResource\Pages;
 use App\Filament\Resources\MasterClassResource\RelationManagers;
 use App\Models\MasterClass;
+use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\FileUpload;
+use Filament\Forms\Components\Group;
 use Filament\Forms\Components\RichEditor;
 use Filament\Forms\Components\Section;
 use Filament\Forms\Components\Select;
@@ -29,61 +31,84 @@ final class MasterClassResource extends Resource
 
     protected static ?string $label = 'Cours'; // Nom de la ressource
 
+    protected static ?int $navigationSort = 2;
+
     public static function form(Form $form): Form
     {
         return $form
             ->schema([
-                Section::make('Informations du cours')
-                    ->columns(2)
+                Group::make()
                     ->schema([
-                        TextInput::make('title')
-                            ->label('Titre du cours')
-                            ->disabled(),
-                        TextInput::make('sub_title')
-                            ->label('Sous titre du cours')
-                            ->required()
-                            ->placeholder('Sous-titre de l\'événement')
-                            ->maxLength(255),
-                        TextInput::make('duration')
-                            ->numeric()
-                            ->columnSpan(['lg' => 1])
-                            ->placeholder('Durée du cours')
-                            ->label('Durée du cours'),
-                        TextInput::make('price')
-                            ->numeric()
-                            ->placeholder('Prix du cours')
-                            ->label('Prix du cours'),
-                        Select::make('status')
-                            ->placeholder('Statut')
-                            ->label('Statut')
-                            ->reactive()
-                            ->searchable()
-                            ->options([
-                                MasterClassEnum::UNPUBLISHED->value => 'Non publié',
-                                MasterClassEnum::PUBLISHED->value => 'Publié',
-                            ])
-                            ->required(),
-                        FileUpload::make('path')
-                            ->label('Photo de couverture')
-                            ->image()
-                            ->required()
-                            ->circleCropper()
-                            ->nullable(),
-                        RichEditor::make('presentation')
-                            ->label('Presentation')
-                            ->fileAttachmentsDirectory('events')
-                            ->columnSpanFull()
-                            ->required()
-                            ->disableGrammarly(),
-
-                        RichEditor::make('description')
-                            ->label('Description du cours')
-                            ->fileAttachmentsDirectory('events')
-                            ->columnSpanFull()
-                            ->required()
-                            ->disableGrammarly(),
-                    ]),
-            ]);
+                        Section::make('Informations du cours')
+                            ->columns(2)
+                            ->schema([
+                                TextInput::make('title')
+                                    ->label('Titre du cours')
+                                    ->disabled(),
+                                TextInput::make('sub_title')
+                                    ->label('Sous titre du cours')
+                                    ->required()
+                                    ->placeholder('Sous-titre de l\'événement')
+                                    ->maxLength(255),
+                                RichEditor::make('presentation')
+                                    ->label('Presentation')
+                                    ->fileAttachmentsDirectory('events')
+                                    ->columnSpanFull()
+                                    ->required()
+                                    ->disableGrammarly(),
+                                RichEditor::make('description')
+                                    ->label('Description du cours')
+                                    ->fileAttachmentsDirectory('events')
+                                    ->columnSpanFull()
+                                    ->required()
+                                    ->disableGrammarly(),
+                            ]),
+                    ])->columnSpan(['lg' => 2]),
+                Group::make()
+                    ->schema([
+                        Section::make('Photo couverture')
+                            ->schema([
+                                FileUpload::make('path')
+                                    ->label('Photo de couverture')
+                                    ->image()
+                                    ->required()
+                                    ->columnSpanFull()
+                                    ->circleCropper()
+                                    ->nullable(),
+                            ]),
+                        Section::make('Information du prix')
+                            ->schema([
+                                DatePicker::make('ended_at')
+                                    ->placeholder('Date de fin du cours')
+                                    ->required()
+                                    ->native(false)
+                                    ->label('Date de fin du cours'),
+                                TextInput::make('price')
+                                    ->numeric()
+                                    ->placeholder('Prix du cours')
+                                    ->helperText("Le prix du cours peut etre fixer dans le cas ou la personne n'as pas participer au master class")
+                                    ->label('Prix du cours'),
+                            ]),
+                        Section::make('Information supplementaire')
+                            ->schema([
+                                Select::make('status')
+                                    ->placeholder('Statut')
+                                    ->label('Statut')
+                                    ->reactive()
+                                    ->searchable()
+                                    ->options([
+                                        MasterClassEnum::UNPUBLISHED->value => 'Non publié',
+                                        MasterClassEnum::PUBLISHED->value => 'Publié',
+                                    ])
+                                    ->required(),
+                                TextInput::make('duration')
+                                    ->numeric()
+                                    ->columnSpan(['lg' => 1])
+                                    ->placeholder('Durée du cours')
+                                    ->label('Durée du cours'),
+                            ]),
+                    ])->columnSpan(['lg' => 1]),
+            ])->columns(3);
     }
 
     public static function table(Table $table): Table
