@@ -41,9 +41,9 @@ final class AdminPanelProvider extends PanelProvider
                 'success' => Color::Emerald,
                 'warning' => Color::Orange,
             ])
-            ->favicon(asset('images/favicon.svg'))
-            ->brandName('Irma learning')
-            ->brandLogo(asset('assets/images/logo/light-logo.png'))
+            ->favicon(asset('images/irma-logo-base.svg'))
+            ->brandName('Certification')
+            ->brandLogo(asset('images/irma-logo-base.svg'))
             ->brandLogoHeight('2rem')
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\\Filament\\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\\Filament\\Pages')

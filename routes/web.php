@@ -3,7 +3,6 @@
 declare(strict_types=1);
 
 use App\Livewire\Pages\Courses\Certifications;
-use App\Livewire\Pages\Courses\FormationLists;
 use App\Livewire\Pages\Courses\FormationsLists;
 use App\Livewire\Pages\Courses\HomePage;
 use App\Livewire\Pages\Courses\LearningCourse;
@@ -12,7 +11,6 @@ use App\Livewire\Pages\StudentCourseLearning;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', HomePage::class)->name('home-page');
-Route::get('/formations', FormationLists::class)->name('formations');
 Route::get('/certifications', Certifications::class)->name('certifications');
 Route::get('/formations-continue', FormationsLists::class)->name('formations-lists');
 
