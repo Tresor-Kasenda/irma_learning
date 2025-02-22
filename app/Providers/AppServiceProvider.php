@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Providers;
 
-use App\Service\PdfConverterService;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Date;
@@ -31,14 +30,10 @@ final class AppServiceProvider extends ServiceProvider
     {
         $this->configureCommands();
         // $this->configureUrl();
-        // $this->configureVite();
+        $this->configureVite();
         $this->shouldBeStrict();
-        // $this->configureDates();
+        $this->configureDates();
         $this->configurePasswordValidation();
-
-        $this->app->singleton(PdfConverterService::class, function ($app) {
-            return new PdfConverterService;
-        });
     }
 
     public function configureCommands(): void
@@ -48,28 +43,15 @@ final class AppServiceProvider extends ServiceProvider
         );
     }
 
-    public function shouldBeStrict(): void
-    {
-        Model::shouldBeStrict(! $this->app->isProduction());
-        Model::unguard();
-    }
-
     public function configureVite(): void
     {
         Vite::usePrefetchStrategy('aggressive');
     }
 
-    public function configureUrl(): void
+    public function shouldBeStrict(): void
     {
-        URL::forceScheme('https');
-    }
-
-    /**
-     * Configure the password validation rules.
-     */
-    private function configurePasswordValidation(): void
-    {
-        Password::defaults(fn () => $this->app->isProduction() ? Password::min(8)->uncompromised() : null);
+        Model::shouldBeStrict(!$this->app->isProduction());
+        Model::unguard();
     }
 
     /**
@@ -78,5 +60,18 @@ final class AppServiceProvider extends ServiceProvider
     private function configureDates(): void
     {
         Date::use(CarbonImmutable::class);
+    }
+
+    /**
+     * Configure the password validation rules.
+     */
+    private function configurePasswordValidation(): void
+    {
+        Password::defaults(fn() => $this->app->isProduction() ? Password::min(8)->uncompromised() : null);
+    }
+
+    public function configureUrl(): void
+    {
+        URL::forceScheme('https');
     }
 }

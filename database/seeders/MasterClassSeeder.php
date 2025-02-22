@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Database\Seeders;
 
+use App\Models\MasterClass;
 use Illuminate\Database\Seeder;
 
 final class MasterClassSeeder extends Seeder
@@ -13,6 +14,8 @@ final class MasterClassSeeder extends Seeder
      */
     public function run(): void
     {
-        //
+        MasterClass::factory()
+            ->count(10)
+            ->create();
     }
 }

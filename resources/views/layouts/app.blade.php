@@ -20,8 +20,8 @@
         }
     </style>
 
-    @filamentStyles
-    @vite('resources/css/app.css')
+    @filepondScripts
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body class="overflow-hidden overflow-y-auto bg-bg">
 <div class="min-h-screen">
@@ -32,7 +32,5 @@
         {{ $slot }}
     </main>
 </div>
-@filamentScripts
-@vite('resources/js/app.js')
 </body>
 </html>

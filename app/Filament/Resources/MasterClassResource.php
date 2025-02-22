@@ -15,6 +15,7 @@ use Filament\Forms\Components\RichEditor;
 use Filament\Forms\Components\Section;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Toggle;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
@@ -62,6 +63,8 @@ final class MasterClassResource extends Resource
                                     ->columnSpanFull()
                                     ->required()
                                     ->disableGrammarly(),
+                                Toggle::make('certifiable')
+                                    ->label('Certifiable')
                             ]),
                     ])->columnSpan(['lg' => 2]),
                 Group::make()
@@ -130,7 +133,7 @@ final class MasterClassResource extends Resource
                 Tables\Columns\TextColumn::make('status')
                     ->label('Status')
                     ->badge()
-                    ->color(fn (string $state): string => match ($state) {
+                    ->color(fn(string $state): string => match ($state) {
                         MasterClassEnum::PUBLISHED->value => 'success',
                         MasterClassEnum::UNPUBLISHED->value => 'danger',
                     })
@@ -163,7 +166,7 @@ final class MasterClassResource extends Resource
         /** @var class-string<Model> $modelClass */
         $modelClass = self::$model;
 
-        return (string) $modelClass::count();
+        return (string)$modelClass::count();
     }
 
     public static function getPages(): array

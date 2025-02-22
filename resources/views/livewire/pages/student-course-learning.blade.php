@@ -54,10 +54,10 @@
             <div class="ui-side-chapter-nav flex flex-col" data-slid-chapter>
                 <div class="p-4 space-y-4 overflow-y-auto overflow-hidden flex-1">
                     <div class=" bg-bg-lighter p-2 space-y-3">
-
                         @foreach($masterClass->chapters as $chapter)
                             <a href="#"
                                wire:click.prevent="setActiveChapter({{ $chapter->id }})"
+                               wire:key="{{ $chapter->id }}"
                                 @class([
                                     'course-chater-item',
                                     'active' => $activeChapter?->id === $chapter->id,
@@ -110,7 +110,7 @@
                 </div>
             </div>
         </aside>
-        <main class="min-h-screen bg-bg py-8 px-4 sm:px-10 lg:px-5 xl:px-8" wire:poll.keep-alive>
+        <main class="min-h-screen bg-bg py-8 px-4 sm:px-10 lg:px-5 xl:px-8">
             <div class="max-w-4xl mx-auto">
                 @if(!$activeChapter)
                     <h1 class="text-4xl font-bold text-fg-title mb-6">{{ $masterClass->title }}</h1>
@@ -155,6 +155,7 @@
                         <div class="flex items-center flex-row gap-4">
                             @foreach($masterClass->resources as $resource)
                                 <a href="{{ asset('storage/'. $resource->file_path) }}"
+                                   wire:key="{{ $resource->id }}"
                                    download="{{ $resource->type === MasterClassResourceEnum::PDF }}"
                                    class="flex items-center w-max mt-5 bg-bg-lighter p-2 rounded-md pr-3 border border-border-lighter hover:border-border hover:bg-bg-high/70 ease-linear duration-300">
                                     @if($resource->type === MasterClassResourceEnum::VIDEO)
@@ -186,75 +187,105 @@
 
                     <div class="mt-4">
                         <div class="markdow-content-block max-w-none flex flex-col space-y-4">
-                            <h2 class="text-2xl font-semibold">Passation d'examens</h2>
-                            <p>{!! $activeChapter->examination?->description !!}</p>
+                            @if($activeChapter->examination)
+                                <h2 class="text-2xl font-semibold">Passation d'examens</h2>
+                                <p>{!! $activeChapter->examination?->description !!}</p>
 
-                            @if ($activeChapter->examination?->deadline && now()->isAfter($activeChapter->examination?->deadline))
-                                <div class="alert-message">
-                                    The submission deadline has passed.
-                                </div>
-                            @elseif (!$examSubmitted)
-                                <a href="{{ asset('storage/'. $activeChapter->examination?->path) }}" download
-                                   class="inline-flex items-center gap-2 px-4 py-2 bg-bg-lighter text-fg hover:bg-bg-light rounded-lg transition-colors mt-4">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
-                                         fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                         stroke-linejoin="round" class="size-5">
-                                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                                        <polyline points="7 10 12 15 17 10"></polyline>
-                                    </svg>
-                                    Telecharge l'examen
-                                </a>
+                                @if ($activeChapter->examination?->deadline && now()->isAfter($activeChapter->examination?->deadline))
+                                    <div class="alert-message">
+                                        The submission deadline has passed.
+                                    </div>
+                                @elseif (!$this->hasSubmittedExam())
+                                    <a
+                                        href="{{ asset('storage/' . $activeChapter->examination?->path) }}"
+                                        download
+                                        class="inline-flex items-center gap-2 px-4 py-2 bg-bg-lighter text-fg hover:bg-bg-light rounded-lg transition-colors mt-4">
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                             stroke-width="1.5" stroke="currentColor" class="size-6">
+                                            <path stroke-linecap="round" stroke-linejoin="round"
+                                                  d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3"/>
+                                        </svg>
+                                        Telecharge l'examen
+                                    </a>
 
-                                <div class="alert-message">
-                                    Apres téléchargement veillez travailler sur et soumettre
-                                    votre examen dans le formulaire sous-dessous
-                                </div>
+                                    <div class="alert-message">
+                                        Apres téléchargement veillez travailler sur et soumettre
+                                        votre examen dans le formulaire sous-dessous
+                                    </div>
 
-                                <div>
-                                    <form wire:submit="submitExam" class="space-y-3">
-                                        {{ $this->form }}
+                                    <div>
+                                        <form wire:submit="submitExam" class="space-y-3">
+                                            <x-filepond::upload
+                                                wire:model="file_path"
+                                            />
 
-                                        <button type="submit" class="px-4 py-2 bg-primary-600 text-white rounded-lg">
-                                            Submit
+                                            <button type="submit" class="px-4 py-2 bg-primary-600 text-white rounded-lg"
+                                                    wire:loading.attr="disabled" wire:target="submitExam"
+                                                {{ $file_path ? '' : 'disabled' }}>
+                                                <span wire:loading.remove>Soumettre votre examen</span>
+                                                <span wire:loading>
+                                                    <svg class="animate-spin mr-2 h-5 w-5 text-white inline-block"
+                                                         xmlns="http://www.w3.org/2000/svg" fill="none"
+                                                         viewBox="0 0 24 24">
+                                                        <circle class="opacity-25" cx="12" cy="12" r="10"
+                                                                stroke="currentColor" stroke-width="4"></circle>
+                                                        <path class="opacity-75" fill="currentColor"
+                                                              d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+                                                    </svg>
+                                                    Chargement...
+                                                </span>
+                                            </button>
+                                        </form>
+                                    </div>
+                                @else
+                                    <div class="alert-message">
+                                        Votre examen a été soumis avec succès.
+                                    </div>
+
+                                    @if(!$activeChapter->isCompleted())
+                                        <button
+                                            x-data
+                                            wire:click.prevent="completeChapter({{ $activeChapter->id }})"
+                                            x-on:click="
+                                                    confetti({
+                                                        particleCount: 1000,
+                                                        spread: 70,
+                                                        origin: { y: 0.6 }
+                                                    });
+                                                "
+                                            class="w-full bg-primary-600 text-white btn btn-md rounded-lg flex items-center justify-center gap-2 hover:bg-primary-700 transition-colors mt-4">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+                                                 viewBox="0 0 24 24"
+                                                 fill="none" stroke="currentColor" stroke-width="2"
+                                                 stroke-linecap="round" stroke-linejoin="round"
+                                                 class="lucide lucide-award h-5 w-5">
+                                                <circle cx="12" cy="8" r="6"></circle>
+                                                <path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11"></path>
+                                            </svg>
+                                            Mark as Completed
                                         </button>
-                                    </form>
+                                    @endif
+                                @endif
 
-                                    <x-filament-actions::modals/>
-                                </div>
+                                @if($masterClass->chapters->every(fn($chapter) => $chapter->isCompleted()))
+                                    <div class="alert-message success mt-4">
+                                        Félicitations ! Vous avez terminé tous les chapitres.
+                                        Vous pouvez maintenant passer l'examen final.
+                                    </div>
+                                    <a href="#"
+                                       class="w-full bg-success-600 text-white btn btn-md rounded-lg flex items-center justify-center gap-2 hover:bg-success-700 transition-colors mt-4">
+                                        Passer l'examen final
+                                    </a>
+                                @endif
                             @else
                                 <div class="alert-message">
-                                    Votre examen a été soumis avec succès.
+                                    Ce cours n'a pas d'examen disponible.
                                 </div>
                             @endif
                         </div>
-                        @if($this->hasSubmittedExam())
-                            <button
-                                x-data
-                                wire:click.prevent="completeChapter({{ $activeChapter }})"
-                                x-on:click="
-                                    confetti({
-                                        particleCount: 1000,
-                                        spread: 70,
-                                        origin: { y: 0.6 }
-                                    });
-                                "
-                                class="w-full bg-primary-600 text-white btn btn-md rounded-lg flex items-center
-                                justify-center gap-2 hover:bg-primary-700 transition-colors">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
-                                     fill="none"
-                                     stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                     stroke-linejoin="round"
-                                     class="lucide lucide-award h-5 w-5">
-                                    <circle cx="12" cy="8" r="6"></circle>
-                                    <path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11"></path>
-                                </svg>
-                                Mark as Completed
-                            </button>
-                        @endif
                     </div>
 
                     <div class="mt-12 grid grid-cols-2 gap-4">
-
                         <button
                             wire:click.prevent="setPreviousChapter"
                             @class([
