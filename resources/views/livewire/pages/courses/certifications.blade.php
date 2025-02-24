@@ -34,11 +34,11 @@
                         class="flex w-full lg:w-1/2 lg:flex-1 lg:min-h-[440px] border border-dashed rounded-md bg-bg shadow-sm shadow-gray-100/20">
                         @if (count($formations) > 0)
                             <div class="flex flex-col p-4 xl:p-5 lg:h-full justify-between">
-                                <span class="mb-4 flex text-fg-title font-semibold">Certification en cours</span>
+                                <span class="mb-4 flex text-fg-title font-semibold">Formation en cours</span>
                                 <ul
                                     class=" flex-1 flex flex-col gap-4 divide-y divide-gray-100/70 *:py-2 first:*:pt-0 last:*:pb-0 mb-5">
-                                    @foreach ($formations as $masterClass)
-                                        <li class="flex-1 flex items-start gap-3" wire:key="{{ $masterClass->id }}">
+                                    @foreach ($formations as $formation)
+                                        <li class="flex-1 flex items-start gap-3" wire:key="{{ $formation->id }}">
                                             <div class="p-2 rounded bg-bg-light text-primary flex min-w-max">
                                                 <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32"
                                                      fill="currentColor" viewBox="0 0 256 256">
@@ -51,7 +51,7 @@
                                                 class="flex-1 flex flex-col sm:flex-row sm:justify-between sm:items-center">
                                                 <div class="mb-4 sm:mb-0 sm:mr-4">
                                                     <h3 class="font-semibold text-fg-subtitle line-clamp-2">
-                                                        {{ $masterClass->title }}
+                                                        {{ $formation->title }}
                                                     </h3>
                                                     <div class="flex items-center gap-1.5 text-sm text-gray-500">
                                                         <svg xmlns="http://www.w3.org/2000/svg" width="32"
@@ -62,11 +62,11 @@
                                                             </path>
                                                         </svg>
                                                         <p>Fin
-                                                            le {{ $masterClass->ended_at->translatedFormat('d F Y') }}</p>
+                                                            le {{ $formation->ended_at->translatedFormat('d F Y') }}</p>
                                                     </div>
                                                 </div>
                                                 <div class="flex min-w-max">
-                                                    <a href="{{ route('master-class', ['masterClass' => $masterClass]) }}"
+                                                    <a href="{{ route('master-class', ['masterClass' => $formation]) }}"
                                                        wire:navigate
                                                        class="btn btn-sm rounded-md w-full justify-center text-white bg-primary">
                                                         Suivre

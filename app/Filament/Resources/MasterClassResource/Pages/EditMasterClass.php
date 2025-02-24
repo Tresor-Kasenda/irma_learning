@@ -50,6 +50,15 @@ final class EditMasterClass extends EditRecord
                                 ->required()
                                 ->native(false)
                                 ->placeholder("Choisir une date"),
+                            FileUpload::make('images')
+                                ->directory('images')
+                                ->label('Couverture')
+                                ->downloadable()
+                                ->previewable()
+                                ->maxSize(10240)
+                                ->deletable()
+                                ->uploadingMessage('Uploading images...')
+                                ->columnSpanFull(),
                             FileUpload::make('path')
                                 ->directory('formations')
                                 ->label('Contenu (PDF)')
@@ -58,7 +67,7 @@ final class EditMasterClass extends EditRecord
                                 ->acceptedFileTypes(['application/pdf'])
                                 ->maxSize(10240) // Taille maximale de 10MB
                                 ->deletable()
-                                ->uploadingMessage('Uploading certification...')
+                                ->uploadingMessage('Uploading path...')
                                 ->columnSpanFull(),
                             RichEditor::make('content')
                                 ->label('Introduction')

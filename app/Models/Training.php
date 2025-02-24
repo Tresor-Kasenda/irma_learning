@@ -15,4 +15,11 @@ class Training extends Model
     {
         return $this->belongsTo(MasterClass::class, 'master_class_id');
     }
+
+    protected function casts(): array
+    {
+        return [
+            'completed_at' => 'datetime'
+        ];
+    }
 }
