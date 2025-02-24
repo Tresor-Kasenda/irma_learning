@@ -93,7 +93,7 @@
     }
 
     .navbar-base {
-        @apply fixed left-1/2 -translate-x-1/2 top-5 h-[calc(100dvh-40px)] w-[calc(100%-30px)] lg:top-0 lg:relative lg:translate-x-0 lg:h-max lg:w-max lg:left-0
+        @apply fixed left-1/2 -translate-x-1/2 top-5 max-h-[calc(100dvh-40px)] h-max lg:max-h-none w-[calc(100%-30px)] lg:top-0 lg:relative lg:translate-x-0 lg:h-max lg:w-max lg:left-0
     }
 
     .navbar-visibility {

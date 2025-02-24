@@ -31,6 +31,11 @@ final class MasterClass extends Model
         return $this->hasMany(Resource::class);
     }
 
+    public function trainings(): HasMany
+    {
+        return $this->hasMany(Training::class);
+    }
+
     public function subscription(): HasOne
     {
         return $this->hasOne(Subscription::class);
@@ -45,7 +50,7 @@ final class MasterClass extends Model
     {
         return [
             'ended_at' => 'datetime',
-            'certifiable' => 'boolean'
+            'certifiable' => 'boolean',
         ];
     }
 }

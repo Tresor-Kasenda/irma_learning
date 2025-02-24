@@ -49,6 +49,11 @@ final class Chapter extends Model
             ->orderBy('position');
     }
 
+    public function subscription(): BelongsTo
+    {
+        return $this->belongsTo(Subscription::class, 'subscription_id');
+    }
+
     public function scopeGetChapterIndex(Builder $query, self $activeChapter): int
     {
         return $query
@@ -62,16 +67,22 @@ final class Chapter extends Model
 
     public function isCompleted(): bool
     {
-        return $this->progress()
-            ->where('user_id', '=', Auth::user()->id)
-            ->where('status', ChapterProgressEnum::COMPLETED->value)->exists();
+        $user = Auth::user();
+        $hasCompleted = $this->progress()
+            ->where('user_id', '=', $user->id)
+            ->where('status', ChapterProgressEnum::COMPLETED->value)
+            ->exists();
+
+        $hasReferenceCode = !empty($user->reference_code);
+
+        return $hasCompleted && $hasReferenceCode;
     }
 
     protected function casts(): array
     {
         return [
             'is_final_chapter' => 'boolean',
-            'points' => 'int'
+            'points' => 'int',
         ];
     }
 }

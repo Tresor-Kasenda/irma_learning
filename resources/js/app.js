@@ -3,7 +3,7 @@ import {initScrollToTop} from "./scroll-to-top";
 
 import {Dropdown} from "@flexilla/dropdown";
 
-import {$, $$} from "@flexilla/utilities";
+import {$, $$, toggleNavbar} from "@flexilla/utilities";
 import {Collapse} from "@flexilla/collapse";
 
 import {notificationSystem} from "./utilities/notification";
@@ -23,6 +23,7 @@ const initAllScript = () => {
         }
     }
     initScrollToTop();
+    toggleNavbar({navbarElement: "[data-main-navbar]"})
     initChapiterSidebar();
 };
 

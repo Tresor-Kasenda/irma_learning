@@ -24,6 +24,7 @@ final class BookingObserver
                 'password' => bcrypt($booking->reference),
                 'role' => UserRoleEnum::STUDENT->value,
                 'must_change_password' => true,
+                'reference_code' => $booking->reference,
             ]);
 
         \Illuminate\Support\defer(function () use ($booking, $user) {

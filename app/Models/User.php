@@ -63,23 +63,13 @@ final class User extends Authenticatable implements FilamentUser
         return $this->hasMany(ChapterProgress::class);
     }
 
-    public function isSuperAdmin(): bool
-    {
-        return $this->isRoot();
-    }
-
-    public function isRoot(): bool
-    {
-        return $this->role === 'ROOT';
-    }
-
     /**
      * @throws Exception
      */
     public function canAccessPanel(Panel $panel): bool
     {
         if ($panel->getId() === 'admin') {
-            return $this->isAdmin() || $this->isManager() || $this->isRoot();
+            return $this->isAdmin() || $this->isManager() || $this->isSuperAdmin();
         }
 
         return $this->isAdmin();
@@ -93,6 +83,16 @@ final class User extends Authenticatable implements FilamentUser
     public function isManager(): bool
     {
         return $this->role === UserRoleEnum::MANAGER->value;
+    }
+
+    public function isSuperAdmin(): bool
+    {
+        return $this->isRoot();
+    }
+
+    public function isRoot(): bool
+    {
+        return $this->role === 'ROOT';
     }
 
     public function isStudent(): bool
