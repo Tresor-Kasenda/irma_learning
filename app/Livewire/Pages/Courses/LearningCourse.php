@@ -22,7 +22,8 @@ final class LearningCourse extends Component
 
     public function mount(MasterClass $masterClass): void
     {
-        $this->masterClass = $masterClass->load('chapters');
+        $this->masterClass = $masterClass
+            ->load('chapters');
     }
 
     public function render(): View
@@ -38,7 +39,7 @@ final class LearningCourse extends Component
             return;
         }
 
-        if (!$masterClass->subscription()->where('user_id', Auth::id())->exists()) {
+        if (!$masterClass->subscription()->whereBelongsTo(Auth::user())->exists()) {
             $masterClass->subscription()->create([
                 'user_id' => Auth::user()->id,
                 'status' => SubscriptionEnum::ACTIVE,

@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace App\Livewire\Pages;
 
+use App\Enums\SubscriptionEnum;
 use App\Models\Chapter;
 use App\Models\MasterClass;
+use App\Models\Subscription;
 use App\Notifications\ExamSubmissionNotification;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Auth;
@@ -57,7 +59,7 @@ final class StudentCourseLearning extends Component
             return $chapter->isCompleted();
         })->count();
 
-        return (int) round(($completedChapters / $this->masterClass->chapters->count()) * 100);
+        return (int)round(($completedChapters / $this->masterClass->chapters->count()) * 100);
     }
 
     public function setPreviousChapter(): void
@@ -80,7 +82,7 @@ final class StudentCourseLearning extends Component
     {
         $previousChapter = $this->getPreviousChapter($chapterId);
 
-        if ($previousChapter && ! $previousChapter->isCompleted()) {
+        if ($previousChapter && !$previousChapter->isCompleted()) {
             $this->dispatch(
                 'notify',
                 message: 'You must complete the previous chapter exam first.',
@@ -93,20 +95,48 @@ final class StudentCourseLearning extends Component
         $chapter = $this->masterClass->chapters->find($chapterId)->load('examination');
         $this->activeChapter = $chapter;
 
-        if (! $chapter->hasProgress()) {
+        if (!$this->masterClass->subscription()->whereBelongsTo(Auth::user())->exists()) {
+            $this->masterClass->subscription()->create([
+                'user_id' => Auth::user()->id,
+                'status' => SubscriptionEnum::ACTIVE,
+                'progress' => 0,
+                'started_at' => now(),
+            ]);
+
+            $this->dispatch(
+                'notify',
+                message: 'Vous êtes maintenant inscrit à cette formation !',
+                type: 'success'
+            );
+        }
+
+        $subscriptionId = Subscription::query()
+            ->whereBelongsTo(Auth::user())
+            ->firstOrFail('id');
+
+        if (!$chapter->hasProgress()) {
             $chapter->progress()->create([
-                'subscription_id' => $this->masterClass->subscription->id,
+                'subscription_id' => $subscriptionId->id,
                 'status' => 'in_progress',
-                'points_earned' => 10,
+                'points_earned' => 0,
+                'user_id' => Auth::id()
             ]);
         }
 
         session()->put("active_chapter_{$this->masterClass->id}", $chapterId);
     }
 
+    private function getPreviousChapter($currentChapterId): ?Chapter
+    {
+        $chapters = $this->masterClass->chapters;
+        $currentIndex = $chapters->search(fn($chapter) => $chapter->id === $currentChapterId);
+
+        return $currentIndex > 0 ? $chapters[$currentIndex - 1] : null;
+    }
+
     public function setNextChapter(): void
     {
-        if (! $this->activeChapter->isCompleted()) {
+        if (!$this->activeChapter->isCompleted()) {
             $this->dispatch(
                 'notify',
                 message: 'You must complete the current chapter before moving to the next one.',
@@ -166,7 +196,7 @@ final class StudentCourseLearning extends Component
     public function completeChapter(Chapter $chapter): void
     {
         // Vérifier si le chapitre a un examen et s'il n'a pas été soumis
-        if ($chapter->examination && ! $chapter->submission()->where('user_id', Auth::id())->exists()) {
+        if ($chapter->examination && !$chapter->submission()->where('user_id', '=', Auth::user()->id)->exists()) {
             $this->dispatch(
                 'notify',
                 message: 'Vous devez soumettre l\'examen avant de terminer ce chapitre.',
@@ -178,17 +208,19 @@ final class StudentCourseLearning extends Component
 
         // Mise à jour du progrès avec une seule requête
         $chapter->progress()->updateOrCreate(
-            ['subscription_id' => $this->masterClass->subscription->id],
+            [
+                'user_id' => Auth::user()->id
+            ],
             [
                 'status' => 'completed',
-                'points_earned' => 100,
+                'points_earned' => 1,
                 'completed_at' => now(),
             ]
         );
 
         // Optimisation de la recherche du prochain chapitre
         $chapters = $this->masterClass->chapters;
-        $currentIndex = $chapters->search(fn ($ch) => $ch->id === $chapter->id);
+        $currentIndex = $chapters->search(fn($ch) => $ch->id === $chapter->id);
         $nextChapter = $currentIndex < $chapters->count() - 1 ? $chapters[$currentIndex + 1] : null;
 
         if ($nextChapter) {
@@ -210,15 +242,7 @@ final class StudentCourseLearning extends Component
     public function hasSubmittedExam(): bool
     {
         return $this->activeChapter->submission()
-            ->where('user_id', Auth::id())
+            ->where('user_id', '=', Auth::user()->id)
             ->exists();
-    }
-
-    private function getPreviousChapter($currentChapterId): ?Chapter
-    {
-        $chapters = $this->masterClass->chapters;
-        $currentIndex = $chapters->search(fn ($chapter) => $chapter->id === $currentChapterId);
-
-        return $currentIndex > 0 ? $chapters[$currentIndex - 1] : null;
     }
 }

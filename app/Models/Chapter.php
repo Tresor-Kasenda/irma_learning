@@ -13,6 +13,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Support\Facades\Auth;
 
 #[ObservedBy(ChapterObserver::class)]
 final class Chapter extends Model
@@ -32,7 +33,9 @@ final class Chapter extends Model
 
     public function hasProgress(): bool
     {
-        return $this->progress()->exists();
+        return $this->progress()
+            ->where('user_id', '=', Auth::user()->id)
+            ->exists();
     }
 
     public function progress(): HasOne
@@ -48,7 +51,8 @@ final class Chapter extends Model
 
     public function scopeGetChapterIndex(Builder $query, self $activeChapter): int
     {
-        return $query->pluck('id')->search($activeChapter->id);
+        return $query
+            ->pluck('id')->search($activeChapter->id);
     }
 
     public function submission(): HasOne
@@ -58,6 +62,16 @@ final class Chapter extends Model
 
     public function isCompleted(): bool
     {
-        return $this->progress()->where('status', ChapterProgressEnum::COMPLETED)->exists();
+        return $this->progress()
+            ->where('user_id', '=', Auth::user()->id)
+            ->where('status', ChapterProgressEnum::COMPLETED->value)->exists();
+    }
+
+    protected function casts(): array
+    {
+        return [
+            'is_final_chapter' => 'boolean',
+            'points' => 'int'
+        ];
     }
 }

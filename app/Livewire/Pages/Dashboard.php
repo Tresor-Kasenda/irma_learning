@@ -7,6 +7,7 @@ namespace App\Livewire\Pages;
 use App\Enums\MasterClassEnum;
 use App\Models\MasterClass;
 use Illuminate\Contracts\View\View;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
@@ -51,21 +52,31 @@ final class Dashboard extends Component
         return [
             'total' => MasterClass::query()
                 ->where('status', '=', MasterClassEnum::PUBLISHED)
-                ->whereHas('subscription', fn ($query) => $query->where('user_id', $userId))
+                ->whereHas('subscription', fn($query) => $query->where('user_id', $userId))
                 ->count(),
             'in_progress' => MasterClass::query()
                 ->where('status', '=', MasterClassEnum::PUBLISHED)
-                ->whereHas('subscription', fn ($query) => $query->where('user_id', $userId))
-                ->whereHas('chapters.progress', fn ($query) => $query->where('user_id', $userId)
-                    ->where('status', '!=', 'completed')
+                ->whereHas('subscription', fn($query) => $query->where('user_id', $userId))
+                ->whereHas('chapters.progress', fn(Builder $query) => $query
+                    ->where('user_id', $userId)
+                    ->where('status', 'in_progress')
                 )
                 ->count(),
             'completed' => MasterClass::query()
                 ->where('status', '=', MasterClassEnum::PUBLISHED)
-                ->whereHas('subscription', fn ($query) => $query->where('user_id', $userId))
-                ->whereHas('chapters', fn ($query) => $query->whereHas('submission', fn ($q) => $q->where('user_id', $userId)
-                    ->where('status', 'completed'))
-                )
+                ->whereHas('subscription', fn($query) => $query->where('user_id', $userId))
+                // Ensure all chapters are completed for the master class
+                ->whereDoesntHave('chapters', function ($query) use ($userId) {
+                    $query->whereDoesntHave('progress', fn($q) => $q
+                        ->where('user_id', $userId)
+                        ->where('status', 'completed')
+                    );
+                })
+                // Ensure the final exam for the final chapter is submitted
+                ->whereHas('chapters', function ($query) use ($userId) {
+                    $query->where('is_final_chapter', true)
+                        ->whereHas('examination.submission', fn($q) => $q->where('user_id', $userId));
+                })
                 ->count(),
         ];
     }
