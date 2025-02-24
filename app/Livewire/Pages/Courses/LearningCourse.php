@@ -33,13 +33,13 @@ final class LearningCourse extends Component
 
     public function subscribeToCourses(MasterClass $masterClass): void
     {
-        if (!auth()->check()) {
+        if (! auth()->check()) {
             $this->redirect(route('login'), navigate: true);
 
             return;
         }
 
-        if (!$masterClass->subscription()->whereBelongsTo(Auth::user())->exists()) {
+        if (! $masterClass->subscription()->whereBelongsTo(Auth::user())->exists()) {
             $masterClass->subscription()->create([
                 'user_id' => Auth::user()->id,
                 'status' => SubscriptionEnum::ACTIVE,

@@ -49,6 +49,11 @@ final class StudentCourseLearning extends Component
         }
     }
 
+    public function canSubmitExam(): bool
+    {
+        return auth()->user()->reference_code !== null;
+    }
+
     public function getProgressPercentage(): int
     {
         if ($this->masterClass->chapters->isEmpty()) {
@@ -81,6 +86,18 @@ final class StudentCourseLearning extends Component
     public function setActiveChapter($chapterId): void
     {
         $previousChapter = $this->getPreviousChapter($chapterId);
+
+        $chapter = $this->masterClass->chapters->find($chapterId);
+
+        if (!$this->canAccessChapter($chapter)) {
+            $this->dispatch(
+                'notify',
+                message: 'Vous devez avoir un code de référence pour accéder à ce chapitre.',
+                type: 'error'
+            );
+
+            return;
+        }
 
         if ($previousChapter && !$previousChapter->isCompleted()) {
             $this->dispatch(
@@ -119,7 +136,7 @@ final class StudentCourseLearning extends Component
                 'subscription_id' => $subscriptionId->id,
                 'status' => 'in_progress',
                 'points_earned' => 0,
-                'user_id' => Auth::id()
+                'user_id' => Auth::id(),
             ]);
         }
 
@@ -132,6 +149,15 @@ final class StudentCourseLearning extends Component
         $currentIndex = $chapters->search(fn($chapter) => $chapter->id === $currentChapterId);
 
         return $currentIndex > 0 ? $chapters[$currentIndex - 1] : null;
+    }
+
+    public function canAccessChapter(Chapter $chapter): bool
+    {
+        if ($chapter === $this->masterClass->chapters->first()) {
+            return true;
+        }
+
+        return auth()->user()->reference_code !== null;
     }
 
     public function setNextChapter(): void
@@ -149,6 +175,15 @@ final class StudentCourseLearning extends Component
         $currentIndex = $this->masterClass->chapters->search($this->activeChapter);
         if ($currentIndex < $this->masterClass->chapters->count() - 1) {
             $nextChapter = $this->masterClass->chapters[$currentIndex + 1];
+            if (auth()->user()->reference_code === null) {
+                $this->dispatch(
+                    'notify',
+                    message: 'Vous devez avoir un code de référence pour accéder au chapitre suivant.',
+                    type: 'error'
+                );
+                return;
+            }
+
             $this->setActiveChapter($nextChapter->id);
 
             $this->dispatch(
@@ -209,7 +244,7 @@ final class StudentCourseLearning extends Component
         // Mise à jour du progrès avec une seule requête
         $chapter->progress()->updateOrCreate(
             [
-                'user_id' => Auth::user()->id
+                'user_id' => Auth::user()->id,
             ],
             [
                 'status' => 'completed',

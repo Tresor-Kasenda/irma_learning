@@ -17,7 +17,7 @@
             </a>
         </div>
         <div data-main-navbar id="app-main"
-             class="lg:flex-1 lg:justify-start flex items-center gap-3 rounded-xl p-3 lg:p-0 z-[80] lg:z-auto navbar-before navbar-base navbar-visibility navbar-opened lg:rounded-none navbar-content-scrollable">
+             class="lg:flex-1 lg:justify-start flex items-center gap-3 rounded-xl px-5 py-14 lg:py-0 lg:px-0 z-[80] lg:z-auto navbar-before navbar-base navbar-visibility navbar-opened lg:rounded-none navbar-content-scrollable">
             <ul class="flex items-center flex-col lg:flex-row gap-3 lg:gap-5 text-fg *:flex w-full h-max">
                 <li class="relative flex w-full lg:w-max group">
                     <a href="{{ route('certifications') }}" wire:navigate aria-label="Lien vers la page : Accueil"

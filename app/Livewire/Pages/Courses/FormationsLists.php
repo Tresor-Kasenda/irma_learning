@@ -17,7 +17,6 @@ final class FormationsLists extends Component
     #[Url(as: 'q')]
     public ?string $search = null;
 
-    
     public function render(): View
     {
         return view('livewire.pages.courses.formations-lists');
