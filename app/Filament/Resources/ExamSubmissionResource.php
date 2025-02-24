@@ -11,6 +11,7 @@ use Filament\Forms\Components\DatePicker;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
+use Illuminate\Support\Facades\Storage;
 
 final class ExamSubmissionResource extends Resource
 {
@@ -45,15 +46,16 @@ final class ExamSubmissionResource extends Resource
                     ->sortable()
                     ->label('Date de soumission'),
                 Tables\Columns\TextColumn::make('file_path')
-                    ->description(fn (ExamSubmission $record): string => $record->file_path ?? '', position: 'above')
-                    ->label('Fichier'),
+                    ->label('Fichier')
+                    ->url(fn(ExamSubmission $record): ?string => $record->file_path ? Storage::url($record->file_path) : null)
+                    ->openUrlInNewTab(),
             ])
             ->filters([
                 Tables\Filters\SelectFilter::make('user')
                     ->relationship(
                         'user',
                         'name',
-                        fn ($query) => $query->where('role', UserRoleEnum::STUDENT)
+                        fn($query) => $query->where('role', UserRoleEnum::STUDENT)
                     )
                     ->label('Etudiant')
                     ->searchable()
@@ -77,7 +79,7 @@ final class ExamSubmissionResource extends Resource
                             ->label('Select Date'),
                     ])
                     ->query(function ($query, array $data) {
-                        if (! empty($data['date'])) {
+                        if (!empty($data['date'])) {
                             $query->whereDate('submitted_at', '=', $data['date']);
                         }
                     }),
@@ -85,11 +87,11 @@ final class ExamSubmissionResource extends Resource
             ->groups([
                 Tables\Grouping\Group::make('chapter_id')
                     ->label('Chapitre')
-                    ->getTitleFromRecordUsing(fn ($record) => data_get($record, 'chapter.title'))
+                    ->getTitleFromRecordUsing(fn($record) => data_get($record, 'chapter.title'))
                     ->collapsible(),
                 Tables\Grouping\Group::make('user_id')
                     ->label('Etudiant')
-                    ->getTitleFromRecordUsing(fn ($record) => data_get($record, 'user.name'))
+                    ->getTitleFromRecordUsing(fn($record) => data_get($record, 'user.name'))
                     ->collapsible(),
             ])
             ->defaultGroup('chapter_id')
