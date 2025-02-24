@@ -147,7 +147,7 @@
                             </div>
                         </div>
                         <span data-btn-layer
-                              class="before:{{ $isSubscribed ? 'bg-green-800' : 'bg-primary-800' }}"></span>
+                              class="before:{{ $isSubscribed ? 'bg-green-800' : 'bg-secondary-800' }}"></span>
                     </button>
                 </li>
             </ul>

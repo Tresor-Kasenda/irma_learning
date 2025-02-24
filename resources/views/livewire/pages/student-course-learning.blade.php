@@ -130,7 +130,7 @@
                     <h2 class="text-2xl font-bold text-fg-title">Presentation</h2>
 
                     <p class="markdow-content-block max-w-none mt-3 flex flex-col prose prose-invert">
-                        {{ $activeChapter->content }}
+                        {!! $activeChapter->content !!}
                     </p>
 
                     <h3 class="text-2xl font-bold text-fg-title mb-6">Dedscription</h3>
@@ -266,17 +266,6 @@
                                         </button>
                                     @endif
                                 @endif
-
-                                @if($masterClass->chapters->every(fn($chapter) => $chapter->isCompleted()))
-                                    <div class="alert-message success mt-4">
-                                        Félicitations ! Vous avez terminé tous les chapitres.
-                                        Vous pouvez maintenant passer l'examen final.
-                                    </div>
-                                    <a href="#"
-                                       class="w-full bg-success-600 text-white btn btn-md rounded-lg flex items-center justify-center gap-2 hover:bg-success-700 transition-colors mt-4">
-                                        Passer l'examen final
-                                    </a>
-                                @endif
                             @else
                                 <div class="alert-message">
                                     Ce cours n'a pas d'examen disponible.
@@ -293,8 +282,11 @@
                                 'text-fg-subtext hover:text-fg-title cursor-pointer' => !($activeChapter && $activeChapter->id === $masterClass->chapters->first()->id),
                                 'text-fg-subtext/50 cursor-not-allowed' => $activeChapter && $activeChapter->id === $masterClass->chapters->first()->id
                             ])
-                            @if($activeChapter && $activeChapter->id === $masterClass->chapters->first()->id) disabled
-                            wire:loading.attr="disabled" @endif>
+                            @if($activeChapter && $activeChapter->id === $masterClass->chapters->first()->id)
+                                disabled
+                            wire:loading.attr="disabled"
+                            @endif
+                        >
                             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
                                  fill="none"
                                  stroke="currentColor" stroke-width="2" stroke-linecap="round"
@@ -308,8 +300,15 @@
 
                         <button
                             wire:click.prevent="setNextChapter"
-                            class="flex items-center justify-end gap-2 text-fg-subtext hover:text-fg-title transition-colors"
-                            @if(!$activeChapter->isCompleted() || $activeChapter->id === $masterClass->chapters->last()->id) disabled @endif>
+                            @class([
+                                'flex items-center justify-end gap-2 transition-colors',
+                                'text-fg-subtext hover:text-fg-title cursor-pointer' => $activeChapter->isCompleted() && $activeChapter->id !== $masterClass->chapters->last()->id,
+                                'text-fg-subtext/50 cursor-not-allowed' => !$activeChapter->isCompleted() || $activeChapter->id === $masterClass->chapters->last()->id,
+                            ])
+                            @if(!$activeChapter->isCompleted() || $activeChapter->id === $masterClass->chapters->last()->id)
+                                disabled wire:loading.attr="disabled"
+                            @endif
+                        >
                             Next Chapter
                             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
                                  fill="none"
@@ -320,9 +319,8 @@
                                 <path d="m12 5 7 7-7 7"></path>
                             </svg>
                         </button>
+                        @endif
                     </div>
-                @endif
-            </div>
         </main>
     </div>
 </div>

@@ -24,29 +24,29 @@ new #[Layout('layouts.guest')] class extends Component {
 }; ?>
 
 <div class="w-full flex justify-center">
-    <x-auth-session-status class="mb-4" :status="session('status')" />
+    <x-auth-session-status class="mb-4" :status="session('status')"/>
 
     <form wire:submit="login"
-        class="border border-border/60 w-full max-w-lg p-1 shadow-lg shadow-gray-200/40 bg-white rounded-lg">
+          class="border border-border/60 w-full max-w-lg p-1 shadow-lg shadow-gray-200/40 bg-white rounded-lg">
         <div class="p-5 sm:p-8">
             <a href="{{ route('home-page') }}" wire:navigate>
                 <img src="{{ asset('images/irma-logo-base.svg') }}" alt="logo Irma" width="200" height="100"
-                    class="h-16 w-auto mb-5 mx-auto">
+                     class="h-16 w-auto mb-5 mx-auto">
             </a>
             <div class="text-center">
                 <h1 class="text-fg-title mb-1 text-xl font-semibold">Aide et support</h1>
                 <p class="text-sm">Obtenez de l'aide en rapport avec votre compte</p>
             </div>
-            <hr class="my-8 border-border-high/60" />
+            <hr class="my-8 border-border-high/60"/>
             <div class="space-y-6">
                 <div class="flex flex-col gap-2">
-                    <x-input-label for="email" :value="__('Email')" />
+                    <x-input-label for="email" :value="__('Email')"/>
                     <x-text-input wire:model="form.email" id="email" class="block mt-1 w-full" type="email"
-                        name="email" required autofocus autocomplete="username" />
-                    <x-input-error :messages="$errors->get('form.email')" class="mt-2" />
+                                  name="email" required autofocus autocomplete="username"/>
+                    <x-input-error :messages="$errors->get('form.email')" class="mt-2"/>
                 </div>
                 <div class="flex flex-col gap-2">
-                    <x-input-label for="problem" :value="__('Probleme rencontre')" />
+                    <x-input-label for="problem" :value="__('Probleme rencontre')"/>
                     <select name="problem" id="problem" class="ui-form-input form-input-md rounded-md peer w-full">
                         <option value="">{{ __('Selectionner un probleme') }}</option>
                         <option value="1">{{ __('Probleme 1') }}</option>
@@ -55,7 +55,7 @@ new #[Layout('layouts.guest')] class extends Component {
                     </select>
                 </div>
                 <div class="flex flex-col gap-2">
-                    <x-input-label for="message" :value="__('Message')" />
+                    <x-input-label for="message" :value="__('Message')"/>
                     <x-text-area id="message"/>
                 </div>
                 <button class="btn btn-md rounded-md w-full justify-center text-white bg-primary">
@@ -67,7 +67,7 @@ new #[Layout('layouts.guest')] class extends Component {
             <p class="text-center text-sm">
                 Tout va bien!
                 <a href="{{ route('login') }}" wire:navigate
-                    class="inline text-primary hover:text-primary-700 font-medium">Me connecter</a>
+                   class="inline text-primary hover:text-primary-700 font-medium">Me connecter</a>
             </p>
         </div>
     </form>

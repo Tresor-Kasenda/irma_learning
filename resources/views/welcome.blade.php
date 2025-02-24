@@ -19,6 +19,7 @@
     <span class="flex w-60 h-36 bg-gradient-to-tr from-primary rounded-full blur-2xl opacity-65"></span>
 </div>
 <main>
+    <x-notification-popup/>
     {{ $slot }}
 </main>
 <x-frontend.footer/>

@@ -99,6 +99,7 @@
                                 <div class="flex w-full mt-7 pb-2">
                                     @if($masterClass->progress < 100)
                                         <a href="{{ route('learning-course-student', $masterClass) }}"
+                                           wire:navigate
                                            class="w-full btn btn-md justify-center before:bg-primary-600 btn-styled-y group rounded before:rounded border border-border-light shadow-lg shadow-gray-50 text-fg-subtitle hover:text-white">
                                             <span class="relative">Continuer</span>
                                         </a>
@@ -110,10 +111,11 @@
                                                     <span class="relative">Voir le certificat</span>
                                                 </a>
                                             @else
-                                                <span
-                                                    class="w-full btn btn-md justify-center btn-styled-y text-fg-subtitle">
+                                                <a href="{{ route('learning-course-student', $masterClass) }}"
+                                                   wire:navigate
+                                                   class="w-full btn btn-md justify-center btn-styled-y text-fg-subtitle">
                                                     Cours terminé
-                                                </span>
+                                                </a>
                                             @endif
                                         @else
                                             <a href="#"
@@ -125,7 +127,7 @@
                                 </div>
                             @else
                                 <div class="flex w-full mt-7 pb-2">
-                                    <a href="#"
+                                    <a href="{{ route('master-class', $masterClass) }}"
                                        class="w-full btn btn-md justify-center before:bg-primary-600 btn-styled-y group rounded before:rounded border border-border-light shadow-lg shadow-gray-50 text-fg-subtitle hover:text-white">
                                         <span class="relative">S'inscrire</span>
                                     </a>

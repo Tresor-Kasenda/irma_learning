@@ -27,13 +27,13 @@
                         wire:navigate
                         class="btn btn-md md:btn-lg btn-solid bg-primary-600 text-white group">
                         <span class="relative z-10">
-                            Certification professionnelle
+                            Certification Professionnelle
                         </span>
                         <span data-btn-layer class=" before:bg-primary-800"></span>
                     </a>
                     <a href="{{ route('formations-lists') }}" wire:navigate
                        class="btn btn-md md:btn-lg flex items-center gap-2">
-                        Formation continue
+                        Formation Continue
                         <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="currentColor"
                              class="ml-1 size-5"
                              viewBox="0 0 256 256">
@@ -61,7 +61,7 @@
                                     {{ $course->title }}
                                 </h1>
                                 <h2 class=" mt-4 line-clamp-2 text-fg">
-                                    {!! str($course->description)->limit(88) !!}
+                                    {!! str($course->description)->limit(98) !!}
                                 </h2>
                                 <div class="flex flex-col gap-1 mt-4">
                                     <div class="flex items-center gap-3 text-fg-subtext">
@@ -81,7 +81,7 @@
                                             wire:navigate
                                             class="w-full justify-center btn btn-sm sm:btn-md btn-solid bg-primary-600 text-white group">
                                               <span class="relative z-10">
-                                                En savoir plus
+                                                En Savoir Plus
                                               </span>
                                             <span data-btn-layer class=" before:bg-primary-800"></span>
                                         </a>
@@ -101,7 +101,7 @@
             <div class="flex flex-col relative max-w-xl">
                 <h2
                     class="font-medium relative text-3xl md:text-4xl text-fg-title  before:absolute before:h-1 before:w-20 before:top-0 before:left-0 before:bg-primary-900 before:rounded-full pt-5">
-                    Nos services principaux
+                    Nos Services Principaux
                 </h2>
             </div>
             <div class="max-w-md">
@@ -236,7 +236,7 @@
             <a href="{{ route('certifications') }}"
                class="mt-8 btn btn-md md:btn-lg btn-solid bg-primary-600 w-max text-white group">
                   <span class="relative z-10">
-                    Voir nos formations
+                    Voir Nos Certifications
                   </span>
                 <span data-btn-layer class=" before:bg-primary-800"></span>
             </a>
@@ -247,7 +247,7 @@
         <div
             class="bg-bg/90 backdrop-blur-sm border border-border-light/60 shadow-xl shadow-bg-light/40 rounded-lg p-5 md:p-6 lg:p-10 xl:p-16 max-w-2xl lg:max-w-none mx-auto lg:mx-0 flex flex-col">
             <h2 class="font-medium text-xl sm:text-2xl/snug text-fg-title">
-                Modes des formations
+                Modes des Formations
             </h2>
             <p class="mt-4 text-fg-subtext">
                 L’iRMA tient à tirer un maximum d’avantage de la transformation digitale de la formation professionnelle

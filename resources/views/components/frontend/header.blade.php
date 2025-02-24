@@ -28,7 +28,7 @@
                 <li class="relative flex w-full lg:w-max group">
                     <a href="{{ route('formations-lists') }}" wire:navigate aria-label="Lien vers la page : Accueil"
                        class="py-2 ease-linear duration-100 inline-flex {{ Request::routeIs('formations-lists') ? 'text-primary-700' : 'hover:text-primary-700' }}">
-                        Formation continue
+                        Formation Continue
                     </a>
                 </li>
                 <li class="relative flex w-full lg:w-max group">
@@ -55,7 +55,7 @@
                     wire:navigate
                     class="btn btn-sm sm:btn-md btn-solid bg-primary-600 text-white group">
                     <span class="relative z-10">
-                        Se connecter
+                        Se Connecter
                     </span>
                     <span data-btn-layer class="before:bg-primary-800"></span>
                 </a>
@@ -67,7 +67,7 @@
                         wire:navigate
                         class="btn btn-sm sm:btn-md btn-solid bg-primary-600 text-white group">
                         <span class="relative z-10">
-                            Mon espace
+                            Mon Espace
                         </span>
                         <span data-btn-layer class="before:bg-primary-800"></span>
                     </a>

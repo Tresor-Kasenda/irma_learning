@@ -16,6 +16,7 @@
 </head>
 <body class="bg-bg-lighter/50 font-sans">
 <main class="flex min-h-screen justify-center items-center">
+    <x-notification-popup/>
     {{ $slot }}
 </main>
 </body>
