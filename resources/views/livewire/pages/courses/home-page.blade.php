@@ -188,7 +188,7 @@
         </div>
     </section>
 
-    <section class="my-32 mx-auto max-w-7xl w-full px-5 sm:px-10 flex-col flex md:flex-row">
+    <section class="my-32 mx-auto max-w-7xl w-full px-5 sm:px-10 flex-col flex md:flex-row gap-16 xl:gap-0">
         <div class="md:w-1/2 lg:pr-10 xl:pr-16 relative">
             <img src="{{ asset('images/image2.webp') }}" alt="event image"
                  class="w-full h-full md:max-h-none object-cover">

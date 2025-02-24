@@ -4,16 +4,16 @@
     class="flex invisible opacity-0 bg-gray-800/50 backdrop-blur-xl fx-open:visible fx-open:opacity-100 fixed inset-0 z-40 lg:invisible lg:hidden"
 ></span>
 
-<header class="flex items-center absolute top-0 w-full z-50 pt-5 px-5 xl:pt-7">
+<header class="flex items-center absolute top-0 w-full z-50 pt-5 px-0.5 sm:px-5 xl:pt-7">
     <nav
         class="mx-auto w-full max-w-7xl flex items-center justify-between gap-10 px-5 bg-bg/10 border border-border-light/30 shadow shadow-bg-light/40 py-1.5 rounded-lg">
         <div class="lg:min-w-max flex">
             <a href="{{ route('home-page') }}" wire:navigate aria-label="Page Accueil du Site Betterlife"
                class="flex items-center w-max gap-1">
                 <img src="{{ asset('images/irma-logo-base.svg') }}" alt="logo Irma" width="200" height="100"
-                     class="h-12 w-auto">
+                     class="h-10 sm:h-12 w-auto">
                 <img src="{{ asset('images/irma-text-primary.svg') }}" alt="Irma Text" width="131" height="51.53"
-                     class="h-12 w-auto max-[500px]:hidden">
+                     class="h-10 sm:h-12 w-auto max-[500px]:hidden">
             </a>
         </div>
         <div data-main-navbar id="app-main"
