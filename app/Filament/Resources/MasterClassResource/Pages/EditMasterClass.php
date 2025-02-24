@@ -6,7 +6,12 @@ namespace App\Filament\Resources\MasterClassResource\Pages;
 
 use App\Filament\Resources\MasterClassResource;
 use Filament\Actions;
+use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\FileUpload;
+use Filament\Forms\Components\RichEditor;
+use Filament\Forms\Components\Section;
 use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Toggle;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\EditRecord;
 use Filament\Support\Enums\MaxWidth;
@@ -29,27 +34,64 @@ final class EditMasterClass extends EditRecord
                 ->icon('heroicon-o-trash'),
             Actions\Action::make('Formation continue')
                 ->label('Ajouter une formation')
-                ->icon("heroicon-o-plus-circle")
+                ->icon('heroicon-o-plus-circle')
                 ->modalWidth(MaxWidth::ThreeExtraLarge)
                 ->form([
-                    TextInput::make('name')
+                    Section::make('Formation')
+                        ->columns(2)
+                        ->schema([
+                            TextInput::make('title')
+                                ->label('Titre de la formation')
+                                ->required()
+                                ->placeholder("Titre de la formation")
+                                ->maxLength(255),
+                            DatePicker::make('completed_at')
+                                ->label("Date de fin de la formation")
+                                ->required()
+                                ->native(false)
+                                ->placeholder("Choisir une date"),
+                            FileUpload::make('path')
+                                ->directory('formations')
+                                ->label('Contenu (PDF)')
+                                ->downloadable()
+                                ->previewable()
+                                ->acceptedFileTypes(['application/pdf'])
+                                ->maxSize(10240) // Taille maximale de 10MB
+                                ->deletable()
+                                ->uploadingMessage('Uploading certification...')
+                                ->columnSpanFull(),
+                            RichEditor::make('content')
+                                ->label('Introduction')
+                                ->fileAttachmentsDirectory('trainings')
+                                ->columnSpanFull()
+                                ->disableGrammarly(),
+                            RichEditor::make('description')
+                                ->label('Description')
+                                ->fileAttachmentsDirectory('trainings')
+                                ->columnSpanFull()
+                                ->disableGrammarly(),
+                            Toggle::make('is_completed')
+                                ->inline()
+                                ->label('Definir comme dernier'),
+                        ]),
                 ])
                 ->slideOver()
                 ->action(function (array $data): void {
-//                    $this->getRecord()->experiences()->create([
-//                        'title' => $data['title'],
-//                        'business' => $data['business'],
-//                        'from' => $data['from'],
-//                        'to' => $data['to'],
-//                        'message' => $data['message'],
-//                    ]);
+                    $this->getRecord()->trainings()->create([
+                        'title' => $data['title'],
+                        'completed_at' => $data['completed_at'],
+                        'path' => $data['path'],
+                        'content' => $data['content'],
+                        'description' => $data['description'],
+                        'is_completed' => $data['is_completed'],
+                    ]);
 
                     Notification::make()
                         ->success()
-                        ->title('Experience saved')
-                        ->body('Les informations de l\'expérience ont été sauvegardées.')
+                        ->title("Formation ajoutée")
+                        ->body("La formation a été ajoutée avec succès")
                         ->send();
-                })
+                }),
         ];
     }
 

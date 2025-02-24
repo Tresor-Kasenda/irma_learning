@@ -133,7 +133,7 @@ final class MasterClassResource extends Resource
                 Tables\Columns\TextColumn::make('status')
                     ->label('Status')
                     ->badge()
-                    ->color(fn (string $state): string => match ($state) {
+                    ->color(fn(string $state): string => match ($state) {
                         MasterClassEnum::PUBLISHED->value => 'success',
                         MasterClassEnum::UNPUBLISHED->value => 'danger',
                     })
@@ -158,6 +158,7 @@ final class MasterClassResource extends Resource
         return [
             RelationManagers\ChaptersRelationManager::class,
             RelationManagers\ResourcesRelationManager::class,
+            RelationManagers\TrainingsRelationManager::class
         ];
     }
 
@@ -166,7 +167,7 @@ final class MasterClassResource extends Resource
         /** @var class-string<Model> $modelClass */
         $modelClass = self::$model;
 
-        return (string) $modelClass::count();
+        return (string)$modelClass::count();
     }
 
     public static function getPages(): array

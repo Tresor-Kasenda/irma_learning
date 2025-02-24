@@ -23,7 +23,7 @@ final class ChaptersRelationManager extends RelationManager
             ->recordTitleAttribute('title')
             ->columns([
                 Tables\Columns\TextColumn::make('path')
-                    ->description(fn(Chapter $record): string => $record->path ?? '', position: 'above')
+                    ->description(fn (Chapter $record): string => $record->path ?? '', position: 'above')
                     ->label('Titre du chapitre')
                     ->searchable()
                     ->badge()
@@ -48,8 +48,8 @@ final class ChaptersRelationManager extends RelationManager
             ])
             ->actions([
                 Tables\Actions\Action::make('examination')
-                    ->label(fn(Chapter $record) => $record->examination()->exists() ? 'Modifier l\'examen' : 'Créer un examen')
-                    ->icon(fn(Chapter $record) => $record->examination()->exists() ? 'heroicon-o-pencil' : 'heroicon-o-plus')
+                    ->label(fn (Chapter $record) => $record->examination()->exists() ? 'Modifier l\'examen' : 'Créer un examen')
+                    ->icon(fn (Chapter $record) => $record->examination()->exists() ? 'heroicon-o-pencil' : 'heroicon-o-plus')
                     ->button()
                     ->slideOver()
                     ->form(self::getExaminationForms())
@@ -132,16 +132,16 @@ final class ChaptersRelationManager extends RelationManager
             Forms\Components\TextInput::make('title')
                 ->label('Titre de l\'examen')
                 ->required()
-                ->default(fn(Chapter $record) => $record->examination?->title),
+                ->default(fn (Chapter $record) => $record->examination?->title),
             Forms\Components\TextInput::make('passing_score')
                 ->label('Score de réussite')
                 ->required()
-                ->default(fn(Chapter $record) => $record->examination?->passing_score),
+                ->default(fn (Chapter $record) => $record->examination?->passing_score),
             Forms\Components\TextInput::make('duration')
                 ->label('Durée')
                 ->required()
                 ->helperText("Durée de l'examen en minutes")
-                ->default(fn(Chapter $record) => $record->examination?->duration),
+                ->default(fn (Chapter $record) => $record->examination?->duration),
             Forms\Components\FileUpload::make('path')
                 ->label('Fichier')
                 ->required()
@@ -149,11 +149,11 @@ final class ChaptersRelationManager extends RelationManager
                 ->directory('examinations')
                 ->maxSize(10240)
                 ->downloadable()
-                ->default(fn(Chapter $record) => $record->examination?->path),
+                ->default(fn (Chapter $record) => $record->examination?->path),
             Forms\Components\MarkdownEditor::make('description')
                 ->label('Description')
                 ->required()
-                ->default(fn(Chapter $record) => $record->examination?->description),
+                ->default(fn (Chapter $record) => $record->examination?->description),
         ];
     }
 }
