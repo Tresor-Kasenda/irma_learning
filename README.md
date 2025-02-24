@@ -11,3 +11,4 @@
 - [ ]  ajouter la page de support
 - [ ]  modifier la partie de soumissions de l'examen pour qu'elle soit plus simple
 - [ ]  Ajouter la page profile de l'etudiant avec possibiliter de modifier ses informations
+- [ ]  Personne ne dois acceder a une master class qui as un status inactif
