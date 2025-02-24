@@ -3,8 +3,6 @@
 namespace App\Filament\Resources\MasterClassResource\RelationManagers;
 
 use App\Models\Training;
-use Filament\Forms;
-use Filament\Forms\Form;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Tables;
 use Filament\Tables\Table;
@@ -12,16 +10,6 @@ use Filament\Tables\Table;
 class TrainingsRelationManager extends RelationManager
 {
     protected static string $relationship = 'trainings';
-
-    public function form(Form $form): Form
-    {
-        return $form
-            ->schema([
-                Forms\Components\TextInput::make('title')
-                    ->required()
-                    ->maxLength(255),
-            ]);
-    }
 
     public function table(Table $table): Table
     {
@@ -55,6 +43,7 @@ class TrainingsRelationManager extends RelationManager
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\DeleteBulkAction::make(),
                 ]),
-            ]);
+            ])
+            ->poll('5s');
     }
 }
