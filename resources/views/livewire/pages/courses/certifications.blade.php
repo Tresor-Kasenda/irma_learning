@@ -9,7 +9,7 @@
                 <div
                     class="mx-auto max-w-7xl w-full px-5 sm:px-10 lg:px-5 py-20  flex flex-col lg:flex-row gap-16 items-start relative">
                     <div
-                        class="relative max-w-lg lg:max-w-none space-y-7 flex flex-col w-full text-center lg:text-left lg:w-1/2 lg:flex-1">
+                        class="relative max-w-lg lg:max-w-none space-y-7 flex flex-col w-full lg:w-1/2 lg:flex-1">
                         <div
                             class=" text-sm pt-8 text-fg-subtitle flex items-center divide-x divide-fg/50 *:px-4 first:*:pl-0 last:*:pr-0 overflow-hidden max-w-full">
                             <a href="./" aria-label="Lien vers la page principale">
@@ -31,7 +31,7 @@
                         </p>
                     </div>
                     <div
-                        class="flex lg:w-1/2 lg:flex-1  lg:min-h-[440px] border border-dashed rounded-md bg-bg shadow-sm shadow-gray-100/20">
+                        class="flex w-full lg:w-1/2 lg:flex-1 lg:min-h-[440px] border border-dashed rounded-md bg-bg shadow-sm shadow-gray-100/20">
                         @if (count($formations) > 0)
                             <div class="flex flex-col p-4 xl:p-5 lg:h-full justify-between">
                                 <span class="mb-4 flex text-fg-title font-semibold">Certification en cours</span>
