@@ -163,7 +163,7 @@
                         'blur-sm pointer-events-none' => !$this->canAccessChapter($activeChapter)
                     ])>
                         <iframe
-                            src="{{ asset('storage/'. $activeChapter->path)  }}#toolbar=0&navpanes=0"
+                            src="{{ Storage::url($activeChapter->path)  }}#toolbar=0&navpanes=0"
                             type="application/pdf"
                             width="100%"
                             height="860px"
@@ -305,7 +305,7 @@
                                     @endif
                                 @else
                                     <div class="alert-message">
-                                        Ce cours n'a pas d'examen disponible.
+                                        Ce Chapitre n'a pas d'examen disponible.
                                     </div>
                                 @endif
                             </div>
