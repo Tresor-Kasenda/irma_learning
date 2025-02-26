@@ -163,10 +163,11 @@
                         'blur-sm pointer-events-none' => !$this->canAccessChapter($activeChapter)
                     ])>
                         <iframe
-                            src="{{ Storage::url($activeChapter->path)  }}#toolbar=0&navpanes=0"
+                            src="{{ asset('storage/' . $activeChapter->path)  }}"
                             type="application/pdf"
                             width="100%"
                             height="860px"
+                            allow="publickey-credentials-get; publickey-credentials-create"
                             class="w-full border border-border rounded-lg"
                             loading="lazy"
                         ></iframe>

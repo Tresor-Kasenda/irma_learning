@@ -12,6 +12,8 @@ use App\Notifications\ExamSubmissionNotification;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Notification;
+use Illuminate\Support\Facades\Storage;
+use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Locked;
 use Livewire\Attributes\Title;
@@ -272,6 +274,25 @@ final class StudentCourseLearning extends Component
                 type: 'success'
             );
         }
+    }
+
+    #[Computed]
+    public function getBase64Pdf($chapterId)
+    {
+        $chapter = Chapter::findOrFail($chapterId);
+        
+        if (!$this->canAccessChapter($chapter)) {
+            return '';
+        }
+        
+        $path = Storage::url($chapter->path);
+        
+        if (file_exists($path)) {
+            $content = file_get_contents($path);
+            return base64_encode($content);
+        }
+        
+        return '';
     }
 
     public function hasSubmittedExam(): bool
