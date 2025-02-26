@@ -6,3 +6,14 @@
     RewriteEngine On
     RewriteRule ^(.*)$ public/$1 [L]
 </IfModule>
+
+<IfModule mod_headers.c>
+    # Remove X-Frame-Options header if it exists
+    Header unset X-Frame-Options
+    
+    # Set Content-Security-Policy to allow embedding in iframes
+    Header set Content-Security-Policy "frame-ancestors 'self' *;"
+    
+    # Disable browser security features that block iframe loading
+    Header unset Content-Security-Policy-Report-Only
+</IfModule>

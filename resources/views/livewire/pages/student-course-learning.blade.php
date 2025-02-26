@@ -160,6 +160,7 @@
 
                     <div @class([
                         'max-w-none markdow-content-block max-w-none mt-3 flex flex-col prose prose-invert',
+                        'blur-sm pointer-events-none' => !$this->canAccessChapter($activeChapter)
                     ])>
                         <iframe
                             src="{{ Storage::url($activeChapter->path)  }}#toolbar=0&navpanes=0"
