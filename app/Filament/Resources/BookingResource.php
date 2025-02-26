@@ -70,9 +70,11 @@ final class BookingResource extends Resource
                                 ->required(),
                             Forms\Components\TextInput::make('email')
                                 ->email()
-                                ->required(),
+                                ->required()
+                                ->unique(Booking::class, 'email', ignoreRecord: true),
                             Forms\Components\TextInput::make('phone_number')
                                 ->tel()
+                                ->unique(Booking::class, 'phone_number', ignoreRecord: true)
                                 ->required(),
                             Forms\Components\Toggle::make('status')
                                 ->required(),
@@ -196,7 +198,7 @@ final class BookingResource extends Resource
         /** @var class-string<Model> $modelClass */
         $modelClass = self::$model;
 
-        return (string) $modelClass::count();
+        return (string)$modelClass::count();
     }
 
     public static function getPages(): array

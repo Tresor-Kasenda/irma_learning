@@ -162,14 +162,14 @@
                         'max-w-none markdow-content-block max-w-none mt-3 flex flex-col prose prose-invert',
                         'blur-sm pointer-events-none' => !$this->canAccessChapter($activeChapter)
                     ])>
-                        <embed
-                            src="{{ asset('storage/'. $activeChapter->path)  }}"
+                        <iframe
+                            src="{{ asset('storage/'. $activeChapter->path)  }}#toolbar=0&navpanes=0"
                             type="application/pdf"
                             width="100%"
                             height="860px"
                             class="w-full border border-border rounded-lg"
-                            pluginspage="http://www.adobe.com/products/acrobat/readstep2.html"
-                        />
+                            loading="lazy"
+                        ></iframe>
                     </div>
 
                     <div class="flex flex-col space-y-4 mt-4">

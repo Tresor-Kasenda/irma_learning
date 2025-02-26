@@ -5,16 +5,20 @@ declare(strict_types=1);
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+use App\Enums\PermissionEnum;
 use App\Enums\UserRoleEnum;
+use App\Observers\UserObserver;
 use Database\Factories\UserFactory;
 use Exception;
 use Filament\Models\Contracts\FilamentUser;
 use Filament\Panel;
+use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
+#[ObservedBy(UserObserver::class)]
 final class User extends Authenticatable implements FilamentUser
 {
     /** @use HasFactory<UserFactory> */
@@ -40,6 +44,58 @@ final class User extends Authenticatable implements FilamentUser
         'password',
         'remember_token',
     ];
+
+
+    public function hasPermission(PermissionEnum $permission): bool
+    {
+        if ($this->isRoot()) {
+            return true;
+        }
+
+        return match ($this->role) {
+            UserRoleEnum::ADMIN->value => $this->getAdminPermissions()->contains($permission),
+            UserRoleEnum::MANAGER->value => $this->getManagerPermissions()->contains($permission),
+            default => false,
+        };
+    }
+
+    public function isRoot(): bool
+    {
+        return $this->role === 'ROOT';
+    }
+
+    private function getAdminPermissions(): \Illuminate\Support\Collection
+    {
+        return collect([
+            PermissionEnum::VIEW_DASHBOARD,
+            PermissionEnum::MANAGE_CONTENT,
+            PermissionEnum::VIEW_REPORTS,
+            PermissionEnum::VIEW_MASTER_CLASS,
+            PermissionEnum::CREATE_MASTER_CLASS,
+            PermissionEnum::UPDATE_MASTER_CLASS,
+            PermissionEnum::VIEW_CHAPTER,
+            PermissionEnum::CREATE_CHAPTER,
+            PermissionEnum::UPDATE_CHAPTER,
+            PermissionEnum::VIEW_SUBSCRIPTION,
+            PermissionEnum::CREATE_SUBSCRIPTION,
+            PermissionEnum::UPDATE_SUBSCRIPTION,
+            PermissionEnum::VIEW_EXAM,
+            PermissionEnum::CREATE_EXAM,
+            PermissionEnum::UPDATE_EXAM,
+            PermissionEnum::SUBMIT_EXAM,
+            PermissionEnum::MANAGE_USERS
+        ]);
+    }
+
+    private function getManagerPermissions(): \Illuminate\Support\Collection
+    {
+        return collect([
+            PermissionEnum::VIEW_DASHBOARD,
+            PermissionEnum::MANAGE_USERS,
+            PermissionEnum::MANAGE_CONTENT,
+            PermissionEnum::VIEW_REPORTS,
+        ]);
+    }
 
     public function submissions(): HasMany
     {
@@ -88,11 +144,6 @@ final class User extends Authenticatable implements FilamentUser
     public function isSuperAdmin(): bool
     {
         return $this->isRoot();
-    }
-
-    public function isRoot(): bool
-    {
-        return $this->role === 'ROOT';
     }
 
     public function isStudent(): bool
