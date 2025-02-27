@@ -68,6 +68,9 @@ export default {
                     title: "hsl(var(--color-fg-title))",
                 },
             },
+            fontFamily: {
+                helvetica: ['Helvetica', 'Arial', 'sans-serif'],
+              },
         },
     },
 

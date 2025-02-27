@@ -19,5 +19,14 @@ final class DatabaseSeeder extends Seeder
         User::factory(10)->create([
             'must_change_password' => true,
         ]);
+        $this->call([
+            EventTypeSeeder::class,
+            EventSeeder::class,
+            MasterClassSeeder::class,
+            ChapterSeeder::class,
+            ResourceSeeder::class,
+            ExaminationSeeder::class,
+            BookingSeeder::class,
+        ]);
     }
 }
