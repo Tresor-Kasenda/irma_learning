@@ -143,7 +143,6 @@ final class BookingResource extends Resource
                 Tables\Columns\TextColumn::make('event.title')
                     ->numeric()
                     ->toggleable()
-                    ->sortable()
                     ->sortable(),
                 Tables\Columns\TextColumn::make('name')
                     ->toggleable()
@@ -162,6 +161,7 @@ final class BookingResource extends Resource
                     ->sortable()
                     ->boolean(),
             ])
+            ->defaultSort('created_at', 'desc')
             ->filters([
                 SelectFilter::make('event_id')
                     ->name('event_id')

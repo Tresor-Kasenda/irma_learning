@@ -34,6 +34,10 @@ new #[Layout('layouts.guest')] class extends Component {
             'must_change_password' => false,
         ]);
 
+        \Illuminate\Support\defer(function () use ($user) {
+            $user->notify(new PasswordChangeNotification($user));
+        });
+
         Auth::logout();
 
         $this->dispatch(
@@ -41,10 +45,6 @@ new #[Layout('layouts.guest')] class extends Component {
             message: "Mot de passe changé avec succès. Connectez-vous avec votre nouveau mot de passe.",
             type: 'success'
         );
-
-        \Illuminate\Support\defer(function () use ($user) {
-            Notification::sendNow($use->email, new PasswordChangeNotification($user));
-        });
 
         $this->redirectIntended(default: route('login', absolute: false), navigate: true);
 
@@ -120,7 +120,7 @@ new #[Layout('layouts.guest')] class extends Component {
         <div class="bg-bg-light rounded px-5 sm:px-6 py-4">
             <p class="text-center text-sm">
                 Soucis pour vous connecter ?
-                <a href="#" wire:navigate
+                <a href="{{ route('help') }}" wire:navigate
                    class="inline text-primary hover:text-primary-700 font-medium">Contactez-nous</a>
             </p>
         </div>

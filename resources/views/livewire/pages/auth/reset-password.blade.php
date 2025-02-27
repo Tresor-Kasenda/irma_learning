@@ -155,7 +155,7 @@ new #[Layout('layouts.guest')] class extends Component {
         <div class="bg-bg-light rounded px-5 sm:px-6 py-4">
             <p class="text-center text-sm">
                 Soucis pour vous connecter ?
-                <a href="#" wire:navigate
+                <a href="{{ route('help') }}" wire:navigate
                    class="inline text-primary hover:text-primary-700 font-medium">Contactez-nous</a>
             </p>
         </div>

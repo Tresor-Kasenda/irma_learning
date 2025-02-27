@@ -13,13 +13,7 @@ new #[Layout('layouts.guest')] class extends Component {
      */
     public function login(): void
     {
-        $this->validate();
 
-        $this->form->authenticate();
-
-        Session::regenerate();
-
-        $this->redirectIntended(default: route('dashboard', absolute: false), navigate: true);
     }
 }; ?>
 
@@ -30,8 +24,13 @@ new #[Layout('layouts.guest')] class extends Component {
           class="border border-border/60 w-full max-w-lg p-1 shadow-lg shadow-gray-200/40 bg-white rounded-lg">
         <div class="p-5 sm:p-8">
             <a href="{{ route('home-page') }}" wire:navigate>
-                <img src="{{ asset('images/irma-logo-base.svg') }}" alt="logo Irma" width="200" height="100"
-                     class="h-16 w-auto mb-5 mx-auto">
+                <img
+                    src="{{ asset('images/irma-logo-base.svg') }}"
+                    alt="logo Irma"
+                    width="200"
+                    height="100"
+                    class="h-16 w-auto mb-5 mx-auto"
+                />
             </a>
             <div class="text-center">
                 <h1 class="text-fg-title mb-1 text-xl font-semibold">Aide et support</h1>
@@ -41,8 +40,16 @@ new #[Layout('layouts.guest')] class extends Component {
             <div class="space-y-6">
                 <div class="flex flex-col gap-2">
                     <x-input-label for="email" :value="__('Email')"/>
-                    <x-text-input wire:model="form.email" id="email" class="block mt-1 w-full" type="email"
-                                  name="email" required autofocus autocomplete="username"/>
+                    <x-text-input
+                        wire:model="form.email"
+                        id="email"
+                        class="block mt-1 w-full"
+                        type="email"
+                        name="email"
+                        required
+                        autofocus
+                        autocomplete="username"
+                    />
                     <x-input-error :messages="$errors->get('form.email')" class="mt-2"/>
                 </div>
                 <div class="flex flex-col gap-2">
