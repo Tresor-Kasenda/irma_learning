@@ -19,7 +19,19 @@ class UserResource extends Resource
 {
     protected static ?string $model = User::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+
+    protected static ?string $navigationGroup = 'Gestion des inscriptions';
+
+    protected static ?string $navigationIcon = 'heroicon-o-user-circle';
+
+    protected static ?string $label = 'Utilisateurs'; // Nom de la ressource
+
+    protected static ?int $navigationSort = 3;
+
+    public static function getLabel(): ?string
+    {
+        return 'Utilisateurs';
+    }
 
     public static function form(Form $form): Form
     {

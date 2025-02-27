@@ -37,10 +37,12 @@ final class PasswordChangeNotification extends Notification
     public function toMail(object $notifiable): MailMessage
     {
         return (new MailMessage)
-            ->greeting('')
-            ->line('The introduction to the notification.')
-            ->action('Notification Action', url('/login'))
-            ->line('Thank you for using our application!');
+            ->subject('Votre mot de passe a été mis à jour')
+            ->greeting('Bonjour' . $this->user->name . ' ' . $this->user->firstname)
+            ->line("Nous vous confirmons que votre mot de passe a été changé avec succès.")
+            ->action("Si vous n’êtes pas à l’origine de cette modification, veuillez immédiatement réinitialiser votre mot de passe en cliquant sur et contacter notre support à support@irmardc.org.", route('password.change'))
+            ->line('Merci de votre confiance,')
+            ->line('L’équipe iRMA');
     }
 
     /**

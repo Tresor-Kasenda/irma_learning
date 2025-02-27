@@ -31,18 +31,4 @@ final class BookingObserver
             $user->notify(new EventBookingNotification($booking));
         });
     }
-
-    /**
-     * Handle the Booking "updated" event.
-     */
-    public function updated(Booking $booking): void
-    {
-        $user = User::query()
-            ->where('email', $booking->email)
-            ->first();
-
-        if ($booking->status) {
-            $user->notify(new BookingUpdatedNotification($booking));
-        }
-    }
 }
