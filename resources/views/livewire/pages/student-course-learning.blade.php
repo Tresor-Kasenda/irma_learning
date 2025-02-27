@@ -124,7 +124,7 @@
             </div>
         </aside>
         <main class="min-h-screen bg-bg py-8 px-4 sm:px-10 lg:px-5 xl:px-8">
-            <div class="max-w-4xl mx-auto">
+            <div class="max-w-4xl mx-auto font-helvetica">
                 @if(!$activeChapter)
                     <h1 class="text-4xl font-bold text-fg-title mb-6">{{ $masterClass->title }}</h1>
                     <div class="markdow-content-block max-w-none mt-28 flex flex-col">
@@ -137,21 +137,21 @@
                         </div>
                     </div>
                 @else
-                    <h1 class="text-4xl font-bold text-fg-title mb-3">{{ $activeChapter->title }}</h1>
+                    <h1 class="text-2xl font-bold text-fg-title mb-3">{{ $activeChapter->title }}</h1>
 
-                    <h2 class="text-2xl font-bold text-fg-title">Presentation</h2>
+                    <h2 class="text-xl font-bold text-fg-title">Presentation</h2>
 
                     <div @class([
-                        'max-w-none markdow-content-block max-w-none flex flex-col prose prose-invert',
+                        'max-w-none markdow-content-block max-w-none mt-2 flex flex-col prose prose-invert',
                     ])>
                         {!! $activeChapter->content !!}
                     </div>
 
 
-                    <h3 class="text-2xl font-bold text-fg-title mb-3">Description</h3>
+                    <h3 class="text-2xl font-bold text-fg-title mb-2">Description</h3>
 
                     <div @class([
-                        'max-w-none markdow-content-block max-w-none flex flex-col prose prose-invert',
+                        'max-w-none markdow-content-block max-w-none mt-2 flex flex-col prose prose-invert',
                         'blur-sm pointer-events-none' => !$this->canAccessChapter($activeChapter)
                     ])>
                         {!! $activeChapter->description !!}

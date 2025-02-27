@@ -35,6 +35,7 @@ final class EventFactory extends Factory
             'description' => $this->faker->text,
             'status' => $this->faker->randomElement(EnsureEventStatusEnum::cases()),
             'content' => $this->faker->text,
+            'address' => $this->faker->address,
         ];
     }
 }
