@@ -37,15 +37,19 @@ final class EventBookingNotification extends Notification
     public function toMail(object $notifiable): MailMessage
     {
         return (new MailMessage)
-            ->greeting("Bonjour {$notifiable->name}")
-            ->line("Vous avez été inscrit à l'événement {$this->booking->event->title}")
-            ->line('Voici les détails de votre inscription :')
-            ->line("Nom : {$this->booking->name}")
-            ->line("Email : {$this->booking->email}")
-            ->line("Mot de passe : {$this->booking->reference}")
-            ->line('Apres la master classe vous aurez un acces la plaforme de certification sur le lien ci dessous')
-            ->action('Certification', url('/'))
-            ->line('Merci de votre confiance.');
+            ->subject('Bienvenue sur la plateforme iRMA – Votre compte est prêt !')
+            ->greeting('Bonjour' . $this->booking->name . ' ' . $this->booking->firstname)
+            ->line("Félicitations !")
+            ->line("Votre compte sur la plateforme d’apprentissage en ligne de l’Institut du Risk Management (iRMA) a été créé avec succès.")
+            ->line("Votre adresse Email : {$this->booking->email}")
+            ->line("Votre mot de passe : {$this->booking->reference}")
+            ->action("Accès à votre compte  :", url('/login'))
+            ->lines([
+                "Nous sommes ravis de vous accompagner dans votre parcours de formation.",
+                "Pour toute assistance, notre équipe reste à votre disposition."
+            ])
+            ->line('Bonne formation !')
+            ->line('L’équipe iRMA');
     }
 
     /**

@@ -37,10 +37,14 @@ final class ExamSubmissionNotification extends Notification
     public function toMail(object $notifiable): MailMessage
     {
         return (new MailMessage)
-            ->greeting('Bonjour')
-            ->line('')
-            ->action('Notification Action', url('/'))
-            ->line('Thank you for using our application!');
+            ->subject('Evaluation soumise – Bien joué !')
+            ->greeting('Bonjour' . $this->submission->user->name . ' ' . $this->submission->user->firstname)
+            ->line('Vous avez soumis avec succès votre évaluation pour le chapitre' . $this->submission->chapter->name . '.')
+            ->line('-	Statut : En cours de correction')
+            ->line('-	Accès à vos résultats : Vous serez notifié dès leur publication.')
+            ->line('Continuez sur cette lancée et passez au chapitre suivant !')
+            ->line('Bonne continuation')
+            ->line('L’équipe iRMA');
     }
 
     /**

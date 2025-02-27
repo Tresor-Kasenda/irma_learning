@@ -39,6 +39,7 @@ final class StudentCourseLearning extends Component
 
     public bool $examSubmitted = false;
 
+    #[Locked]
     public ?Chapter $activeChapter;
 
     public function mount(MasterClass $masterClass): void
@@ -53,7 +54,7 @@ final class StudentCourseLearning extends Component
 
     public function canSubmitExam(): bool
     {
-        return auth()->user()->reference_code !== null;
+        return Auth::user()->reference_code !== null;
     }
 
     public function getProgressPercentage(): int
@@ -79,7 +80,7 @@ final class StudentCourseLearning extends Component
 
             $this->dispatch(
                 'notify',
-                message: 'Moving to previous chapter.',
+                message: 'Passage au chapitre précédent.',
                 type: 'success'
             );
         }

@@ -117,7 +117,7 @@
                                 <circle cx="12" cy="8" r="6"></circle>
                                 <path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11"></path>
                             </svg>
-                            View Certificate
+                            Voir mon certificat
                         </button>
                     @endif
                 </div>
@@ -133,26 +133,25 @@
                         <h2>About this Masterclass</h2>
                         <p>{!! $masterClass->description !!}</p>
                         <div class="alert-message">
-                            ⚡️ Pro Tip: Start with the first chapter and progress sequentially through the course
-                            for the best learning experience.
+                            ⚡️ Astuce Pro : Commencez par le premier chapitre et progressez de manière séquentielle à travers le cours pour une meilleure expérience d'apprentissage.
                         </div>
                     </div>
                 @else
-                    <h1 class="text-4xl font-bold text-fg-title mb-8">{{ $activeChapter->title }}</h1>
+                    <h1 class="text-4xl font-bold text-fg-title mb-3">{{ $activeChapter->title }}</h1>
 
                     <h2 class="text-2xl font-bold text-fg-title">Presentation</h2>
 
                     <div @class([
-                        'max-w-none markdow-content-block max-w-none mt-3 flex flex-col prose prose-invert',
+                        'max-w-none markdow-content-block max-w-none flex flex-col prose prose-invert',
                     ])>
                         {!! $activeChapter->content !!}
                     </div>
 
 
-                    <h3 class="text-2xl font-bold text-fg-title mb-6">Dedscription</h3>
+                    <h3 class="text-2xl font-bold text-fg-title mb-3">Description</h3>
 
                     <div @class([
-                        'max-w-none markdow-content-block max-w-none mt-3 flex flex-col prose prose-invert',
+                        'max-w-none markdow-content-block max-w-none flex flex-col prose prose-invert',
                         'blur-sm pointer-events-none' => !$this->canAccessChapter($activeChapter)
                     ])>
                         {!! $activeChapter->description !!}
@@ -211,8 +210,10 @@
                     <div class="mt-4">
                         @if(!$this->canSubmitExam())
                             <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4 text-yellow-700">
-                                <p>Pour soumettre l'examen et accéder aux autres chapitres, vous devez avoir un code de
-                                    référence.</p>
+                                <p>
+                                    Pour soumettre l'examen et accéder aux autres chapitres, vous devez avoir un code de
+                                    référence.
+                                </p>
                                 <a href="#"
                                    class="mt-2 inline-flex items-center text-yellow-800 hover:text-yellow-900">
                                     Obtenir un code de référence
@@ -230,7 +231,7 @@
 
                                     @if ($activeChapter->examination?->deadline && now()->isAfter($activeChapter->examination?->deadline))
                                         <div class="alert-message">
-                                            The submission deadline has passed.
+                                            La date limite de soumission est passée.
                                         </div>
                                     @elseif (!$this->hasSubmittedExam())
                                         <a
@@ -300,13 +301,13 @@
                                                     <circle cx="12" cy="8" r="6"></circle>
                                                     <path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11"></path>
                                                 </svg>
-                                                Mark as Completed
+                                                Marquer comme Terminé
                                             </button>
                                         @endif
                                     @endif
                                 @else
                                     <div class="alert-message">
-                                        Ce Chapitre n'a pas d'examen disponible.
+                                        Aucune evaluation n'est disponible pour ce chapitre de cours.
                                     </div>
                                 @endif
                             </div>
@@ -339,7 +340,7 @@
                                 <path d="m12 19-7-7 7-7"></path>
                                 <path d="M19 12H5"></path>
                             </svg>
-                            Previous Chapter
+                            Chapitre Précédent
                         </button>
 
                         <button
@@ -357,7 +358,7 @@
                                 disabled
                             @endif
                         >
-                            Next Chapter
+                            Chapitre Suivant
                             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
                                  fill="none"
                                  stroke="currentColor" stroke-width="2" stroke-linecap="round"

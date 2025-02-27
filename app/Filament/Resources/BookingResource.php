@@ -25,7 +25,7 @@ final class BookingResource extends Resource
 
     protected static ?string $navigationGroup = 'Gestion des inscriptions';
 
-    protected static ?string $navigationIcon = 'heroicon-o-user-circle'; // Icône du menu (facultatif)
+    protected static ?string $navigationIcon = 'heroicon-o-users'; // Icône du menu (facultatif)
 
     protected static ?string $label = 'Inscription'; // Nom de la ressource
 
