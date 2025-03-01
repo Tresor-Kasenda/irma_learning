@@ -41,25 +41,27 @@ new #[Layout('layouts.guest')] class extends Component {
                 <div class="flex flex-col gap-2">
                     <x-input-label for="email" :value="__('Email')"/>
                     <x-text-input
-                        wire:model="form.email"
+                        wire:model="email"
                         id="email"
                         class="block mt-1 w-full"
                         type="email"
                         name="email"
                         required
                         autofocus
+                        placeholder=""
                         autocomplete="username"
                     />
-                    <x-input-error :messages="$errors->get('form.email')" class="mt-2"/>
+                    <x-input-error :messages="$errors->get('email')" class="mt-2"/>
                 </div>
                 <div class="flex flex-col gap-2">
                     <x-input-label for="problem" :value="__('Probleme rencontre')"/>
                     <select name="problem" id="problem" class="ui-form-input form-input-md rounded-md peer w-full">
-                        <option value="">{{ __('Selectionner un probleme') }}</option>
+                        <option>{{ __('Selectionner un probleme') }}</option>
                         <option value="1">{{ __('Probleme 1') }}</option>
                         <option value="2">{{ __('Probleme 2') }}</option>
                         <option value="3">{{ __('Probleme 3') }}</option>
                     </select>
+                    <x-input-error :messages="$errors->get('email')" class="mt-2"/>
                 </div>
                 <div class="flex flex-col gap-2">
                     <x-input-label for="message" :value="__('Message')"/>

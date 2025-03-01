@@ -203,7 +203,7 @@
 
 
     .ui-form-input {
-        @apply border border-border px-[var(--form-input-px)] py-[var(--form-input-py)] text-[var(--form-input-text-size)] focus:outline-none focus:ring-[hsl(var(--color-primary-600))] focus:border-[hsl(var(--color-primary-500))] invalid:outline-[hsl(var(--color-danger-600))] text-sm placeholder:font-thin placeholder:text-gray-500;
+        @apply border border-border px-[var(--form-input-px)] py-[var(--form-input-py)] text-[var(--form-input-text-size)] focus:outline-none focus:ring-[hsl(var(--color-primary-600))] focus:border-[hsl(var(--color-primary-500))] invalid:outline-[hsl(var(--color-danger-600))] text-sm placeholder:font-thin placeholder:text-gray-600;
     }
 
     .form-input-sm {

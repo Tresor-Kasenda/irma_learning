@@ -15,7 +15,10 @@ final class EditUser extends EditRecord
     protected function getHeaderActions(): array
     {
         return [
-            Actions\DeleteAction::make(),
+            Actions\DeleteAction::make()
+                ->label("Supprimer l'utilisateur")
+                ->icon('heroicon-o-trash')
+            ,
         ];
     }
 }

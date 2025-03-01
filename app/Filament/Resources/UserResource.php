@@ -76,16 +76,16 @@ final class UserResource extends Resource
                             ->maxLength(255)
                             ->revealable()
                             ->live()
-                            ->dehydrated(fn (?string $state): bool => filled($state))
-                            ->required(fn (string $operation, Get $get): bool => $operation === 'create')
+                            ->dehydrated(fn(?string $state): bool => filled($state))
+                            ->required(fn(string $operation, Get $get): bool => $operation === 'create')
                             ->label('Mot de passe'),
                         Forms\Components\TextInput::make('password_confirmation')
                             ->password()
-                            ->required(fn (string $operation): bool => $operation === 'create')
+                            ->required(fn(string $operation): bool => $operation === 'create')
                             ->maxLength(255)
                             ->same('password')
                             ->dehydrated(false)
-                            ->visible(fn (Get $get) => $get('password'))
+                            ->visible(fn(Get $get) => $get('password'))
                             ->label('Confirmer le mot de passe'),
                         Forms\Components\FileUpload::make('avatar')
                             ->label('Photo de profile')
@@ -168,6 +168,19 @@ final class UserResource extends Resource
 
     public static function canDelete(Model $record): bool
     {
-        return auth()->user()->hasPermission(PermissionEnum::MANAGE_USERS);
+        $user = auth()->user();
+
+        // First check if user has permission to manage users
+        if (!$user->hasPermission(PermissionEnum::MANAGE_USERS)) {
+            return false;
+        }
+
+        // If the record has ADMIN role, only ROOT users can delete it
+        if ($record->role === UserRoleEnum::ADMIN->value) {
+            return $user->role === UserRoleEnum::ROOT->value;
+        }
+
+        // For other roles, allow deletion if they have manage users permission
+        return true;
     }
 }

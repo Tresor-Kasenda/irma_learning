@@ -50,9 +50,10 @@ new #[Layout('layouts.guest')] class extends Component {
                     <x-text-input
                         wire:model="form.email"
                         id="email"
-                        class="block mt-1 w-full"
+                        class="block mt-1 w-full placeholder:text-gray-400"
                         type="email"
                         name="email"
+                        placeholder="Ex: users@example.com"
                         required
                         autofocus
                         autocomplete="username"
@@ -61,8 +62,16 @@ new #[Layout('layouts.guest')] class extends Component {
                 </div>
                 <div class="flex flex-col gap-2">
                     <x-input-label for="password" :value="__('Password')"/>
-                    <x-text-input wire:model="form.password" id="password" class="block mt-1 w-full" type="password"
-                                  name="password" required autocomplete="current-password"/>
+                    <x-text-input
+                        wire:model="form.password"
+                        id="password"
+                        class="block mt-1 w-full placeholder:text-gray-400"
+                        type="password"
+                        name="password"
+                        required
+                        autocomplete="current-password"
+                        placeholder="********"
+                    />
                     <x-input-error :messages="$errors->get('form.password')" class="mt-2"/>
                     <div class="flex justify-between w-full pt-3">
                         <div class="flex items-center gap-2">
