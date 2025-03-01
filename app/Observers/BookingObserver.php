@@ -7,7 +7,6 @@ namespace App\Observers;
 use App\Enums\UserRoleEnum;
 use App\Models\Booking;
 use App\Models\User;
-use App\Notifications\BookingUpdatedNotification;
 use App\Notifications\EventBookingNotification;
 
 final class BookingObserver

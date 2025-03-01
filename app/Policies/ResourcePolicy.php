@@ -1,12 +1,14 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Policies;
 
 use App\Enums\PermissionEnum;
 use App\Models\User;
 use Illuminate\Auth\Access\HandlesAuthorization;
 
-class ResourcePolicy
+final class ResourcePolicy
 {
     use HandlesAuthorization;
 

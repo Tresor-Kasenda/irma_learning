@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Filament\Resources\MasterClassResource\RelationManagers;
 
 use App\Models\Training;
@@ -7,7 +9,7 @@ use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Tables;
 use Filament\Tables\Table;
 
-class TrainingsRelationManager extends RelationManager
+final class TrainingsRelationManager extends RelationManager
 {
     protected static string $relationship = 'trainings';
 
@@ -17,8 +19,8 @@ class TrainingsRelationManager extends RelationManager
             ->recordTitleAttribute('title')
             ->columns([
                 Tables\Columns\TextColumn::make('path')
-                    ->description(fn(Training $record): string => $record->path ?? '', position: 'above')
-                    ->label("Ficher")
+                    ->description(fn (Training $record): string => $record->path ?? '', position: 'above')
+                    ->label('Ficher')
                     ->searchable()
                     ->badge()
                     ->sortable(),

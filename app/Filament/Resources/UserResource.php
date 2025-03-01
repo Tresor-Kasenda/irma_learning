@@ -1,11 +1,12 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Filament\Resources;
 
 use App\Enums\PermissionEnum;
 use App\Enums\UserRoleEnum;
 use App\Filament\Resources\UserResource\Pages;
-use App\Filament\Resources\UserResource\RelationManagers;
 use App\Models\User;
 use Filament\Forms;
 use Filament\Forms\Form;
@@ -15,10 +16,9 @@ use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Model;
 
-class UserResource extends Resource
+final class UserResource extends Resource
 {
     protected static ?string $model = User::class;
-
 
     protected static ?string $navigationGroup = 'Gestion des inscriptions';
 
@@ -40,19 +40,19 @@ class UserResource extends Resource
                 Forms\Components\Section::make()
                     ->schema([
                         Forms\Components\TextInput::make('name')
-                            ->label("Nom")
+                            ->label('Nom')
                             ->placeholder('votre nom')
                             ->required(),
                         Forms\Components\TextInput::make('username')
-                            ->label("Post Nom")
+                            ->label('Post Nom')
                             ->placeholder('votre post nom')
                             ->required(),
                         Forms\Components\TextInput::make('firstname')
-                            ->label("Prénom")
+                            ->label('Prénom')
                             ->placeholder('votre prenom')
                             ->required(),
                         Forms\Components\TextInput::make('email')
-                            ->label("Email")
+                            ->label('Email')
                             ->placeholder('votre email')
                             ->email()
                             ->required(),
@@ -65,7 +65,7 @@ class UserResource extends Resource
                             ])
                             ->searchable(),
                         Forms\Components\TextInput::make('phone')
-                            ->label("Téléphone")
+                            ->label('Téléphone')
                             ->placeholder('+243xxxxxxxxx')
                             ->tel()
                             ->regex('/^\+[1-9]\d{1,14}$/')
@@ -76,16 +76,16 @@ class UserResource extends Resource
                             ->maxLength(255)
                             ->revealable()
                             ->live()
-                            ->dehydrated(fn(?string $state): bool => filled($state))
-                            ->required(fn(string $operation, Get $get): bool => $operation === 'create')
+                            ->dehydrated(fn (?string $state): bool => filled($state))
+                            ->required(fn (string $operation, Get $get): bool => $operation === 'create')
                             ->label('Mot de passe'),
                         Forms\Components\TextInput::make('password_confirmation')
                             ->password()
-                            ->required(fn(string $operation): bool => $operation === 'create')
+                            ->required(fn (string $operation): bool => $operation === 'create')
                             ->maxLength(255)
                             ->same('password')
                             ->dehydrated(false)
-                            ->visible(fn(Get $get) => $get('password'))
+                            ->visible(fn (Get $get) => $get('password'))
                             ->label('Confirmer le mot de passe'),
                         Forms\Components\FileUpload::make('avatar')
                             ->label('Photo de profile')
@@ -101,7 +101,7 @@ class UserResource extends Resource
                             ->label('Forcer le changement de mot de passe')
                             ->helperText('Si activé, l\'utilisateur devra changer son mot de passe à sa prochaine connexion')
                             ->default(true),
-                    ])->columns(2)
+                    ])->columns(2),
             ]);
     }
 
@@ -163,7 +163,7 @@ class UserResource extends Resource
 
     public static function canCreate(): bool
     {
-        return static::can('create') && auth()->user()->hasPermission(PermissionEnum::MANAGE_USERS);
+        return self::can('create') && auth()->user()->hasPermission(PermissionEnum::MANAGE_USERS);
     }
 
     public static function canDelete(Model $record): bool

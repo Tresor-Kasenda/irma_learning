@@ -7,7 +7,6 @@ namespace App\Models;
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use App\Enums\PermissionEnum;
 use App\Enums\UserRoleEnum;
-use App\Observers\UserObserver;
 use Database\Factories\UserFactory;
 use Exception;
 use Filament\Models\Contracts\FilamentUser;
@@ -43,6 +42,15 @@ final class User extends Authenticatable implements FilamentUser
         'remember_token',
     ];
 
+    public function results(): HasMany
+    {
+        return $this->hasMany(ExamResult::class);
+    }
+
+    public function evaluatedResults(): HasMany
+    {
+        return $this->hasMany(ExamResult::class, 'evaluated_by');
+    }
 
     public function hasPermission(PermissionEnum $permission): bool
     {
@@ -60,39 +68,6 @@ final class User extends Authenticatable implements FilamentUser
     public function isRoot(): bool
     {
         return $this->role === 'ROOT';
-    }
-
-    private function getAdminPermissions(): \Illuminate\Support\Collection
-    {
-        return collect([
-            PermissionEnum::VIEW_DASHBOARD,
-            PermissionEnum::MANAGE_CONTENT,
-            PermissionEnum::VIEW_REPORTS,
-            PermissionEnum::VIEW_MASTER_CLASS,
-            PermissionEnum::CREATE_MASTER_CLASS,
-            PermissionEnum::UPDATE_MASTER_CLASS,
-            PermissionEnum::VIEW_CHAPTER,
-            PermissionEnum::CREATE_CHAPTER,
-            PermissionEnum::UPDATE_CHAPTER,
-            PermissionEnum::VIEW_SUBSCRIPTION,
-            PermissionEnum::CREATE_SUBSCRIPTION,
-            PermissionEnum::UPDATE_SUBSCRIPTION,
-            PermissionEnum::VIEW_EXAM,
-            PermissionEnum::CREATE_EXAM,
-            PermissionEnum::UPDATE_EXAM,
-            PermissionEnum::SUBMIT_EXAM,
-            PermissionEnum::MANAGE_USERS
-        ]);
-    }
-
-    private function getManagerPermissions(): \Illuminate\Support\Collection
-    {
-        return collect([
-            PermissionEnum::VIEW_DASHBOARD,
-            PermissionEnum::MANAGE_USERS,
-            PermissionEnum::MANAGE_CONTENT,
-            PermissionEnum::VIEW_REPORTS,
-        ]);
     }
 
     public function submissions(): HasMany
@@ -161,5 +136,38 @@ final class User extends Authenticatable implements FilamentUser
             'password' => 'hashed',
             'must_change_password' => 'boolean',
         ];
+    }
+
+    private function getAdminPermissions(): \Illuminate\Support\Collection
+    {
+        return collect([
+            PermissionEnum::VIEW_DASHBOARD,
+            PermissionEnum::MANAGE_CONTENT,
+            PermissionEnum::VIEW_REPORTS,
+            PermissionEnum::VIEW_MASTER_CLASS,
+            PermissionEnum::CREATE_MASTER_CLASS,
+            PermissionEnum::UPDATE_MASTER_CLASS,
+            PermissionEnum::VIEW_CHAPTER,
+            PermissionEnum::CREATE_CHAPTER,
+            PermissionEnum::UPDATE_CHAPTER,
+            PermissionEnum::VIEW_SUBSCRIPTION,
+            PermissionEnum::CREATE_SUBSCRIPTION,
+            PermissionEnum::UPDATE_SUBSCRIPTION,
+            PermissionEnum::VIEW_EXAM,
+            PermissionEnum::CREATE_EXAM,
+            PermissionEnum::UPDATE_EXAM,
+            PermissionEnum::SUBMIT_EXAM,
+            PermissionEnum::MANAGE_USERS,
+        ]);
+    }
+
+    private function getManagerPermissions(): \Illuminate\Support\Collection
+    {
+        return collect([
+            PermissionEnum::VIEW_DASHBOARD,
+            PermissionEnum::MANAGE_USERS,
+            PermissionEnum::MANAGE_CONTENT,
+            PermissionEnum::VIEW_REPORTS,
+        ]);
     }
 }

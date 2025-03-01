@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Livewire\Pages\Formations;
 
 use App\Models\Training;
@@ -11,7 +13,7 @@ use Livewire\Component;
 
 #[Layout('welcome')]
 #[Title('Formation Details')]
-class DetailFormation extends Component
+final class DetailFormation extends Component
 {
     #[Locked]
     public Training $training;

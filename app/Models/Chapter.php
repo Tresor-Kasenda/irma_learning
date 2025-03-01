@@ -26,6 +26,11 @@ final class Chapter extends Model
         return $this->belongsTo(MasterClass::class, 'master_class_id');
     }
 
+    public function result(): HasOne
+    {
+        return $this->hasOne(ExamResult::class);
+    }
+
     public function examination(): HasOne
     {
         return $this->hasOne(Examination::class);
@@ -73,7 +78,7 @@ final class Chapter extends Model
             ->where('status', ChapterProgressEnum::COMPLETED->value)
             ->exists();
 
-        $hasReferenceCode = !empty($user->reference_code);
+        $hasReferenceCode = ! empty($user->reference_code);
 
         return $hasCompleted && $hasReferenceCode;
     }

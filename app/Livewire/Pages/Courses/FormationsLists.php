@@ -23,10 +23,10 @@ final class FormationsLists extends Component
         $formations = Training::query()
             ->when(
                 $this->search,
-                fn($query) => $query
+                fn ($query) => $query
                     ->whereAny([
                         'title',
-                        'description'
+                        'description',
                     ], 'like', "%{$this->search}%"))
             ->latest('created_at')
             ->take(5)
@@ -37,7 +37,7 @@ final class FormationsLists extends Component
             'trainings' => Training::query()
                 ->latest('created_at')
                 ->take(9)
-                ->get()
+                ->get(),
 
         ]);
     }

@@ -8,6 +8,7 @@ use Database\Factories\ExamSubmissionFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 final class ExamSubmission extends Model
 {
@@ -17,6 +18,11 @@ final class ExamSubmission extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class, 'user_id');
+    }
+
+    public function result(): HasOne
+    {
+        return $this->hasOne(ExamResult::class, 'exam_submission_id');
     }
 
     public function chapter(): BelongsTo

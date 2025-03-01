@@ -1,12 +1,14 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class Training extends Model
+final class Training extends Model
 {
     /** @use HasFactory<\Database\Factories\TrainingFactory> */
     use HasFactory;
@@ -19,7 +21,7 @@ class Training extends Model
     protected function casts(): array
     {
         return [
-            'completed_at' => 'datetime'
+            'completed_at' => 'datetime',
         ];
     }
 }

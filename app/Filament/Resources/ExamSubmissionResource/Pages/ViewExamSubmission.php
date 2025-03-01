@@ -51,7 +51,7 @@ final class ViewExamSubmission extends ViewRecord
                                     ->copyable()
                                     ->badge(),
                             ]),
-                    ])
+                    ]),
             ]);
     }
 
@@ -63,9 +63,10 @@ final class ViewExamSubmission extends ViewRecord
                 ->icon('heroicon-o-arrow-down-tray')
                 ->action(function () {
                     $filePath = $this->record->file_path;
+
                     return Storage::download($filePath);
                 })
-                ->visible(fn() => $this->record->file_path !== null),
+                ->visible(fn () => $this->record->file_path !== null),
         ];
     }
 }

@@ -43,13 +43,13 @@ final class EditMasterClass extends EditRecord
                             TextInput::make('title')
                                 ->label('Titre de la formation')
                                 ->required()
-                                ->placeholder("Titre de la formation")
+                                ->placeholder('Titre de la formation')
                                 ->maxLength(255),
                             DatePicker::make('completed_at')
-                                ->label("Date de fin de la formation")
+                                ->label('Date de fin de la formation')
                                 ->required()
                                 ->native(false)
-                                ->placeholder("Choisir une date"),
+                                ->placeholder('Choisir une date'),
                             FileUpload::make('images')
                                 ->directory('images')
                                 ->label('Couverture')
@@ -97,8 +97,8 @@ final class EditMasterClass extends EditRecord
 
                     Notification::make()
                         ->success()
-                        ->title("Formation ajoutée")
-                        ->body("La formation a été ajoutée avec succès")
+                        ->title('Formation ajoutée')
+                        ->body('La formation a été ajoutée avec succès')
                         ->send();
                 }),
         ];

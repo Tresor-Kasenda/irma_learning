@@ -6,7 +6,7 @@ namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
 
-final class TrainingSeeder extends Seeder
+final class ExamResultSeeder extends Seeder
 {
     /**
      * Run the database seeds.
