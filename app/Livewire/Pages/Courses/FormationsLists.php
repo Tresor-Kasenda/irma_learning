@@ -9,6 +9,7 @@ use Illuminate\Contracts\View\View;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Attributes\Url;
+use Livewire\Attributes\Validate;
 use Livewire\Component;
 
 #[Layout('welcome')]
@@ -16,6 +17,7 @@ use Livewire\Component;
 final class FormationsLists extends Component
 {
     #[Url(as: 'q')]
+    #[Validate('nullable|string')]
     public ?string $search = null;
 
     public function render(): View
@@ -23,11 +25,11 @@ final class FormationsLists extends Component
         $formations = Training::query()
             ->when(
                 $this->search,
-                fn ($query) => $query
+                fn($query) => $query
                     ->whereAny([
                         'title',
                         'description',
-                    ], 'like', "%{$this->search}%"))
+                    ], 'like', sprintf('%%%s%%', $this->search)))
             ->latest('created_at')
             ->take(5)
             ->get();

@@ -133,7 +133,8 @@
                         <h2>About this Masterclass</h2>
                         <p>{!! $masterClass->description !!}</p>
                         <div class="alert-message">
-                            ⚡️ Astuce Pro : Commencez par le premier chapitre et progressez de manière séquentielle à travers le cours pour une meilleure expérience d'apprentissage.
+                            ⚡️ Astuce Pro : Commencez par le premier chapitre et progressez de manière séquentielle à
+                            travers le cours pour une meilleure expérience d'apprentissage.
                         </div>
                     </div>
                 @else
@@ -263,16 +264,16 @@
                                                     {{ $file_path ? '' : 'disabled' }}>
                                                     <span wire:loading.remove>Soumettre votre examen</span>
                                                     <span wire:loading>
-                                                    <svg class="animate-spin mr-2 h-5 w-5 text-white inline-block"
-                                                         xmlns="http://www.w3.org/2000/svg" fill="none"
-                                                         viewBox="0 0 24 24">
-                                                        <circle class="opacity-25" cx="12" cy="12" r="10"
-                                                                stroke="currentColor" stroke-width="4"></circle>
-                                                        <path class="opacity-75" fill="currentColor"
-                                                              d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
-                                                    </svg>
-                                                    Chargement...
-                                                </span>
+                                                        <svg class="animate-spin mr-2 h-5 w-5 text-white inline-block"
+                                                             xmlns="http://www.w3.org/2000/svg" fill="none"
+                                                             viewBox="0 0 24 24">
+                                                            <circle class="opacity-25" cx="12" cy="12" r="10"
+                                                                    stroke="currentColor" stroke-width="4"></circle>
+                                                            <path class="opacity-75" fill="currentColor"
+                                                                  d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+                                                        </svg>
+                                                        Chargement...
+                                                    </span>
                                                 </button>
                                             </form>
                                         </div>

@@ -6,21 +6,57 @@ use Livewire\Attributes\Layout;
 use Livewire\Volt\Component;
 
 new #[Layout('layouts.guest')] class extends Component {
-    public LoginForm $form;
 
-    /**
-     * Handle an incoming authentication request.
-     */
-    public function login(): void
+    #[\Livewire\Attributes\Validate('required|string|email')]
+    public ?string $email = null;
+
+    #[\Livewire\Attributes\Validate('required|exists:problems,id')]
+    public ?int $problem_id = null;
+
+    #[\Livewire\Attributes\Validate('required|string')]
+    public ?string $message = null;
+
+    #[\Livewire\Attributes\Computed]
+    public function problems(): \Illuminate\Support\Collection
     {
-
+        return \App\Models\Problem::pluck('name', 'id');
     }
+
+    public function submit(): void
+    {
+        $this->validate();
+
+        $helpRequest = \App\Models\HelpRequest::create([
+            'problem_id' => $this->problem_id,
+            'email' => $this->email,
+            'message' => $this->message,
+        ]);
+
+        try {
+            $admin = \App\Models\User::query()
+                ->where('role', '=', \App\Enums\UserRoleEnum::ROOT)->first();
+            if ($admin) {
+                $admin->notify(new \App\Notifications\NewHelpRequest($helpRequest));
+            }
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Échec de l\'envoi de notification: ' . $e->getMessage());
+        }
+
+        $this->reset(['email', 'problem_id', 'message']);
+
+        $this->dispatch(
+            'notify',
+            message: "Votre demande d'aide a été soumise avec",
+            type: 'success'
+        );
+    }
+
 }; ?>
 
 <div class="w-full flex justify-center">
     <x-auth-session-status class="mb-4" :status="session('status')"/>
 
-    <form wire:submit="login"
+    <form wire:submit="submit"
           class="border border-border/60 w-full max-w-lg p-1 shadow-lg shadow-gray-200/40 bg-white rounded-lg">
         <div class="p-5 sm:p-8">
             <a href="{{ route('home-page') }}" wire:navigate>
@@ -55,20 +91,33 @@ new #[Layout('layouts.guest')] class extends Component {
                 </div>
                 <div class="flex flex-col gap-2">
                     <x-input-label for="problem" :value="__('Probleme rencontre')"/>
-                    <select name="problem" id="problem" class="ui-form-input form-input-md rounded-md peer w-full">
+                    <select name="problem" wire:model="problem_id" id="problem"
+                            class="ui-form-input form-input-md rounded-md peer w-full">
                         <option>{{ __('Selectionner un probleme') }}</option>
-                        <option value="1">{{ __('Probleme 1') }}</option>
-                        <option value="2">{{ __('Probleme 2') }}</option>
-                        <option value="3">{{ __('Probleme 3') }}</option>
+                        @foreach($this->problems() as $id => $problem)
+                            <option value="{{ $id }}">{{ $problem }}</option>
+                        @endforeach
                     </select>
                     <x-input-error :messages="$errors->get('email')" class="mt-2"/>
                 </div>
                 <div class="flex flex-col gap-2">
                     <x-input-label for="message" :value="__('Message')"/>
-                    <x-text-area id="message"/>
+                    <x-text-area wire:model="message" id="message"/>
                 </div>
-                <button class="btn btn-md rounded-md w-full justify-center text-white bg-primary">
-                    {{ __('Soumettre') }}
+                <button class="btn btn-md rounded-md w-full justify-center text-white bg-primary"
+                        wire:loading.attr="disabled">
+                    <span wire:loading.remove>{{ __('Soumettre') }}</span>
+                    <span wire:loading>
+                        <svg class="animate-spin mr-2 h-5 w-5 text-white inline-block"
+                             xmlns="http://www.w3.org/2000/svg" fill="none"
+                             viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10"
+                                    stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor"
+                                  d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+                        </svg>
+                        Chargement...
+                    </span>
                 </button>
             </div>
         </div>
