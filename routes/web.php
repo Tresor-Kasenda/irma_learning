@@ -16,6 +16,7 @@ Route::get('/certifications', Certifications::class)->name('certifications');
 Route::get('/formations-continue', FormationsLists::class)->name('formations-lists');
 Route::get('/master-class/{masterClass}/formations', LearningCourse::class)->name('master-class');
 Volt::route('/resultats', 'resultats')->name("resultats");
+Volt::route('/courses-info', 'info-certification')->name("courses-info");
 
 Route::get('/formation/{training}/details', App\Livewire\Pages\Formations\DetailFormation::class)->name('formation-details');
 
