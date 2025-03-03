@@ -189,7 +189,7 @@
                 class="h-max transition duration-500 fx-open:border-primary bg-bg/50 backdrop-blur-sm border rounded-lg border-border-light">
                 <button data-accordion-trigger
                     class="group inline-flex items-center justify-between text-left w-full transition duration-500 hover:bg-bg-high/20 rounded-lg p-4 ">
-                    <h5 class="text-fg-title font-medium">Validation des Compétences</h5>
+                    <h5 class="text-primary-700 font-medium">Validation des Compétences</h5>
                     <div class="size-3 flex relative ease-linear duration-300 group-aria-expanded:rotate-45">
                         <span class="flex h-0.5 w-full absolute top-1/2 -translate-y-1/2 bg-fg-title/60"></span>
                         <span class="flex h-full w-0.5 absolute left-1/2 -translate-x-1/2 bg-fg-title/60"></span>
@@ -210,7 +210,7 @@
                 class="h-max transition duration-500 fx-open:border-primary bg-bg/50 backdrop-blur-sm border rounded-lg border-border-light">
                 <button data-accordion-trigger
                     class="group inline-flex items-center justify-between text-left w-full transition duration-500 hover:bg-bg-high/20 rounded-lg p-4 ">
-                    <h5 class="text-fg-title font-medium">Modalités d'Accès et de Passation</h5>
+                    <h5 class="text-primary-700 font-medium">Modalités d'Accès et de Passation</h5>
                     <div class="size-3 flex relative ease-linear duration-300 group-aria-expanded:rotate-45">
                         <span class="flex h-0.5 w-full absolute top-1/2 -translate-y-1/2 bg-fg-title/60"></span>
                         <span class="flex h-full w-0.5 absolute left-1/2 -translate-x-1/2 bg-fg-title/60"></span>
@@ -239,7 +239,7 @@
                 class="h-max transition duration-500 fx-open:border-primary bg-bg/50 backdrop-blur-sm border rounded-lg border-border-light">
                 <button data-accordion-trigger
                     class="group inline-flex items-center justify-between text-left w-full transition duration-500 hover:bg-bg-high/20 rounded-lg p-4 ">
-                    <h5 class="text-fg-title font-medium">Publication des Résultats et Délivrance des Certifications
+                    <h5 class="text-primary-700 font-medium">Publication des Résultats et Délivrance des Certifications
                     </h5>
                     <div class="size-3 flex relative ease-linear duration-300 group-aria-expanded:rotate-45">
                         <span class="flex h-0.5 w-full absolute top-1/2 -translate-y-1/2 bg-fg-title/60"></span>
