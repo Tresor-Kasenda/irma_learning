@@ -9,11 +9,13 @@ use App\Livewire\Pages\Courses\LearningCourse;
 use App\Livewire\Pages\Dashboard;
 use App\Livewire\Pages\StudentCourseLearning;
 use Illuminate\Support\Facades\Route;
+use Livewire\Volt\Volt;
 
 Route::get('/', HomePage::class)->name('home-page');
 Route::get('/certifications', Certifications::class)->name('certifications');
 Route::get('/formations-continue', FormationsLists::class)->name('formations-lists');
 Route::get('/master-class/{masterClass}/formations', LearningCourse::class)->name('master-class');
+Volt::route('/resultats', 'resultats')->name("resultats");
 
 Route::get('/formation/{training}/details', App\Livewire\Pages\Formations\DetailFormation::class)->name('formation-details');
 

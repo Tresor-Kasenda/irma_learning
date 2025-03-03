@@ -9,7 +9,6 @@
         "@flexilla/collapse": "^2.0.6",
         "@flexilla/dropdown": "^2.0.4",
         "@flexilla/tailwind-plugin": "^0.0.10",
-        "@flexilla/utilities": "^2.0.71",
         "@tailwindcss/forms": "^0.5.2",
         "@tailwindcss/vite": "^4.0.6",
         "autoprefixer": "^10.4.2",
@@ -21,7 +20,8 @@
         "vite": "^6.0.11"
     },
     "dependencies": {
-        "@flexilla/flexilla": "^2.0.9",
+        "@flexilla/flexilla": "^2.1.0",
+        "@flexilla/utilities": "^2.0.72",
         "canvas-confetti": "^1.9.3"
     }
 }
