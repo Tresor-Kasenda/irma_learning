@@ -22,10 +22,10 @@
                                 Certification
                             </div>
                         </div>
-                        <h1 class="text-fg-title text-4xl/tight md:text-5xl/tight xl:text-6xl/tight text-center">
+                        <h1 class="text-fg-title text-xl text-center">
                             Certification Professionnelle
                         </h1>
-                        <p class="text-fg-subtitle text-lg font-medium max-w-lg mx-auto text-center">
+                        <p class="text-fg-subtitle text-4xl/tight  font-medium max-w-lg mx-auto text-center italic">
                             Un gage de crédibilité qui ouvre à de nouvelles opportunités
                         </p>
                     </div>
@@ -180,7 +180,7 @@
     </section>
 
     <section class="mx-auto max-w-7xl w-full px-5 sm:px-10 flex flex-col gap-16">
-        <h2 class="font-medium relative text-3xl md:text-4xl text-fg-title max-w-xl mx-auto text-center">
+        <h2 class="font-medium relative text-3xl md:text-4xl text-fg-title max-w-xl mx-auto text-center capitalize">
             Informations importantes
         </h2>
         <div data-ui-accordion data-accordion-type="single"
@@ -277,7 +277,7 @@
         </div>
     </section>
     <section id="certifications" class="my-32 scroll-mt-20 w-full flex flex-col gap-16">
-        <h2 class="font-medium relative text-3xl md:text-4xl text-fg-title max-w-xl mx-auto text-center">
+        <h2 class="font-medium relative text-3xl md:text-4xl text-fg-title max-w-xl mx-auto text-center capitalize">
             Nos certifications
         </h2>
         <div

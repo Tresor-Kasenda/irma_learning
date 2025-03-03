@@ -22,7 +22,7 @@ new class extends Component {
                     <li class="flex relative text-fg">
                         <a href="#" data-tabs-trigger data-target="tab2" tabindex="0" aria-label=""
                             class="pb-3 border-b-2 border-transparent fx-active:border-primary fx-active:text-primary">
-                            Resultats
+                            Examens de certification
                         </a>
                     </li>
                 </ul>
@@ -46,29 +46,60 @@ new class extends Component {
                         <div class="px-4 flex w-full">
                             <div class="py-4 grid sm:grid-cols-2 lg:grid-cols-3 gap-6 w-full">
                                 <div
-                                    class="bg-bg px-6 py-4 rounded-md shadow-md shadow-gray-100 border border-border/50">
-                                    <div class="flex flex-col h-full">
-                                        <div>
-                                            <h3 class="text-lg font-medium text-fg-title">Chapitre 1: Algèbre
-                                                Linéaire</h3>
-                                            <p class="mt-1 text-sm text-gray-500">Points obtenus: <span
-                                                    class="font-semibold text-emerald-600">18/20</span></p>
+                                    class="flex flex-col bg-bg px-6 py-4 rounded-md shadow-md shadow-gray-50 border border-border/50"> 
+                                    <div>
+                                        <h3 class="text-lg font-medium text-fg-title">Chapitre 1: Algèbre
+                                            Linéaire</h3>
+                                            <p class="mt-1 text-sm text-gray-500">Date: <span
+                                                class="font-semibold text-fg-subtext">10/02/2025</span></p>
+                                        <p class="mt-1 text-sm text-gray-500">Status: <span
+                                                class="font-semibold text-emerald-600">Success</span></p>
+                                        <p class="mt-1 text-sm text-gray-500">Points obtenus: <span
+                                                class="font-semibold text-emerald-600">18/20</span></p>
+                                    </div>
+                                    <div class="mt-4 relative group">
+                                        <button class="flex items-center text-blue-600 hover:text-blue-800">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32"
+                                                fill="currentColor" class="h-5 w-5 mr-2" viewBox="0 0 256 256">
+                                                <path
+                                                    d="M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm0,192a88,88,0,1,1,88-88A88.1,88.1,0,0,1,128,216Zm16-40a8,8,0,0,1-8,8,16,16,0,0,1-16-16V128a8,8,0,0,1,0-16,16,16,0,0,1,16,16v40A8,8,0,0,1,144,176ZM112,84a12,12,0,1,1,12,12A12,12,0,0,1,112,84Z">
+                                                </path>
+                                            </svg>
+                                            <span class="text-sm">Observation</span>
+                                        </button>
+                                        <div
+                                            class="absolute left-0 w-64 sm:w-full mt-2 p-4 bg-primary-50 rounded-md shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible group-active:visible group-active:opacity-100 group-focus-within:opacity-100 group-focus-within:visible transition-all duration-300 z-10">
+                                            <p class="text-sm text-fg">Excellent travail! Maîtrise
+                                                exceptionnelle des concepts fondamentaux.</p>
                                         </div>
-                                        <div class="mt-4 relative group">
-                                            <button class="flex items-center text-blue-600 hover:text-blue-800">
-                                                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32"
-                                                    fill="currentColor" class="h-5 w-5 mr-2" viewBox="0 0 256 256">
-                                                    <path
-                                                        d="M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm0,192a88,88,0,1,1,88-88A88.1,88.1,0,0,1,128,216Zm16-40a8,8,0,0,1-8,8,16,16,0,0,1-16-16V128a8,8,0,0,1,0-16,16,16,0,0,1,16,16v40A8,8,0,0,1,144,176ZM112,84a12,12,0,1,1,12,12A12,12,0,0,1,112,84Z">
-                                                    </path>
-                                                </svg>
-                                                <span class="text-sm">Voir commentaires</span>
-                                            </button>
-                                            <div
-                                                class="absolute left-0 w-64 sm:w-full mt-2 p-4 bg-primary-50 rounded-md shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible group-active:visible group-active:opacity-100 group-focus-within:opacity-100 group-focus-within:visible transition-all duration-300 z-10">
-                                                <p class="text-sm text-fg">Excellent travail! Maîtrise
-                                                    exceptionnelle des concepts fondamentaux.</p>
-                                            </div>
+                                    </div>
+                                </div>
+                                <div
+                                    class="flex flex-col bg-bg px-6 py-4 rounded-md shadow-md shadow-gray-50 border border-border/50"> 
+                                    <div>
+                                        <h3 class="text-lg font-medium text-fg-title">Chapitre 1: Algèbre
+                                            Linéaire</h3>
+                                            <p class="mt-1 text-sm text-gray-500">Date: <span
+                                                class="font-semibold text-fg-subtext">10/02/2025</span></p>
+                                        <p class="mt-1 text-sm text-gray-500">Status: <span
+                                                class="font-semibold text-red-600">Failed</span></p>
+                                        <p class="mt-1 text-sm text-gray-500">Points obtenus: <span
+                                                class="font-semibold text-red-600">8/20</span></p>
+                                    </div>
+                                    <div class="mt-4 relative group">
+                                        <button class="flex items-center text-blue-600 hover:text-blue-800">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32"
+                                                fill="currentColor" class="h-5 w-5 mr-2" viewBox="0 0 256 256">
+                                                <path
+                                                    d="M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm0,192a88,88,0,1,1,88-88A88.1,88.1,0,0,1,128,216Zm16-40a8,8,0,0,1-8,8,16,16,0,0,1-16-16V128a8,8,0,0,1,0-16,16,16,0,0,1,16,16v40A8,8,0,0,1,144,176ZM112,84a12,12,0,1,1,12,12A12,12,0,0,1,112,84Z">
+                                                </path>
+                                            </svg>
+                                            <span class="text-sm">Observation</span>
+                                        </button>
+                                        <div
+                                            class="absolute left-0 w-64 sm:w-full mt-2 p-4 bg-primary-50 rounded-md shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible group-active:visible group-active:opacity-100 group-focus-within:opacity-100 group-focus-within:visible transition-all duration-300 z-10">
+                                            <p class="text-sm text-fg">Excellent travail! Maîtrise
+                                                exceptionnelle des concepts fondamentaux.</p>
                                         </div>
                                     </div>
                                 </div>

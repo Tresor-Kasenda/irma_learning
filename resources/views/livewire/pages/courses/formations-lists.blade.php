@@ -23,10 +23,10 @@
                                 Formation continue
                             </div>
                         </div>
-                        <h1 class="text-fg-title text-4xl/tight md:text-5xl/tight xl:text-6xl/tight mx-auto text-center">
+                        <h1 class="text-fg-title text-xl mx-auto text-center">
                             Formation Continue
                         </h1>
-                        <p class="text-fg-subtitle text-lg font-medium max-w-lg mx-auto text-center">
+                        <p class="text-fg-subtitle text-4xl/tight font-medium max-w-lg mx-auto text-center italic">
                             Le savoir en mouvement, votre carrière en progression !
                         </p>
                     </div>
@@ -179,7 +179,7 @@
     </section>
 
     <section class="mx-auto max-w-7xl w-full px-5 sm:px-10 flex flex-col gap-16">
-        <h2 class="font-medium relative text-3xl md:text-4xl text-fg-title max-w-xl mx-auto text-center">
+        <h2 class="font-medium relative text-3xl md:text-4xl text-fg-title max-w-xl mx-auto text-center capitalize">
             Nos services principaux
         </h2>
         <div data-ui-accordion data-accordion-type="single"
