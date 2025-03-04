@@ -1,15 +1,15 @@
 import "./bootstrap";
-import {initScrollToTop} from "./scroll-to-top";
+import { initScrollToTop } from "./scroll-to-top";
 
-import {Dropdown} from "@flexilla/dropdown";
+import { Dropdown } from "@flexilla/dropdown";
 
-import {$, $$, toggleNavbar} from "@flexilla/utilities";
-import {Collapse} from "@flexilla/collapse";
+import { $, $$, toggleNavbar } from "@flexilla/utilities";
+import { Collapse } from "@flexilla/collapse";
 
-import {notificationSystem} from "./utilities/notification";
+import { notificationSystem } from "./utilities/notification";
 
 import confetti from "canvas-confetti";
-import {Accordion} from "@flexilla/flexilla";
+import { Accordion, Tabs } from "@flexilla/flexilla";
 
 window.notificationSystem = notificationSystem;
 const initAllScript = () => {
@@ -19,12 +19,24 @@ const initAllScript = () => {
     const collaspibles = $$("[data-ui-collapsible]");
     if (collaspibles && collaspibles.length > 0) {
         for (const collapsible of collaspibles) {
-            new Collapse(collapsible, {defaultState: "open"});
+            new Collapse(collapsible, { defaultState: "open" });
         }
     }
     initScrollToTop();
-    toggleNavbar({navbarElement: "[data-main-navbar]"})
+    const navbarEl = document.querySelector("[data-main-navbar]");
+    if (navbarEl instanceof HTMLElement) {
+        toggleNavbar({ navbarElement: navbarEl });
+    }
+    const navDash = document.querySelector("[data-dash-nav]");
+    if (navDash instanceof HTMLElement) {
+        toggleNavbar({ navbarElement: navDash });
+    }
+
     initChapiterSidebar();
+    const tabResults = document.querySelector("[data-results-tabs]");
+    if (tabResults instanceof HTMLElement) {
+        new Tabs(tabResults);
+    }
 };
 
 document.addEventListener("livewire:navigated", initAllScript);

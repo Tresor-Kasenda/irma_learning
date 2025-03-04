@@ -206,6 +206,8 @@
         @apply border border-border px-[var(--form-input-px)] py-[var(--form-input-py)] text-[var(--form-input-text-size)] focus:outline-none focus:ring-[hsl(var(--color-primary-600))] focus:border-[hsl(var(--color-primary-500))] invalid:outline-[hsl(var(--color-danger-600))] text-sm placeholder:font-thin placeholder:text-gray-600;
     }
 
+
+
     .form-input-sm {
         --form-input-px: 0.5rem;
         --form-input-py: 0.25rem;
@@ -238,5 +240,13 @@
 
     .btn-solid:hover [data-btn-layer]::before {
         @apply translate-x-0 scale-150
+    }
+
+
+}
+
+@media (max-width: 640px) {
+    .dashnav {
+        @apply absolute inset-x-0 z-[100] top-16 px-4 py-6 bg-bg rounded-md shadow-sm invisible fx-open:visible opacity-0 fx-open:opacity-100 ease-linear duration-300
     }
 }

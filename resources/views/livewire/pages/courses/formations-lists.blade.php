@@ -11,7 +11,7 @@
                     <div
                         class="relative max-w-lg lg:max-w-none space-y-7 flex flex-col w-full text-center lg:text-left lg:w-1/2 lg:flex-1">
                         <div
-                            class=" text-sm pt-8 text-fg-subtitle flex items-center divide-x divide-fg/50 *:px-4 first:*:pl-0 last:*:pr-0 overflow-hidden max-w-full">
+                            class="text-sm pt-8 text-fg-subtitle flex items-center justify-center text-center divide-x divide-fg/50 *:px-4 first:*:pl-0 last:*:pr-0 overflow-hidden max-w-full">
                             <a href="{{ route('home-page') }}" wire:navigate aria-label="Lien vers la page principale">
                                 <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none"
                                      viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
@@ -23,22 +23,22 @@
                                 Formation continue
                             </div>
                         </div>
-                        <h1 class="text-fg-title text-4xl/tight md:text-5xl/tight xl:text-6xl/tight">
+                        <h1 class="text-fg-title text-xl mx-auto text-center">
                             Formation Continue
                         </h1>
-                        <p class="text-fg max-w-lg">
+                        <p class="text-fg-subtitle text-4xl/tight font-medium max-w-lg mx-auto text-center italic">
                             Le savoir en mouvement, votre carrière en progression !
                         </p>
                     </div>
                     <div
                         class="flex w-full lg:w-1/2 lg:flex-1 lg:min-h-[440px] border border-dashed rounded-md bg-bg shadow-sm shadow-gray-100/20">
                         @if (count($formations) > 0)
-                            <div class="flex flex-col w-full p-4 xl:p-5 lg:h-full justify-between">
-                                <span class="mb-4 flex text-fg-title font-semibold">Formation en cours</span>
+                            <div class="min-h-full flex flex-col w-full p-4 xl:p-5 lg:h-full justify-between">
+                                <span class="mb-4 flex h-max text-fg-title font-semibold">Formation en cours</span>
                                 <ul
-                                    class=" flex-1 flex flex-col gap-4 divide-y divide-gray-100/70 *:py-2 first:*:pt-0 last:*:pb-0 mb-5">
+                                    class="flex-1 flex flex-col gap-4 divide-y divide-gray-100/70 *:py-2 first:*:pt-0 last:*:pb-0 mb-5">
                                     @foreach ($formations as $training)
-                                        <li class="flex-1 flex items-start gap-3" wire:key="{{ $training->id }}">
+                                        <li class="flex-1 flex items-start gap-3 max-h-max" wire:key="{{ $training->id }}">
                                             <div class="p-2 rounded bg-bg-light text-primary flex min-w-max">
                                                 <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32"
                                                      fill="currentColor" viewBox="0 0 256 256">
@@ -76,7 +76,7 @@
                                         </li>
                                     @endforeach
                                 </ul>
-                                <div>
+                                <div class="flex h-max">
                                     <a href="#certifications"
                                        class="group relative w-max btn btn-sm sm:btn-md justify-center overflow-hidden rounded-md btn-solid bg-primary-50 text-primary-800 hover:text-primary-50">
                                         <div class="flex items-center relative z-10">
@@ -179,7 +179,7 @@
     </section>
 
     <section class="mx-auto max-w-7xl w-full px-5 sm:px-10 flex flex-col gap-16">
-        <h2 class="font-medium relative text-3xl md:text-4xl text-fg-title max-w-xl mx-auto text-center">
+        <h2 class="font-medium relative text-3xl md:text-4xl text-fg-title max-w-xl mx-auto text-center capitalize">
             Nos services principaux
         </h2>
         <div data-ui-accordion data-accordion-type="single"
@@ -188,7 +188,7 @@
                  class="h-max transition duration-500 fx-open:border-primary bg-bg/50 backdrop-blur-sm border rounded-lg border-border-light">
                 <button data-accordion-trigger
                         class="group inline-flex items-center justify-between text-left w-full transition duration-500 hover:bg-bg-high/20 rounded-lg p-4 ">
-                    <h5 class="text-fg-title font-medium">Objectifs de la Formation Continue</h5>
+                    <h5 class="text-primary-700 font-medium">Objectifs de la Formation Continue</h5>
                     <div class="size-3 flex relative ease-linear duration-300 group-aria-expanded:rotate-45">
                         <span class="flex h-0.5 w-full absolute top-1/2 -translate-y-1/2 bg-fg-title/60"></span>
                         <span class="flex h-full w-0.5 absolute left-1/2 -translate-x-1/2 bg-fg-title/60"></span>
@@ -209,7 +209,7 @@
                  class="h-max lg:col-span-2 transition duration-500 fx-open:border-primary bg-bg/50 backdrop-blur-sm border rounded-lg border-border-light">
                 <button data-accordion-trigger
                         class="group inline-flex items-center justify-between text-left w-full transition duration-500 hover:bg-bg-high/20 rounded-lg p-4 ">
-                    <h5 class="text-fg-title font-medium">Exigences de Formation Continue</h5>
+                    <h5 class="text-primary-700 font-medium">Exigences de Formation Continue</h5>
                     <div class="size-3 flex relative ease-linear duration-300 group-aria-expanded:rotate-45">
                         <span class="flex h-0.5 w-full absolute top-1/2 -translate-y-1/2 bg-fg-title/60"></span>
                         <span class="flex h-full w-0.5 absolute left-1/2 -translate-x-1/2 bg-fg-title/60"></span>
@@ -257,10 +257,18 @@
         </div>
     </section>
     <section id="certifications" class="my-32 scroll-mt-20 w-full flex flex-col gap-16">
+        <h2 class="font-medium relative text-3xl md:text-4xl text-fg-title max-w-xl mx-auto text-center">
+            Nos formations
+        </h2>
         <div
             class="mx-auto max-w-7xl w-full px-5 sm:px-10 border border-border-lighter bg-bg/30 rounded-md h-14 sticky top-2 z-20 backdrop-blur-sm flex justify-between items-center">
             <div class="text-sm md:text-base text-fg-subtext">
-                Nos formations
+                @if ($trainings->count() > 0)
+                    <span class="text-primary"> {{ $trainings->count() }}</span>
+                    formation{{ $trainings->count() > 1 ? 's' : '' }} <span class="hidden sm:inline">Disponible{{ $trainings->count() > 1 ? 's' : '' }}</span>
+                @else
+                    Aucune formation disponible
+                @endif
             </div>
             <div class="flex gap-3 items-center">
                 <div class="relative w-[230px] sm:w-80">
