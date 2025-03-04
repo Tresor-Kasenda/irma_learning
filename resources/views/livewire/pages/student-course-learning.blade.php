@@ -138,43 +138,19 @@
                         </div>
                     </div>
                 @else
-                    <h1 class="text-2xl font-bold text-fg-title mb-3">{{ $activeChapter->title }}</h1>
+                    <h1 class="text-2xl font-bold text-fg-title mb-3">{{ str($activeChapter->title)->ucfirst() }}</h1>
 
-                    <h2 class="text-xl font-bold text-fg-title">Presentation</h2>
+                    <h2 class="text-2xl font-bold text-fg-title pt-2 pb-3">Presentation</h2>
 
-                    <div @class([
-                        'max-w-none markdow-content-block max-w-none mt-2 flex flex-col prose prose-invert',
-                    ])>
+                    <div class="'max-w-none markdow-content-block max-w-none mt-2 flex flex-col prose prose-invert'">
                         {!! $activeChapter->content !!}
                     </div>
 
-
-                    <h3 class="text-2xl font-bold text-fg-title mb-2">Description</h3>
-
-                    <div @class([
-                        'max-w-none markdow-content-block max-w-none mt-2 flex flex-col prose prose-invert',
-                        'blur-sm pointer-events-none' => !$this->canAccessChapter($activeChapter)
-                    ])>
-                        {!! $activeChapter->description !!}
-                    </div>
-
-                    <div @class([
-                        'max-w-none markdow-content-block max-w-none mt-3 flex flex-col prose prose-invert',
-                        'blur-sm pointer-events-none' => !$this->canAccessChapter($activeChapter)
-                    ])>
-                        <iframe
-                            src="{{ asset('storage/' . $activeChapter->path)  }}"
-                            type="application/pdf"
-                            width="100%"
-                            height="860px"
-                            allow="publickey-credentials-get; publickey-credentials-create"
-                            class="w-full border border-border rounded-lg"
-                            loading="lazy"
-                        ></iframe>
-                    </div>
-
                     <div class="flex flex-col space-y-4 mt-4">
-                        <h2 class="text-2xl font-semibold">Ressources</h2>
+                        <h2 class="text-2xl font-semibold">Ressource du cours</h2>
+                        <p class="text-gray-600">
+                            Vous trouverez ci-dessous les ressources associées au cours.
+                        </p>
                         <div class="flex items-center flex-row gap-4">
                             @foreach($masterClass->resources as $resource)
                                 <a href="{{ asset('storage/'. $resource->file_path) }}"
@@ -208,6 +184,31 @@
                         </div>
                     </div>
 
+
+                    <h3 class="text-2xl font-bold text-fg-title m-4">Description</h3>
+
+                    <div @class([
+                        'max-w-none markdow-content-block max-w-none mt-2 text-gray-700 leading-relaxed flex flex-col prose prose-invert',
+                        'blur-sm pointer-events-none' => !$this->canAccessChapter($activeChapter)
+                    ])>
+                        {!! $activeChapter->description !!}
+                    </div>
+
+                    <div @class([
+                        'max-w-none markdow-content-block max-w-none mt-3 flex flex-col prose prose-invert',
+                        'blur-sm pointer-events-none' => !$this->canAccessChapter($activeChapter)
+                    ])>
+                        <iframe
+                            src="{{ asset('storage/' . $activeChapter->path)  }}"
+                            type="application/pdf"
+                            width="100%"
+                            height="860px"
+                            allow="publickey-credentials-get; publickey-credentials-create"
+                            class="w-full border border-border rounded-lg"
+                            loading="lazy"
+                        ></iframe>
+                    </div>
+
                     <div class="mt-4">
                         @if(!$this->canSubmitExam())
                             <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4 text-yellow-700">
@@ -227,12 +228,12 @@
                         @else
                             <div class="markdow-content-block max-w-none flex flex-col space-y-4">
                                 @if($activeChapter->examination)
-                                    <h2 class="text-2xl font-semibold">Passation d'evaluation</h2>
+                                    <h2 class="text-2xl font-semibold">Passation d'Evaluation</h2>
                                     <p>{!! $activeChapter->examination?->description !!}</p>
 
                                     @if ($activeChapter->examination?->deadline && now()->isAfter($activeChapter->examination?->deadline))
                                         <div class="alert-message">
-                                            La date limite de soumission est passée.
+                                            La date limite de soumission est déjà passée.
                                         </div>
                                     @elseif (!$this->hasSubmittedExam())
                                         <a
@@ -244,14 +245,46 @@
                                                 <path stroke-linecap="round" stroke-linejoin="round"
                                                       d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3"/>
                                             </svg>
-                                            Telecharge l'examen
+                                            Télécharger votre évalutation
                                         </a>
 
-                                        <div class="alert-message">
-                                            Apres téléchargement veillez travailler sur et soumettre
-                                            votre examen dans le formulaire sous-dessous
-                                        </div>
+                                        @if($activeChapter->examination?->files && count($activeChapter->examination->files) > 0)
+                                            <div class="mt-4 space-y-2">
+                                                <h4 class="text-fg-subtitle">
+                                                    Fichiers supplémentaires
+                                                </h4>
+                                                <div class="space-y-2 flex">
+                                                    @foreach($activeChapter->examination->files as $file)
+                                                        <a
+                                                            href="{{ asset('storage/' . $file) }}"
+                                                            download
+                                                            class="flex items-center gap-2 px-3 py-2 text-fg  rounded-lg transition-colors text-sm w-full">
+                                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none"
+                                                                 viewBox="0 0 24 24"
+                                                                 stroke-width="1.5" stroke="currentColor"
+                                                                 class="size-5">
+                                                                <path stroke-linecap="round" stroke-linejoin="round"
+                                                                      d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m.75 12 3 3m0 0 3-3m-3 3v-6m-1.5-9H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z"/>
+                                                            </svg>
+                                                            <span>{{ basename($file) }}</span>
+                                                        </a>
+                                                    @endforeach
+                                                </div>
+                                            </div>
+                                        @endif
 
+                                        <div x-data="{ tooltip: false }" class="relative">
+                                            <div @mouseenter="tooltip = true" @mouseleave="tooltip = false"
+                                                 class="alert-message">
+                                                Apres téléchargement de l'évaluation veillez travailler et soumettre
+                                                votre examen dans le formulaire ci-dessous
+                                            </div>
+                                            <div x-show="tooltip"
+                                                 class="absolute bg-gray-700 text-white text-xs rounded py-1 px-4 right-0 bottom-full">
+                                                Apres téléchargement de l'évaluation veillez travailler et soumettre
+                                                votre examen dans le formulaire ci-dessous
+                                            </div>
+                                        </div>
                                         <div>
                                             <form wire:submit="submitExam" class="space-y-3">
                                                 <x-filepond::upload
@@ -293,7 +326,7 @@
                                                         origin: { y: 0.6 }
                                                     });
                                                 "
-                                                class="w-full bg-primary-600 text-white btn btn-md rounded-lg flex items-center justify-center gap-2 hover:bg-primary-700 transition-colors mt-4">
+                                                class="w-full bg-primary-600 text-white btn btn-md rounded-lg flex flex-wrap items-center justify-center gap-2 hover:bg-primary-700 transition-colors mt-4">
                                                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
                                                      viewBox="0 0 24 24"
                                                      fill="none" stroke="currentColor" stroke-width="2"
@@ -302,13 +335,13 @@
                                                     <circle cx="12" cy="8" r="6"></circle>
                                                     <path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11"></path>
                                                 </svg>
-                                                Marquer comme Terminé
+                                                Marquer ce chapitre comme terminé
                                             </button>
                                         @endif
                                     @endif
                                 @else
                                     <div class="alert-message">
-                                        Aucune evaluation n'est disponible pour ce chapitre de cours.
+                                        Aucune évaluation n'est disponible pour ce chapitre.
                                     </div>
                                 @endif
                             </div>
@@ -369,8 +402,9 @@
                                 <path d="m12 5 7 7-7 7"></path>
                             </svg>
                         </button>
-                        @endif
                     </div>
+                @endif
+            </div>
         </main>
     </div>
 </div>
