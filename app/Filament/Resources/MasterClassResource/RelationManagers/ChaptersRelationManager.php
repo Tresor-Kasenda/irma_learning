@@ -145,7 +145,6 @@ final class ChaptersRelationManager extends RelationManager
             Forms\Components\FileUpload::make('path')
                 ->label('Fichier')
                 ->required()
-                ->acceptedFileTypes(['application/pdf'])
                 ->directory('examinations')
                 ->maxSize(10240)
                 ->downloadable()
@@ -153,12 +152,11 @@ final class ChaptersRelationManager extends RelationManager
             Forms\Components\FileUpload::make('files')
                 ->label('Fichiers supplémentaires')
                 ->multiple()
-                ->acceptedFileTypes(['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'])
                 ->directory('examinations/additional')
                 ->maxSize(10240)
                 ->downloadable()
                 ->default(fn(Chapter $record) => $record->examination?->files),
-            Forms\Components\MarkdownEditor::make('description')
+            Forms\Components\RichEditor::make('description')
                 ->label('Description')
                 ->required()
                 ->default(fn(Chapter $record) => $record->examination?->description),
