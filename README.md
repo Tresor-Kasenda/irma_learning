@@ -1,14 +1,17 @@
-- [ ]  create a middleware to protect admin panel
-- [ ]  add role table in the plateforme
-- [ ]  add role field to user table
-- [ ]  si la personne est deja souscrit a une formation on dois le rediriger directement sur la page de la formation
-- [ ]  ajouter la page contactez-nous
-- [ ]  ajouter la page a propos
-- [ ]  ajouter la page de politique de confidentialité
-- [ ]  ajouter la page de conditions d'utilisation
-- [ ]  ajouter la page de mentions légales
-- [ ]  ajouter la page de FAQ
-- [ ]  ajouter la page de support
-- [ ]  modifier la partie de soumissions de l'examen pour qu'elle soit plus simple
-- [ ]  Ajouter la page profile de l'etudiant avec possibiliter de modifier ses informations
-- [ ]  Personne ne dois acceder a une master class qui as un status inactif
+- [x]  create a middleware to protect admin panel
+- [x]  add role table in the plateforme
+- [x]  add role field to user table
+- [x]  si la personne est deja souscrit a une formation on dois le rediriger directement sur la page de la formation
+- [x]  ajouter la page contactez-nous
+- [x]  ajouter la page a propos
+- [x]  ajouter la page de politique de confidentialité
+- [x]  ajouter la page de conditions d'utilisation
+- [x]  ajouter la page de mentions légales
+- [x]  ajouter la page de FAQ
+- [x]  ajouter la page de support
+- [x]  modifier la partie de soumissions de l'examen pour qu'elle soit plus simple
+- [x]  Ajouter la page profile de l'etudiant avec possibiliter de modifier ses informations
+- [x]  Personne ne dois acceder a une master class qui as un status inactif
+- [ ] L'etudiant authentifier ne peut voir que la master class auquel il est souscrit
+- [ ] L'etudiant authentifier peut voir d'autres master class mais il dois payer pour y acceder
+- [ ] L'etudiant authentifier peut voir les master class qu'il a deja payé

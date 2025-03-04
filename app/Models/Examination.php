@@ -29,4 +29,11 @@ final class Examination extends Model
     {
         return $this->belongsTo(MasterClass::class, 'master_class_id');
     }
+
+    protected function casts(): array
+    {
+        return [
+            'files' => 'array'
+        ];
+    }
 }
