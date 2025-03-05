@@ -64,7 +64,6 @@ final class EditMasterClass extends EditRecord
                                 ->label('Contenu (PDF)')
                                 ->downloadable()
                                 ->previewable()
-                                ->acceptedFileTypes(['application/pdf'])
                                 ->maxSize(10240) // Taille maximale de 10MB
                                 ->deletable()
                                 ->uploadingMessage('Uploading path...')
