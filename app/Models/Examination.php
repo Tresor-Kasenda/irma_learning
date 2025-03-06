@@ -33,7 +33,7 @@ final class Examination extends Model
     protected function casts(): array
     {
         return [
-            'files' => 'array'
+            'files' => 'array',
         ];
     }
 }

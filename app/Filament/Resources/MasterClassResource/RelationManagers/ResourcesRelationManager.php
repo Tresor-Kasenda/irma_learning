@@ -44,7 +44,7 @@ final class ResourcesRelationManager extends RelationManager
                             ->required()
                             ->placeholder('Lien de la ressource')
                             ->columnSpanFull()
-                            ->visible(fn($get) => $get('type') === 'link'),
+                            ->visible(fn ($get) => $get('type') === 'link'),
                         Forms\Components\FileUpload::make('file_path')
                             ->label('Fichier')
                             ->directory('resources')
@@ -52,8 +52,8 @@ final class ResourcesRelationManager extends RelationManager
                             ->previewable()
                             ->placeholder('Fichier de la ressource')
                             ->maxSize(10240)
-                            ->required(fn($get) => in_array($get('type'), ['pdf', 'video']))
-                            ->visible(fn($get) => in_array($get('type'), ['pdf', 'video']))
+                            ->required(fn ($get) => in_array($get('type'), ['pdf', 'video']))
+                            ->visible(fn ($get) => in_array($get('type'), ['pdf', 'video']))
                             ->columnSpanFull(),
                         Forms\Components\RichEditor::make('content')
                             ->label('Contenu')
@@ -73,9 +73,9 @@ final class ResourcesRelationManager extends RelationManager
                 Tables\Columns\TextColumn::make('file_path')
                     ->label('Fichier')
                     ->searchable()
-                    ->url(fn($record) => $record->type === 'link' ? $record->file_path : null)
+                    ->url(fn ($record) => $record->type === 'link' ? $record->file_path : null)
                     ->badge()
-                    ->extraAttributes(fn($record) => $record->type !== 'link' ? ['data-filament-download-url' => $record->file_path] : [])
+                    ->extraAttributes(fn ($record) => $record->type !== 'link' ? ['data-filament-download-url' => $record->file_path] : [])
                     ->sortable(),
                 Tables\Columns\TextColumn::make('title')
                     ->label('Titre du chapitre')

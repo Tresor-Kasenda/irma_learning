@@ -17,8 +17,7 @@ final class EditUser extends EditRecord
         return [
             Actions\DeleteAction::make()
                 ->label("Supprimer l'utilisateur")
-                ->icon('heroicon-o-trash')
-            ,
+                ->icon('heroicon-o-trash'),
         ];
     }
 }

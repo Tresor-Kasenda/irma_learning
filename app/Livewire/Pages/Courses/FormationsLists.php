@@ -25,7 +25,7 @@ final class FormationsLists extends Component
         $formations = Training::query()
             ->when(
                 $this->search,
-                fn($query) => $query
+                fn ($query) => $query
                     ->whereAny([
                         'title',
                         'description',

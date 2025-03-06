@@ -52,8 +52,13 @@ final class AppServiceProvider extends ServiceProvider
 
     public function shouldBeStrict(): void
     {
-        Model::shouldBeStrict(!$this->app->isProduction());
+        Model::shouldBeStrict(! $this->app->isProduction());
         Model::unguard();
+    }
+
+    public function configureUrl(): void
+    {
+        URL::forceScheme('https');
     }
 
     /**
@@ -69,11 +74,6 @@ final class AppServiceProvider extends ServiceProvider
      */
     private function configurePasswordValidation(): void
     {
-        Password::defaults(fn() => $this->app->isProduction() ? Password::min(8)->uncompromised() : null);
-    }
-
-    public function configureUrl(): void
-    {
-        URL::forceScheme('https');
+        Password::defaults(fn () => $this->app->isProduction() ? Password::min(8)->uncompromised() : null);
     }
 }

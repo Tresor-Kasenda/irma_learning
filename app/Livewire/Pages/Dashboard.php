@@ -38,7 +38,7 @@ final class Dashboard extends Component
                 'title',
                 'duration',
                 'description',
-                'sub_title'
+                'sub_title',
             ], 'like', sprintf('%%%s%%', $this->search))
             ->withCount('chapters')
             ->withCount(['chapters as completed_chapters_count' => function ($query) {
@@ -64,13 +64,13 @@ final class Dashboard extends Component
         return [
             'total' => MasterClass::query()
                 ->where('status', '=', MasterClassEnum::PUBLISHED)
-                ->whereHas('subscription', fn($query) => $query->where('user_id', $userId))
+                ->whereHas('subscription', fn ($query) => $query->where('user_id', $userId))
                 ->count(),
             'in_progress' => MasterClass::query()
                 ->selectRaw('1')
                 ->where('status', '=', MasterClassEnum::PUBLISHED)
-                ->whereHas('subscription', fn($query) => $query->where('user_id', $userId))
-                ->whereHas('chapters.progress', fn(Builder $query) => $query
+                ->whereHas('subscription', fn ($query) => $query->where('user_id', $userId))
+                ->whereHas('chapters.progress', fn (Builder $query) => $query
                     ->where('user_id', $userId)
                     ->where('status', 'in_progress')
                 )
@@ -78,16 +78,16 @@ final class Dashboard extends Component
             'completed' => MasterClass::query()
                 ->selectRaw('1')
                 ->where('status', '=', MasterClassEnum::PUBLISHED)
-                ->whereHas('subscription', fn($query) => $query->where('user_id', $userId))
+                ->whereHas('subscription', fn ($query) => $query->where('user_id', $userId))
                 ->whereDoesntHave('chapters', function ($query) use ($userId) {
-                    $query->whereDoesntHave('progress', fn($q) => $q
+                    $query->whereDoesntHave('progress', fn ($q) => $q
                         ->where('user_id', $userId)
                         ->where('status', 'completed')
                     );
                 })
                 ->whereHas('chapters', function ($query) use ($userId) {
                     $query->where('is_final_chapter', true)
-                        ->whereHas('examination.submission', fn($q) => $q->where('user_id', $userId));
+                        ->whereHas('examination.submission', fn ($q) => $q->where('user_id', $userId));
                 })
                 ->count(),
         ];
