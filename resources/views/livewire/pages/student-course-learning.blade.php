@@ -537,27 +537,28 @@
                                             </div>
                                             <div>
                                                 <form wire:submit="submitExam" class="space-y-3">
-                                                    <x-filepond::upload
-                                                        wire:model="file_path"
-                                                    />
+                                                    {{ $this->form }}
 
                                                     <button type="submit"
                                                             class="px-4 py-2 bg-primary-600 text-white rounded-lg"
-                                                            wire:loading.attr="disabled" wire:target="submitExam"
-                                                        {{ $file_path ? '' : 'disabled' }}>
+                                                            wire:loading.attr="disabled" wire:target="submitExam">
                                                         <span wire:loading.remove>Soumettre votre examen</span>
                                                         <span wire:loading>
-                                                        <svg class="animate-spin mr-2 h-5 w-5 text-white inline-block"
-                                                             xmlns="http://www.w3.org/2000/svg" fill="none"
-                                                             viewBox="0 0 24 24">
-                                                            <circle class="opacity-25" cx="12" cy="12" r="10"
-                                                                    stroke="currentColor" stroke-width="4"></circle>
-                                                            <path class="opacity-75" fill="currentColor"
-                                                                  d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
-                                                        </svg>
-                                                        Chargement...
-                                                    </span>
+                                                            <svg
+                                                                class="animate-spin mr-2 h-5 w-5 text-white inline-block"
+                                                                xmlns="http://www.w3.org/2000/svg" fill="none"
+                                                                viewBox="0 0 24 24">
+                                                                <circle class="opacity-25" cx="12" cy="12" r="10"
+                                                                        stroke="currentColor" stroke-width="4"></circle>
+                                                                <path class="opacity-75" fill="currentColor"
+                                                                      d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+                                                            </svg>
+                                                            Chargement...
+                                                        </span>
                                                     </button>
+
+                                                    <x-filament-actions::modals/>
+
                                                 </form>
                                             </div>
                                         @else

@@ -130,7 +130,8 @@
                                     @else
                                         @if ($masterClass->examinations)
                                             @if ($masterClass->certifiable)
-                                                <a href="{{ route('certificate', $masterClass) }}"
+                                                <a href="#"
+                                                   wire:navigate
                                                    class="w-full btn btn-md justify-center before:bg-primary-600 btn-styled-y group rounded before:rounded border border-border-light shadow-lg shadow-gray-50 text-fg-subtitle hover:text-white">
                                                     <span class="relative">Voir le certificat</span>
                                                 </a>
