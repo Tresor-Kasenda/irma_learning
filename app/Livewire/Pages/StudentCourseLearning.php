@@ -9,31 +9,34 @@ use App\Models\Chapter;
 use App\Models\MasterClass;
 use App\Models\Subscription;
 use App\Notifications\ExamSubmissionNotification;
+use Filament\Forms\Components\FileUpload;
+use Filament\Forms\Concerns\InteractsWithForms;
+use Filament\Forms\Contracts\HasForms;
+use Filament\Forms\Form;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Notification;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Locked;
 use Livewire\Attributes\Title;
-use Livewire\Attributes\Validate;
 use Livewire\Component;
 use Livewire\WithFileUploads;
 use Spatie\LivewireFilepond\WithFilePond;
 
 #[Layout('layouts.app')]
 #[Title('Apprendre')]
-final class StudentCourseLearning extends Component
+final class StudentCourseLearning extends Component implements HasForms
 {
     use WithFilePond;
     use WithFileUploads;
+    use InteractsWithForms;
 
     #[Locked]
     public MasterClass $masterClass;
 
     public bool $isFinalChapter = false;
 
-    #[Validate('required', 'file', 'mimes:pdf,doc,docx', 'max:5120')]
-    public $file_path;
+    public ?array $data = [];
 
     public bool $examSubmitted = false;
 
@@ -48,6 +51,7 @@ final class StudentCourseLearning extends Component
         if ($savedChapterId) {
             $this->activeChapter = $this->masterClass->chapters->find($savedChapterId)->load(['examination', 'progress']);
         }
+        $this->form->fill();
     }
 
     public function canSubmitExam(): bool
@@ -196,6 +200,25 @@ final class StudentCourseLearning extends Component
         }
     }
 
+    public function form(Form $form): Form
+    {
+        return $form
+            ->schema([
+                FileUpload::make('file_path')
+                    ->label("Soumettre l'examen")
+                    ->placeholder("Choisissez un fichier")
+                    ->directory('examens')
+                    ->downloadable()
+                    ->previewable()
+                    ->acceptedFileTypes(['application/pdf'])
+                    ->maxSize(10240) // Taille maximale de 10MB
+                    ->deletable()
+                    ->uploadingMessage('Uploading certification...')
+                    ->columnSpanFull(),
+            ])
+            ->statePath('data');
+    }
+
     public function render(): View
     {
         return view('livewire.pages.student-course-learning');
@@ -213,12 +236,13 @@ final class StudentCourseLearning extends Component
             return;
         }
 
-        $path = $this->file_path->storePublicly('/', ['disk' => 'public']);
+        $data = $this->form->getState();
+
 
         $submission = $this->activeChapter->examination->submission()->create([
             'user_id' => Auth::user()->id,
             'chapter_id' => $this->activeChapter->id,
-            'file_path' => $path,
+            'file_path' => $data['file_path'],
             'submitted_at' => now(),
         ]);
 
