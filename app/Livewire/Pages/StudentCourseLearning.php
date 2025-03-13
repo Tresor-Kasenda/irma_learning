@@ -251,7 +251,8 @@ final class StudentCourseLearning extends Component implements HasForms
         });
 
         $this->examSubmitted = true;
-        $this->file_path = null;
+        $this->form->fill();
+        $this->data = [];
     }
 
     public function completeChapter(Chapter $chapter): void
