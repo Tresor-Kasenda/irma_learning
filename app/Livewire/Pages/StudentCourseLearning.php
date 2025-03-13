@@ -20,15 +20,11 @@ use Livewire\Attributes\Layout;
 use Livewire\Attributes\Locked;
 use Livewire\Attributes\Title;
 use Livewire\Component;
-use Livewire\WithFileUploads;
-use Spatie\LivewireFilepond\WithFilePond;
 
 #[Layout('layouts.app')]
 #[Title('Apprendre')]
 final class StudentCourseLearning extends Component implements HasForms
 {
-    use WithFilePond;
-    use WithFileUploads;
     use InteractsWithForms;
 
     #[Locked]

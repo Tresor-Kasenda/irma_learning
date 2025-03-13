@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "28320a19c8858a5a9b651072ed05884f",
+    "content-hash": "b8f3b24faf39394a130d008f2200a877",
     "packages": [
         {
             "name": "anourvalar/eloquent-serialize",
@@ -5033,84 +5033,6 @@
                 }
             ],
             "time": "2025-02-06T14:58:20+00:00"
-        },
-        {
-            "name": "spatie/livewire-filepond",
-            "version": "1.4.1",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/spatie/livewire-filepond.git",
-                "reference": "d08f8b00537b2c39cfa87e5891594f1fc6c43a2d"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/spatie/livewire-filepond/zipball/d08f8b00537b2c39cfa87e5891594f1fc6c43a2d",
-                "reference": "d08f8b00537b2c39cfa87e5891594f1fc6c43a2d",
-                "shasum": ""
-            },
-            "require": {
-                "illuminate/contracts": "^10.0||^11.0||^12.0",
-                "livewire/livewire": "^3.5",
-                "php": "^8.2",
-                "spatie/laravel-package-tools": "^1.16"
-            },
-            "require-dev": {
-                "larastan/larastan": "^2.9",
-                "laravel/pint": "^1.14",
-                "nunomaduro/collision": "^8.1.1||^7.10.0",
-                "orchestra/testbench": "^9.0.0||^8.22.0||^10.0",
-                "pestphp/pest": "^2.34||^3.7",
-                "pestphp/pest-plugin-arch": "^2.7||^3.0",
-                "pestphp/pest-plugin-laravel": "^2.3||^3.1",
-                "phpstan/extension-installer": "^1.3",
-                "phpstan/phpstan-deprecation-rules": "^1.1||^2.0",
-                "phpstan/phpstan-phpunit": "^1.3||^2.0"
-            },
-            "type": "library",
-            "extra": {
-                "laravel": {
-                    "providers": [
-                        "Spatie\\LivewireFilepond\\LivewireFilepondServiceProvider"
-                    ]
-                }
-            },
-            "autoload": {
-                "psr-4": {
-                    "Spatie\\LivewireFilepond\\": "src/",
-                    "Spatie\\LivewireFilepond\\Database\\Factories\\": "database/factories/"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "authors": [
-                {
-                    "name": "Rias Van der Veken",
-                    "email": "rias@spatie.be",
-                    "role": "Developer"
-                }
-            ],
-            "description": "Upload files using Filepond in Livewire components",
-            "homepage": "https://github.com/spatie/livewire-filepond",
-            "keywords": [
-                "laravel",
-                "livewire",
-                "livewire-filepond",
-                "spatie",
-                "uploads"
-            ],
-            "support": {
-                "issues": "https://github.com/spatie/livewire-filepond/issues",
-                "source": "https://github.com/spatie/livewire-filepond/tree/1.4.1"
-            },
-            "funding": [
-                {
-                    "url": "https://github.com/Spatie",
-                    "type": "github"
-                }
-            ],
-            "time": "2025-02-21T14:01:32+00:00"
         },
         {
             "name": "symfony/clock",

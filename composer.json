@@ -20,8 +20,7 @@
         "laravel/sanctum": "^4.0",
         "laravel/tinker": "^2.10.1",
         "livewire/livewire": "^v3.5.20",
-        "livewire/volt": "^1.6.6",
-        "spatie/livewire-filepond": "^1.4"
+        "livewire/volt": "^1.6.6"
     },
     "require-dev": {
         "barryvdh/laravel-debugbar": "^3.15",

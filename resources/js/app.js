@@ -10,7 +10,6 @@ import {notificationSystem} from "./utilities/notification";
 
 import confetti from "canvas-confetti";
 import {Accordion, Tabs} from "@flexilla/flexilla";
-import 'filepond/dist/filepond.min.css';
 
 
 window.notificationSystem = notificationSystem;
