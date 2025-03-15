@@ -22,6 +22,9 @@ Route::get('/formation/{training}/details', App\Livewire\Pages\Formations\Detail
 Route::middleware(['auth', 'verified', 'force.password.change'])->group(function () {
     Route::get('dashboard', Dashboard::class)->name('dashboard');
     Route::get('/courses/{masterClass}/start', StudentCourseLearning::class)->name('learning-course-student');
+    Route::get('/courses/{masterClass}/{chapter?}', \App\Livewire\Pages\StudentCourseLearning::class)
+    ->name('student.course.learning');
+
     Route::view('profile', 'profile')->name('profile');
 });
 

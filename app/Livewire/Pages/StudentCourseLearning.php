@@ -16,6 +16,7 @@ use Filament\Forms\Form;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Notification;
+use Illuminate\Support\Str;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Locked;
 use Livewire\Attributes\Title;
@@ -39,79 +40,49 @@ final class StudentCourseLearning extends Component implements HasForms
     #[Locked]
     public ?Chapter $activeChapter;
 
-    public function mount(MasterClass $masterClass): void
+    public function mount(MasterClass $masterClass, ?string $chapter = null): void
     {
         $this->masterClass = $masterClass->load(['resources', 'chapters', 'subscription']);
-        $savedChapterId = session()->get("active_chapter_{$masterClass->id}");
 
+        if ($chapter) {
+            $matchingChapter = $this->masterClass->chapters()
+                ->where('name', 'like', Str::replace('-', ' ', $chapter))
+                ->first();
+
+            if ($matchingChapter) {
+                $this->setActiveChapter($matchingChapter->id);
+                return;
+            }
+        }
+
+        $savedChapterId = session()->get("active_chapter_{$masterClass->id}");
         if ($savedChapterId) {
             $this->activeChapter = $this->masterClass->chapters->find($savedChapterId)->load(['examination', 'progress']);
         }
+
         $this->form->fill();
-    }
-
-    public function canSubmitExam(): bool
-    {
-        return Auth::user()->reference_code !== null;
-    }
-
-    public function getProgressPercentage(): int
-    {
-        if ($this->masterClass->chapters->isEmpty()) {
-            return 0;
-        }
-
-        $completedChapters = $this->masterClass->chapters->filter(function ($chapter) {
-            return $chapter->isCompleted();
-        })->count();
-
-        return (int)round(($completedChapters / $this->masterClass->chapters->count()) * 100);
-    }
-
-    public function setPreviousChapter(): void
-    {
-        $currentIndex = $this->masterClass->chapters()->getChapterIndex($this->activeChapter);
-
-        if ($currentIndex > 0) {
-            $previousChapter = $this->masterClass->chapters[$currentIndex - 1];
-            $this->setActiveChapter($previousChapter->id);
-
-            $this->dispatch(
-                'notify',
-                message: 'Passage au chapitre précédent.',
-                type: 'success'
-            );
-        }
     }
 
     public function setActiveChapter($chapterId): void
     {
         $previousChapter = $this->getPreviousChapter($chapterId);
-
         $chapter = $this->masterClass->chapters->find($chapterId);
 
         if (!$this->canAccessChapter($chapter)) {
-            $this->dispatch(
-                'notify',
-                message: 'Vous devez avoir un code de référence pour accéder à ce chapitre.',
-                type: 'error'
-            );
-
+            $this->dispatch('notify', message: 'Vous devez avoir un code de référence pour accéder à ce chapitre.', type: 'error');
             return;
         }
 
         if ($previousChapter && !$previousChapter->isCompleted()) {
-            $this->dispatch(
-                'notify',
-                message: 'You must complete the previous chapter exam first.',
-                type: 'error'
-            );
-
+            $this->dispatch('notify', message: 'You must complete the previous chapter exam first.', type: 'error');
             return;
         }
 
-        $chapter = $this->masterClass->chapters->find($chapterId)->load(['examination', 'progress']);
-        $this->activeChapter = $chapter;
+        $this->activeChapter = $chapter->load(['examination', 'progress']);
+        $this->dispatch('urlChanged', url: route('student.course.learning', [
+            'masterClass' => $this->masterClass->id,
+            'chapter' => Str::slug($chapter->title)
+        ]));
 
         if (!$this->masterClass->subscription()->whereBelongsTo(Auth::user())->exists()) {
             $this->masterClass->subscription()->create([
@@ -120,17 +91,10 @@ final class StudentCourseLearning extends Component implements HasForms
                 'progress' => 0,
                 'started_at' => now(),
             ]);
-
-            $this->dispatch(
-                'notify',
-                message: 'Vous êtes maintenant inscrit à cette formation !',
-                type: 'success'
-            );
+            $this->dispatch('notify', message: 'Vous êtes maintenant inscrit à cette formation !', type: 'success');
         }
 
-        $subscriptionId = Subscription::query()
-            ->whereBelongsTo(Auth::user())
-            ->firstOrFail('id');
+        $subscriptionId = Subscription::query()->whereBelongsTo(Auth::user())->firstOrFail('id');
 
         if (!$chapter->hasProgress()) {
             $chapter->progress()->create([
@@ -161,6 +125,34 @@ final class StudentCourseLearning extends Component implements HasForms
         return auth()->user()->reference_code !== null;
     }
 
+    public function canSubmitExam(): bool
+    {
+        return Auth::user()->reference_code !== null;
+    }
+
+    public function getProgressPercentage(): int
+    {
+        if ($this->masterClass->chapters->isEmpty()) {
+            return 0;
+        }
+
+        $completedChapters = $this->masterClass->chapters->filter(function ($chapter) {
+            return $chapter->isCompleted();
+        })->count();
+
+        return (int)round(($completedChapters / $this->masterClass->chapters->count()) * 100);
+    }
+
+    public function setPreviousChapter(): void
+    {
+        $currentIndex = $this->masterClass->chapters()->getChapterIndex($this->activeChapter);
+
+        if ($currentIndex > 0) {
+            $previousChapter = $this->masterClass->chapters[$currentIndex - 1];
+            $this->setActiveChapter($previousChapter->id);
+        }
+    }
+
     public function setNextChapter(): void
     {
         if (!$this->activeChapter->isCompleted()) {
@@ -187,12 +179,6 @@ final class StudentCourseLearning extends Component implements HasForms
             }
 
             $this->setActiveChapter($nextChapter->id);
-
-            $this->dispatch(
-                'notify',
-                message: 'Moving to next chapter.',
-                type: 'success'
-            );
         }
     }
 
@@ -253,18 +239,16 @@ final class StudentCourseLearning extends Component implements HasForms
 
     public function completeChapter(Chapter $chapter): void
     {
-        // Vérifier si le chapitre a un examen et s'il n'a pas été soumis
         if ($chapter->examination && !$chapter->submission()->where('user_id', '=', Auth::user()->id)->exists()) {
             $this->dispatch(
                 'notify',
                 message: 'Vous devez soumettre l\'examen avant de terminer ce chapitre.',
                 type: 'error'
             );
-
             return;
         }
 
-        // Mise à jour du progrès avec une seule requête
+        // Mise à jour du progrès du chapitre
         $chapter->progress()->updateOrCreate(
             [
                 'user_id' => Auth::user()->id,
@@ -276,7 +260,23 @@ final class StudentCourseLearning extends Component implements HasForms
             ]
         );
 
-        // Optimisation de la recherche du prochain chapitre
+        // Calculer et mettre à jour la progression globale
+        $totalChapters = $this->masterClass->chapters->count();
+        $completedChapters = $this->masterClass->chapters()
+            ->whereHas('progress', function ($query) {
+                $query->where('user_id', Auth::user()->id)
+                    ->where('status', 'completed');
+            })
+            ->count();
+
+        $progressPercentage = ($completedChapters / $totalChapters) * 100;
+
+        // Mettre à jour la progression dans la subscription
+        $this->masterClass->subscription()
+            ->whereBelongsTo(Auth::user())
+            ->update(['progress' => $progressPercentage]);
+
+        // Gestion du chapitre suivant
         $chapters = $this->masterClass->chapters;
         $currentIndex = $chapters->search(fn($ch) => $ch->id === $chapter->id);
         $nextChapter = $currentIndex < $chapters->count() - 1 ? $chapters[$currentIndex + 1] : null;

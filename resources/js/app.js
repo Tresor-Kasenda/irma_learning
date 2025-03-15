@@ -61,3 +61,10 @@ const initChapiterSidebar = () => {
 };
 
 
+document.addEventListener('livewire:initialized', () => {
+    Livewire.on('urlChanged', (params) => {
+        console.log(params.url);
+        window.history.pushState(null, '', params.url);
+    });
+});
+
