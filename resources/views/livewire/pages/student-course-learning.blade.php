@@ -386,164 +386,174 @@
                     </section>
                 @else
                     <section class="py-8 flex flex-col">
-                        <h1 class="text-2xl font-bold text-fg-title mb-3">{{ str($activeChapter->title)->ucfirst() }}</h1>
-
-                        <h2 class="text-2xl font-bold text-fg-title pt-2 pb-3">Presentation</h2>
-
-                        <div
-                            class="'max-w-none markdow-content-block max-w-none mt-2 flex flex-col prose prose-invert'">
-                            {!! $activeChapter->content !!}
+                        <div wire:loading.flex wire:target="setActiveChapter"
+                             class="w-full flex-col items-center justify-center space-y-4 py-12">
+                            <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
+                            <p class="text-fg-subtitle">Chargement du chapitre...</p>
                         </div>
+                        <div wire:loading.remove wire:target="setActiveChapter" class="flex flex-col">
+                            <h1 class="text-2xl font-bold text-fg-title mb-3">{{ str($activeChapter->title)->ucfirst() }}</h1>
 
-                        <div class="flex flex-col space-y-4 mt-4">
-                            <h2 class="text-2xl font-semibold">Ressource du cours</h2>
-                            <p class="text-gray-600">
-                                Vous trouverez ci-dessous les ressources associées au cours.
-                            </p>
-                            <div class="flex items-center flex-row gap-4">
-                                @foreach($masterClass->resources as $resource)
-                                    <a href="{{ asset('storage/'. $resource->file_path) }}"
-                                       wire:key="{{ $resource->id }}"
-                                       download="{{ $resource->type === MasterClassResourceEnum::PDF }}"
-                                       class="flex items-center w-max mt-5 bg-bg-lighter p-2 rounded-md pr-3 border border-border-lighter hover:border-border hover:bg-bg-high/70 ease-linear duration-300">
-                                        @if($resource->type === MasterClassResourceEnum::VIDEO)
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32"
-                                                 fill="currentColor"
-                                                 viewBox="0 0 256 256" class="size-6 mr-4 text-blue-600">
-                                                <path
-                                                    d="M216,72V184a16,16,0,0,1-16,16H56a16,16,0,0,1-16-16V72A16,16,0,0,1,56,56H200A16,16,0,0,1,216,72Zm-16,0H56V184H200Zm-72,28a32,32,0,0,0-13.09,61.4,8,8,0,0,0,6.18-14.72A16,16,0,1,1,128,116a15.91,15.91,0,0,1,9.6,3.2L128,128a8,8,0,0,0,5.66,13.66A8.25,8.25,0,0,0,136,141.33l14.4-13.12A8,8,0,0,0,152,120,32,32,0,0,0,128,100Z"/>
-                                            </svg>
-                                        @else
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32"
-                                                 fill="currentColor"
-                                                 viewBox="0 0 256 256" class="size-6 mr-4 text-red-600">
-                                                <path
-                                                    d="M224,152a8,8,0,0,1-8,8H192v16h16a8,8,0,0,1,0,16H192v16a8,8,0,0,1-16,0V152a8,8,0,0,1,8-8h32A8,8,0,0,1,224,152ZM92,172a28,28,0,0,1-28,28H56v8a8,8,0,0,1-16,0V152a8,8,0,0,1,8-8H64A28,28,0,0,1,92,172Zm-16,0a12,12,0,0,0-12-12H56v24h8A12,12,0,0,0,76,172Zm88,8a36,36,0,0,1-36,36H112a8,8,0,0,1-8-8V152a8,8,0,0,1,8-8h16A36,36,0,0,1,164,180Zm-16,0a20,20,0,0,0-20-20h-8v40h8A20,20,0,0,0,148,180ZM40,112V40A16,16,0,0,1,56,24h96a8,8,0,0,1,5.66,2.34l56,56A8,8,0,0,1,216,88v24a8,8,0,0,1-16,0V96H152a8,8,0,0,1-8-8V40H56v72a8,8,0,0,1-16,0ZM160,80h28.69L160,51.31Z"/>
-                                            </svg>
-                                        @endif
-                                        <div class="flex flex-col flex-1">
+                            <h2 class="text-2xl font-bold text-fg-title pt-2 pb-3">Presentation</h2>
+
+                            <div
+                                class="'max-w-none markdow-content-block max-w-none mt-2 flex flex-col prose prose-invert'">
+                                {!! $activeChapter->content !!}
+                            </div>
+
+                            <div class="flex flex-col space-y-4 mt-4">
+                                <h2 class="text-2xl font-semibold">Ressource du cours</h2>
+                                <p class="text-gray-600">
+                                    Vous trouverez ci-dessous les ressources associées au cours.
+                                </p>
+                                <div class="flex items-center flex-row gap-4">
+                                    @foreach($masterClass->resources as $resource)
+                                        <a href="{{ asset('storage/'. $resource->file_path) }}"
+                                           wire:key="{{ $resource->id }}"
+                                           download="{{ $resource->type === MasterClassResourceEnum::PDF }}"
+                                           class="flex items-center w-max mt-5 bg-bg-lighter p-2 rounded-md pr-3 border border-border-lighter hover:border-border hover:bg-bg-high/70 ease-linear duration-300">
+                                            @if($resource->type === MasterClassResourceEnum::VIDEO)
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32"
+                                                     fill="currentColor"
+                                                     viewBox="0 0 256 256" class="size-6 mr-4 text-blue-600">
+                                                    <path
+                                                        d="M216,72V184a16,16,0,0,1-16,16H56a16,16,0,0,1-16-16V72A16,16,0,0,1,56,56H200A16,16,0,0,1,216,72Zm-16,0H56V184H200Zm-72,28a32,32,0,0,0-13.09,61.4,8,8,0,0,0,6.18-14.72A16,16,0,1,1,128,116a15.91,15.91,0,0,1,9.6,3.2L128,128a8,8,0,0,0,5.66,13.66A8.25,8.25,0,0,0,136,141.33l14.4-13.12A8,8,0,0,0,152,120,32,32,0,0,0,128,100Z"/>
+                                                </svg>
+                                            @else
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32"
+                                                     fill="currentColor"
+                                                     viewBox="0 0 256 256" class="size-6 mr-4 text-red-600">
+                                                    <path
+                                                        d="M224,152a8,8,0,0,1-8,8H192v16h16a8,8,0,0,1,0,16H192v16a8,8,0,0,1-16,0V152a8,8,0,0,1,8-8h32A8,8,0,0,1,224,152ZM92,172a28,28,0,0,1-28,28H56v8a8,8,0,0,1-16,0V152a8,8,0,0,1,8-8H64A28,28,0,0,1,92,172Zm-16,0a12,12,0,0,0-12-12H56v24h8A12,12,0,0,0,76,172Zm88,8a36,36,0,0,1-36,36H112a8,8,0,0,1-8-8V152a8,8,0,0,1,8-8h16A36,36,0,0,1,164,180Zm-16,0a20,20,0,0,0-20-20h-8v40h8A20,20,0,0,0,148,180ZM40,112V40A16,16,0,0,1,56,24h96a8,8,0,0,1,5.66,2.34l56,56A8,8,0,0,1,216,88v24a8,8,0,0,1-16,0V96H152a8,8,0,0,1-8-8V40H56v72a8,8,0,0,1-16,0ZM160,80h28.69L160,51.31Z"/>
+                                                </svg>
+                                            @endif
+                                            <div class="flex flex-col flex-1">
                                         <span
                                             class="text-sm font-semibold text-fg-title">{{ str($resource->title)->ucfirst() }}</span>
-                                            <span class="text-sm text-gray-500">
+                                                <span class="text-sm text-gray-500">
                                             {{ $resource->type === MasterClassResourceEnum::VIDEO ? 'Cliquer pour regarder' : 'Cliquer pour télécharger' }}
                                         </span>
-                                        </div>
-                                    </a>
-                                @endforeach
+                                            </div>
+                                        </a>
+                                    @endforeach
+                                </div>
                             </div>
-                        </div>
 
+                            <h3 class="text-2xl font-bold text-fg-title m-4">Description</h3>
 
-                        <h3 class="text-2xl font-bold text-fg-title m-4">Description</h3>
-
-                        <div @class([
+                            <div @class([
                         'max-w-none markdow-content-block max-w-none mt-2 text-gray-700 leading-relaxed flex flex-col prose prose-invert',
                         'blur-sm pointer-events-none' => !$this->canAccessChapter($activeChapter)
                     ])>
-                            {!! $activeChapter->description !!}
-                        </div>
+                                {!! $activeChapter->description !!}
+                            </div>
 
-                        <div @class([
+                            <div @class([
                         'max-w-none markdow-content-block max-w-none mt-3 flex flex-col prose prose-invert',
                         'blur-sm pointer-events-none' => !$this->canAccessChapter($activeChapter)
                     ])>
-                            <iframe
-                                src="{{ asset('storage/' . $activeChapter->path)  }}"
-                                type="application/pdf"
-                                width="100%"
-                                height="860px"
-                                allow="publickey-credentials-get; publickey-credentials-create"
-                                class="w-full border border-border rounded-lg"
-                                loading="lazy"
-                            ></iframe>
-                        </div>
+                                <iframe
+                                    src="{{ asset('storage/' . $activeChapter->path)  }}"
+                                    type="application/pdf"
+                                    width="100%"
+                                    height="860px"
+                                    allow="publickey-credentials-get; publickey-credentials-create"
+                                    class="w-full border border-border rounded-lg"
+                                    loading="lazy"
+                                ></iframe>
+                            </div>
 
-                        <div class="mt-4">
-                            @if(!$this->canSubmitExam())
-                                <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4 text-yellow-700">
-                                    <p>
-                                        Pour soumettre l'examen et accéder aux autres chapitres, vous devez avoir un
-                                        code de
-                                        référence.
-                                    </p>
-                                    <a href="#"
-                                       class="mt-2 inline-flex items-center text-yellow-800 hover:text-yellow-900">
-                                        Obtenir un code de référence
-                                        <svg class="ml-1 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                  d="M9 5l7 7-7 7"/>
-                                        </svg>
-                                    </a>
-                                </div>
-                            @else
-                                <div class="markdow-content-block max-w-none flex flex-col space-y-4">
-                                    @if($activeChapter->examination)
-                                        <h2 class="text-2xl font-semibold">Passation d'Evaluation</h2>
-                                        <p>{!! $activeChapter->examination?->description !!}</p>
+                            <div class="mt-4">
+                                @if(!$this->canSubmitExam())
+                                    <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4 text-yellow-700">
+                                        <p>
+                                            Pour soumettre l'examen et accéder aux autres chapitres, vous devez avoir un
+                                            code de
+                                            référence.
+                                        </p>
+                                        <a href="#"
+                                           class="mt-2 inline-flex items-center text-yellow-800 hover:text-yellow-900">
+                                            Obtenir un code de référence
+                                            <svg class="ml-1 h-4 w-4" fill="none" stroke="currentColor"
+                                                 viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                      d="M9 5l7 7-7 7"/>
+                                            </svg>
+                                        </a>
+                                    </div>
+                                @else
+                                    <div class="markdow-content-block max-w-none flex flex-col space-y-4">
+                                        @if($activeChapter->examination)
+                                            <h2 class="text-2xl font-semibold">Passation d'Evaluation</h2>
+                                            <p>{!! $activeChapter->examination?->description !!}</p>
 
-                                        @if ($activeChapter->examination?->deadline && now()->isAfter($activeChapter->examination?->deadline))
-                                            <div class="alert-message">
-                                                La date limite de soumission est déjà passée.
-                                            </div>
-                                        @elseif (!$this->hasSubmittedExam())
-                                            <a
-                                                href="{{ asset('storage/' . $activeChapter->examination?->path) }}"
-                                                download
-                                                class="inline-flex items-center gap-2 px-4 py-2 bg-bg-lighter text-fg hover:bg-bg-light rounded-lg transition-colors mt-4">
-                                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-                                                     stroke-width="1.5" stroke="currentColor" class="size-6">
-                                                    <path stroke-linecap="round" stroke-linejoin="round"
-                                                          d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3"/>
-                                                </svg>
-                                                Télécharger votre évalutation
-                                            </a>
+                                            @if ($activeChapter->examination?->deadline && now()->isAfter($activeChapter->examination?->deadline))
+                                                <div class="alert-message">
+                                                    La date limite de soumission est déjà passée.
+                                                </div>
+                                            @elseif (!$this->hasSubmittedExam())
+                                                <a
+                                                    href="{{ asset('storage/' . $activeChapter->examination?->path) }}"
+                                                    download
+                                                    class="inline-flex items-center gap-2 px-4 py-2 bg-bg-lighter text-fg hover:bg-bg-light rounded-lg transition-colors mt-4">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none"
+                                                         viewBox="0 0 24 24"
+                                                         stroke-width="1.5" stroke="currentColor" class="size-6">
+                                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                                              d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3"/>
+                                                    </svg>
+                                                    Télécharger votre évalutation
+                                                </a>
 
-                                            @if($activeChapter->examination?->files && count($activeChapter->examination->files) > 0)
-                                                <div class="mt-4 space-y-2">
-                                                    <h4 class="text-fg-subtitle">
-                                                        Fichiers supplémentaires
-                                                    </h4>
-                                                    <div class="space-y-2 flex">
-                                                        @foreach($activeChapter->examination->files as $file)
-                                                            <a
-                                                                href="{{ asset('storage/' . $file) }}"
-                                                                download
-                                                                class="flex items-center gap-2 px-3 py-2 text-fg  rounded-lg transition-colors text-sm w-full">
-                                                                <svg xmlns="http://www.w3.org/2000/svg" fill="none"
-                                                                     viewBox="0 0 24 24"
-                                                                     stroke-width="1.5" stroke="currentColor"
-                                                                     class="size-5">
-                                                                    <path stroke-linecap="round" stroke-linejoin="round"
-                                                                          d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m.75 12 3 3m0 0 3-3m-3 3v-6m-1.5-9H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z"/>
-                                                                </svg>
-                                                                <span>{{ basename($file) }}</span>
-                                                            </a>
-                                                        @endforeach
+                                                @if($activeChapter->examination?->files && count($activeChapter->examination->files) > 0)
+                                                    <div class="mt-4 space-y-2">
+                                                        <h4 class="text-fg-subtitle">
+                                                            Fichiers supplémentaires
+                                                        </h4>
+                                                        <div class="space-y-2 flex">
+                                                            @foreach($activeChapter->examination->files as $file)
+                                                                <a
+                                                                    href="{{ asset('storage/' . $file) }}"
+                                                                    download
+                                                                    class="flex items-center gap-2 px-3 py-2 text-fg  rounded-lg transition-colors text-sm w-full">
+                                                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none"
+                                                                         viewBox="0 0 24 24"
+                                                                         stroke-width="1.5" stroke="currentColor"
+                                                                         class="size-5">
+                                                                        <path stroke-linecap="round"
+                                                                              stroke-linejoin="round"
+                                                                              d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m.75 12 3 3m0 0 3-3m-3 3v-6m-1.5-9H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z"/>
+                                                                    </svg>
+                                                                    <span>{{ basename($file) }}</span>
+                                                                </a>
+                                                            @endforeach
+                                                        </div>
+                                                    </div>
+                                                @endif
+
+                                                <div x-data="{ tooltip: false }" class="relative">
+                                                    <div @mouseenter="tooltip = true" @mouseleave="tooltip = false"
+                                                         class="alert-message">
+                                                        Apres téléchargement de l'évaluation veillez travailler et
+                                                        soumettre
+                                                        votre examen dans le formulaire ci-dessous
+                                                    </div>
+                                                    <div x-show="tooltip"
+                                                         class="absolute bg-gray-700 text-white text-xs rounded py-1 px-4 right-0 bottom-full">
+                                                        Apres téléchargement de l'évaluation veillez travailler et
+                                                        soumettre
+                                                        votre examen dans le formulaire ci-dessous
                                                     </div>
                                                 </div>
-                                            @endif
+                                                <div>
+                                                    <form wire:submit="submitExam" class="space-y-3">
+                                                        {{ $this->form }}
 
-                                            <div x-data="{ tooltip: false }" class="relative">
-                                                <div @mouseenter="tooltip = true" @mouseleave="tooltip = false"
-                                                     class="alert-message">
-                                                    Apres téléchargement de l'évaluation veillez travailler et soumettre
-                                                    votre examen dans le formulaire ci-dessous
-                                                </div>
-                                                <div x-show="tooltip"
-                                                     class="absolute bg-gray-700 text-white text-xs rounded py-1 px-4 right-0 bottom-full">
-                                                    Apres téléchargement de l'évaluation veillez travailler et soumettre
-                                                    votre examen dans le formulaire ci-dessous
-                                                </div>
-                                            </div>
-                                            <div>
-                                                <form wire:submit="submitExam" class="space-y-3">
-                                                    {{ $this->form }}
-
-                                                    <button type="submit"
-                                                            class="px-4 py-2 bg-primary-600 text-white rounded-lg"
-                                                            wire:loading.attr="disabled" wire:target="submitExam">
-                                                        <span wire:loading.remove>Soumettre votre examen</span>
-                                                        <span wire:loading>
+                                                        <button type="submit"
+                                                                class="px-4 py-2 bg-primary-600 text-white rounded-lg"
+                                                                wire:loading.attr="disabled" wire:target="submitExam">
+                                                            <span wire:loading.remove>Soumettre votre examen</span>
+                                                            <span wire:loading>
                                                             <svg
                                                                 class="animate-spin mr-2 h-5 w-5 text-white inline-block"
                                                                 xmlns="http://www.w3.org/2000/svg" fill="none"
@@ -555,48 +565,49 @@
                                                             </svg>
                                                             Chargement...
                                                         </span>
-                                                    </button>
+                                                        </button>
 
-                                                    <x-filament-actions::modals/>
+                                                        <x-filament-actions::modals/>
 
-                                                </form>
-                                            </div>
-                                        @else
-                                            <div class="alert-message">
-                                                Votre examen a été soumis avec succès.
-                                            </div>
+                                                    </form>
+                                                </div>
+                                            @else
+                                                <div class="alert-message">
+                                                    Votre examen a été soumis avec succès.
+                                                </div>
 
-                                            @if(!$activeChapter->isCompleted())
-                                                <button
-                                                    x-data
-                                                    wire:click.prevent="completeChapter({{ $activeChapter->id }})"
-                                                    x-on:click="
+                                                @if(!$activeChapter->isCompleted())
+                                                    <button
+                                                        x-data
+                                                        wire:click.prevent="completeChapter({{ $activeChapter->id }})"
+                                                        x-on:click="
                                                     confetti({
                                                         particleCount: 1000,
                                                         spread: 70,
                                                         origin: { y: 0.6 }
                                                     });
                                                 "
-                                                    class="w-full bg-primary-600 text-white btn btn-md rounded-lg flex flex-wrap items-center justify-center gap-2 hover:bg-primary-700 transition-colors mt-4">
-                                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
-                                                         viewBox="0 0 24 24"
-                                                         fill="none" stroke="currentColor" stroke-width="2"
-                                                         stroke-linecap="round" stroke-linejoin="round"
-                                                         class="lucide lucide-award h-5 w-5">
-                                                        <circle cx="12" cy="8" r="6"></circle>
-                                                        <path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11"></path>
-                                                    </svg>
-                                                    Marquer ce chapitre comme terminé
-                                                </button>
+                                                        class="w-full bg-primary-600 text-white btn btn-md rounded-lg flex flex-wrap items-center justify-center gap-2 hover:bg-primary-700 transition-colors mt-4">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+                                                             viewBox="0 0 24 24"
+                                                             fill="none" stroke="currentColor" stroke-width="2"
+                                                             stroke-linecap="round" stroke-linejoin="round"
+                                                             class="lucide lucide-award h-5 w-5">
+                                                            <circle cx="12" cy="8" r="6"></circle>
+                                                            <path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11"></path>
+                                                        </svg>
+                                                        Marquer ce chapitre comme terminé
+                                                    </button>
+                                                @endif
                                             @endif
+                                        @else
+                                            <div class="alert-message">
+                                                Aucune évaluation n'est disponible pour ce chapitre.
+                                            </div>
                                         @endif
-                                    @else
-                                        <div class="alert-message">
-                                            Aucune évaluation n'est disponible pour ce chapitre.
-                                        </div>
-                                    @endif
-                                </div>
-                            @endif
+                                    </div>
+                                @endif
+                            </div>
                         </div>
 
                         <div class="mt-12 grid grid-cols-2 gap-4">

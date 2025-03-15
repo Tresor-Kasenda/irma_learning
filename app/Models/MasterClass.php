@@ -21,6 +21,11 @@ final class MasterClass extends Model
         return $this->belongsTo(Event::class);
     }
 
+    public function finalExam(): HasOne
+    {
+        return $this->hasOne(FinalExamination::class);
+    }
+
     public function examinations(): HasMany
     {
         return $this->hasMany(Examination::class);
