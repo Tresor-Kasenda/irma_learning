@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Filament\Resources;
 
-use App\Enums\PermissionEnum;
 use App\Enums\UserRoleEnum;
 use App\Filament\Resources\UserResource\Pages;
 use App\Models\User;
@@ -76,16 +75,16 @@ final class UserResource extends Resource
                             ->maxLength(255)
                             ->revealable()
                             ->live()
-                            ->dehydrated(fn (?string $state): bool => filled($state))
-                            ->required(fn (string $operation, Get $get): bool => $operation === 'create')
+                            ->dehydrated(fn(?string $state): bool => filled($state))
+                            ->required(fn(string $operation, Get $get): bool => $operation === 'create')
                             ->label('Mot de passe'),
                         Forms\Components\TextInput::make('password_confirmation')
                             ->password()
-                            ->required(fn (string $operation): bool => $operation === 'create')
+                            ->required(fn(string $operation): bool => $operation === 'create')
                             ->maxLength(255)
                             ->same('password')
                             ->dehydrated(false)
-                            ->visible(fn (Get $get) => $get('password'))
+                            ->visible(fn(Get $get) => $get('password'))
                             ->label('Confirmer le mot de passe'),
                         Forms\Components\FileUpload::make('avatar')
                             ->label('Photo de profile')
@@ -118,26 +117,50 @@ final class UserResource extends Resource
                 Tables\Columns\TextColumn::make('email')
                     ->searchable(),
                 Tables\Columns\TextColumn::make('role')
+                    ->label('Rôle')
+                    ->badge()
+                    ->color(fn(string $state): string => match ($state) {
+                        UserRoleEnum::ADMIN->value => 'danger',
+                        UserRoleEnum::STUDENT->value => 'success',
+                        default => 'warning',
+                    })
                     ->searchable(),
                 Tables\Columns\TextColumn::make('reference_code')
                     ->searchable(),
             ])
             ->filters([
-                //
+                Tables\Filters\SelectFilter::make('role')
+                    ->label('Filtrer par rôle')
+                    ->options([
+                        UserRoleEnum::STUDENT->value => 'Étudiants',
+                        UserRoleEnum::ADMIN->value => 'Administrateurs',
+                        UserRoleEnum::SUPPORT->value => 'Support',
+                        UserRoleEnum::MANAGER->value => 'Manager',
+                    ])
+                    ->multiple(),
             ])
             ->actions([
-                Tables\Actions\EditAction::make(),
+                Tables\Actions\EditAction::make()
+                    ->visible(fn(User $record): bool => static::canEdit($record)),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
+                    Tables\Actions\DeleteBulkAction::make()
+                        ->visible(fn(User $record): bool => static::canDelete($record)),
                 ]),
-            ]);
+            ])
+            ->defaultSort('created_at', 'desc')
+            ->heading('Tous les participants');
     }
 
     public static function canEdit(Model $record): bool
     {
-        return auth()->user()->hasPermission(PermissionEnum::MANAGE_USERS);
+        return auth()->user()->role === UserRoleEnum::ROOT->value;
+    }
+
+    public static function canDelete(Model $record): bool
+    {
+        return auth()->user()->role === UserRoleEnum::ROOT->value;
     }
 
     public static function getRelations(): array
@@ -158,29 +181,15 @@ final class UserResource extends Resource
 
     public static function canViewAny(): bool
     {
-        return auth()->user()->hasPermission(PermissionEnum::MANAGE_USERS);
+        return auth()->check(); // All authenticated users can view
     }
 
     public static function canCreate(): bool
     {
-        return self::can('create') && auth()->user()->hasPermission(PermissionEnum::MANAGE_USERS);
-    }
-
-    public static function canDelete(Model $record): bool
-    {
         $user = auth()->user();
-
-        // First check if user has permission to manage users
-        if (! $user->hasPermission(PermissionEnum::MANAGE_USERS)) {
-            return false;
-        }
-
-        // If the record has ADMIN role, only ROOT users can delete it
-        if ($record->role === UserRoleEnum::ADMIN->value) {
-            return $user->role === UserRoleEnum::ROOT->value;
-        }
-
-        // For other roles, allow deletion if they have manage users permission
-        return true;
+        return in_array($user->role, [
+            UserRoleEnum::ROOT->value,
+            UserRoleEnum::ADMIN->value
+        ]);
     }
 }

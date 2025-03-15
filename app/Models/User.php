@@ -15,6 +15,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Collection;
 
 final class User extends Authenticatable implements FilamentUser
 {
@@ -41,6 +42,11 @@ final class User extends Authenticatable implements FilamentUser
         'password',
         'remember_token',
     ];
+
+    public function examFinals(): HasMany
+    {
+        return $this->hasMany(ExamFinal::class);
+    }
 
     public function results(): HasMany
     {
@@ -70,6 +76,39 @@ final class User extends Authenticatable implements FilamentUser
         return $this->role === 'ROOT';
     }
 
+    private function getAdminPermissions(): Collection
+    {
+        return collect([
+            PermissionEnum::VIEW_DASHBOARD,
+            PermissionEnum::MANAGE_CONTENT,
+            PermissionEnum::VIEW_REPORTS,
+            PermissionEnum::VIEW_MASTER_CLASS,
+            PermissionEnum::CREATE_MASTER_CLASS,
+            PermissionEnum::UPDATE_MASTER_CLASS,
+            PermissionEnum::VIEW_CHAPTER,
+            PermissionEnum::CREATE_CHAPTER,
+            PermissionEnum::UPDATE_CHAPTER,
+            PermissionEnum::VIEW_SUBSCRIPTION,
+            PermissionEnum::CREATE_SUBSCRIPTION,
+            PermissionEnum::UPDATE_SUBSCRIPTION,
+            PermissionEnum::VIEW_EXAM,
+            PermissionEnum::CREATE_EXAM,
+            PermissionEnum::UPDATE_EXAM,
+            PermissionEnum::SUBMIT_EXAM,
+            PermissionEnum::MANAGE_USERS,
+        ]);
+    }
+
+    private function getManagerPermissions(): Collection
+    {
+        return collect([
+            PermissionEnum::VIEW_DASHBOARD,
+            PermissionEnum::MANAGE_USERS,
+            PermissionEnum::MANAGE_CONTENT,
+            PermissionEnum::VIEW_REPORTS,
+        ]);
+    }
+
     public function submissions(): HasMany
     {
         return $this->hasMany(ExamSubmission::class);
@@ -90,6 +129,18 @@ final class User extends Authenticatable implements FilamentUser
     public function progressions(): HasMany
     {
         return $this->hasMany(ChapterProgress::class);
+    }
+
+    public function masterclasses()
+    {
+        return $this->belongsToMany(
+            Masterclass::class,
+            'user_master_classe',
+            'user_id',
+            'master_class_id'
+        )
+            ->withPivot('reference_code')
+            ->withTimestamps();
     }
 
     /**
@@ -136,38 +187,5 @@ final class User extends Authenticatable implements FilamentUser
             'password' => 'hashed',
             'must_change_password' => 'boolean',
         ];
-    }
-
-    private function getAdminPermissions(): \Illuminate\Support\Collection
-    {
-        return collect([
-            PermissionEnum::VIEW_DASHBOARD,
-            PermissionEnum::MANAGE_CONTENT,
-            PermissionEnum::VIEW_REPORTS,
-            PermissionEnum::VIEW_MASTER_CLASS,
-            PermissionEnum::CREATE_MASTER_CLASS,
-            PermissionEnum::UPDATE_MASTER_CLASS,
-            PermissionEnum::VIEW_CHAPTER,
-            PermissionEnum::CREATE_CHAPTER,
-            PermissionEnum::UPDATE_CHAPTER,
-            PermissionEnum::VIEW_SUBSCRIPTION,
-            PermissionEnum::CREATE_SUBSCRIPTION,
-            PermissionEnum::UPDATE_SUBSCRIPTION,
-            PermissionEnum::VIEW_EXAM,
-            PermissionEnum::CREATE_EXAM,
-            PermissionEnum::UPDATE_EXAM,
-            PermissionEnum::SUBMIT_EXAM,
-            PermissionEnum::MANAGE_USERS,
-        ]);
-    }
-
-    private function getManagerPermissions(): \Illuminate\Support\Collection
-    {
-        return collect([
-            PermissionEnum::VIEW_DASHBOARD,
-            PermissionEnum::MANAGE_USERS,
-            PermissionEnum::MANAGE_CONTENT,
-            PermissionEnum::VIEW_REPORTS,
-        ]);
     }
 }

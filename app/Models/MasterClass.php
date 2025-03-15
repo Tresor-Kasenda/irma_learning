@@ -26,6 +26,23 @@ final class MasterClass extends Model
         return $this->hasOne(FinalExamination::class);
     }
 
+    public function examFinal(): HasOne
+    {
+        return $this->hasOne(ExamFinal::class);
+    }
+
+    public function students()
+    {
+        return $this->belongsToMany(
+            User::class,
+            'user_master_classe',
+            'master_class_id',
+            'user_id'
+        )
+            ->withPivot('reference_code')
+            ->withTimestamps();
+    }
+
     public function examinations(): HasMany
     {
         return $this->hasMany(Examination::class);

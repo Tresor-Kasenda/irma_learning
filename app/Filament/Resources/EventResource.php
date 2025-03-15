@@ -40,7 +40,7 @@ final class EventResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-calendar-days'; // Icône du menu (facultatif)
 
-    protected static ?string $label = 'Liste des events'; // Nom de la ressource
+    protected static ?string $label = 'Formations'; // Nom de la ressource
 
     public static function form(Form $form): Form
     {
@@ -142,7 +142,7 @@ final class EventResource extends Resource
                                     ->displayFormat('d F Y')
                                     ->columnSpanFull()
                                     ->placeholder('Choisir une date')
-                                    ->minDate(fn ($operation) => $operation === 'create' ? now() : null)
+                                    ->minDate(fn($operation) => $operation === 'create' ? now() : null)
                                     ->required(),
                                 TimePicker::make('heure_debut')
                                     ->prefix('Start')

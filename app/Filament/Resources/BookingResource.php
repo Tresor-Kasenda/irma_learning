@@ -31,7 +31,7 @@ final class BookingResource extends Resource
 
     public static function getLabel(): ?string
     {
-        return 'Reservation';
+        return 'Tous les participants';
     }
 
     public static function form(Form $form): Form
@@ -198,7 +198,7 @@ final class BookingResource extends Resource
         /** @var class-string<Model> $modelClass */
         $modelClass = self::$model;
 
-        return (string) $modelClass::count();
+        return (string)$modelClass::count();
     }
 
     public static function getPages(): array

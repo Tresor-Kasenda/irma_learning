@@ -74,7 +74,7 @@ final class StudentCourseLearning extends Component implements HasForms
         }
 
         if ($previousChapter && !$previousChapter->isCompleted()) {
-            $this->dispatch('notify', message: 'You must complete the previous chapter exam first.', type: 'error');
+            $this->dispatch('notify', message: 'Vous devez d\'abord passer l\'examen du chapitre précédent.', type: 'error');
             return;
         }
 
@@ -158,7 +158,7 @@ final class StudentCourseLearning extends Component implements HasForms
         if (!$this->activeChapter->isCompleted()) {
             $this->dispatch(
                 'notify',
-                message: 'You must complete the current chapter before moving to the next one.',
+                message: 'Vous devez terminer le chapitre en cours avant de passer au suivant.',
                 type: 'error'
             );
 
@@ -192,7 +192,7 @@ final class StudentCourseLearning extends Component implements HasForms
                     ->directory('examens')
                     ->downloadable()
                     ->previewable()
-                    ->acceptedFileTypes(['application/pdf'])
+                    ->acceptedFileTypes(['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'])
                     ->maxSize(10240) // Taille maximale de 10MB
                     ->deletable()
                     ->uploadingMessage('Uploading certification...')
@@ -274,9 +274,23 @@ final class StudentCourseLearning extends Component implements HasForms
         // Mettre à jour la progression dans la subscription
         $this->masterClass->subscription()
             ->whereBelongsTo(Auth::user())
-            ->update(['progress' => $progressPercentage]);
+            ->update(['progress' => $progressPercentage, 'completed_at' => now()]);
 
-        // Gestion du chapitre suivant
+        // Vérifier si c'est le dernier chapitre
+        $isLastChapter = $chapter->id === $this->masterClass->chapters->last()->id;
+
+        if ($isLastChapter && $this->hasCompletedAllChapters()) {
+            $this->dispatch(
+                'notify',
+                message: 'Félicitations ! Vous avez terminé tous les chapitres. Vous pouvez maintenant passer l\'examen final.',
+                type: 'success'
+            );
+
+            // Redirection vers l'examen final
+            $this->redirect(route('student.course.final-exam', ['masterClass' => $this->masterClass]), navigate: true);
+        }
+
+        // Gestion du chapitre suivant si ce n'est pas le dernier
         $chapters = $this->masterClass->chapters;
         $currentIndex = $chapters->search(fn($ch) => $ch->id === $chapter->id);
         $nextChapter = $currentIndex < $chapters->count() - 1 ? $chapters[$currentIndex + 1] : null;
@@ -285,16 +299,20 @@ final class StudentCourseLearning extends Component implements HasForms
             $this->setActiveChapter($nextChapter->id);
             $this->dispatch(
                 'notify',
-                message: 'Chapter completed! Moving to next chapter.',
-                type: 'success'
-            );
-        } else {
-            $this->dispatch(
-                'notify',
-                message: 'Congratulations! You have completed all chapters.',
+                message: 'Chapitre terminé ! Passage au chapitre suivant.',
                 type: 'success'
             );
         }
+    }
+
+    private function hasCompletedAllChapters(): bool
+    {
+        return $this->masterClass->chapters()
+            ->whereDoesntHave('progress', function ($query) {
+                $query->where('user_id', Auth::user()->id)
+                    ->where('status', 'completed');
+            })
+            ->doesntExist();
     }
 
     public function hasSubmittedExam(): bool
