@@ -7,11 +7,6 @@ namespace App\Filament\Resources;
 use App\Enums\ExamResultEnum;
 use App\Filament\Resources\ExamResultResource\Pages;
 use App\Models\ExamResult;
-use Filament\Forms;
-use Filament\Forms\Components\Select;
-use Filament\Forms\Components\Textarea;
-use Filament\Forms\Components\TextInput;
-use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
@@ -46,7 +41,7 @@ final class ExamResultResource extends Resource
                 Tables\Columns\TextColumn::make('status')
                     ->label('Statut')
                     ->badge()
-                    ->color(fn (string $state): string => match ($state) {
+                    ->color(fn(string $state): string => match ($state) {
                         'passed' => 'success',
                         'failed' => 'danger',
                         default => 'warning',
@@ -78,11 +73,11 @@ final class ExamResultResource extends Resource
             ->groups([
                 Tables\Grouping\Group::make('chapter_id')
                     ->label('Chapitre')
-                    ->getTitleFromRecordUsing(fn ($record) => data_get($record, 'chapter.title'))
+                    ->getTitleFromRecordUsing(fn($record) => data_get($record, 'chapter.title'))
                     ->collapsible(),
                 Tables\Grouping\Group::make('student_id')
                     ->label('Etudiant')
-                    ->getTitleFromRecordUsing(fn ($record) => data_get($record, 'user.name'))
+                    ->getTitleFromRecordUsing(fn($record) => data_get($record, 'user.name'))
                     ->collapsible(),
             ])
             ->actions([
@@ -92,85 +87,6 @@ final class ExamResultResource extends Resource
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\DeleteBulkAction::make(),
                 ]),
-            ]);
-    }
-
-    public static function form(Form $form): Form
-    {
-        return $form
-            ->schema([
-                Forms\Components\Section::make()
-                    ->schema([
-                        Select::make('chapter_id')
-                            ->label('Chapitre')
-                            ->required()
-                            ->relationship('chapter', 'title', function ($query) {
-                                $query->whereHas('examination');
-                            })
-                            ->searchable()
-                            ->live()
-                            ->afterStateUpdated(fn (callable $set) => $set('examination_id', null)),
-                        Select::make('examination_id')
-                            ->label('Examen')
-                            ->required()
-                            ->relationship('examination', 'title', function ($query, $get) {
-                                $chapterId = $get('chapter_id');
-                                if ($chapterId) {
-                                    $query->where('chapter_id', $chapterId);
-                                }
-                            })
-                            ->searchable()
-                            ->visible(fn ($get) => filled($get('chapter_id'))),
-
-                        Select::make('student_id')
-                            ->label('Étudiant')
-                            ->required()
-                            ->relationship('student', 'name', function ($query, $get) {
-                                $examinationId = $get('examination_id');
-                                if ($examinationId) {
-                                    $query->whereHas('submissions', function ($subquery) use ($examinationId) {
-                                        $subquery->where('examination_id', $examinationId);
-                                    });
-                                }
-                            })
-                            ->getSearchResultsUsing(function (string $search, $get) {
-                                $examinationId = $get('examination_id');
-                                $query = \App\Models\User::query()
-                                    ->where(function ($query) use ($search) {
-                                        $query->where('name', 'like', "%{$search}%")
-                                            ->orWhere('surname', 'like', "%{$search}%")
-                                            ->orWhere('first_name', 'like', "%{$search}%")
-                                            ->orWhere('reference_code', 'like', "%{$search}%");
-                                    });
-
-                                if ($examinationId) {
-                                    $query->whereHas('submissions', function ($subquery) use ($examinationId) {
-                                        $subquery->where('examination_id', $examinationId);
-                                    });
-                                }
-
-                                return $query->limit(50)->pluck('name', 'id');
-                            })
-                            ->searchable(),
-                        TextInput::make('score')
-                            ->label('Note')
-                            ->required()
-                            ->placeholder('Note sur 10')
-                            ->numeric()
-                            ->minValue(0)
-                            ->maxValue(10),
-                        Select::make('status')
-                            ->label('Statut')
-                            ->placeholder('Statut')
-                            ->required()
-                            ->options(ExamResultEnum::class),
-                        Textarea::make('feedback')
-                            ->label('Commentaire')
-                            ->placeholder('Commentaire')
-                            ->rows(4)
-                            ->columnSpanFull()
-                            ->required(),
-                    ])->columns(2),
             ]);
     }
 

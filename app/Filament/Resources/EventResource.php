@@ -42,6 +42,11 @@ final class EventResource extends Resource
 
     protected static ?string $label = 'Formations'; // Nom de la ressource
 
+    public static function getNavigationLabel(): string
+    {
+        return "Formations";
+    }
+
     public static function form(Form $form): Form
     {
         return $form
@@ -52,6 +57,7 @@ final class EventResource extends Resource
                             Select::make('event_type_id')
                                 ->label("Type d'événement")
                                 ->reactive()
+                                ->preload()
                                 ->searchable()
                                 ->options(EventType::pluck('title', 'id')->toArray())
                                 ->createOptionForm([

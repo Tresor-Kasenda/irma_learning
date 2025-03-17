@@ -29,6 +29,8 @@ final class BookingResource extends Resource
 
     protected static ?string $label = 'Inscription'; // Nom de la ressource
 
+    protected static ?int $navigationSort = 1;
+
     public static function getLabel(): ?string
     {
         return 'Tous les participants';
@@ -92,6 +94,7 @@ final class BookingResource extends Resource
                                 ->relationship('event', 'title')
                                 ->placeholder("Nom de l'évènement")
                                 ->columnSpanFull()
+                                ->preload()
                                 ->required(),
                             Forms\Components\Select::make('title')
                                 ->label('Titre de civilité')
@@ -101,6 +104,7 @@ final class BookingResource extends Resource
                                     'Mlle' => 'Mademoiselle',
                                 ])
                                 ->reactive()
+                                ->preload()
                                 ->searchable()
                                 ->native(false)
                                 ->columnSpanFull()

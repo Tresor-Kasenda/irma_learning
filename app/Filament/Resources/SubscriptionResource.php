@@ -18,7 +18,7 @@ final class SubscriptionResource extends Resource
 
     protected static ?string $navigationGroup = 'Gestion de formation';
 
-    protected static ?string $label = 'Souscription'; // Nom de la ressource
+    protected static ?string $label = 'Inscription'; // Nom de la ressource
 
     protected static ?int $navigationSort = 3;
 

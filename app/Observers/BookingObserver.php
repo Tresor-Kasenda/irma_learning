@@ -24,6 +24,8 @@ final class BookingObserver
                 'role' => UserRoleEnum::STUDENT->value,
                 'must_change_password' => true,
                 'reference_code' => $booking->reference,
+                'phone' => $booking->phone_number,
+                'firstname' => $booking->firstname
             ]);
 
         \Illuminate\Support\defer(function () use ($booking, $user) {
