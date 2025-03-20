@@ -46,7 +46,7 @@ final class StudentCourseLearning extends Component implements HasForms
 
         if ($chapter) {
             $matchingChapter = $this->masterClass->chapters()
-                ->where('name', 'like', Str::replace('-', ' ', $chapter))
+                ->where('title', 'like', Str::replace('-', ' ', $chapter))
                 ->first();
 
             if ($matchingChapter) {
@@ -145,7 +145,9 @@ final class StudentCourseLearning extends Component implements HasForms
 
     public function setPreviousChapter(): void
     {
-        $currentIndex = $this->masterClass->chapters()->getChapterIndex($this->activeChapter);
+        $currentIndex = $this->masterClass->chapters->search(function ($chapter) {
+            return $chapter->id === $this->activeChapter->id;
+        });
 
         if ($currentIndex > 0) {
             $previousChapter = $this->masterClass->chapters[$currentIndex - 1];

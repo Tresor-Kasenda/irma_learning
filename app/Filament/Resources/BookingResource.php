@@ -33,7 +33,7 @@ final class BookingResource extends Resource
 
     public static function getLabel(): ?string
     {
-        return 'Tous les participants';
+        return 'Détails des participants';
     }
 
     public static function form(Form $form): Form

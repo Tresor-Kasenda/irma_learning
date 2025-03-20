@@ -62,11 +62,12 @@ final class ViewExamSubmission extends ViewRecord
                 ->label('Télécharger')
                 ->icon('heroicon-o-arrow-down-tray')
                 ->action(function () {
-                    $filePath = $this->record->file_path;
+                    $filePath = $this->record?->file_path;
 
-                    return Storage::download($filePath);
+                    return Storage::disk('public')
+                        ->download($filePath);
                 })
-                ->visible(fn () => $this->record->file_path !== null),
+                ->visible(fn() => $this->record->file_path !== null),
         ];
     }
 }

@@ -24,13 +24,13 @@ class StudentResource extends Resource
     protected static ?string $navigationGroup = 'Gestion des inscriptions';
 
 
-    protected static ?string $label = 'Etudiants'; // Nom de la ressource
+    protected static ?string $label = 'Gestion des résultats'; // Nom de la ressource
 
     protected static ?int $navigationSort = 5;
 
     public static function getLabel(): ?string
     {
-        return 'Etudiants';
+        return 'Gestion des résultats';
     }
 
     public static function form(Form $form): Form

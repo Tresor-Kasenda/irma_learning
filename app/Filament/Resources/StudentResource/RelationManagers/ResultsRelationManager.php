@@ -28,10 +28,28 @@ class ResultsRelationManager extends RelationManager
             ->schema([
                 Forms\Components\Section::make('Publication des resultats')
                     ->schema([
+                        Forms\Components\Select::make('master_class_id')
+                            ->label('Master Class')
+                            ->relationship('cours', 'title')
+                            ->searchable()
+                            ->preload()
+                            ->required()
+                            ->live()
+                            ->afterStateUpdated(function (callable $set) {
+                                // Reset dependent fields when master class changes
+                                $set('chapter_id', null);
+                                $set('examination_id', null);
+                            }),
                         Forms\Components\Select::make('chapter_id')
                             ->label('Chapitre')
                             ->required()
-                            ->relationship('chapter', 'title', function (Builder $query) use ($chaptersWithResults) {
+                            ->relationship('chapter', 'title', function (Builder $query, callable $get) use ($chaptersWithResults) {
+                                // Filter chapters by selected master class
+                                $masterClassId = $get('master_class_id');
+                                if ($masterClassId) {
+                                    $query->where('master_class_id', $masterClassId);
+                                }
+
                                 // Exclude chapters that already have results
                                 if (!empty($chaptersWithResults)) {
                                     $query->whereNotIn('id', $chaptersWithResults);
@@ -101,6 +119,15 @@ class ResultsRelationManager extends RelationManager
                             ->maxSize(10240) // Taille maximale de 10MB
                             ->deletable()
                             ->uploadingMessage('Uploading certification...')
+                            ->columnSpanFull(),
+                        Forms\Components\FileUpload::make('correction')
+                            ->directory('reponses')
+                            ->label('Reponses d\'evaluation')
+                            ->downloadable()
+                            ->previewable()
+                            ->acceptedFileTypes(['application/pdf'])
+                            ->maxSize(10240) // Taille maximale de 10MB
+                            ->deletable()
                             ->columnSpanFull(),
                         Forms\Components\Textarea::make('feedback')
                             ->label('Commentaire')
