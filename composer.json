@@ -17,6 +17,7 @@
         "php": "^8.2",
         "filament/filament": "^v3.2.142",
         "laravel/framework": "^v11.40.0",
+        "laravel/pulse": "^1.4",
         "laravel/sanctum": "^4.0",
         "laravel/tinker": "^2.10.1",
         "livewire/livewire": "^v3.5.20",
