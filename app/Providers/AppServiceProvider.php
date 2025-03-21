@@ -19,14 +19,6 @@ use Illuminate\Validation\Rules\Password;
 final class AppServiceProvider extends ServiceProvider
 {
     /**
-     * Register any application services.
-     */
-    public function register(): void
-    {
-        //
-    }
-
-    /**
      * Bootstrap any application services.
      */
     public function boot(): void
@@ -41,6 +33,10 @@ final class AppServiceProvider extends ServiceProvider
 
 
         Gate::define('viewPulse', function (User $user) {
+            return $user->isAdmin();
+        });
+
+        Gate::define('viewTelescope', function (User $user) {
             return $user->isAdmin();
         });
     }
@@ -77,6 +73,17 @@ final class AppServiceProvider extends ServiceProvider
     private function configurePasswordValidation(): void
     {
         Password::defaults(fn() => $this->app->isProduction() ? Password::min(8)->uncompromised() : null);
+    }
+
+    /**
+     * Register any application services.
+     */
+    public function register(): void
+    {
+        if ($this->app->environment('local') && class_exists(\Laravel\Telescope\TelescopeServiceProvider::class)) {
+            $this->app->register(\Laravel\Telescope\TelescopeServiceProvider::class);
+            $this->app->register(TelescopeServiceProvider::class);
+        }
     }
 
     public function configureUrl(): void
