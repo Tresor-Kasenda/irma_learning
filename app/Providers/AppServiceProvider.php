@@ -39,6 +39,7 @@ final class AppServiceProvider extends ServiceProvider
         $this->configurePasswordValidation();
         Schema::defaultStringLength(191);
 
+
         Gate::define('viewPulse', function (User $user) {
             return $user->isAdmin();
         });
