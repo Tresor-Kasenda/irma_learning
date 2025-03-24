@@ -194,6 +194,7 @@ final class StudentCourseLearning extends Component implements HasForms
                     ->directory('examens')
                     ->downloadable()
                     ->previewable()
+                    ->required()
                     ->acceptedFileTypes(['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'])
                     ->maxSize(10240) // Taille maximale de 10MB
                     ->deletable()
@@ -210,7 +211,13 @@ final class StudentCourseLearning extends Component implements HasForms
 
     public function submitExam(): void
     {
-        $this->validate();
+        $this->validate([
+            'data.file_path' => 'required|array|min:1',
+        ], [
+            'data.file_path.required' => 'Veuillez sélectionner un fichier à soumettre.',
+            'data.file_path.array' => 'Format de fichier invalide.',
+            'data.file_path.min' => 'Veuillez sélectionner au moins un fichier.',
+        ]);
 
         $examination = $this->activeChapter->examination;
 

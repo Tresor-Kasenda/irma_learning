@@ -442,16 +442,16 @@
                             <h3 class="text-2xl font-bold text-fg-title m-4">Description</h3>
 
                             <div @class([
-                        'max-w-none markdow-content-block max-w-none mt-2 text-gray-700 leading-relaxed flex flex-col prose prose-invert',
-                        'blur-sm pointer-events-none' => !$this->canAccessChapter($activeChapter)
-                    ])>
+                                'max-w-none markdow-content-block max-w-none mt-2 text-gray-700 leading-relaxed flex flex-col prose prose-invert',
+                                'blur-sm pointer-events-none' => !$this->canAccessChapter($activeChapter)
+                            ])>
                                 {!! $activeChapter->description !!}
                             </div>
 
                             <div @class([
-                        'max-w-none markdow-content-block max-w-none mt-3 flex flex-col prose prose-invert',
-                        'blur-sm pointer-events-none' => !$this->canAccessChapter($activeChapter)
-                    ])>
+                                'max-w-none markdow-content-block max-w-none mt-3 flex flex-col prose prose-invert',
+                                'blur-sm pointer-events-none' => !$this->canAccessChapter($activeChapter)
+                            ])>
                                 <iframe
                                     src="{{ asset('storage/' . $activeChapter->path)  }}"
                                     type="application/pdf"
@@ -545,13 +545,24 @@
                                                         votre examen dans le formulaire ci-dessous
                                                     </div>
                                                 </div>
+
                                                 <div>
                                                     <form wire:submit="submitExam" class="space-y-3">
                                                         {{ $this->form }}
 
-                                                        <button type="submit"
-                                                                class="px-4 py-2 bg-primary-600 text-white rounded-lg"
-                                                                wire:loading.attr="disabled" wire:target="submitExam">
+
+                                                        <div class="text-warning-500 text-sm">
+                                                            Apres avoir uploader votre ficher veillez patienter jusqu'a
+                                                            ce que le telechargement de votre ficher passe au vert avant
+                                                            de cliquer
+                                                            sur le bouton Soumettre votre examen
+                                                        </div>
+                                                        <button
+                                                            type="submit"
+                                                            class="px-4 py-2 bg-primary-600 text-white rounded-lg"
+                                                            wire:loading.attr="disabled"
+                                                            wire:target="submitExam"
+                                                        >
                                                             <span wire:loading.remove>Soumettre votre examen</span>
                                                             <span wire:loading>
                                                             <svg
