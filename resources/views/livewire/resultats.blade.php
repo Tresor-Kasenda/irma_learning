@@ -8,23 +8,19 @@ new class extends Component {
 
     public function mount(): void
     {
-        // Get the authenticated student's ID
         $studentId = auth()->id();
 
-        // Retrieve evaluations (chapter results) with nested relationships
         $results = ExamResult::query()
-            ->with(['chapter', 'examination', 'cours'])  // Load the master class directly
+            ->with(['chapter', 'examination', 'cours'])
             ->where('student_id', '=', $studentId)
             ->get();
 
-// Group by master class and preserve both ID and title information
         $this->evaluations = $results->groupBy('master_class_id')
             ->map(function ($items, $masterClassId) {
-                // Get master class details from the first item in the group
                 $masterClass = $items->first()->cours;
 
                 return [
-                    'master_class' => $masterClass, // Contains ID, title, and other attributes
+                    'master_class' => $masterClass,
                     'results' => $items
                 ];
             });

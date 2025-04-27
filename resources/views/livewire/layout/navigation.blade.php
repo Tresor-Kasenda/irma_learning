@@ -59,6 +59,15 @@ new class extends Component {
                         @endif
                     </a>
                 </li>
+
+                <li data-state="{{ request()->routeIs('student.history.lists') ? 'active' : 'inactive' }}"
+                    class="md:h-full flex items-center group fx-active:border-primary border-b-2 border-transparent fx-active:text-fg-title">
+                    <a href="{{ route('student.history.lists') }}"
+                       wire:navigate
+                       class="w-full sm:w-max flex px-3 py-1.5 rounded-md hover:bg-bg-light group-fx-active:bg-bg border border-transparent group-fx-active:border-border/40">
+                        Historique d'apprentissage
+                    </a>
+                </li>
             </ul>
         </div>
 

@@ -175,6 +175,16 @@ final class User extends Authenticatable implements FilamentUser
         return $this->role === UserRoleEnum::STUDENT->value;
     }
 
+    public function management()
+    {
+        return $this->hasMany(Management::class);
+    }
+
+    public function mathematics()
+    {
+        return $this->hasMany(Mathematic::class);
+    }
+
     /**
      * Get the attributes that should be cast.
      *

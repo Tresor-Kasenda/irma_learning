@@ -9,6 +9,7 @@ use App\Models\MasterClass;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Facades\Cache;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
@@ -30,66 +31,87 @@ final class Dashboard extends Component
     }
 
     #[Computed]
-    public function masterClasses(): Collection
-    {
-        return MasterClass::query()
-            ->where('status', '=', MasterClassEnum::PUBLISHED)
-            ->whereAny([
-                'title',
-                'duration',
-                'description',
-                'sub_title',
-            ], 'like', sprintf('%%%s%%', $this->search))
-            ->withCount('chapters')
-            ->withCount(['chapters as completed_chapters_count' => function ($query) {
-                $query->whereHas('submission', function ($q) {
-                    $q->where('user_id', auth()->id());
-                });
-            }])
-            ->get()
-            ->map(function ($masterClass) {
-                $masterClass->progress = $masterClass->chapters_count > 0
-                    ? round(($masterClass->completed_chapters_count / $masterClass->chapters_count) * 100)
-                    : 0;
-
-                return $masterClass;
-            });
-    }
-
-    #[Computed]
     public function statistics(): array
     {
         $userId = auth()->id();
+        $cacheKey = "statistics_{$userId}";
 
-        return [
-            'total' => MasterClass::query()
+        return Cache::remember($cacheKey, now()->addMinutes(10), function () use ($userId) {
+            $baseQuery = MasterClass::query()
                 ->where('status', '=', MasterClassEnum::PUBLISHED)
-                ->whereHas('subscription', fn ($query) => $query->where('user_id', $userId))
-                ->count(),
-            'in_progress' => MasterClass::query()
-                ->selectRaw('1')
-                ->where('status', '=', MasterClassEnum::PUBLISHED)
-                ->whereHas('subscription', fn ($query) => $query->where('user_id', $userId))
-                ->whereHas('chapters.progress', fn (Builder $query) => $query
-                    ->where('user_id', $userId)
-                    ->where('status', 'in_progress')
-                )
-                ->count(),
-            'completed' => MasterClass::query()
-                ->selectRaw('1')
-                ->where('status', '=', MasterClassEnum::PUBLISHED)
-                ->whereHas('subscription', fn ($query) => $query->where('user_id', $userId))
-                ->whereDoesntHave('chapters', function ($query) use ($userId) {
-                    $query->whereDoesntHave('progress', fn ($q) => $q
+                ->whereHas('subscription', fn($query) => $query->where('user_id', $userId));
+
+            return [
+                'total' => (clone $baseQuery)->count(),
+                'in_progress' => (clone $baseQuery)
+                    ->whereHas('chapters.progress', fn(Builder $query) => $query
                         ->where('user_id', $userId)
-                        ->where('status', 'completed')
-                    );
+                        ->where('status', 'in_progress')
+                    )
+                    ->count(),
+                'completed' => (clone $baseQuery)
+                    ->whereExists(function ($query) use ($userId) {
+                        $query->selectRaw('1')
+                            ->from('chapters')
+                            ->whereColumn('chapters.master_class_id', 'master_classes.id')
+                            ->where('is_final_chapter', true)
+                            ->whereExists(function ($subquery) use ($userId) {
+                                $subquery->selectRaw('1')
+                                    ->from('exam_submissions')
+                                    ->join('examinations', 'examinations.id', '=', 'exam_submissions.examination_id')
+                                    ->whereColumn('examinations.chapter_id', 'chapters.id')
+                                    ->where('exam_submissions.user_id', $userId);
+                            });
+                    })
+                    ->whereNotExists(function ($query) use ($userId) {
+                        $query->selectRaw('1')
+                            ->from('chapters')
+                            ->whereColumn('chapters.master_class_id', 'master_classes.id')
+                            ->whereNotExists(function ($subquery) use ($userId) {
+                                $subquery->selectRaw('1')
+                                    ->from('chapter_progress')
+                                    ->whereColumn('chapter_progress.chapter_id', 'chapters.id')
+                                    ->where('chapter_progress.user_id', $userId)
+                                    ->where('chapter_progress.status', 'completed');
+                            });
+                    })
+                    ->count(),
+            ];
+        });
+    }
+
+    #[Computed]
+    public function masterClasses(): Collection
+    {
+        $userId = auth()->id();
+        $cacheKey = "master_classes_{$userId}_{$this->search}";
+
+        return Cache::remember($cacheKey, now()->addMinutes(5), function () use ($userId) {
+            return MasterClass::query()
+                ->where('status', '=', MasterClassEnum::PUBLISHED)
+                ->when($this->search, function (Builder $query) {
+                    $query->where(function (Builder $query) {
+                        $query->where('title', 'like', "%{$this->search}%")
+                            ->orWhere('duration', 'like', "%{$this->search}%")
+                            ->orWhere('description', 'like', "%{$this->search}%")
+                            ->orWhere('sub_title', 'like', "%{$this->search}%");
+                    });
                 })
-                ->whereHas('chapters', function ($query) use ($userId) {
-                    $query->where('is_final_chapter', true)
-                        ->whereHas('examination.submission', fn ($q) => $q->where('user_id', $userId));
-                })
-                ->count(),
-        ];
+                ->withCount('chapters')
+                ->withCount(['chapters as completed_chapters_count' => function (Builder $query) use ($userId) {
+                    $query->whereHas('progress', function (Builder $q) use ($userId) {
+                        $q->where('user_id', $userId)
+                            ->where('status', 'completed');
+                    });
+                }])
+                ->get()
+                ->map(function ($masterClass) {
+                    $masterClass->progress = $masterClass->chapters_count > 0
+                        ? round(($masterClass->completed_chapters_count / $masterClass->chapters_count) * 100)
+                        : 0;
+
+                    return $masterClass;
+                });
+        });
     }
 }

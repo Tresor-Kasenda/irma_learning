@@ -8,8 +8,9 @@ use App\Livewire\Pages\Courses\HomePage;
 use App\Livewire\Pages\Courses\LearningCourse;
 use App\Livewire\Pages\Dashboard;
 use App\Livewire\Pages\Examinatio\SubmitExamination;
+use App\Livewire\Pages\History\StudentExamUpateHistory;
+use App\Livewire\Pages\History\StudentHistory;
 use App\Livewire\Pages\StudentCourseLearning;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Route;
 use Livewire\Volt\Volt;
 
@@ -17,14 +18,6 @@ Route::get('/', HomePage::class)->name('home-page');
 Route::get('/certifications', Certifications::class)->name('certifications');
 Route::get('/formations-continue', FormationsLists::class)->name('formations-lists');
 Route::get('/master-class/{masterClass}/formations', LearningCourse::class)->name('master-class');
-
-Route::get('/hash', function () {
-    $pass = "password";
-    $password = Hash::make($pass);
-    dd(
-        $password
-    );
-});
 
 Route::get('/formation/{training}/details', App\Livewire\Pages\Formations\DetailFormation::class)->name('formation-details');
 
@@ -41,6 +34,9 @@ Route::middleware(['auth', 'verified', 'force.password.change'])->group(function
     Route::view('profile', 'profile')->name('profile');
 
     Volt::route('/resultats', 'resultats')->name('resultats');
+
+    Route::get('/histories', StudentHistory::class)->name('student.history.lists');
+    Route::get('/histories/{submission}/update', StudentExamUpateHistory::class)->name('student.history.update');
 });
 
 require __DIR__ . '/auth.php';

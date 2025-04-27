@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "770227db6bcb2e9ad9086345821f1e4b",
+    "content-hash": "3c21e800d8cca0379ef01b4886ff3631",
     "packages": [
         {
             "name": "anourvalar/eloquent-serialize",
@@ -4975,6 +4975,55 @@
                 }
             ],
             "time": "2024-04-27T21:32:50+00:00"
+        },
+        {
+            "name": "rapids/rapids",
+            "version": "v1.0.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/Tresor-Kasenda/rapids.git",
+                "reference": "911ae9918e2dbcce9f827633006a898cde5d0c89"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/Tresor-Kasenda/rapids/zipball/911ae9918e2dbcce9f827633006a898cde5d0c89",
+                "reference": "911ae9918e2dbcce9f827633006a898cde5d0c89",
+                "shasum": ""
+            },
+            "require": {
+                "illuminate/support": "^10.0|^11.0|^12.0",
+                "laravel/prompts": "^0.3.5",
+                "php": "^8.3"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "Rapids\\Rapids\\RapidsServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Rapids\\Rapids\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Tresor kasenda",
+                    "email": "tresorkasendat@gmail.com"
+                }
+            ],
+            "description": "Rapid is a Laravel command can helps to generate crud, models, migration and ui with Livewire and Filament",
+            "support": {
+                "issues": "https://github.com/Tresor-Kasenda/rapids/issues",
+                "source": "https://github.com/Tresor-Kasenda/rapids/tree/v1.0.0"
+            },
+            "time": "2025-04-19T19:22:44+00:00"
         },
         {
             "name": "ryangjchandler/blade-capture-directive",
