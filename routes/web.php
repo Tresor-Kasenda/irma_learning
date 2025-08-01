@@ -19,6 +19,8 @@ Route::get('/certifications', Certifications::class)->name('certifications');
 Route::get('/formations-continue', FormationsLists::class)->name('formations-lists');
 Route::get('/master-class/{masterClass}/formations', LearningCourse::class)->name('master-class');
 
+Volt::route('/nos-tarifs', 'pages.pricings')->name('pages.pricings');
+
 Route::get('/formation/{training}/details', App\Livewire\Pages\Formations\DetailFormation::class)->name('formation-details');
 
 Route::middleware(['auth', 'verified', 'force.password.change'])->group(function () {

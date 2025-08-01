@@ -32,6 +32,12 @@
                     </a>
                 </li>
                 <li class="relative flex w-full lg:w-max group">
+                    <a href="{{ route('pages.pricings') }}" wire:navigate aria-label="Lien vers la page : Tarifs"
+                       class="py-2 ease-linear duration-100 inline-flex {{ Request::routeIs('formations-lists') ? 'text-primary-700' : 'hover:text-primary-700' }}">
+                        Nos tarifs
+                    </a>
+                </li>
+                <li class="relative flex w-full lg:w-max group">
                     <a target="_blank" href="#" aria-label="Lien vers la page : Accueil"
                        class="py-2 ease-linear duration-100 inline-flex hover:text-primary-700">
                         iRMA Association
