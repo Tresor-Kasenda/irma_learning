@@ -26,9 +26,9 @@
 <body class="overflow-hidden overflow-y-auto bg-bg">
 <div class="min-h-screen">
     <livewire:layout.navigation/>
-    <!-- Page Content -->
     <main class="py-8 relative">
         <x-notification-popup/>
+        <livewire:components.notifications/>
         {{ $slot }}
     </main>
 </div>

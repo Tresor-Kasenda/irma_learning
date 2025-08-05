@@ -28,9 +28,9 @@ final class MasterClassResource extends Resource
 
     protected static ?string $navigationGroup = 'Gestion de formation';
 
-    protected static ?string $navigationIcon = 'heroicon-o-book-open'; // Icône du menu (facultatif)
+    protected static ?string $navigationIcon = 'heroicon-o-book-open';
 
-    protected static ?string $label = 'Cours'; // Nom de la ressource
+    protected static ?string $label = 'Cours';
 
     protected static ?int $navigationSort = 2;
 

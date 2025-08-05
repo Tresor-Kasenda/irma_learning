@@ -23,6 +23,8 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'force.password.change' => ForcePasswordChange::class,
             'completed.chapters' => EnsureAllChaptersCompleted::class,
+            'ensure.master.class.access' => \App\Http\Middleware\EnsureMasterClassAccess::class,
+            'restrict.student.access' => \App\Http\Middleware\RestrictStudentMasterClassAccess::class,
         ]);
 
         $middleware->appendToGroup('web', WebRequestMonitoring::class)

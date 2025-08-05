@@ -1,7 +1,7 @@
 export function notificationSystem() {
     return {
         notifications: [],
-        initNotifications() {
+        init() {
             const savedNotifications = JSON.parse(localStorage.getItem('notifications')) || [];
             this.notifications = savedNotifications.map(notification => ({
                 ...notification,
