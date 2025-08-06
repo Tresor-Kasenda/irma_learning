@@ -14,7 +14,7 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body class="overflow-hidden overflow-y-auto bg-bg min-h-screen">
-<x-frontend.header/>
+<x-frontend.header :white-header="isset($whiteHeader)"/>
 <div class="absolute top-0 left-0 inset-x-0 h-40 flex">
     <span class="flex w-60 h-36 bg-gradient-to-tr from-primary rounded-full blur-2xl opacity-65"></span>
 </div>
