@@ -12,7 +12,7 @@ use Livewire\Attributes\Url;
 use Livewire\Attributes\Validate;
 use Livewire\Component;
 
-#[Layout('welcome')]
+#[Layout('welcome', ['whiteHeader' => true])]
 #[Title('Formations')]
 final class FormationsLists extends Component
 {

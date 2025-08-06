@@ -22,6 +22,7 @@
         "vite": "^6.0.11"
     },
     "dependencies": {
+        "@flexilla/alpine-tabs": "^0.1.0",
         "@flexilla/flexilla": "^2.1.0",
         "@flexilla/utilities": "^2.0.72",
         "canvas-confetti": "^1.9.3",
