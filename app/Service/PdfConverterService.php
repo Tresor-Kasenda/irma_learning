@@ -13,12 +13,9 @@ use Smalot\PdfParser\Parser;
 
 final class PdfConverterService
 {
+    protected CommonMarkConverter $markdownConverter;
+    protected array $tocItems;
     private Parser $pdfParser;
-
-    private CommonMarkConverter $markdownConverter;
-
-    private array $tocItems;
-
     private int $currentPosition;
 
     public function __construct()
@@ -35,26 +32,21 @@ final class PdfConverterService
     public function convertToStructuredMarkdownAndHtml(string $path): array
     {
         try {
-            // Obtention du chemin absolu du fichier
             $filePath = Storage::disk('public')->path($path);
-            Log::info('Chemin du fichier PDF: '.$filePath);
+            Log::info('Chemin du fichier PDF: ' . $filePath);
 
-            // Vérification de l'existence du fichier
-            if (! file_exists($filePath)) {
-                throw new Exception("Fichier non trouvé à l'emplacement: ".$filePath);
+            if (!file_exists($filePath)) {
+                throw new Exception("Fichier non trouvé à l'emplacement: " . $filePath);
             }
 
-            // Initialisation
             $this->currentPosition = 0;
             $this->tocItems = [];
             $elements = [];
 
-            // Extraction du texte et parsing initial
             $pdf = $this->pdfParser->parseFile($filePath);
             $rawText = $pdf->getText();
-            Log::info('Contenu brut du PDF: '.mb_substr($rawText, 0, 500)); // Affiche les 500 premiers caractères
+            Log::info('Contenu brut du PDF: ' . mb_substr($rawText, 0, 500)); // Affiche les 500 premiers caractères
 
-            // Extraction des éléments
             $elements = array_merge(
                 $this->extractHeaders($rawText),
                 $this->extractLinks($rawText),
@@ -62,18 +54,15 @@ final class PdfConverterService
                 $this->extractMathFormulas($rawText)
             );
 
-            // Extraction et traitement des images
             $imageElements = $this->processImages($filePath, $rawText);
             $elements = array_merge($elements, $imageElements);
 
-            // Tri des éléments par position
             usort($elements, function ($a, $b) {
                 return $a['position'] <=> $b['position'];
             });
 
-            // Génération du Markdown final
             $markdown = $this->generateMarkdown($rawText, $elements);
-            Log::info('Markdown généré: '.mb_substr($markdown, 0, 500)); // Affiche les 500 premiers caractères
+            Log::info('Markdown généré: ' . mb_substr($markdown, 0, 500)); // Affiche les 500 premiers caractères
 
             return [
                 'markdown' => $markdown,
@@ -81,8 +70,8 @@ final class PdfConverterService
             ];
 
         } catch (Exception $e) {
-            Log::error('Erreur lors de la conversion PDF: '.$e->getMessage());
-            throw new Exception('Échec de la conversion PDF: '.$e->getMessage());
+            Log::error('Erreur lors de la conversion PDF: ' . $e->getMessage());
+            throw new Exception('Échec de la conversion PDF: ' . $e->getMessage());
         }
     }
 
@@ -98,8 +87,7 @@ final class PdfConverterService
                 continue;
             }
 
-            // Détection des titres par soulignement
-            if (preg_match('/^[=\-]{3,}$/', $line) && ! empty($previousLine)) {
+            if (preg_match('/^[=\-]{3,}$/', $line) && !empty($previousLine)) {
                 $level = $line[0] === '=' ? 1 : 2;
                 $this->currentPosition++;
 
@@ -112,8 +100,7 @@ final class PdfConverterService
 
                 $headers[] = $header;
                 $this->tocItems[] = $header;
-            } // Détection des titres numériques (ex: "1. Introduction", "1.1. Section", etc.)
-            elseif (preg_match('/^(\d+\.?)+(\s+.+)$/', $line, $matches)) {
+            } elseif (preg_match('/^(\d+\.?)+(\s+.+)$/', $line, $matches)) {
                 $level = mb_substr_count($matches[1], '.');
                 $this->currentPosition++;
 
@@ -126,8 +113,7 @@ final class PdfConverterService
 
                 $headers[] = $header;
                 $this->tocItems[] = $header;
-            } // Détection des titres alphabétiques (ex: "a. Section", "a.1. Subsection", etc.)
-            elseif (preg_match('/^([a-zA-Z]+\.?)+(\s+.+)$/', $line, $matches)) {
+            } elseif (preg_match('/^([a-zA-Z]+\.?)+(\s+.+)$/', $line, $matches)) {
                 $level = mb_substr_count($matches[1], '.');
                 $this->currentPosition++;
 
@@ -162,7 +148,7 @@ final class PdfConverterService
                 $length = min(mb_strlen($rawText) - $start, 100);
                 $context = mb_substr($rawText, $start, $length);
 
-                $linkText = preg_replace('/^\S*'.preg_quote($url, '/').'\S*/', '', $context);
+                $linkText = preg_replace('/^\S*' . preg_quote($url, '/') . '\S*/', '', $context);
                 $linkText = mb_trim($linkText);
 
                 if (empty($linkText)) {
@@ -192,7 +178,7 @@ final class PdfConverterService
             $line = mb_trim($line);
 
             if (preg_match('/^\s*[\|\+][-\+]+[\|\+]\s*$/', $line)) {
-                if (! $inTable) {
+                if (!$inTable) {
                     $inTable = true;
                     $this->currentPosition++;
                     $currentTable = [
@@ -210,7 +196,7 @@ final class PdfConverterService
                     $cells = array_map('trim', explode('|', mb_trim($line, '| ')));
                     $currentTable['content'][] = $cells;
                 } else {
-                    if (! empty($currentTable['content'])) {
+                    if (!empty($currentTable['content'])) {
                         $tables[] = $currentTable;
                     }
                     $inTable = false;
@@ -273,7 +259,7 @@ final class PdfConverterService
 
                         $imagePosition = null;
                         foreach ($imageReferences as $reference) {
-                            if (str_contains($reference['reference'], (string) ($i + 1))) {
+                            if (str_contains($reference['reference'], (string)($i + 1))) {
                                 $imagePosition = $reference['position'];
                                 break;
                             }
@@ -294,7 +280,7 @@ final class PdfConverterService
             $imagick->destroy();
 
         } catch (Exception $e) {
-            Log::warning('Erreur lors du traitement des images: '.$e->getMessage());
+            Log::warning('Erreur lors du traitement des images: ' . $e->getMessage());
         }
 
         return $images;
@@ -315,35 +301,35 @@ final class PdfConverterService
             switch ($element['type']) {
                 case 'header':
                     if (isset($element['content'])) {
-                        $markdown .= str_repeat('#', $element['level']).' '.$element['content']."\n\n";
+                        $markdown .= str_repeat('#', $element['level']) . ' ' . $element['content'] . "\n\n";
                     }
                     break;
 
                 case 'link':
                     if (isset($element['content'], $element['url'])) {
-                        $markdown .= sprintf('[%s](%s)', $element['content'], $element['url'])."\n\n";
+                        $markdown .= sprintf('[%s](%s)', $element['content'], $element['url']) . "\n\n";
                     }
                     break;
 
                 case 'table':
                     if (isset($element['content'])) {
-                        $markdown .= $this->renderTable($element['content'])."\n\n";
+                        $markdown .= $this->renderTable($element['content']) . "\n\n";
                     }
                     break;
 
                 case 'math':
                     if (isset($element['content'])) {
-                        $markdown .= $element['content']."\n\n";
+                        $markdown .= $element['content'] . "\n\n";
                     }
                     break;
 
                 case 'image':
                     if (isset($element['path'], $element['alt'])) {
                         $markdown .= sprintf(
-                            '![%s](%s)',
-                            $element['alt'],
-                            Storage::url($element['path'])
-                        )."\n\n";
+                                '![%s](%s)',
+                                $element['alt'],
+                                Storage::url($element['path'])
+                            ) . "\n\n";
                     }
                     break;
             }
@@ -365,15 +351,12 @@ final class PdfConverterService
         $markdown = [];
         $headers = array_shift($tableData);
 
-        // En-têtes
-        $markdown[] = '| '.implode(' | ', $headers).' |';
+        $markdown[] = '| ' . implode(' | ', $headers) . ' |';
 
-        // Séparateur
-        $markdown[] = '| '.implode(' | ', array_fill(0, count($headers), '---')).' |';
+        $markdown[] = '| ' . implode(' | ', array_fill(0, count($headers), '---')) . ' |';
 
-        // Données
         foreach ($tableData as $row) {
-            $markdown[] = '| '.implode(' | ', $row).' |';
+            $markdown[] = '| ' . implode(' | ', $row) . ' |';
         }
 
         return implode("\n", $markdown);

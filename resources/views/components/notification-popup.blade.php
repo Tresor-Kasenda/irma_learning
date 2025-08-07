@@ -1,7 +1,7 @@
 <div
     x-data="notificationSystem()"
     class="fixed top-4 right-4 z-[70]"
-    x-init="initNotifications"
+    x-init="init"
 >
     <template x-for="notification in notifications" :key="notification.id">
         <div
@@ -29,12 +29,17 @@
                     </svg>
                 </div>
                 <div class="ml-3">
-                    <p x-text="notification.message" class="text-sm font-medium"></p>
+                    <p
+                        x-text="notification.message"
+                        class="text-sm font-medium"
+                    ></p>
                 </div>
                 <div class="ml-auto pl-3">
                     <div class="-mx-1.5 -my-1.5">
-                        <button @click="removeNotification(notification.id)"
-                                class="inline-flex rounded-md p-1.5 text-white hover:bg-white hover:bg-opacity-10 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-green-50 focus:ring-white">
+                        <button
+                            @click="removeNotification(notification.id)"
+                            class="inline-flex rounded-md p-1.5 text-white hover:bg-white hover:bg-opacity-10 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-green-50 focus:ring-white"
+                        >
                             <span class="sr-only">Dismiss</span>
                             <svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                                 <path fill-rule="evenodd"

@@ -35,12 +35,19 @@ final class LearningCourse extends Component
     {
         if (! auth()->check()) {
             $this->redirect(route('login'), navigate: true);
-
             return;
         }
 
-        if (! $masterClass->subscription()->whereBelongsTo(Auth::user())->exists()) {
-            $masterClass->subscription()->create([
+        $user = Auth::user();
+
+        // Si l'utilisateur est un étudiant, le rediriger vers sa page de formations
+        if ($user->isStudent()) {
+            $this->redirect(route('student.my-master-classes', ['activeTab' => 'available']), navigate: true);
+            return;
+        }
+
+        if (! $masterClass->subscriptions()->whereBelongsTo(Auth::user())->exists()) {
+            $masterClass->subscriptions()->create([
                 'user_id' => Auth::user()->id,
                 'status' => SubscriptionEnum::ACTIVE,
                 'progress' => 0,

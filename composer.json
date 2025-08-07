@@ -14,17 +14,22 @@
     ],
     "license": "MIT",
     "require": {
-        "php": "^8.2",
+        "php": "^8.4",
         "filament/filament": "^v3.2.142",
         "inspector-apm/inspector-laravel": "^4.11",
+        "intervention/image": "^3.11",
+        "intervention/image-laravel": "^1.5",
         "laravel/framework": "^v11.40.0",
-        "laravel/pulse": "^1.4",
+        "laravel/pulse": "*",
         "laravel/sanctum": "^4.0",
-        "laravel/telescope": "^5.6",
         "laravel/tinker": "^2.10.1",
+        "league/csv": "^9.24",
         "livewire/livewire": "^v3.5.20",
         "livewire/volt": "^1.6.6",
-        "rapids/rapids": "^1.0"
+        "rapids/rapids": "^1.0",
+        "smalot/pdfparser": "*",
+        "spatie/pdf-to-image": "^3.1",
+        "tecnickcom/tcpdf": "^6.10"
     },
     "require-dev": {
         "barryvdh/laravel-debugbar": "^3.15",
@@ -74,9 +79,6 @@
     },
     "extra": {
         "laravel": {
-            "dont-discover": [
-                "laravel/telescope"
-            ]
         }
     },
     "config": {

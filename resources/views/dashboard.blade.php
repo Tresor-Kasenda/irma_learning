@@ -1,8 +1,6 @@
 <div>
     <div class="absolute inset-x-0 -top-2 h-56 bg-bg-lighter rounded-b-xl"></div>
-
     <div class="px-4 sm:px-10 lg:px-5 xl:px-8 xl:max-w-[88rem] w-full mx-auto">
-        <!-- Content -->
         <div class="relative pt-8 grid gap-8">
             <div class="flex flex-col">
                 <h1 class="text-xl font-semibold text-fg-subtitle">Mes statistiques</h1>
@@ -89,7 +87,7 @@
                 </div>
             </div>
 
-            <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6" wire:poll.keep-alive>
+            <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                 @forelse($this->masterClasses() as $masterClass)
                     <div wire:key="{{ $masterClass->id }}"
                          class="bg-bg border border-border-light rounded-lg p-0.5 shadow-sm shadow-gray-100/40 group hover:shadow-gray-200/50">
@@ -117,8 +115,10 @@
                                         <span>{{ $masterClass->progress }}%</span>
                                     </div>
                                     <div class="w-full flex bg-bg-high rounded-full h-1">
-                                        <span class="bg-primary-600 h-full rounded-full"
-                                              style="width: {{ $masterClass->progress }}%;"></span>
+                                        <span
+                                            class="bg-primary-600 h-full rounded-full"
+                                            style="width: {{ $masterClass->progress }}%;"
+                                        ></span>
                                     </div>
                                 </div>
                                 <div class="flex w-full mt-7 pb-2">

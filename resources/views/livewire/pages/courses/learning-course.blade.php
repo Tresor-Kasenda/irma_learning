@@ -1,5 +1,5 @@
 @php
-    $isSubscribed = $masterClass->subscription()->where('user_id', auth()->id())->exists();
+    $isSubscribed = $masterClass->subscriptions()->where('user_id', auth()->id())->exists();
 @endphp
 <div>
 

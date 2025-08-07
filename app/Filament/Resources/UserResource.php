@@ -23,7 +23,7 @@ final class UserResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-user-circle';
 
-    protected static ?string $label = 'Utilisateurs'; // Nom de la ressource
+    protected static ?string $label = 'Utilisateurs';
 
     protected static ?int $navigationSort = 3;
 

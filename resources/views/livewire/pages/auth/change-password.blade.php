@@ -21,11 +21,12 @@ new #[Layout('layouts.guest')] class extends Component {
         $user = Auth::user();
 
         if (!Hash::check($this->current_password, $user->password)) {
-            $this->dispatch(
-                'notify',
-                message: "Le mot de passe actuel est incorrect.",
-                type: 'error'
-            );
+            $this->dispatch('notification-add', [
+                'type' => 'error',
+                'title' => 'Erreur de mot de passe',
+                'message' => 'Le mot de passe actuel est incorrect.',
+                'duration' => 5000
+            ]);
             return;
         }
 
@@ -40,11 +41,12 @@ new #[Layout('layouts.guest')] class extends Component {
 
         Auth::logout();
 
-        $this->dispatch(
-            'notify',
-            message: "Mot de passe changé avec succès. Connectez-vous avec votre nouveau mot de passe.",
-            type: 'success'
-        );
+        $this->dispatch('notification-add', [
+            'type' => 'success', 
+            'title' => 'Mot de passe modifié',
+            'message' => 'Mot de passe changé avec succès. Connectez-vous avec votre nouveau mot de passe.',
+            'duration' => 6000
+        ]);
 
         $this->redirectIntended(default: route('login', absolute: false), navigate: true);
 

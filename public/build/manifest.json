@@ -1,13 +1,13 @@
 {
-    "resources/css/app.css": {
-        "file": "assets/app-BEGOMAs-.css",
-        "src": "resources/css/app.css",
-        "isEntry": true
-    },
-    "resources/js/app.js": {
-        "file": "assets/app-BScLPgmc.js",
-        "name": "app",
-        "src": "resources/js/app.js",
-        "isEntry": true
-    }
+  "resources/css/app.css": {
+    "file": "assets/app-9lV0CCfa.css",
+    "src": "resources/css/app.css",
+    "isEntry": true
+  },
+  "resources/js/app.js": {
+    "file": "assets/app-MKjykNZB.js",
+    "name": "app",
+    "src": "resources/js/app.js",
+    "isEntry": true
+  }
 }

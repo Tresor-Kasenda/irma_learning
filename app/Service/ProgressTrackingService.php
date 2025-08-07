@@ -15,13 +15,11 @@ final class ProgressTrackingService
     public function completeChapter(Subscription $subscription, Chapter $chapter)
     {
         DB::transaction(function () use ($subscription, $chapter) {
-            // Check if the previous chapter is completed
             $previousChapter = $chapter->previousChapter();
             if ($previousChapter && ! $this->isChapterCompleted($subscription, $previousChapter)) {
                 throw new Exception('Previous chapter must be completed first.');
             }
 
-            // Mark the chapter as completed
             ChapterProgress::updateOrCreate(
                 [
                     'subscription_id' => $subscription->id,
@@ -34,7 +32,6 @@ final class ProgressTrackingService
                 ]
             );
 
-            // Update overall progress
             $this->updateOverallProgress($subscription);
         });
 
@@ -89,7 +86,6 @@ final class ProgressTrackingService
     {
         $progress = $this->getDetailedProgress($subscription);
 
-        // Check if the student has completed at least 80% of the course
         $minimumProgress = 80;
 
         return $progress['progress_percentage'] >= $minimumProgress;
