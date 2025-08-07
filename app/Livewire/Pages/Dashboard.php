@@ -25,9 +25,9 @@ final class Dashboard extends Component
 
     private DashboardService $dashboardService;
 
-    public function mount(DashboardService $dashboardService): void
+    public function boot(): void
     {
-        $this->dashboardService = $dashboardService;
+        $this->dashboardService = app(DashboardService::class);
     }
 
     public function render(): View

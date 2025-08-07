@@ -42,7 +42,7 @@ final class StudentCourseLearning extends Component implements HasForms
 
     public function mount(MasterClass $masterClass, ?string $chapter = null): void
     {
-        $this->masterClass = $masterClass->load(['resources', 'chapters', 'subscription']);
+        $this->masterClass = $masterClass->load(['resources', 'chapters']);
 
         if ($chapter) {
             $matchingChapter = $this
@@ -76,8 +76,8 @@ final class StudentCourseLearning extends Component implements HasForms
 
         if (!$this->canAccessChapter($chapter)) {
             $this->dispatch(
-                'notify', 
-                message: 'Vous devez avoir un code de référence pour accéder à ce chapitre.', 
+                'notify',
+                message: 'Vous devez avoir un code de référence pour accéder à ce chapitre.',
                 type: 'error'
             );
             return;
@@ -85,8 +85,8 @@ final class StudentCourseLearning extends Component implements HasForms
 
         if ($previousChapter && !$previousChapter->isCompleted()) {
             $this->dispatch(
-                'notify', 
-                message: 'Vous devez d\'abord passer l\'examen du chapitre précédent.', 
+                'notify',
+                message: 'Vous devez d\'abord passer l\'examen du chapitre précédent.',
                 type: 'error'
             );
             return;
@@ -106,8 +106,8 @@ final class StudentCourseLearning extends Component implements HasForms
                 'started_at' => now(),
             ]);
             $this->dispatch(
-                'notify', 
-                message: 'Vous êtes maintenant inscrit à cette formation !', 
+                'notify',
+                message: 'Vous êtes maintenant inscrit à cette formation !',
                 type: 'success'
             );
         }

@@ -28,7 +28,6 @@
     <livewire:layout.navigation/>
     <main class="py-8 relative">
         <x-notification-popup/>
-        <livewire:components.notifications/>
         {{ $slot }}
     </main>
 </div>
