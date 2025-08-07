@@ -1,16 +1,16 @@
 import "./bootstrap";
-import {initScrollToTop} from "./scroll-to-top";
+import { initScrollToTop } from "./scroll-to-top";
 
-import {Dropdown} from "@flexilla/dropdown";
+import { Dropdown } from "@flexilla/dropdown";
 
-import {$, $$, toggleNavbar} from "@flexilla/utilities";
-import {Collapse} from "@flexilla/collapse";
+import { $, $$, toggleNavbar } from "@flexilla/utilities";
+import { Collapse } from "@flexilla/collapse";
 
-import {notificationSystem} from "./utilities/notification";
+import { notificationSystem } from "./utilities/notification";
 
 import confetti from "canvas-confetti";
-import {Accordion, Tabs} from "@flexilla/flexilla";
-
+import { Accordion, Tabs } from "@flexilla/flexilla";
+import PluginTabs from "@flexilla/alpine-tabs";
 
 window.notificationSystem = notificationSystem;
 const initAllScript = () => {
@@ -20,17 +20,17 @@ const initAllScript = () => {
     const collaspibles = $$("[data-ui-collapsible]");
     if (collaspibles && collaspibles.length > 0) {
         for (const collapsible of collaspibles) {
-            new Collapse(collapsible, {defaultState: "open"});
+            new Collapse(collapsible, { defaultState: "open" });
         }
     }
     initScrollToTop();
     const navbarEl = document.querySelector("[data-main-navbar]");
     if (navbarEl instanceof HTMLElement) {
-        toggleNavbar({navbarElement: navbarEl});
+        toggleNavbar({ navbarElement: navbarEl });
     }
     const navDash = document.querySelector("[data-dash-nav]");
     if (navDash instanceof HTMLElement) {
-        toggleNavbar({navbarElement: navDash});
+        toggleNavbar({ navbarElement: navDash });
     }
 
     initChapiterSidebar();
@@ -60,10 +60,10 @@ const initChapiterSidebar = () => {
     }
 };
 
-
-document.addEventListener('livewire:initialized', () => {
-    Livewire.on('urlChanged', (params) => {
-        window.history.pushState(null, '', params.url);
+document.addEventListener("livewire:initialized", () => {
+    Livewire.on("urlChanged", (params) => {
+        window.history.pushState(null, "", params.url);
     });
 });
 
+Alpine.plugin(PluginTabs)

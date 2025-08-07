@@ -31,6 +31,10 @@ Route::get('/master-class/{masterClass}/details', MasterClassDetails::class)
 Route::get('/formation/{training}/details', App\Livewire\Pages\Formations\DetailFormation::class)
     ->name('formation-details');
 
+Volt::route('/nos-tarifs', 'pages.pricings')->name('pages.pricings');
+
+Route::get('/formation/{training}/details', App\Livewire\Pages\Formations\DetailFormation::class)->name('formation-details');
+
 Route::middleware(['auth', 'verified', 'force.password.change'])->group(function () {
     Route::get('dashboard', Dashboard::class)->name('dashboard');
 
