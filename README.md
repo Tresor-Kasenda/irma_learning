@@ -15,3 +15,7 @@
 - [ ] L'etudiant authentifier ne peut voir que la master class auquel il est souscrit
 - [ ] L'etudiant authentifier peut voir d'autres master class mais il dois payer pour y acceder
 - [ ] L'etudiant authentifier peut voir les master class qu'il a deja payé
+
+
+- maximum 6 modules
+- 

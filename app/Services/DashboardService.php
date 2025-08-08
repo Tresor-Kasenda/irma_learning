@@ -58,15 +58,14 @@ final class DashboardService
         $cacheKey = "user_statistics_{$user->id}";
 
         return Cache::remember($cacheKey, now()->addMinutes(10), function () use ($user) {
-            // Query optimisée avec raw SQL pour éviter les N+1
             $stats = DB::select('
-                SELECT 
+                SELECT
                     COUNT(DISTINCT mc.id) as total,
-                    COUNT(DISTINCT CASE 
-                        WHEN cp.status = "in_progress" THEN mc.id 
+                    COUNT(DISTINCT CASE
+                        WHEN cp.status = "in_progress" THEN mc.id
                     END) as in_progress,
-                    COUNT(DISTINCT CASE 
-                        WHEN es.id IS NOT NULL AND c.is_final_chapter = 1 THEN mc.id 
+                    COUNT(DISTINCT CASE
+                        WHEN es.id IS NOT NULL AND c.is_final_chapter = 1 THEN mc.id
                     END) as completed
                 FROM master_classes mc
                 INNER JOIN subscriptions s ON s.master_class_id = mc.id
@@ -77,12 +76,12 @@ final class DashboardService
                 WHERE mc.status = ?
                 AND s.user_id = ?
                 AND s.status = ?
-            ', [$user->id, $user->id, MasterClassEnum::PUBLISHED->value, $user->id, SubscriptionEnum::ACTIVE->value]);
+            ', [$user?->id, $user?->id, MasterClassEnum::PUBLISHED->value, $user?->id, SubscriptionEnum::ACTIVE->value]);
 
             return [
-                'total' => (int) $stats[0]->total,
-                'in_progress' => (int) $stats[0]->in_progress,
-                'completed' => (int) $stats[0]->completed,
+                'total' => (int)$stats[0]->total,
+                'in_progress' => (int)$stats[0]->in_progress,
+                'completed' => (int)$stats[0]->completed,
             ];
         });
     }
@@ -96,8 +95,6 @@ final class DashboardService
 
         foreach ($patterns as $pattern) {
             if (str_contains($pattern, '*')) {
-                // Pour les patterns avec wildcard, on devrait utiliser Redis ou un cache tags
-                // Pour l'instant, on clear le cache simple
                 Cache::forget(str_replace('_*', '_', $pattern));
             } else {
                 Cache::forget($pattern);

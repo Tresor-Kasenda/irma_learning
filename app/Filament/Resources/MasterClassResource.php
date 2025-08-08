@@ -45,11 +45,18 @@ final class MasterClassResource extends Resource
                             ->schema([
                                 TextInput::make('title')
                                     ->label('Titre du cours')
-                                    ->disabled(),
-                                TextInput::make('sub_title')
-                                    ->label('Sous titre du cours')
+                                    ->placeholder('Titre du cours')
                                     ->required()
-                                    ->placeholder('Sous-titre de l\'événement')
+                                    ->afterStateUpdated(function ($state, callable $set) {
+                                        $set('slug', str($state)->slug());
+                                    })
+                                    ->live()
+                                    ->maxLength(255),
+                                TextInput::make('slug')
+                                    ->label('Slug du cours')
+                                    ->required()
+                                    ->disabled()
+                                    ->dehydrated()
                                     ->maxLength(255),
                                 RichEditor::make('presentation')
                                     ->label('Presentation')
@@ -133,9 +140,12 @@ final class MasterClassResource extends Resource
                 Tables\Columns\TextColumn::make('status')
                     ->label('Status')
                     ->badge()
-                    ->color(fn(string $state): string => match ($state) {
+                    ->color(fn($state): string => match ($state) {
+                        MasterClassEnum::PUBLISHED,
                         MasterClassEnum::PUBLISHED->value => 'success',
-                        MasterClassEnum::UNPUBLISHED->value => 'danger',
+                        MasterClassEnum::UNPUBLISHED,
+                        MasterClassEnum::UNPUBLISHED->value => 'warning',
+                        default => 'gray',
                     })
                     ->searchable()
                     ->sortable(),
@@ -150,6 +160,12 @@ final class MasterClassResource extends Resource
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\DeleteBulkAction::make(),
                 ]),
+            ])
+            ->emptyStateActions([
+                Tables\Actions\CreateAction::make()
+                    ->label('Créer un cours')
+                    ->icon('heroicon-o-plus')
+                    ->color('success'),
             ]);
     }
 

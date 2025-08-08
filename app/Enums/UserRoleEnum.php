@@ -7,19 +7,21 @@ namespace App\Enums;
 enum UserRoleEnum: string
 {
     case STUDENT = 'STUDENT';
-    case ADMIN = 'ADMIN';
-    case ROOT = 'ROOT';
-    case SUPPORT = 'SUPPORT';
-    case MANAGER = 'MANAGER';
 
-    public function getPrefix(): string
+    case ADMIN = 'ADMIN';
+
+    case ROOT = 'ROOT';
+
+    case INSTRUCTOR = 'INSTRUCTOR';
+
+
+    public function getLabel(): string
     {
         return match ($this) {
-            self::STUDENT => 'ST',
-            self::ADMIN => 'AD',
-            self::ROOT => 'RT',
-            self::SUPPORT => 'SU',
-            self::MANAGER => 'MA',
+            self::STUDENT => 'Étudiant',
+            self::ADMIN => 'Administrateur',
+            self::ROOT => 'Root',
+            self::INSTRUCTOR => 'Instructeur',
         };
     }
 }

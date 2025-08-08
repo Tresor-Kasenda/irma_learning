@@ -2,6 +2,9 @@
 
 declare(strict_types=1);
 
+use App\Http\Controllers\AccountController;
+use App\Http\Controllers\AdminController;
+use App\Http\Controllers\DashboardController;
 use App\Livewire\ConvertPdf;
 use App\Livewire\Pages\Courses\Certifications;
 use App\Livewire\Pages\Courses\FormationsLists;
@@ -38,7 +41,6 @@ Route::get('/formation/{training}/details', App\Livewire\Pages\Formations\Detail
 Route::middleware(['auth', 'verified', 'force.password.change'])->group(function () {
     Route::get('dashboard', Dashboard::class)->name('dashboard');
 
-    // Routes pour les étudiants authentifiés - Toutes les souscriptions se font via Livewire
     Route::get('/mes-formations', MyMasterClasses::class)->name('student.my-master-classes');
 
     Route::get('/courses/{masterClass}/start', StudentCourseLearning::class)
@@ -64,5 +66,24 @@ Route::middleware(['auth', 'verified', 'force.password.change'])->group(function
     Route::get('/histories', StudentHistory::class)->name('student.history.lists');
     Route::get('/histories/{submission}/update', StudentExamUpateHistory::class)->name('student.history.update');
 });
+
+
+Route::get('/dash', [DashboardController::class, 'index'])
+    ->middleware(['auth', 'check.status']);
+
+Route::get('/inactive-account', [AccountController::class, 'inactive'])
+    ->middleware(['auth', 'check.status:inactive']);
+
+Route::middleware(['auth'])
+    ->group(function () {
+        Route::get('/admin', [AdminController::class, 'index'])
+            ->middleware('check.status:active');
+
+        Route::get('/account/suspended', [AccountController::class, 'suspended'])
+            ->name('account.suspended');
+
+        Route::get('/account/inactive', [AccountController::class, 'inactive'])
+            ->name('account.inactive');
+    });
 
 require __DIR__ . '/auth.php';

@@ -20,8 +20,6 @@ final class DatabaseSeeder extends Seeder
             'must_change_password' => true,
         ]);
         $this->call([
-            EventTypeSeeder::class,
-            EventSeeder::class,
             MasterClassSeeder::class,
             ChapterSeeder::class,
             ResourceSeeder::class,

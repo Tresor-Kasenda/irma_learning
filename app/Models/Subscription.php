@@ -41,7 +41,6 @@ final class Subscription extends Model
         return $this->hasMany(ChapterProgress::class, 'subscription_id');
     }
 
-    // Scopes
     public function scopeActive(Builder $query): Builder
     {
         return $query->where('status', SubscriptionEnum::ACTIVE);
@@ -84,7 +83,7 @@ final class Subscription extends Model
             return null;
         }
 
-        return (int) $this->started_at->diffInDays($this->completed_at);
+        return (int)$this->started_at->diffInDays($this->completed_at);
     }
 
     protected function casts(): array

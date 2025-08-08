@@ -4,14 +4,11 @@ declare(strict_types=1);
 
 namespace App\Providers;
 
-use App\Models\User;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Schema;
-use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\Vite;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
@@ -24,21 +21,11 @@ final class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         $this->configureCommands();
-        // $this->configureUrl();
         $this->configureVite();
         $this->shouldBeStrict();
         $this->configureDates();
         $this->configurePasswordValidation();
         Schema::defaultStringLength(191);
-
-
-        Gate::define('viewPulse', function (User $user) {
-            return $user->isAdmin();
-        });
-
-        Gate::define('viewTelescope', function (User $user) {
-            return $user->isAdmin();
-        });
     }
 
     public function configureCommands(): void
@@ -80,14 +67,5 @@ final class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        if ($this->app->environment('local') && class_exists(\Laravel\Telescope\TelescopeServiceProvider::class)) {
-            $this->app->register(\Laravel\Telescope\TelescopeServiceProvider::class);
-            $this->app->register(TelescopeServiceProvider::class);
-        }
-    }
-
-    public function configureUrl(): void
-    {
-        URL::forceScheme('https');
     }
 }
