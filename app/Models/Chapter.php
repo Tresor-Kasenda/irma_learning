@@ -4,90 +4,52 @@ declare(strict_types=1);
 
 namespace App\Models;
 
-use App\Enums\ChapterProgressEnum;
-use App\Observers\ChapterObserver;
+use App\Enums\ChapterTypeEnum;
 use Database\Factories\ChapterFactory;
-use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasOne;
-use Illuminate\Support\Facades\Auth;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
+use Illuminate\Database\Eloquent\Relations\MorphOne;
 
-#[ObservedBy(ChapterObserver::class)]
 final class Chapter extends Model
 {
     /** @use HasFactory<ChapterFactory> */
     use HasFactory;
 
-    public function cours(): BelongsTo
+    public function section(): BelongsTo
     {
-        return $this->belongsTo(MasterClass::class, 'master_class_id');
+        return $this->belongsTo(Section::class, 'section_id');
     }
 
-    public function result(): HasOne
+    public function exam(): MorphOne
     {
-        return $this->hasOne(ExamResult::class);
+        return $this->morphOne(Exam::class, 'examable');
     }
 
-    public function examination(): HasOne
+    public function progress(): MorphMany
     {
-        return $this->hasOne(Examination::class);
+        return $this->morphMany(UserProgress::class, 'trackable');
     }
 
-    public function hasProgress(): bool
+    public function scopeActive($query): Model|Builder
     {
-        return $this->progress()
-            ->where('user_id', '=', Auth::user()->id)
-            ->exists();
+        return $query->where('is_active', true);
     }
 
-    public function progress(): HasOne
+    public function scopeFree($query): Model|Builder
     {
-        return $this->hasOne(ChapterProgress::class);
-    }
-
-    public function scopeSearchByActive(Builder $query, self $activeChapter): Builder
-    {
-        return $query->where('id', $activeChapter->id)
-            ->orderBy('position');
-    }
-
-    public function subscription(): BelongsTo
-    {
-        return $this->belongsTo(Subscription::class, 'subscription_id');
-    }
-
-    public function scopeGetChapterIndex(Builder $query, self $activeChapter): int
-    {
-        return $query
-            ->pluck('id')->search($activeChapter->id);
-    }
-
-    public function submission(): HasOne
-    {
-        return $this->hasOne(ExamSubmission::class);
-    }
-
-    public function isCompleted(): bool
-    {
-        $user = Auth::user();
-        $hasCompleted = $this->progress()
-            ->where('user_id', '=', $user->id)
-            ->where('status', ChapterProgressEnum::COMPLETED->value)
-            ->exists();
-
-        $hasReferenceCode = ! empty($user->reference_code);
-
-        return $hasCompleted && $hasReferenceCode;
+        return $query->where('is_free', true);
     }
 
     protected function casts(): array
     {
         return [
-            'is_final_chapter' => 'boolean',
-            'points' => 'int',
+            'is_free' => 'boolean',
+            'is_active' => 'boolean',
+            'metadata' => 'array',
+            'content_type' => ChapterTypeEnum::class,
         ];
     }
 }

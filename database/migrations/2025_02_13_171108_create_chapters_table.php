@@ -6,8 +6,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
-{
+return new class extends Migration {
     /**
      * Run the migrations.
      */
@@ -15,13 +14,19 @@ return new class extends Migration
     {
         Schema::create('chapters', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('master_class_id')->constrained();
+            $table->foreignId('section_id')->constrained();
             $table->string('title');
-            $table->longText('content')->nullable();
-            $table->integer('points')->default(0);
-            $table->integer('order_sequence')->nullable();
-            $table->text('description');
+            $table->longText('content');
+            $table->enum('content_type', ['text', 'video', 'audio', 'pdf', 'interactive'])->default('text');
+            $table->string('media_url')->nullable();
+            $table->integer('duration_minutes')->nullable();
+            $table->integer('order_position');
+            $table->boolean('is_free')->default(false);
+            $table->boolean('is_active')->default(true);
+            $table->json('metadata')->nullable()->comment('Additional content metadata');
             $table->timestamps();
+
+            $table->index(['section_id', 'order_position']);
         });
     }
 
