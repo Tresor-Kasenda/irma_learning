@@ -41,33 +41,33 @@ new class extends Component {
                         Dashboard
                     </a>
                 </li>
-                <li data-state="{{ request()->routeIs('resultats') ? 'active' : 'inactive' }}"
-                    class="md:h-full flex items-center group fx-active:border-primary border-b-2 border-transparent fx-active:text-fg-title">
-                    <a href="{{ route('resultats') }}"
-                       wire:navigate
-                       class="w-full sm:w-max flex items-center gap-2 px-3 py-1.5 rounded-md hover:bg-bg-light group-fx-active:bg-bg border border-transparent group-fx-active:border-border/40">
-                        Resultats
-                        @php
-                            $showNewResult = ExamResult::query()->where('student_id', auth()->id())->exists();
-                        @endphp
-                        @if($showNewResult)
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
-                                 stroke="currentColor" class="size-5 text-red-700">
-                                <path stroke-linecap="round" stroke-linejoin="round"
-                                      d="M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0"/>
-                            </svg>
-                        @endif
-                    </a>
-                </li>
+                {{--                <li data-state="{{ request()->routeIs('resultats') ? 'active' : 'inactive' }}"--}}
+                {{--                    class="md:h-full flex items-center group fx-active:border-primary border-b-2 border-transparent fx-active:text-fg-title">--}}
+                {{--                    <a href="{{ route('resultats') }}"--}}
+                {{--                       wire:navigate--}}
+                {{--                       class="w-full sm:w-max flex items-center gap-2 px-3 py-1.5 rounded-md hover:bg-bg-light group-fx-active:bg-bg border border-transparent group-fx-active:border-border/40">--}}
+                {{--                        Resultats--}}
+                {{--                        @php--}}
+                {{--                            $showNewResult = ExamResult::query()->where('student_id', auth()->id())->exists();--}}
+                {{--                        @endphp--}}
+                {{--                        @if($showNewResult)--}}
+                {{--                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"--}}
+                {{--                                 stroke="currentColor" class="size-5 text-red-700">--}}
+                {{--                                <path stroke-linecap="round" stroke-linejoin="round"--}}
+                {{--                                      d="M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0"/>--}}
+                {{--                            </svg>--}}
+                {{--                        @endif--}}
+                {{--                    </a>--}}
+                {{--                </li>--}}
 
-                <li data-state="{{ request()->routeIs('student.history.lists') ? 'active' : 'inactive' }}"
-                    class="md:h-full flex items-center group fx-active:border-primary border-b-2 border-transparent fx-active:text-fg-title">
-                    <a href="{{ route('student.history.lists') }}"
-                       wire:navigate
-                       class="w-full sm:w-max flex px-3 py-1.5 rounded-md hover:bg-bg-light group-fx-active:bg-bg border border-transparent group-fx-active:border-border/40">
-                        Historique d'apprentissage
-                    </a>
-                </li>
+                {{--                <li data-state="{{ request()->routeIs('student.history.lists') ? 'active' : 'inactive' }}"--}}
+                {{--                    class="md:h-full flex items-center group fx-active:border-primary border-b-2 border-transparent fx-active:text-fg-title">--}}
+                {{--                    <a href="{{ route('student.history.lists') }}"--}}
+                {{--                       wire:navigate--}}
+                {{--                       class="w-full sm:w-max flex px-3 py-1.5 rounded-md hover:bg-bg-light group-fx-active:bg-bg border border-transparent group-fx-active:border-border/40">--}}
+                {{--                        Historique d'apprentissage--}}
+                {{--                    </a>--}}
+                {{--                </li>--}}
             </ul>
         </div>
 
@@ -95,21 +95,21 @@ new class extends Component {
                                 class="text-fg-subtext text-sm font-normal truncate flex">{{ auth()->user()?->email }}</small>
                         </div>
                     </li>
-                    <li>
-                        <a class="ui-dropdown-item gap-x-2" href="{{ route('profile') }}" wire:navigate>
-                            <svg id="Layer_1" data-name="Layer 1" xmlns="http://www.w3.org/2000/svg"
-                                 viewBox="0 0 24 24" stroke-width="1.5" width="24" height="24"
-                                 color="currentColor" class="size-5 *:stroke-current *:fill-none">
-                                <circle cx="12" cy="7.25" r="5.73"></circle>
-                                <path
-                                    d="M1.5,23.48l.37-2.05A10.3,10.3,0,0,1,12,13h0a10.3,10.3,0,0,1,10.13,8.45l.37,2.05">
-                                </path>
-                            </svg>
-                            <span>
-                                Profile
-                            </span>
-                        </a>
-                    </li>
+                    {{--                    <li>--}}
+                    {{--                        <a class="ui-dropdown-item gap-x-2" href="{{ route('profile') }}" wire:navigate>--}}
+                    {{--                            <svg id="Layer_1" data-name="Layer 1" xmlns="http://www.w3.org/2000/svg"--}}
+                    {{--                                 viewBox="0 0 24 24" stroke-width="1.5" width="24" height="24"--}}
+                    {{--                                 color="currentColor" class="size-5 *:stroke-current *:fill-none">--}}
+                    {{--                                <circle cx="12" cy="7.25" r="5.73"></circle>--}}
+                    {{--                                <path--}}
+                    {{--                                    d="M1.5,23.48l.37-2.05A10.3,10.3,0,0,1,12,13h0a10.3,10.3,0,0,1,10.13,8.45l.37,2.05">--}}
+                    {{--                                </path>--}}
+                    {{--                            </svg>--}}
+                    {{--                            <span>--}}
+                    {{--                                Profile--}}
+                    {{--                            </span>--}}
+                    {{--                        </a>--}}
+                    {{--                    </li>--}}
                     <li>
                         <button wire:click="logout"
                                 class="ui-dropdown-item text-red-600 hover:bg-red-100/60 w-full focus:outline-red-600 focus:bg-red-50 gap-x-2">

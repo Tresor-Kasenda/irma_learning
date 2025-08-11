@@ -20,11 +20,6 @@ class Module extends Model
         return $this->belongsTo(Formation::class, 'formation_id');
     }
 
-    public function sections(): HasMany
-    {
-        return $this->hasMany(Section::class)->orderBy('order_position');
-    }
-
     public function exam(): MorphOne
     {
         return $this->morphOne(Exam::class, 'examable');
@@ -33,6 +28,23 @@ class Module extends Model
     public function progress(): MorphMany
     {
         return $this->morphMany(UserProgress::class, 'trackable');
+    }
+
+    public function scopeActive($query)
+    {
+        return $query->where('is_active', true);
+    }
+
+    public function getChaptersCount(): int
+    {
+        return $this->sections()->with('chapters')->get()->sum(function ($section) {
+            return $section->chapters->count();
+        });
+    }
+
+    public function sections(): HasMany
+    {
+        return $this->hasMany(Section::class)->orderBy('order_position');
     }
 
     protected function casts(): array

@@ -13,7 +13,7 @@ use Illuminate\Database\Eloquent\Model;
 final class AdminAccessMiddleware extends Middleware
 {
     /**
-     * @param  array<string>  $guards
+     * @param array<string> $guards
      *
      * @throws AuthenticationException
      */
@@ -21,7 +21,7 @@ final class AdminAccessMiddleware extends Middleware
     {
         $guard = Filament::auth();
 
-        if (! $guard->check()) {
+        if (!$guard->check()) {
             $this->unauthenticated($request, $guards);
 
             return;
@@ -36,8 +36,9 @@ final class AdminAccessMiddleware extends Middleware
 
         abort_if(
             $user instanceof FilamentUser ?
-                (! $user->canAccessPanel($panel)) : (config('app.env') !== 'local'),
+                (!$user->canAccessPanel($panel)) : (config('app.env') !== 'local'),
             403,
+            'Accès refusé. Vous devez avoir un rôle administrateur pour accéder à cette section.'
         );
     }
 

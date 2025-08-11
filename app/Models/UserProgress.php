@@ -54,8 +54,9 @@ class UserProgress extends Model
 
         if ($this->trackable instanceof Chapter) {
             $formation = $this->trackable->section->module->formation;
-            $enrollment = Enrollment::where('user_id', $this->user_id)
-                ->where('formation_id', $formation->id)
+            $enrollment = Enrollment::query()
+                ->where('user_id', '=', $this->user_id)
+                ->where('formation_id', '=', $formation->id)
                 ->first();
             $enrollment?->updateProgress();
         }

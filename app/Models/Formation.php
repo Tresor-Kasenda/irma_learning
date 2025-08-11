@@ -60,7 +60,7 @@ class Formation extends Model
         return $this->morphMany(UserProgress::class, 'trackable');
     }
 
-    public function scopeActive($query): Model
+    public function scopeActive($query)
     {
         return $query->where('is_active', true);
     }

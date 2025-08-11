@@ -4,11 +4,11 @@ namespace App\Enums;
 
 enum FormationLevelEnum: string
 {
-    case BEGINNER = 'Beginner';
+    case BEGINNER = 'beginner';
 
-    case INTERMEDIATE = 'Intermediate';
+    case INTERMEDIATE = 'intermediate';
 
-    case ADVANCED = 'Advanced';
+    case ADVANCED = 'advanced';
 
     public function getLabel(): string
     {

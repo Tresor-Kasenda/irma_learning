@@ -15,7 +15,8 @@
     "license": "MIT",
     "require": {
         "php": "^8.4",
-        "filament/filament": "^v3.2.142",
+        "filament/filament": "^3.3",
+        "ibrahim-bougaoua/filaprogress": "^0.1.0",
         "inspector-apm/inspector-laravel": "^4.11",
         "intervention/image": "^3.11",
         "intervention/image-laravel": "^1.5",

@@ -13,7 +13,10 @@ use Exception;
 use Filament\Models\Contracts\FilamentUser;
 use Filament\Panel;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -62,9 +65,9 @@ final class User extends Authenticatable implements FilamentUser
         return $this->hasMany(UserProgress::class);
     }
 
-    public function enrollments(): HasMany
+    public function createdFormations(): HasMany
     {
-        return $this->hasMany(Enrollment::class);
+        return $this->hasMany(Formation::class, 'created_by');
     }
 
     public function examAttempts(): HasMany
@@ -75,6 +78,51 @@ final class User extends Authenticatable implements FilamentUser
     public function payments(): HasMany
     {
         return $this->hasMany(Payment::class);
+    }
+
+    public function answers(): HasManyThrough
+    {
+        return $this->hasManyThrough(UserAnswer::class, ExamAttempt::class);
+    }
+
+    public function scopeActive($query): Model
+    {
+        return $query->where('status', 'active');
+    }
+
+    public function scopeStudents($query): Model
+    {
+        return $query->where('role', 'student');
+    }
+
+    public function scopeInstructors($query): Model
+    {
+        return $query->where('role', 'instructor');
+    }
+
+    public function isEnrolledIn(Formation $formation): bool
+    {
+        return $this->formations()->where('formation_id', $formation->id)->exists();
+    }
+
+    public function formations(): BelongsToMany
+    {
+        return $this->belongsToMany(Formation::class, 'enrollments')
+            ->withPivot(['status', 'payment_status', 'progress_percentage', 'enrollment_date'])
+            ->withTimestamps();
+    }
+
+    public function hasCompletedFormation(Formation $formation): bool
+    {
+        return $this->enrollments()
+            ->where('formation_id', $formation->id)
+            ->where('status', 'completed')
+            ->exists();
+    }
+
+    public function enrollments(): HasMany
+    {
+        return $this->hasMany(Enrollment::class);
     }
 
     public function hasPermission(PermissionEnum $permission): bool
@@ -93,7 +141,7 @@ final class User extends Authenticatable implements FilamentUser
 
     public function isRoot(): bool
     {
-        return $this->role === 'ROOT';
+        return $this->role === UserRoleEnum::ROOT;
     }
 
     /**
@@ -110,7 +158,7 @@ final class User extends Authenticatable implements FilamentUser
 
     public function isAdmin(): bool
     {
-        return $this->role === UserRoleEnum::ADMIN->value;
+        return $this->role === UserRoleEnum::ADMIN;
     }
 
     public function isSuperAdmin(): bool
@@ -120,12 +168,22 @@ final class User extends Authenticatable implements FilamentUser
 
     public function isStudent(): bool
     {
-        return $this->role === UserRoleEnum::STUDENT->value;
+        return $this->role === UserRoleEnum::STUDENT;
     }
 
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults()->logFillable();
+    }
+
+
+    /**
+     * @param string $role
+     * @return bool
+     */
+    public function hasRole(UserRoleEnum $role): bool
+    {
+        return $this->role === $role;
     }
 
     /**

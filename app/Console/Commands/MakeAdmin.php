@@ -43,6 +43,10 @@ final class MakeAdmin extends MakeUserCommand
                     label: 'Name',
                     required: true,
                 ),
+            'username' => $this->options['username'] ?? text(
+                    label: 'Username',
+                    required: true,
+            ),
             'email' => $this->options['email'] ?? text(
                     label: 'Email address',
                     required: true,
@@ -69,8 +73,8 @@ final class MakeAdmin extends MakeUserCommand
     {
         return [
             'ADMIN',
-            'SUPPORT',
-            'MANAGER',
+            'INSTRUCTOR',
+            'ROOT',
         ];
     }
 }

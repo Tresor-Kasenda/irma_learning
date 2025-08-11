@@ -4,11 +4,14 @@ declare(strict_types=1);
 
 namespace App\Providers\Filament;
 
+use App\Filament\Pages\Settings;
 use App\Http\Middleware\AdminAccessMiddleware;
 use Exception;
+use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
+use Filament\Navigation\MenuItem;
 use Filament\Pages;
 use Filament\Panel;
 use Filament\PanelProvider;
@@ -32,6 +35,7 @@ final class AdminPanelProvider extends PanelProvider
             ->id('admin')
             ->path('admin')
             ->login()
+            ->authGuard('web')
             ->spa()
             ->colors([
                 'danger' => Color::Red,
@@ -67,10 +71,17 @@ final class AdminPanelProvider extends PanelProvider
                 DispatchServingFilamentEvent::class,
             ])
             ->authMiddleware([
-                // Authenticate::class,
+                Authenticate::class,
                 AdminAccessMiddleware::class,
             ])
             ->sidebarCollapsibleOnDesktop()
-            ->sidebarFullyCollapsibleOnDesktop();
+            ->sidebarFullyCollapsibleOnDesktop()
+            ->userMenuItems([
+                MenuItem::make()
+                    ->label('Settings')
+                    ->url(fn(): string => Settings::getUrl())
+                    ->icon('heroicon-o-cog-6-tooth'),
+                // ...
+            ]);
     }
 }
