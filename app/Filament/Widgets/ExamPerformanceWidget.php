@@ -15,13 +15,11 @@ class ExamPerformanceWidget extends ChartWidget
 
     protected function getData(): array
     {
-        // Exam results distribution
         $resultDistribution = [];
         foreach (ExamResultEnum::cases() as $result) {
             $resultDistribution[$result->name] = ExamAttempt::where('result', $result->value)->count();
         }
 
-        // Average score by exam
         $examScores = ExamAttempt::select(
             'exams.id',
             'exams.title',
@@ -38,9 +36,8 @@ class ExamPerformanceWidget extends ChartWidget
         $examAverages = $examScores->pluck('average_score')->toArray();
         $examAttempts = $examScores->pluck('attempt_count')->toArray();
 
-        // Pass/fail ratio
-        $passCount = ExamAttempt::where('result', ExamResultEnum::Passed->value)->count();
-        $failCount = ExamAttempt::where('result', ExamResultEnum::Failed->value)->count();
+        $passCount = ExamAttempt::where('result', ExamResultEnum::PASSED->value)->count();
+        $failCount = ExamAttempt::where('result', ExamResultEnum::FAILED->value)->count();
         $totalAttempts = $passCount + $failCount;
         $passRate = $totalAttempts > 0 ? round(($passCount / $totalAttempts) * 100, 1) : 0;
 

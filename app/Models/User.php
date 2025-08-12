@@ -166,24 +166,25 @@ final class User extends Authenticatable implements FilamentUser
         return $this->isRoot();
     }
 
-    public function isStudent(): bool
-    {
-        return $this->role === UserRoleEnum::STUDENT;
-    }
-
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults()->logFillable();
     }
 
-
     /**
-     * @param string $role
      * @return bool
      */
-    public function hasRole(UserRoleEnum $role): bool
+    public function hasStudent(): bool
     {
-        return $this->role === $role;
+        if ($this->isStudent()) {
+            return true;
+        }
+        return false;
+    }
+
+    public function isStudent(): bool
+    {
+        return $this->role === UserRoleEnum::STUDENT;
     }
 
     /**

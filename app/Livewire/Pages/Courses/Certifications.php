@@ -4,50 +4,45 @@ declare(strict_types=1);
 
 namespace App\Livewire\Pages\Courses;
 
-use App\Enums\MasterClassEnum;
-use App\Models\MasterClass;
+use App\Models\Formation;
 use Illuminate\Contracts\View\View;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Attributes\Url;
 use Livewire\Component;
+use Livewire\WithPagination;
 
 #[Layout('welcome', ['whiteHeader' => true])]
 #[Title('Certifications')]
 final class Certifications extends Component
 {
+    use WithPagination;
+
     #[Url(as: 'q')]
     public ?string $search = null;
 
-    public $formations;
-
     public function updatedSearch(): void
     {
-        $this->getFormations();
-    }
-
-    public function getFormations(): void
-    {
-        $this->formations = MasterClass::query()
-            ->where('status', '=', MasterClassEnum::PUBLISHED->value)
-            ->when($this->search, function ($query) {
-                $query->whereAny([
-                    'title',
-                    'description',
-                ], 'like', sprintf('%%%s%%', $this->search));
-            })
-            ->orderByDesc('created_at')
-            ->limit(5)
-            ->get();
-    }
-
-    public function mount(): void
-    {
-        $this->getFormations();
+        $this->resetPage();
     }
 
     public function render(): View
     {
-        return view('livewire.pages.courses.certifications');
+        $query = Formation::query()
+            ->active()
+            ->orderBy('created_at', 'desc');
+
+        if ($this->search) {
+            $query->whereLike(['title', 'description'], sprintf('%%%s%%', $this->search));
+        }
+
+        $formationTotalCount = cache()->remember('formation_total_count', 60 * 10, function () {
+            return Formation::count();
+        });
+
+        return view('livewire.pages.courses.certifications', [
+            'formations' => $query->paginate(10),
+            'formationCount' => $formationTotalCount,
+        ]);
     }
 }

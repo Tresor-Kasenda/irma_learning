@@ -15,7 +15,6 @@ class CertificateAnalyticsWidget extends ChartWidget
 
     protected function getData(): array
     {
-        // Certificate issuance over time (last 6 months)
         $monthlyLabels = [];
         $certificateData = [];
 
@@ -23,18 +22,16 @@ class CertificateAnalyticsWidget extends ChartWidget
             $month = Carbon::now()->subMonths($i);
             $monthlyLabels[] = $month->format('M Y');
 
-            $certificateData[] = Certificate::whereYear('created_at', $month->year)
+            $certificateData[] = Certificate::query()->whereYear('created_at', '=', $month->year)
                 ->whereMonth('created_at', $month->month)
                 ->count();
         }
 
-        // Certificate status distribution
         $statusDistribution = [];
         foreach (CertificateStatusEnum::cases() as $status) {
-            $statusDistribution[$status->name] = Certificate::where('status', $status->value)->count();
+            $statusDistribution[$status->name] = Certificate::query()->where('status', '=', $status->value)->count();
         }
 
-        // Certificates by formation (top 5)
         $certByFormation = Certificate::select(
             'formations.title',
             DB::raw('COUNT(certificates.id) as cert_count')
@@ -48,14 +45,13 @@ class CertificateAnalyticsWidget extends ChartWidget
         $formationLabels = $certByFormation->pluck('title')->toArray();
         $formationCounts = $certByFormation->pluck('cert_count')->toArray();
 
-        // Calculate completion rate (certificates issued / total enrollments)
         $completionRate = DB::table('enrollments')
             ->selectRaw('
-                COUNT(DISTINCT CASE WHEN EXISTS (
+                SUM(CASE WHEN EXISTS (
                     SELECT 1 FROM certificates
                     WHERE certificates.user_id = enrollments.user_id
                     AND certificates.formation_id = enrollments.formation_id
-                ) THEN enrollments.id END) as completed,
+                ) THEN 1 ELSE 0 END) as completed,
                 COUNT(*) as total
             ')
             ->first();

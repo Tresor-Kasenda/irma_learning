@@ -9,6 +9,7 @@ use App\Livewire\Pages\Courses\FormationsLists;
 use App\Livewire\Pages\Courses\LearningCourse;
 use App\Livewire\Pages\Dashboard;
 use App\Livewire\Pages\Frontend\Formations;
+use App\Livewire\Pages\Frontend\Payments\StudentPayment;
 use App\Livewire\Pages\Frontend\ShowFormation\DetailFormation;
 use App\Livewire\Pages\MasterClass\MasterClassDetails;
 use Illuminate\Support\Facades\Route;
@@ -21,8 +22,13 @@ Route::get('/', Formations::class)->name('home-page');
 Route::get('/{formation}/show', DetailFormation::class)
     ->name('formation.show');
 
+Route::get('/formation/{formation}/payment', StudentPayment::class)
+    ->name('student.payment.create')
+    ->middleware('auth');
+
 Route::get('/certifications', Certifications::class)->name('certifications');
 Route::get('/formations-continue', FormationsLists::class)->name('formations-lists');
+
 
 Route::get('/master-class/{masterClass}/formations', LearningCourse::class)
     ->name('master-class')
@@ -44,7 +50,7 @@ Route::get('/dash', [DashboardController::class, 'index'])
 
 
 Route::get('/dashboard', Dashboard::class)
-    ->middleware(['auth', 'check.status:active'])
+    ->middleware(['auth'])
     ->name('dashboard');
 
 
