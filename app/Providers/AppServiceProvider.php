@@ -42,6 +42,7 @@ final class AppServiceProvider extends ServiceProvider
 
     public function shouldBeStrict(): void
     {
+        Model::automaticallyEagerLoadRelationships();
         Model::shouldBeStrict(!$this->app->isProduction());
         Model::unguard();
     }

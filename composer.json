@@ -15,12 +15,14 @@
     "license": "MIT",
     "require": {
         "php": "^8.4",
+        "ext-imagick": "*",
+        "barryvdh/laravel-dompdf": "^3.1",
         "filament/filament": "^3.3",
-        "ibrahim-bougaoua/filaprogress": "^0.1.0",
+        "ibrahim-bougaoua/filaprogress": "*",
         "inspector-apm/inspector-laravel": "^4.11",
         "intervention/image": "^3.11",
         "intervention/image-laravel": "^1.5",
-        "laravel/framework": "^v11.40.0",
+        "laravel/framework": "^v12.20",
         "laravel/pulse": "*",
         "laravel/sanctum": "^4.0",
         "laravel/tinker": "^2.10.1",
@@ -32,12 +34,12 @@
         "spatie/laravel-activitylog": "^4.10",
         "spatie/laravel-sluggable": "^3.7",
         "spatie/pdf-to-image": "^3.1",
-        "tecnickcom/tcpdf": "^6.10",
-        "ext-imagick": "*"
+        "tecnickcom/tcpdf": "^6.10"
     },
     "require-dev": {
         "barryvdh/laravel-debugbar": "^3.15",
         "fakerphp/faker": "^1.9.1",
+        "laravel/boost": "^1.0",
         "laravel/breeze": "^2.3",
         "laravel/pail": "^1.2.2",
         "laravel/pint": "^1.20.0",
