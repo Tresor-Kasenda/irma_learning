@@ -5,6 +5,8 @@ namespace App\Filament\Resources\PaymentResource\Pages;
 use App\Filament\Resources\PaymentResource;
 use App\Models\Payment;
 use Filament\Actions;
+use Filament\Infolists\Components\Section;
+use Filament\Infolists\Components\TextEntry;
 use Filament\Infolists\Infolist;
 use Filament\Resources\Pages\ViewRecord;
 
@@ -16,67 +18,67 @@ class ViewPayment extends ViewRecord
     {
         return $infolist
             ->schema([
-                Infolists\Components\Section::make('Informations du paiement')
+                Section::make('Informations du paiement')
                     ->schema([
-                        Infolists\Components\TextEntry::make('id')
+                        TextEntry::make('id')
                             ->label('ID du paiement'),
-                        Infolists\Components\TextEntry::make('user.name')
+                        TextEntry::make('user.name')
                             ->label('Utilisateur'),
-                        Infolists\Components\TextEntry::make('user.email')
+                        TextEntry::make('user.email')
                             ->label('Email utilisateur')
                             ->copyable(),
-                        Infolists\Components\TextEntry::make('formation.title')
+                        TextEntry::make('formation.title')
                             ->label('Formation'),
-                        Infolists\Components\TextEntry::make('amount')
+                        TextEntry::make('amount')
                             ->label('Montant')
                             ->money('EUR'),
-                        Infolists\Components\TextEntry::make('status')
+                        TextEntry::make('status')
                             ->label('Statut')
                             ->badge(),
                     ])
                     ->columns(3),
 
-                Infolists\Components\Section::make('Détails de transaction')
+                Section::make('Détails de transaction')
                     ->schema([
-                        Infolists\Components\TextEntry::make('transaction_id')
+                        TextEntry::make('transaction_id')
                             ->label('ID de transaction')
                             ->copyable(),
-                        Infolists\Components\TextEntry::make('payment_method')
+                        TextEntry::make('payment_method')
                             ->label('Méthode de paiement'),
-                        Infolists\Components\TextEntry::make('gateway')
+                        TextEntry::make('gateway')
                             ->label('Passerelle'),
-                        Infolists\Components\TextEntry::make('invoice_number')
+                        TextEntry::make('invoice_number')
                             ->label('Numéro de facture')
                             ->getStateUsing(fn(Payment $record): string => $record->generateInvoiceNumber()),
                     ])
                     ->columns(2),
 
-                Infolists\Components\Section::make('Dates importantes')
+                Section::make('Dates importantes')
                     ->schema([
-                        Infolists\Components\TextEntry::make('created_at')
+                        TextEntry::make('created_at')
                             ->label('Créé le')
                             ->dateTime(),
-                        Infolists\Components\TextEntry::make('processed_at')
+                        TextEntry::make('processed_at')
                             ->label('Traité le')
                             ->dateTime(),
-                        Infolists\Components\TextEntry::make('updated_at')
+                        TextEntry::make('updated_at')
                             ->label('Modifié le')
                             ->dateTime(),
                     ])
                     ->columns(3),
 
-                Infolists\Components\Section::make('Réponse de la passerelle')
+                Section::make('Réponse de la passerelle')
                     ->schema([
-                        Infolists\Components\KeyValueEntry::make('gateway_response')
+                        KeyValueEntry::make('gateway_response')
                             ->label('Données de réponse')
                             ->columnSpanFull(),
                     ])
                     ->collapsible()
                     ->collapsed(),
 
-                Infolists\Components\Section::make('Notes')
+                Section::make('Notes')
                     ->schema([
-                        Infolists\Components\TextEntry::make('notes')
+                        TextEntry::make('notes')
                             ->label('Notes administratives')
                             ->columnSpanFull()
                             ->placeholder('Aucune note'),

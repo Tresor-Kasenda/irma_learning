@@ -5,18 +5,17 @@ namespace App\Filament\Resources;
 use App\Enums\EnrollmentPaymentEnum;
 use App\Enums\EnrollmentStatusEnum;
 use App\Filament\Resources\EnrollmentResource\Pages;
-use App\Filament\Resources\EnrollmentResource\RelationManagers\UserProgressRelationManager;
 use App\Models\Enrollment;
 use Filament\Forms;
 use Filament\Forms\Components\Actions\Action;
 use Filament\Forms\Form;
-use Filament\Infolists\Components\ProgressBarEntry;
 use Filament\Infolists\Components\Section;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Infolists\Infolist;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
+use IbrahimBougaoua\FilaProgress\Infolists\Components\ProgressBarEntry;
 use Illuminate\Database\Eloquent\Builder;
 
 class EnrollmentResource extends Resource

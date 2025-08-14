@@ -5,6 +5,7 @@ namespace App\Filament\Resources\ExamAttemptResource\Pages;
 use App\Filament\Resources\ExamAttemptResource;
 use App\Models\ExamAttempt;
 use Filament\Actions;
+use Filament\Infolists;
 use Filament\Infolists\Infolist;
 use Filament\Resources\Pages\ViewRecord;
 
