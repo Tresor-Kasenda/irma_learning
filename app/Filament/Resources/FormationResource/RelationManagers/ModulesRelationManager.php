@@ -25,10 +25,14 @@ class ModulesRelationManager extends RelationManager
                     ->schema([
                         Forms\Components\TextInput::make('title')
                             ->required()
+                            ->placeholder('Titre du module')
                             ->maxLength(255),
 
                         Forms\Components\Textarea::make('description')
                             ->rows(3)
+                            ->autosize()
+                            ->maxLength(65535)
+                            ->placeholder('Description du module')
                             ->columnSpanFull(),
 
                         Forms\Components\Grid::make(2)

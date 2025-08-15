@@ -3,6 +3,7 @@
 namespace App\Filament\Resources;
 
 use App\Enums\FormationLevelEnum;
+use App\Enums\UserRoleEnum;
 use App\Filament\Resources\FormationResource\Pages;
 use App\Filament\Resources\FormationResource\RelationManagers;
 use App\Models\Formation;
@@ -55,11 +56,16 @@ class FormationResource extends Resource
 
                         Forms\Components\Textarea::make('short_description')
                             ->label('Description courte')
+                            ->autosize()
+                            ->maxLength(255)
+                            ->placeholder('Une brève description de la formation')
+                            ->rows(4)
                             ->columnSpanFull(),
 
 
                         Forms\Components\RichEditor::make('description')
                             ->label('Description complète')
+                            ->placeholder('Une description détaillée de la formation')
                             ->columnSpanFull()
                             ->required(),
                     ])
@@ -87,7 +93,7 @@ class FormationResource extends Resource
 
                         Forms\Components\Select::make('created_by')
                             ->label('Créé par')
-                            ->relationship('creator', 'name')
+                            ->relationship('creator', 'name', fn($query) => $query->whereIn('role', [UserRoleEnum::ADMIN, UserRoleEnum::INSTRUCTOR]))
                             ->searchable()
                             ->preload()
                             ->default(auth()->id())
@@ -267,7 +273,7 @@ class FormationResource extends Resource
         return [
             'index' => Pages\ListFormations::route('/'),
             'create' => Pages\CreateFormation::route('/create'),
-            'view' => Pages\ViewFormation::route('/{record}'),
+            'view' => Pages\ViewFormation::route('/{record}/show'),
             'edit' => Pages\EditFormation::route('/{record}/edit'),
         ];
     }

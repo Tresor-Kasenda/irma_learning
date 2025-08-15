@@ -4,6 +4,7 @@ namespace App\Filament\Resources\FormationResource\RelationManagers;
 
 use App\Enums\EnrollmentPaymentEnum;
 use App\Enums\EnrollmentStatusEnum;
+use App\Enums\UserRoleEnum;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\RelationManagers\RelationManager;
@@ -126,7 +127,9 @@ class StudentsRelationManager extends RelationManager
                     ->schema([
                         Forms\Components\Select::make('user_id')
                             ->label('Étudiant')
-                            ->relationship('user', 'name')
+                            ->relationship('students', 'name', function ($query) {
+                                $query->where('role', UserRoleEnum::STUDENT);
+                            })
                             ->searchable()
                             ->preload()
                             ->required(),

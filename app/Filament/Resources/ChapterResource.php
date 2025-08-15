@@ -2,7 +2,6 @@
 
 namespace App\Filament\Resources;
 
-use App\Enums\ChapterTypeEnum;
 use App\Filament\Resources\ChapterResource\Pages;
 use App\Models\Chapter;
 use App\Service\PdfExtractionService;
@@ -93,12 +92,12 @@ class ChapterResource extends Resource
                 Tables\Columns\TextColumn::make('content_type')
                     ->label('Type')
                     ->badge()
-                    ->color(fn(ChapterTypeEnum $state): string => match ($state) {
-                        ChapterTypeEnum::TEXT => 'success',
-                        ChapterTypeEnum::VIDEO => 'warning',
-                        ChapterTypeEnum::AUDIO => 'danger',
-                        ChapterTypeEnum::PDF => 'info',
-                        ChapterTypeEnum::INTERACTIVE => 'primary',
+                    ->color(fn(string $state): string => match ($state) {
+                        'text' => 'success',
+                        'video' => 'warning',
+                        'audio' => 'danger',
+                        'pdf' => 'info',
+                        'interactive' => 'primary',
                         default => 'gray',
                     }),
 
@@ -107,7 +106,7 @@ class ChapterResource extends Resource
                     ->numeric()
                     ->sortable(),
 
-                Tables\Columns\TextColumn::make('estimated_duration')
+                Tables\Columns\TextColumn::make('duration_minutes')
                     ->label('Durée (min)')
                     ->numeric()
                     ->sortable(),
@@ -136,7 +135,13 @@ class ChapterResource extends Resource
 
                 Tables\Filters\SelectFilter::make('content_type')
                     ->label('Type de contenu')
-                    ->options(ChapterTypeEnum::class),
+                    ->options([
+                        'text' => 'Texte',
+                        'video' => 'Vidéo',
+                        'audio' => 'Audio',
+                        'pdf' => 'PDF',
+                        'interactive' => 'Interactif',
+                    ]),
 
                 Tables\Filters\TernaryFilter::make('is_free')
                     ->label('Gratuit')
@@ -242,7 +247,7 @@ class ChapterResource extends Resource
     {
         try {
             $html = static::convertMarkdownToHtml($record->content);
-            $pdf = PDF::loadHTML($html);
+            $pdf = Pdf::loadHTML($html);
 
             $filename = 'chapitre-' . $record->id . '-' . time() . '.pdf';
             $path = storage_path('app/public/exports/' . $filename);
@@ -293,13 +298,13 @@ class ChapterResource extends Resource
         $html = '<p>' . $html . '</p>';
 
         $css = '
-        <style>
-            body { font-family: Arial, sans-serif; line-height: 1.6; margin: 40px; }
-            h1, h2, h3 { color: #333; margin-top: 30px; }
-            pre { background: #f4f4f4; padding: 15px; border-radius: 5px; }
-            code { background: #f4f4f4; padding: 2px 4px; border-radius: 3px; }
-            img { max-width: 100%; height: auto; }
-        </style>';
+            <style>
+                body { font-family: Arial, sans-serif; line-height: 1.6; margin: 40px; }
+                h1, h2, h3 { color: #333; margin-top: 30px; }
+                pre { background: #f4f4f4; padding: 15px; border-radius: 5px; }
+                code { background: #f4f4f4; padding: 2px 4px; border-radius: 3px; }
+                img { max-width: 100%; height: auto; }
+            </style>';
 
         return $css . $html;
     }
@@ -345,7 +350,7 @@ class ChapterResource extends Resource
                                         Forms\Components\FileUpload::make('pdf_file')
                                             ->label('Fichier PDF')
                                             ->acceptedFileTypes(['application/pdf'])
-                                            ->maxSize(20480) // 20MB
+                                            ->maxSize(20480)
                                             ->disk('local')
                                             ->directory('temp-pdfs')
                                             ->visibility('private')
@@ -421,16 +426,22 @@ class ChapterResource extends Resource
                     ->schema([
                         Forms\Components\Select::make('content_type')
                             ->label('Type de contenu')
-                            ->options(ChapterTypeEnum::class)
+                            ->options([
+                                'text' => 'Texte',
+                                'video' => 'Vidéo',
+                                'audio' => 'Audio',
+                                'pdf' => 'PDF',
+                                'interactive' => 'Interactif',
+                            ])
                             ->required()
-                            ->default(ChapterTypeEnum::TEXT)
+                            ->default('text')
                             ->live()
                             ->afterStateUpdated(function ($state, Forms\Set $set) {
                                 $set('metadata', []);
-                                $set('content_file', null);
+                                $set('media_url', null);
                             }),
 
-                        Forms\Components\FileUpload::make('content_file')
+                        Forms\Components\FileUpload::make('media_url')
                             ->label('Fichier de contenu')
                             ->disk('public')
                             ->directory('chapters')
@@ -438,20 +449,11 @@ class ChapterResource extends Resource
                             ->preserveFilenames()
                             ->columnSpanFull()
                             ->acceptedFileTypes(['application/pdf', 'video/*'])
-                            ->helperText('Upload a PDF or a video file depending on the selected content type.')
-                            ->visible(fn(Forms\Get $get) => in_array($get('content_type'), [
-                                ChapterTypeEnum::PDF->value,
-                                ChapterTypeEnum::VIDEO->value,
-                                ChapterTypeEnum::PDF,
-                                ChapterTypeEnum::VIDEO,
-                            ], true))
-                            ->required(fn(Forms\Get $get) => in_array($get('content_type'), [
-                                ChapterTypeEnum::PDF->value,
-                                ChapterTypeEnum::VIDEO->value,
-                                ChapterTypeEnum::PDF,
-                                ChapterTypeEnum::VIDEO,
-                            ], true))
+                            ->helperText('Uploadez un PDF ou une vidéo selon le type.')
+                            ->visible(fn(Forms\Get $get) => in_array($get('content_type'), ['pdf', 'video'], true))
+                            ->required(fn(Forms\Get $get) => in_array($get('content_type'), ['pdf', 'video'], true))
                             ->afterStateUpdated(function ($state, Forms\Set $set, Forms\Get $get) {
+                                // Optionally mirror in metadata
                                 $meta = $get('metadata') ?? [];
                                 $meta['source_file'] = $state;
                                 $set('metadata', $meta);
@@ -478,7 +480,7 @@ class ChapterResource extends Resource
                             ->required()
                             ->minValue(1),
 
-                        Forms\Components\TextInput::make('estimated_duration')
+                        Forms\Components\TextInput::make('duration_minutes')
                             ->label('Durée estimée (minutes)')
                             ->numeric()
                             ->minValue(0)
@@ -539,8 +541,8 @@ class ChapterResource extends Resource
             $set('title', $extractedData['title']);
             $set('description', $extractedData['description']);
             $set('content', $extractedData['content']);
-            $set('estimated_duration', $extractedData['estimated_duration']);
-            $set('content_type', ChapterTypeEnum::PDF);
+            $set('duration_minutes', $extractedData['estimated_duration']);
+            $set('content_type', 'pdf');
 
             $currentMetadata = $get('metadata') ?? [];
             $mergedMetadata = array_merge($currentMetadata, $extractedData['metadata']);
@@ -603,8 +605,8 @@ class ChapterResource extends Resource
 
             $record->update([
                 'content' => $extractedData['content'],
-                'estimated_duration' => $extractedData['estimated_duration'],
-                'metadata' => array_merge($record->metadata, $extractedData['metadata']),
+                'duration_minutes' => $extractedData['estimated_duration'],
+                'metadata' => array_merge($record->metadata ?? [], $extractedData['metadata']),
             ]);
 
             Notification::make()
@@ -631,12 +633,12 @@ class ChapterResource extends Resource
             $combinedHtml = '';
 
             foreach ($records as $record) {
-                $combinedHtml .= '<h1>' . $record->title . '</h1>';
+                $combinedHtml .= '<h1>' . e($record->title) . '</h1>';
                 $combinedHtml .= static::convertMarkdownToHtml($record->content);
                 $combinedHtml .= '<div style="page-break-after: always;"></div>';
             }
 
-            $pdf = PDF::loadHTML($combinedHtml);
+            $pdf = Pdf::loadHTML($combinedHtml);
             $filename = 'chapitres-combines-' . time() . '.pdf';
             $path = storage_path('app/public/exports/' . $filename);
 

@@ -23,6 +23,7 @@ return new class extends Migration {
             $table->integer('order_position');
             $table->boolean('is_free')->default(false);
             $table->boolean('is_active')->default(true);
+            $table->longText('description')->nullable()->comment('Description of the content');
             $table->json('metadata')->nullable()->comment('Additional content metadata');
             $table->timestamps();
 

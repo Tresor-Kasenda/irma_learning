@@ -61,7 +61,7 @@ class StudentPayment extends Component
             type: 'success'
         );
 
-        $this->redirect(route('formations.show', $this->formation), navigate: true);
+        $this->redirect(route('formation.show', $this->formation), navigate: true);
     }
 
     public function render(): View
