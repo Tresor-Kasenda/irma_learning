@@ -68,10 +68,10 @@
         </div>
         <div class="lg:min-w-max flex justify-end items-center gap-x-2">
             @guest
-                <a href="{{ route('login') }}" wire:navigate
+                <a href="{{ route('register') }}" wire:navigate
                    class="btn btn-sm sm:btn-md btn-solid bg-primary-600 text-white group">
                     <span class="relative z-10">
-                        Se Connecter
+                        S'inscrire
                     </span>
                     <span data-btn-layer class="before:bg-primary-800"></span>
                 </a>
