@@ -7,8 +7,6 @@ use App\Filament\Resources\UserProgressResource\Pages;
 use App\Models\Chapter;
 use App\Models\Section;
 use App\Models\UserProgress;
-use Filament\Forms;
-use Filament\Forms\Components\Actions\Action;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
@@ -29,91 +27,7 @@ class UserProgressResource extends Resource
     public static function form(Form $form): Form
     {
         return $form
-            ->schema([
-                Forms\Components\Section::make('Informations de Base')
-                    ->schema([
-                        Forms\Components\Select::make('user_id')
-                            ->relationship('user', 'name')
-                            ->required()
-                            ->searchable()
-                            ->preload()
-                            ->columnSpan(1),
-
-                        Forms\Components\MorphToSelect::make('trackable')
-                            ->label('Élément suivi')
-                            ->required()
-                            ->types([
-                                Forms\Components\MorphToSelect\Type::make(Chapter::class)
-                                    ->titleAttribute('title')
-                                    ->getSearchResultsUsing(fn(string $search): array => Chapter::where('title', 'like', "%{$search}%")->limit(50)->pluck('title', 'id')->toArray())
-                                    ->getOptionLabelUsing(fn($value): ?string => Chapter::find($value)?->title),
-                                Forms\Components\MorphToSelect\Type::make(Section::class)
-                                    ->titleAttribute('title')
-                                    ->getSearchResultsUsing(fn(string $search): array => Section::where('title', 'like', "%{$search}%")->limit(50)->pluck('title', 'id')->toArray())
-                                    ->getOptionLabelUsing(fn($value): ?string => Section::find($value)?->title),
-                            ])
-                            ->columnSpan(1),
-
-                        Forms\Components\Select::make('status')
-                            ->options(UserProgressEnum::class)
-                            ->default(UserProgressEnum::NOT_STARTED)
-                            ->required()
-                            ->columnSpan(1),
-
-                        Forms\Components\TextInput::make('progress_percentage')
-                            ->label('Progression (%)')
-                            ->numeric()
-                            ->minValue(0)
-                            ->maxValue(100)
-                            ->default(0)
-                            ->columnSpan(1),
-                    ])
-                    ->columns(2),
-
-                Forms\Components\Section::make('Suivi Temporel')
-                    ->schema([
-                        Forms\Components\DateTimePicker::make('started_at')
-                            ->label('Commencé le')
-                            ->native(false)
-                            ->columnSpan(1),
-
-                        Forms\Components\DateTimePicker::make('completed_at')
-                            ->label('Complété le')
-                            ->native(false)
-                            ->columnSpan(1),
-
-                        Forms\Components\TextInput::make('time_spent')
-                            ->label('Temps passé (minutes)')
-                            ->numeric()
-                            ->minValue(0)
-                            ->columnSpan(2),
-                    ])
-                    ->columns(2),
-
-                Forms\Components\Section::make('Actions Rapides')
-                    ->schema([
-                        Forms\Components\Actions::make([
-                            Action::make('markAsStarted')
-                                ->label('Marquer comme commencé')
-                                ->icon('heroicon-o-play')
-                                ->color('primary')
-                                ->action(function (UserProgress $record) {
-                                    $record->markAsStarted();
-                                })
-                                ->visible(fn($context, $record) => $context === 'edit' && $record && $record->status === UserProgressEnum::IN_PROGRESS),
-
-                            Action::make('markAsCompleted')
-                                ->label('Marquer comme complété')
-                                ->icon('heroicon-o-check-circle')
-                                ->color('success')
-                                ->action(function (UserProgress $record) {
-                                    $record->markAsCompleted();
-                                })
-                                ->visible(fn($context, $record) => $context === 'edit' && $record && $record->status !== UserProgressEnum::COMPLETED),
-                        ]),
-                    ])
-                    ->visible(fn($context) => $context === 'edit'),
-            ]);
+            ->schema([]);
     }
 
     public static function table(Table $table): Table
@@ -291,9 +205,7 @@ class UserProgressResource extends Resource
     {
         return [
             'index' => Pages\ListUserProgress::route('/'),
-            'create' => Pages\CreateUserProgress::route('/create'),
             'view' => Pages\ViewUserProgress::route('/{record}'),
-            'edit' => Pages\EditUserProgress::route('/{record}/edit'),
         ];
     }
 

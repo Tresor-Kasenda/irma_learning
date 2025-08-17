@@ -51,13 +51,7 @@ class SectionResource extends Resource
                             ->label('Titre de la section')
                             ->required()
                             ->maxLength(255),
-
-                        Forms\Components\Textarea::make('description')
-                            ->label('Description')
-                            ->rows(3)
-                            ->columnSpanFull(),
-
-                        Forms\Components\RichEditor::make('content')
+                        Forms\Components\RichEditor::make('description')
                             ->label('Contenu de la section')
                             ->columnSpanFull(),
                     ])
@@ -80,6 +74,7 @@ class SectionResource extends Resource
 
                         Forms\Components\Toggle::make('is_active')
                             ->label('Section active')
+                            ->inline(false)
                             ->default(true),
                     ])
                     ->columns(3),
@@ -218,5 +213,10 @@ class SectionResource extends Resource
         return parent::getEloquentQuery()
             ->withoutGlobalScopes()
             ->with(['module.formation']);
+    }
+
+    public static function getNavigationBadge(): ?string
+    {
+        return static::getModel()::count();
     }
 }

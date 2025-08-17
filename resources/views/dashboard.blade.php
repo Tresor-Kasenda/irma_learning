@@ -5,8 +5,6 @@
             <div class="flex flex-col">
                 <h1 class="text-xl font-semibold text-fg-subtitle">Mes statistiques</h1>
             </div>
-
-
             <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
                 <div class="bg-bg border border-border-light rounded-md p-6 shadow-sm shadow-gray-100/40">
                     <div class="flex justify-between items-start mb-4">

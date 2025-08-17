@@ -21,9 +21,9 @@ class QuestionResource extends Resource
 
     protected static ?string $navigationLabel = 'Questions';
 
-    protected static ?string $navigationGroup = 'Évaluations';
+    protected static ?string $navigationGroup = 'Gestion des formations';
 
-    protected static ?int $navigationSort = 2;
+    protected static ?int $navigationSort = 5;
 
     public static function form(Form $form): Form
     {

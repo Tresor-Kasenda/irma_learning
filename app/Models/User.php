@@ -125,6 +125,11 @@ final class User extends Authenticatable implements FilamentUser
         return $this->hasMany(Enrollment::class);
     }
 
+    public function certificates(): HasMany
+    {
+        return $this->hasMany(Certificate::class);
+    }
+
     public function hasPermission(PermissionEnum $permission): bool
     {
         if ($this->isRoot()) {
@@ -185,6 +190,24 @@ final class User extends Authenticatable implements FilamentUser
     public function isStudent(): bool
     {
         return $this->role === UserRoleEnum::STUDENT;
+    }
+
+    public function getEnrollmentsWithProgress()
+    {
+        return $this->enrollments()
+            ->with([
+                'formation' => function ($query) {
+                    $query->select('id', 'title', 'slug', 'difficulty_level', 'price')
+                        ->withCount('modules');
+                },
+                'formation.modules' => function ($query) {
+                    $query->select('id', 'formation_id', 'title')
+                        ->withCount('sections');
+                }
+            ])
+            ->paid()
+            ->latest()
+            ->get();
     }
 
     /**

@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources;
 
+use App\Enums\ChapterTypeEnum;
 use App\Filament\Resources\ChapterResource\Pages;
 use App\Models\Chapter;
 use App\Service\PdfExtractionService;
@@ -9,7 +10,6 @@ use Barryvdh\DomPDF\Facade\Pdf;
 use Exception;
 use Filament\Forms;
 use Filament\Forms\Form;
-use Filament\Forms\Get;
 use Filament\Notifications\Actions\Action;
 use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
@@ -35,34 +35,6 @@ class ChapterResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('section.module.formation.title')
-                    ->label('Formation')
-                    ->sortable()
-                    ->searchable()
-                    ->tooltip(function (TextColumn $column): ?string {
-                        $state = $column->getState();
-                        if (strlen($state) <= $column->getCharacterLimit()) {
-                            return null;
-                        }
-                        return $state;
-                    })
-                    ->toggleable()
-                    ->limit(30),
-
-                Tables\Columns\TextColumn::make('section.module.title')
-                    ->label('Module')
-                    ->sortable()
-                    ->searchable()
-                    ->toggleable()
-                    ->tooltip(function (TextColumn $column): ?string {
-                        $state = $column->getState();
-                        if (strlen($state) <= $column->getCharacterLimit()) {
-                            return null;
-                        }
-                        return $state;
-                    })
-                    ->limit(30),
-
                 Tables\Columns\TextColumn::make('section.title')
                     ->label('Section')
                     ->sortable()
@@ -92,7 +64,7 @@ class ChapterResource extends Resource
                 Tables\Columns\TextColumn::make('content_type')
                     ->label('Type')
                     ->badge()
-                    ->color(fn(string $state): string => match ($state) {
+                    ->color(fn(ChapterTypeEnum $state): string => match ($state) {
                         'text' => 'success',
                         'video' => 'warning',
                         'audio' => 'danger',
@@ -101,11 +73,6 @@ class ChapterResource extends Resource
                         default => 'gray',
                     }),
 
-                Tables\Columns\TextColumn::make('order_position')
-                    ->label('Position')
-                    ->numeric()
-                    ->sortable(),
-
                 Tables\Columns\TextColumn::make('duration_minutes')
                     ->label('Durée (min)')
                     ->numeric()
@@ -113,18 +80,16 @@ class ChapterResource extends Resource
 
                 Tables\Columns\IconColumn::make('is_free')
                     ->label('Gratuit')
-                    ->boolean(),
+                    ->boolean()
+                    ->alignCenter()
+                    ->trueIcon('heroicon-o-check-circle')
+                    ->falseIcon('heroicon-o-lock-closed')
+                    ->trueColor('success')
+                    ->falseColor('warning'),
 
                 Tables\Columns\IconColumn::make('is_active')
                     ->label('Actif')
                     ->boolean(),
-
-                Tables\Columns\IconColumn::make('from_pdf')
-                    ->label('PDF')
-                    ->boolean()
-                    ->getStateUsing(fn($record) => !empty($record->metadata['pdf_info'] ?? []))
-                    ->tooltip('Créé à partir d\'un PDF')
-                    ->toggleable(),
             ])
             ->filters([
                 Tables\Filters\SelectFilter::make('section')
@@ -173,7 +138,7 @@ class ChapterResource extends Resource
                     Tables\Actions\Action::make('export_pdf')
                         ->label('Exporter en PDF')
                         ->icon('heroicon-o-document-arrow-down')
-                        ->visible(fn($record) => !empty($record->metadata['pdf_info'] ?? []))
+                        ->visible(fn($record) => !empty($record->media_url ?? []))
                         ->action(function ($record) {
                             static::exportToPdf($record);
                         })
@@ -182,7 +147,7 @@ class ChapterResource extends Resource
                     Tables\Actions\Action::make('re_extract')
                         ->label('Re-extraire du PDF')
                         ->icon('heroicon-o-arrow-path')
-                        ->visible(fn($record) => !empty($record->metadata['pdf_info'] ?? []))
+                        ->visible(fn($record) => !empty($record->media_url ?? []))
                         ->form([
                             Forms\Components\Toggle::make('extract_images')
                                 ->label('Extraire les images')
@@ -340,83 +305,43 @@ class ChapterResource extends Resource
                                             ->required()
                                             ->maxLength(255),
 
-                                        Forms\Components\Textarea::make('description')
-                                            ->label('Description')
-                                            ->rows(3),
-                                    ]),
-
-                                Forms\Components\Tabs\Tab::make('Import PDF')
-                                    ->schema([
-                                        Forms\Components\FileUpload::make('pdf_file')
-                                            ->label('Fichier PDF')
-                                            ->acceptedFileTypes(['application/pdf'])
-                                            ->maxSize(20480)
-                                            ->disk('local')
-                                            ->directory('temp-pdfs')
-                                            ->visibility('private')
+                                        Forms\Components\Select::make('content_type')
+                                            ->label('Type de contenu')
+                                            ->options([
+                                                'text' => 'Texte',
+                                                'video' => 'Vidéo',
+                                                'audio' => 'Audio',
+                                                'pdf' => 'PDF',
+                                                'interactive' => 'Interactif',
+                                            ])
+                                            ->required()
+                                            ->default('text')
                                             ->live()
+                                            ->afterStateUpdated(function ($state, Forms\Set $set) {
+                                                $set('metadata', []);
+                                                $set('media_url', null);
+                                            }),
+
+                                        Forms\Components\FileUpload::make('media_url')
+                                            ->label('Fichier de contenu')
+                                            ->disk('public')
+                                            ->directory('chapters')
+                                            ->visibility('public')
+                                            ->preserveFilenames()
+                                            ->columnSpanFull()
+                                            ->acceptedFileTypes(['application/pdf', 'video/*'])
+                                            ->helperText('Uploadez un PDF ou une vidéo selon le type.')
+                                            ->visible(fn(Forms\Get $get) => in_array($get('content_type'), ['pdf', 'video'], true))
+                                            ->required(fn(Forms\Get $get) => in_array($get('content_type'), ['pdf', 'video'], true))
                                             ->afterStateUpdated(function ($state, Forms\Set $set, Forms\Get $get) {
+                                                $meta = $get('metadata') ?? [];
+                                                $meta['source_file'] = $state;
+                                                $set('metadata', $meta);
+
                                                 if ($state) {
                                                     static::extractPdfContent($state, $set, $get);
                                                 }
-                                            })
-                                            ->helperText('Uploadez un PDF pour extraire automatiquement le contenu'),
-
-                                        Forms\Components\Group::make([
-                                            Forms\Components\Toggle::make('extract_images')
-                                                ->label('Extraire les images')
-                                                ->default(true)
-                                                ->inline(false),
-
-                                            Forms\Components\Toggle::make('extract_code')
-                                                ->label('Détecter et formater le code')
-                                                ->default(true)
-                                                ->inline(false),
-
-                                            Forms\Components\Toggle::make('create_toc')
-                                                ->label('Créer une table des matières')
-                                                ->default(true)
-                                                ->inline(false),
-
-                                            Forms\Components\Toggle::make('generate_cover')
-                                                ->label('Générer une image de couverture')
-                                                ->default(true)
-                                                ->inline(false),
-                                        ])
-                                            ->columns(2)
-                                            ->columnSpanFull(),
-
-                                        Forms\Components\Select::make('section_id')
-                                            ->label('Section')
-                                            ->relationship('section', 'title')
-                                            ->searchable()
-                                            ->preload()
-                                            ->required()
-                                            ->createOptionForm([
-                                                Forms\Components\Select::make('module_id')
-                                                    ->label('Module')
-                                                    ->relationship('module', 'title')
-                                                    ->required(),
-                                                Forms\Components\TextInput::make('title')
-                                                    ->label('Titre de la section')
-                                                    ->required(),
-                                            ]),
-
-                                        Forms\Components\TextInput::make('title')
-                                            ->label('Titre du chapitre (sera rempli automatiquement)')
-                                            ->required()
-                                            ->maxLength(255)
-                                            ->disabled(fn(Get $get) => !empty($get('pdf_file'))),
-
-                                        Forms\Components\Textarea::make('description')
-                                            ->label('Description (sera remplie automatiquement)')
-                                            ->rows(3)
-                                            ->disabled(fn(Get $get) => !empty($get('pdf_file'))),
-
-                                        Forms\Components\Placeholder::make('pdf_preview')
-                                            ->label('Aperçu de l\'extraction')
-                                            ->content(fn(Get $get) => $get('extraction_preview') ?? 'Aucun PDF uploadé')
-                                            ->visible(fn(Get $get) => !empty($get('extraction_preview'))),
+                                            }),
                                     ]),
                             ])
                             ->columnSpanFull(),
@@ -424,41 +349,6 @@ class ChapterResource extends Resource
 
                 Forms\Components\Section::make('Configuration du contenu')
                     ->schema([
-                        Forms\Components\Select::make('content_type')
-                            ->label('Type de contenu')
-                            ->options([
-                                'text' => 'Texte',
-                                'video' => 'Vidéo',
-                                'audio' => 'Audio',
-                                'pdf' => 'PDF',
-                                'interactive' => 'Interactif',
-                            ])
-                            ->required()
-                            ->default('text')
-                            ->live()
-                            ->afterStateUpdated(function ($state, Forms\Set $set) {
-                                $set('metadata', []);
-                                $set('media_url', null);
-                            }),
-
-                        Forms\Components\FileUpload::make('media_url')
-                            ->label('Fichier de contenu')
-                            ->disk('public')
-                            ->directory('chapters')
-                            ->visibility('public')
-                            ->preserveFilenames()
-                            ->columnSpanFull()
-                            ->acceptedFileTypes(['application/pdf', 'video/*'])
-                            ->helperText('Uploadez un PDF ou une vidéo selon le type.')
-                            ->visible(fn(Forms\Get $get) => in_array($get('content_type'), ['pdf', 'video'], true))
-                            ->required(fn(Forms\Get $get) => in_array($get('content_type'), ['pdf', 'video'], true))
-                            ->afterStateUpdated(function ($state, Forms\Set $set, Forms\Get $get) {
-                                // Optionally mirror in metadata
-                                $meta = $get('metadata') ?? [];
-                                $meta['source_file'] = $state;
-                                $set('metadata', $meta);
-                            }),
-
                         Forms\Components\RichEditor::make('content')
                             ->label('Contenu principal')
                             ->columnSpanFull()
@@ -499,10 +389,6 @@ class ChapterResource extends Resource
                             ->default(true),
                     ])
                     ->columns(2),
-
-                Forms\Components\Hidden::make('extraction_preview'),
-                Forms\Components\Hidden::make('extracted_content'),
-                Forms\Components\Hidden::make('extracted_metadata'),
             ]);
     }
 
@@ -512,13 +398,35 @@ class ChapterResource extends Resource
     protected static function extractPdfContent($pdfFile, Forms\Set $set, Forms\Get $get): void
     {
         try {
+            // Early return if no file is provided
             if (!$pdfFile) {
                 return;
             }
 
-            $tempPath = Storage::disk('local')->path($pdfFile);
+            // First, verify file exists in storage and get its path
+            $filePath = null;
 
-            if (!file_exists($tempPath)) {
+            // Try to get file from public disk (where FileUpload stores it)
+            if (Storage::disk('public')->exists($pdfFile)) {
+                $filePath = Storage::disk('public')->path($pdfFile);
+            } // If not found, try alternative paths
+            else {
+                $potentialPaths = [
+                    Storage::disk('local')->path($pdfFile),
+                    storage_path('app/public/' . $pdfFile),
+                    storage_path('app/public/chapters/' . $pdfFile)
+                ];
+
+                foreach ($potentialPaths as $path) {
+                    if (file_exists($path)) {
+                        $filePath = $path;
+                        break;
+                    }
+                }
+            }
+
+            // If file not found anywhere, notify and exit
+            if (!$filePath || !file_exists($filePath)) {
                 Notification::make()
                     ->title('Erreur')
                     ->body('Impossible de trouver le fichier PDF.')
@@ -527,6 +435,18 @@ class ChapterResource extends Resource
                 return;
             }
 
+            // Store file reference in metadata
+            $currentMetadata = $get('metadata') ?? [];
+            $currentMetadata['pdf_info'] = array_merge($currentMetadata['pdf_info'] ?? [], [
+                'original_path' => $filePath,
+                'filename' => basename($pdfFile),
+                'storage_path' => $pdfFile,
+                'storage_disk' => 'public',
+                'uploaded_at' => now()->toDateTimeString(),
+            ]);
+            $set('metadata', $currentMetadata);
+
+            // Continue with extraction process
             $options = [
                 'extractImages' => $get('extract_images') ?? true,
                 'extractCode' => $get('extract_code') ?? true,
@@ -536,18 +456,20 @@ class ChapterResource extends Resource
             ];
 
             $extractionService = app(PdfExtractionService::class);
-            $extractedData = $extractionService->extractPdfContent($tempPath, $options);
+            $extractedData = $extractionService->extractPdfContent($filePath, $options);
 
+            // Set values from extracted data
             $set('title', $extractedData['title']);
             $set('description', $extractedData['description']);
             $set('content', $extractedData['content']);
             $set('duration_minutes', $extractedData['estimated_duration']);
             $set('content_type', 'pdf');
 
-            $currentMetadata = $get('metadata') ?? [];
+            // Merge extracted metadata with our file info
             $mergedMetadata = array_merge($currentMetadata, $extractedData['metadata']);
             $set('metadata', $mergedMetadata);
 
+            // Create a preview summary
             $preview = "✅ Extraction réussie!\n\n";
             $preview .= "📄 Titre: {$extractedData['title']}\n";
             $preview .= "⏱️ Durée estimée: {$extractedData['estimated_duration']} minutes\n";

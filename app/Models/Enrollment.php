@@ -27,19 +27,19 @@ class Enrollment extends Model
         return $this->belongsTo(Formation::class, 'formation_id');
     }
 
-    public function scopeActive($query): Model
+    public function scopeActive($query)
     {
-        return $query->where('status', 'active');
+        return $query->where('status', EnrollmentStatusEnum::Active);
     }
 
-    public function scopePaid($query): Model
+    public function scopePaid($query)
     {
-        return $query->where('payment_status', 'paid');
+        return $query->where('payment_status', EnrollmentPaymentEnum::PAID);
     }
 
-    public function scopeCompleted($query): Model
+    public function scopeCompleted($query)
     {
-        return $query->where('status', 'completed');
+        return $query->where('status', EnrollmentStatusEnum::Completed);
     }
 
     public function getActivitylogOptions(): LogOptions

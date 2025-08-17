@@ -27,16 +27,7 @@ class ViewSection extends ViewRecord
                             ->label('Titre'),
                         Infolists\Components\TextEntry::make('order_position')
                             ->label('Position'),
-                        Infolists\Components\TextEntry::make('estimated_duration')
-                            ->label('Durée estimée (minutes)'),
-                        Infolists\Components\IconEntry::make('is_active')
-                            ->label('Active')
-                            ->boolean(),
                         Infolists\Components\TextEntry::make('description')
-                            ->columnSpanFull(),
-                        Infolists\Components\TextEntry::make('content')
-                            ->label('Contenu')
-                            ->html()
                             ->columnSpanFull(),
                     ])
                     ->columns(2),
@@ -46,14 +37,23 @@ class ViewSection extends ViewRecord
                         Infolists\Components\TextEntry::make('chapters_count')
                             ->label('Nombre de chapitres')
                             ->getStateUsing(fn(Section $record): int => $record->chapters()->count()),
-                    ]),
+                        Infolists\Components\IconEntry::make('is_active')
+                            ->label('Active')
+                            ->boolean(),
+                        Infolists\Components\TextEntry::make('estimated_duration')
+                            ->label('Durée estimée (minutes)'),
+                    ])
+                    ->columns(3),
             ]);
     }
 
     protected function getHeaderActions(): array
     {
         return [
-            Actions\EditAction::make(),
+            Actions\Action::make('back')
+                ->label('Retour')
+                ->url(SectionResource::getUrl('index'))
+                ->icon('heroicon-o-arrow-left')
         ];
     }
 

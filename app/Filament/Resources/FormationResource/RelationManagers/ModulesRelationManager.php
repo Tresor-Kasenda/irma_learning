@@ -121,6 +121,7 @@ class ModulesRelationManager extends RelationManager
                 Tables\Actions\ActionGroup::make([
                     Tables\Actions\ViewAction::make()
                         ->label('Voir')
+                        //->url(ModuleResource::getUrl('view', ['record' => $this->record]))
                         ->icon('heroicon-o-eye'),
                     Tables\Actions\EditAction::make()
                         ->slideOver()

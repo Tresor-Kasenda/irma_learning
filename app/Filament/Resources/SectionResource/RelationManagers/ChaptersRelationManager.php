@@ -28,16 +28,39 @@ class ChaptersRelationManager extends RelationManager
                             ->required()
                             ->maxLength(255),
 
-                        Forms\Components\Textarea::make('description')
-                            ->label('Description')
-                            ->rows(3)
-                            ->columnSpanFull(),
-
                         Forms\Components\Select::make('content_type')
                             ->label('Type de contenu')
-                            ->options(ChapterTypeEnum::class)
+                            ->options([
+                                'text' => 'Texte',
+                                'video' => 'Vidéo',
+                                'audio' => 'Audio',
+                                'pdf' => 'PDF',
+                                'interactive' => 'Interactif',
+                            ])
                             ->required()
-                            ->native(false),
+                            ->default('text')
+                            ->live()
+                            ->afterStateUpdated(function ($state, Forms\Set $set) {
+                                $set('metadata', []);
+                                $set('media_url', null);
+                            }),
+
+                        Forms\Components\FileUpload::make('media_url')
+                            ->label('Fichier de contenu')
+                            ->disk('public')
+                            ->directory('chapters')
+                            ->visibility('public')
+                            ->preserveFilenames()
+                            ->columnSpanFull()
+                            ->acceptedFileTypes(['application/pdf', 'video/*'])
+                            ->helperText('Uploadez un PDF ou une vidéo selon le type.')
+                            ->visible(fn(Forms\Get $get) => in_array($get('content_type'), ['pdf', 'video'], true))
+                            ->required(fn(Forms\Get $get) => in_array($get('content_type'), ['pdf', 'video'], true))
+                            ->afterStateUpdated(function ($state, Forms\Set $set, Forms\Get $get) {
+                                $meta = $get('metadata') ?? [];
+                                $meta['source_file'] = $state;
+                                $set('metadata', $meta);
+                            }),
 
                         Forms\Components\Grid::make(2)
                             ->schema([
@@ -147,11 +170,6 @@ class ChaptersRelationManager extends RelationManager
                     ->boolean()
                     ->alignCenter(),
 
-                Tables\Columns\TextColumn::make('progress_count')
-                    ->label('Progression')
-                    ->counts('progress')
-                    ->alignCenter(),
-
                 Tables\Columns\TextColumn::make('created_at')
                     ->label('Créé le')
                     ->dateTime()
@@ -179,35 +197,42 @@ class ChaptersRelationManager extends RelationManager
                     ->native(false),
             ])
             ->headerActions([
-                Tables\Actions\CreateAction::make(),
+                Tables\Actions\CreateAction::make()
+                    ->label('Ajouter un chapitre')
+                    ->icon('heroicon-o-plus-circle')
+                    ->slideOver(),
             ])
             ->actions([
-                Tables\Actions\ViewAction::make(),
-                Tables\Actions\EditAction::make(),
-                Tables\Actions\DeleteAction::make(),
+                Tables\Actions\ActionGroup::make([
+                    Tables\Actions\ViewAction::make(),
+                    Tables\Actions\EditAction::make()
+                        ->label('Modifier')
+                        ->slideOver(),
+                    Tables\Actions\DeleteAction::make(),
 
-                Tables\Actions\Action::make('preview')
-                    ->label('Aperçu')
-                    ->icon('heroicon-o-eye')
-                    ->color('info')
-                    //->modalContent(fn (Chapter $record) => view('filament.resources.chapter.preview', ['chapter' => $record]))
-                    ->modalWidth('5xl'),
+                    Tables\Actions\Action::make('preview')
+                        ->label('Aperçu')
+                        ->icon('heroicon-o-eye')
+                        ->color('info')
+                        ->modalContent(fn(Chapter $record) => view('filament.resources.chapter.preview', ['chapter' => $record]))
+                        ->modalWidth('5xl'),
 
-                Tables\Actions\Action::make('duplicate')
-                    ->label('Dupliquer')
-                    ->icon('heroicon-o-document-duplicate')
-                    ->color('warning')
-                    ->action(function (Chapter $record) {
-                        $newChapter = $record->replicate();
-                        $newChapter->title = $record->title . ' (Copie)';
-                        $newChapter->order_position = Chapter::query()
-                                ->where('section_id', '=', $record->section_id)
-                                ->max('order_position') + 1;
-                        $newChapter->save();
+                    Tables\Actions\Action::make('duplicate')
+                        ->label('Dupliquer')
+                        ->icon('heroicon-o-document-duplicate')
+                        ->color('warning')
+                        ->action(function (Chapter $record) {
+                            $newChapter = $record->replicate();
+                            $newChapter->title = $record->title . ' (Copie)';
+                            $newChapter->order_position = Chapter::query()
+                                    ->where('section_id', '=', $record->section_id)
+                                    ->max('order_position') + 1;
+                            $newChapter->save();
 
-                        $this->mountedTableActionRecord = $newChapter->getKey();
-                    })
-                    ->successNotificationTitle('Chapitre dupliqué avec succès'),
+                            $this->mountedTableActionRecord = $newChapter->getKey();
+                        })
+                        ->successNotificationTitle('Chapitre dupliqué avec succès'),
+                ])
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([

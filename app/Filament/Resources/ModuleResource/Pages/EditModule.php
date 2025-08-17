@@ -18,10 +18,6 @@ class EditModule extends EditRecord
                 ->label('Retour')
                 ->url(ModuleResource::getUrl('index'))
                 ->icon('heroicon-o-arrow-left'),
-            Actions\ViewAction::make()
-                ->label('Voir')
-                ->icon('heroicon-o-eye')
-                ->url(ModuleResource::getUrl('view', ['record' => $this->record])),
         ];
     }
 

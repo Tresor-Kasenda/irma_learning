@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 use App\Http\Controllers\AccountController;
 use App\Http\Controllers\DashboardController;
+use App\Livewire\Pages\Admins\DashboardAdmin;
 use App\Livewire\Pages\Courses\Certifications;
 use App\Livewire\Pages\Courses\FormationsLists;
 use App\Livewire\Pages\Courses\LearningCourse;
-use App\Livewire\Pages\Dashboard;
 use App\Livewire\Pages\Frontend\Formations;
 use App\Livewire\Pages\Frontend\Payments\StudentPayment;
 use App\Livewire\Pages\Frontend\ShowFormation\DetailFormation;
@@ -26,7 +26,7 @@ Route::get('/formations-continue', FormationsLists::class)->name('formations-lis
 Volt::route('/nos-tarifs', 'pages.pricings')->name('pages.pricings');
 
 Route::middleware('auth')->group(function () {
-    Route::get('/dashboard', Dashboard::class)->name('dashboard');
+    Route::get('/dashboard', DashboardAdmin::class)->name('dashboard');
     Route::get('/dash', [DashboardController::class, 'index'])->name('content');
     Route::get('/formation/{formation}/payment', StudentPayment::class)
         ->name('student.payment.create');

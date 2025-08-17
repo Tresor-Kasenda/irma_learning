@@ -6,7 +6,6 @@ use App\Enums\ExamAttemptEnum;
 use App\Filament\Resources\ExamAttemptResource\Pages;
 use App\Filament\Resources\ExamAttemptResource\RelationManagers;
 use App\Models\ExamAttempt;
-use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
@@ -28,88 +27,7 @@ class ExamAttemptResource extends Resource
     public static function form(Form $form): Form
     {
         return $form
-            ->schema([
-                Forms\Components\Section::make('Informations de la tentative')
-                    ->schema([
-                        Forms\Components\Select::make('user_id')
-                            ->label('Étudiant')
-                            ->relationship('user', 'name')
-                            ->searchable()
-                            ->preload()
-                            ->required(),
-
-                        Forms\Components\Select::make('exam_id')
-                            ->label('Examen')
-                            ->relationship('exam', 'title')
-                            ->searchable()
-                            ->preload()
-                            ->required(),
-
-                        Forms\Components\TextInput::make('attempt_number')
-                            ->label('Numéro de tentative')
-                            ->numeric()
-                            ->minValue(1)
-                            ->default(1)
-                            ->required(),
-
-                        Forms\Components\Select::make('status')
-                            ->label('Statut')
-                            ->options(ExamAttemptEnum::class)
-                            ->required()
-                            ->native(false),
-                    ])
-                    ->columns(2),
-
-                Forms\Components\Section::make('Résultats')
-                    ->schema([
-                        Forms\Components\TextInput::make('score')
-                            ->label('Score obtenu')
-                            ->numeric()
-                            ->minValue(0),
-
-                        Forms\Components\TextInput::make('max_score')
-                            ->label('Score maximum')
-                            ->numeric()
-                            ->minValue(1),
-
-                        Forms\Components\TextInput::make('percentage')
-                            ->label('Pourcentage (%)')
-                            ->numeric()
-                            ->minValue(0)
-                            ->maxValue(100)
-                            ->step(0.01),
-
-                        Forms\Components\TextInput::make('time_taken')
-                            ->label('Temps pris (secondes)')
-                            ->numeric()
-                            ->minValue(0),
-                    ])
-                    ->columns(2),
-
-                Forms\Components\Section::make('Dates importantes')
-                    ->schema([
-                        Forms\Components\DateTimePicker::make('started_at')
-                            ->label('Commencé le')
-                            ->native(false),
-
-                        Forms\Components\DateTimePicker::make('completed_at')
-                            ->label('Terminé le')
-                            ->native(false)
-                            ->after('started_at'),
-                    ])
-                    ->columns(2),
-
-                Forms\Components\Section::make('Réponses (JSON)')
-                    ->schema([
-                        Forms\Components\Textarea::make('answers')
-                            ->label('Réponses stockées')
-                            ->helperText('Format JSON des réponses de l\'étudiant')
-                            ->rows(5)
-                            ->columnSpanFull(),
-                    ])
-                    ->collapsible()
-                    ->collapsed(),
-            ]);
+            ->schema([]);
     }
 
     public static function table(Table $table): Table
@@ -238,9 +156,7 @@ class ExamAttemptResource extends Resource
     {
         return [
             'index' => Pages\ListExamAttempts::route('/'),
-            'create' => Pages\CreateExamAttempt::route('/create'),
             'view' => Pages\ViewExamAttempt::route('/{record}'),
-            'edit' => Pages\EditExamAttempt::route('/{record}/edit'),
         ];
     }
 
