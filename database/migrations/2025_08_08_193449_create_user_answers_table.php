@@ -18,8 +18,10 @@ return new class extends Migration {
             $table->text('answer_text')->nullable()->comment('For text/essay questions');
             $table->boolean('is_correct')->default(false);
             $table->integer('points_earned')->default(0);
+            $table->json('selected_options')->nullable()->after('selected_option_id');
+            $table->integer('points_earned')->default(0)->after('is_correct');
             $table->timestamps();
-            
+
             $table->index(['exam_attempt_id', 'question_id']);
         });
     }

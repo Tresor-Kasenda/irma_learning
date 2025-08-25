@@ -34,7 +34,8 @@
         "spatie/laravel-activitylog": "^4.10",
         "spatie/laravel-sluggable": "^3.7",
         "spatie/pdf-to-image": "^3.1",
-        "tecnickcom/tcpdf": "^6.10"
+        "tecnickcom/tcpdf": "^6.10",
+        "ext-fileinfo": "*"
     },
     "require-dev": {
         "barryvdh/laravel-debugbar": "^3.15",

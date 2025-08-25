@@ -18,9 +18,35 @@ class Exam extends Model
         return $this->morphTo();
     }
 
+    public function scopeActive($query): Model
+    {
+        return $query->where('is_active', true);
+    }
+
+    public function getTotalPoints(): int
+    {
+        return $this->questions()->sum('points');
+    }
+
     public function questions(): HasMany
     {
         return $this->hasMany(Question::class)->orderBy('order_position');
+    }
+
+    public function canUserAttempt(User $user): bool
+    {
+        if ($this->max_attempts === 0) {
+            return true;
+        }
+
+        return $this->getUserAttemptCount($user) < $this->max_attempts;
+    }
+
+    public function getUserAttemptCount(User $user): int
+    {
+        return $this->attempts()
+            ->where('user_id', $user->id)
+            ->count();
     }
 
     public function attempts(): HasMany
@@ -28,9 +54,9 @@ class Exam extends Model
         return $this->hasMany(ExamAttempt::class);
     }
 
-    public function scopeActive($query): Model
+    public function getPassingScore(): float
     {
-        return $query->where('is_active', true);
+        return $this->passing_score ?? 60;
     }
 
     protected function casts(): array

@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\ExamAttemptEnum;
+use App\Enums\ExamResultEnum;
 use Database\Factories\ExamAttemptFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -13,6 +14,9 @@ class ExamAttempt extends Model
 {
     /** @use HasFactory<ExamAttemptFactory> */
     use HasFactory;
+
+
+    protected $guarded = [];
 
     public function user(): BelongsTo
     {
@@ -38,11 +42,17 @@ class ExamAttempt extends Model
     public function complete(): void
     {
         $this->calculateScore();
+
+        $status = $this->isPassed() ? ExamResultEnum::PASSED : ExamResultEnum::FAILED;
         $this->update([
-            'status' => $this->isPassed() ? 'completed' : 'failed',
+            'status' => $status,
             'completed_at' => now(),
             'time_taken' => now()->diffInSeconds($this->started_at)
         ]);
+
+        if ($this->isPassed() && $this->exam->examable_type === Section::class) {
+            $this->markSectionAsCompleted();
+        }
     }
 
     public function calculateScore(): void
@@ -65,6 +75,28 @@ class ExamAttempt extends Model
     public function isPassed(): bool
     {
         return $this->percentage >= $this->exam->passing_score;
+    }
+
+    private function markSectionAsCompleted(): void
+    {
+        $section = $this->exam->examable;
+
+        UserProgress::updateOrCreate([
+            'user_id' => $this->user_id,
+            'trackable_type' => Section::class,
+            'trackable_id' => $section->id,
+        ], [
+            'status' => 'completed',
+            'progress_percentage' => 100,
+            'completed_at' => now(),
+        ]);
+
+        $formation = $section->module->formation;
+        $enrollment = Enrollment::where('user_id', $this->user_id)
+            ->where('formation_id', $formation->id)
+            ->first();
+
+        $enrollment?->updateProgress();
     }
 
     protected function casts(): array

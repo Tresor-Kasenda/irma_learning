@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Enums\EnrollmentPaymentEnum;
+use App\Enums\EnrollmentStatusEnum;
 use App\Enums\VerificationCodeStatusEnum;
 use App\Enums\VerificationCodeTypeEnum;
 use Database\Factories\VerificationCodeFactory;
@@ -9,11 +11,14 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Str;
 
 class VerificationCode extends Model
 {
     /** @use HasFactory<VerificationCodeFactory> */
     use HasFactory;
+
+    protected $guarded = [];
 
     protected static function boot(): void
     {
@@ -29,7 +34,9 @@ class VerificationCode extends Model
     {
         do {
             $code = strtoupper(Str::random(8));
-        } while (self::where('code', $code)->exists());
+        } while (self::where('code', $code)
+            ->where('expires_at', '>', now())
+            ->exists());
 
         return $code;
     }
@@ -74,6 +81,27 @@ class VerificationCode extends Model
             'ip_address' => $ipAddress,
             'user_agent' => $userAgent,
         ]);
+
+        $this->createEnrollmentAfterValidation();
+    }
+
+    private function createEnrollmentAfterValidation(): void
+    {
+        $existingEnrollment = Enrollment::where('user_id', $this->user_id)
+            ->where('formation_id', $this->formation_id)
+            ->first();
+
+        if (!$existingEnrollment) {
+            Enrollment::query()
+                ->create([
+                    'user_id' => $this->user_id,
+                    'formation_id' => $this->formation_id,
+                    'status' => EnrollmentStatusEnum::Active,
+                    'payment_status' => EnrollmentPaymentEnum::PAID,
+                    'enrollment_date' => now(),
+                    'progress_percentage' => 0,
+                ]);
+        }
     }
 
     public function markAsExpired(): void

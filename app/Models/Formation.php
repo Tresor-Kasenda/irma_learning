@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\EnrollmentPaymentEnum;
 use App\Enums\FormationLevelEnum;
 use Database\Factories\FormationFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -92,6 +93,69 @@ class Formation extends Model
         return $this->hasMany(Module::class)->orderBy('order_position');
     }
 
+    public function getTotalSectionsCount(): int
+    {
+        return $this->modules()
+            ->with('sections')
+            ->get()
+            ->sum(function ($module) {
+                return $module->sections->count();
+            });
+    }
+
+    public function getCompletedSectionsCount(User $user): int
+    {
+        return UserProgress::where('user_id', $user->id)
+            ->where('status', 'completed')
+            ->whereHasMorph('trackable', [Section::class], function ($query) {
+                $query->whereHas('module', function ($q) {
+                    $q->where('formation_id', $this->id);
+                });
+            })
+            ->count();
+    }
+
+    public function getCompletedModulesCount(User $user): int
+    {
+        $totalModules = $this->modules->count();
+        $completedCount = 0;
+
+        foreach ($this->modules as $module) {
+            $totalSections = $module->sections->count();
+            $completedSections = UserProgress::where('user_id', $user->id)
+                ->where('status', 'completed')
+                ->whereHasMorph('trackable', [Section::class], function ($query) use ($module) {
+                    $query->where('module_id', $module->id);
+                })
+                ->count();
+
+            if ($completedSections >= $totalSections) {
+                $completedCount++;
+            }
+        }
+
+        return $completedCount;
+    }
+
+    public function getCertifiedStudentsCount(): int
+    {
+        return Certificate::where('formation_id', $this->id)
+            ->where('status', 'active')
+            ->count();
+    }
+
+    public function getPaidEnrollmentsCount(): int
+    {
+        return $this->enrollments()
+            ->where('payment_status', EnrollmentPaymentEnum::PAID)
+            ->count();
+    }
+
+    public function enrollments(): HasMany
+    {
+        return $this->hasMany(Enrollment::class);
+    }
+
     public function getEstimatedDuration(): int
     {
         return $this->modules()->sum('estimated_duration');
@@ -100,11 +164,6 @@ class Formation extends Model
     public function getEnrollmentCount(): int
     {
         return $this->enrollments()->where('payment_status', 'paid')->count();
-    }
-
-    public function enrollments(): HasMany
-    {
-        return $this->hasMany(Enrollment::class);
     }
 
     protected function casts(): array

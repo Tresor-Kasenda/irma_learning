@@ -12,6 +12,8 @@ class UserAnswer extends Model
     /** @use HasFactory<UserAnswerFactory> */
     use HasFactory;
 
+    protected $guarded = [];
+
     public function examAttempt(): BelongsTo
     {
         return $this->belongsTo(ExamAttempt::class, 'exam_attempt_id');
@@ -29,11 +31,39 @@ class UserAnswer extends Model
 
     public function checkCorrectness(): void
     {
-        if ($this->question->question_type === 'single_choice' || $this->question->question_type === 'multiple_choice') {
-            $this->is_correct = $this->selectedOption?->is_correct ?? false;
-            $this->points_earned = $this->is_correct ? $this->question->points : 0;
+        $isCorrect = false;
+        $pointsEarned = 0;
+
+        switch ($this->question->question_type->value) {
+            case 'single_choice':
+                $isCorrect = $this->selectedOption?->is_correct ?? false;
+                $pointsEarned = $isCorrect ? $this->question->points : 0;
+                break;
+
+            case 'multiple_choice':
+                $correctOptions = $this->question->options()->where('is_correct', true)->get();
+                $selectedOptions = json_decode($this->selected_options ?? '[]', true);
+
+                $correctSelected = collect($selectedOptions)->filter(function ($optionId) use ($correctOptions) {
+                    return $correctOptions->contains('id', $optionId);
+                });
+
+                $incorrectSelected = collect($selectedOptions)->filter(function ($optionId) use ($correctOptions) {
+                    return !$correctOptions->contains('id', $optionId);
+                });
+
+                if ($correctSelected->count() > 0 && $incorrectSelected->count() === 0) {
+                    $percentage = $correctSelected->count() / $correctOptions->count();
+                    $pointsEarned = (int)($this->question->points * $percentage);
+                    $isCorrect = $percentage === 1.0;
+                }
+                break;
         }
-        $this->save();
+
+        $this->update([
+            'is_correct' => $isCorrect,
+            'points_earned' => $pointsEarned,
+        ]);
     }
 
     protected function casts(): array
