@@ -2,9 +2,12 @@
 
 namespace App\Filament\Resources\ModuleResource\RelationManagers;
 
+use App\Filament\Resources\SectionResource;
+use App\Models\Section;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\RelationManagers\RelationManager;
+use Filament\Support\Enums\MaxWidth;
 use Filament\Tables;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
@@ -103,14 +106,18 @@ class SectionsRelationManager extends RelationManager
             ])
             ->headerActions([
                 Tables\Actions\CreateAction::make()
-                    ->slideOver()
                     ->label('Ajouter une section')
                     ->icon('heroicon-o-plus')
                     ->color('success')
+                    ->modalWidth(MaxWidth::Large)
                     ->slideOver(),
             ])
             ->actions([
                 Tables\Actions\ActionGroup::make([
+                    Tables\Actions\ViewAction::make()
+                        ->label('Voir')
+                        ->url(fn(Section $record): string => SectionResource::getUrl('view', ['record' => $record]))
+                        ->icon('heroicon-o-eye'),
                     Tables\Actions\EditAction::make()
                         ->slideOver()
                         ->label('Modifier')
@@ -119,12 +126,6 @@ class SectionsRelationManager extends RelationManager
                         ->label('Supprimer')
                         ->icon('heroicon-o-trash')
                         ->requiresConfirmation(),
-                    Tables\Actions\Action::make('manage_chapters')
-                        ->label('Gérer chapitres')
-                        ->icon('heroicon-o-book-open')
-                        ->color('info')
-                        //->url(fn(Section $record) => route('filament.admin.resources.sections.view', $record))
-                        ->openUrlInNewTab(),
                 ])
             ])
             ->bulkActions([

@@ -14,8 +14,8 @@ return new class extends Migration {
             $table->id();
             $table->string('title');
             $table->string('slug')->unique();
-            $table->text('description');
             $table->text('short_description')->nullable();
+            $table->text('description');
             $table->string('image')->nullable();
             $table->decimal('price', 8, 2);
             $table->integer('duration_hours');

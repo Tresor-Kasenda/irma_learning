@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Http\Controllers\AccountController;
 use App\Http\Controllers\DashboardController;
+use App\Livewire\ConvertPdf;
 use App\Livewire\Pages\Admins\DashboardAdmin;
 use App\Livewire\Pages\Courses\Certifications;
 use App\Livewire\Pages\Courses\FormationsLists;
@@ -20,6 +21,8 @@ use Livewire\Volt\Volt;
 Route::get('/', Formations::class)->name('home-page');
 Route::get('/{formation}/show', DetailFormation::class)
     ->name('formation.show');
+
+Route::get('/convert', ConvertPdf::class);
 
 Route::get('/certifications', Certifications::class)->name('certifications');
 Route::get('/formations-continue', FormationsLists::class)->name('formations-lists');

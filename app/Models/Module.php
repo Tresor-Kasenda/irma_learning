@@ -15,6 +15,8 @@ class Module extends Model
     /** @use HasFactory<ModuleFactory> */
     use HasFactory;
 
+    protected $guarded = [];
+
     public function formation(): BelongsTo
     {
         return $this->belongsTo(Formation::class, 'formation_id');

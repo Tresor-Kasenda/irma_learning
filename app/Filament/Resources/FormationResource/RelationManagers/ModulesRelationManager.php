@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\FormationResource\RelationManagers;
 
+use App\Filament\Resources\ModuleResource;
 use App\Models\Module;
 use Filament\Forms;
 use Filament\Forms\Form;
@@ -121,7 +122,7 @@ class ModulesRelationManager extends RelationManager
                 Tables\Actions\ActionGroup::make([
                     Tables\Actions\ViewAction::make()
                         ->label('Voir')
-                        //->url(ModuleResource::getUrl('view', ['record' => $this->record]))
+                        ->url(fn(Module $record): string => ModuleResource::getUrl('view', ['record' => $record]))
                         ->icon('heroicon-o-eye'),
                     Tables\Actions\EditAction::make()
                         ->slideOver()

@@ -4,6 +4,7 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\SectionResource\Pages;
 use App\Filament\Resources\SectionResource\RelationManagers;
+use App\Models\Module;
 use App\Models\Section;
 use Filament\Forms;
 use Filament\Forms\Form;
@@ -35,17 +36,19 @@ class SectionResource extends Resource
                             ->label('Module')
                             ->relationship('module', 'title')
                             ->searchable()
-                            ->preload()
-                            ->required()
-                            ->createOptionForm([
-                                Forms\Components\Select::make('formation_id')
-                                    ->label('Formation')
-                                    ->relationship('formation', 'title')
-                                    ->required(),
-                                Forms\Components\TextInput::make('title')
-                                    ->label('Titre du module')
-                                    ->required(),
-                            ]),
+                            ->getOptionLabelFromRecordUsing(fn($record) => strlen($record->title) > 50
+                                ? substr($record->title, 0, 50) . '...'
+                                : $record->title
+                            )
+                            ->extraAttributes(function ($get) {
+                                $formationId = $get('module_id_id');
+                                if ($formationId) {
+                                    $formation = Module::find($formationId);
+                                    return $formation ? ['title' => $formation->title] : [];
+                                }
+                                return [];
+                            })
+                            ->required(),
 
                         Forms\Components\TextInput::make('title')
                             ->label('Titre de la section')

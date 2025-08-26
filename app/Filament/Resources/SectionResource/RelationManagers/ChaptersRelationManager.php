@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\SectionResource\RelationManagers;
 
 use App\Enums\ChapterTypeEnum;
+use App\Filament\Resources\ChapterResource;
 use App\Models\Chapter;
 use Filament\Forms;
 use Filament\Forms\Form;
@@ -52,10 +53,10 @@ class ChaptersRelationManager extends RelationManager
                             ->visibility('public')
                             ->preserveFilenames()
                             ->columnSpanFull()
-                            ->acceptedFileTypes(['application/pdf', 'video/*'])
-                            ->helperText('Uploadez un PDF ou une vidéo selon le type.')
-                            ->visible(fn(Forms\Get $get) => in_array($get('content_type'), ['pdf', 'video'], true))
-                            ->required(fn(Forms\Get $get) => in_array($get('content_type'), ['pdf', 'video'], true))
+                            ->acceptedFileTypes(['application/pdf', 'video/*', 'audio/*'])
+                            ->helperText('Uploadez un fichier selon le type de contenu.')
+                            ->visible(fn(Forms\Get $get) => in_array($get('content_type'), ['pdf', 'video', 'audio'], true))
+                            ->required(fn(Forms\Get $get) => in_array($get('content_type'), ['pdf', 'video', 'audio'], true))
                             ->afterStateUpdated(function ($state, Forms\Set $set, Forms\Get $get) {
                                 $meta = $get('metadata') ?? [];
                                 $meta['source_file'] = $state;
@@ -75,12 +76,20 @@ class ChaptersRelationManager extends RelationManager
                                     ->numeric()
                                     ->suffix('min'),
                             ]),
+
+                        Forms\Components\Textarea::make('description')
+                            ->label('Description du contenu')
+                            ->maxLength(65535)
+                            ->columnSpanFull()
+                            ->rows(4)
+                            ->placeholder('Description de ce chapitre...'),
                     ]),
 
                 Forms\Components\Section::make('Contenu')
                     ->schema([
                         Forms\Components\RichEditor::make('content')
                             ->label('Contenu principal')
+                            ->required()
                             ->columnSpanFull()
                             ->toolbarButtons([
                                 'blockquote',
@@ -112,6 +121,7 @@ class ChaptersRelationManager extends RelationManager
                             ->schema([
                                 Forms\Components\Toggle::make('is_free')
                                     ->label('Gratuit')
+                                    ->default(false)
                                     ->helperText('Accessible sans inscription payante'),
 
                                 Forms\Components\Toggle::make('is_active')
@@ -200,15 +210,21 @@ class ChaptersRelationManager extends RelationManager
                 Tables\Actions\CreateAction::make()
                     ->label('Ajouter un chapitre')
                     ->icon('heroicon-o-plus-circle')
+                    ->modalWidth('xl')
                     ->slideOver(),
             ])
             ->actions([
                 Tables\Actions\ActionGroup::make([
-                    Tables\Actions\ViewAction::make(),
+                    Tables\Actions\ViewAction::make()
+                        ->url(fn(Chapter $record): string => ChapterResource::getUrl('view', ['record' => $record]))
+                        ->label('Voir')
+                        ->icon('heroicon-o-eye'),
                     Tables\Actions\EditAction::make()
                         ->label('Modifier')
                         ->slideOver(),
-                    Tables\Actions\DeleteAction::make(),
+                    Tables\Actions\DeleteAction::make()
+                        ->label('Supprimer')
+                        ->requiresConfirmation(),
 
                     Tables\Actions\Action::make('preview')
                         ->label('Aperçu')

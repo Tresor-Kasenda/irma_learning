@@ -2,7 +2,6 @@
 
 namespace App\Filament\Resources\ModuleResource\Pages;
 
-use App\Filament\Resources\FormationResource;
 use App\Filament\Resources\ModuleResource;
 use App\Models\Module;
 use Filament\Actions;
@@ -25,16 +24,22 @@ class ViewModule extends ViewRecord
                             ->label('Formation'),
                         TextEntry::make('title')
                             ->label('Titre'),
-                        TextEntry::make('order_position')
-                            ->label('Position'),
+                        TextEntry::make('is_active')
+                            ->label('Actif')
+                            ->badge()
+                            ->formatStateUsing(fn(bool $state): string => $state ? 'Actif' : 'Inactif')
+                            ->color(fn(bool $state): string => $state ? 'success' : 'danger'),
                         TextEntry::make('estimated_duration')
-                            ->label('Durée estimée (minutes)'),
+                            ->label('Durée estimée (minutes)')
+                            ->suffix(' min'),
                         TextEntry::make('description')
+                            ->label('Description')
                             ->columnSpanFull(),
                         TextEntry::make('content')
                             ->label('Contenu')
                             ->html()
-                            ->columnSpanFull(),
+                            ->columnSpanFull()
+                            ->placeholder('Aucun contenu disponible'),
                     ])
                     ->columns(2),
 
@@ -57,7 +62,7 @@ class ViewModule extends ViewRecord
         return [
             Actions\Action::make('back')
                 ->label('Retour')
-                ->url(FormationResource::getUrl('index'))
+                ->url(ModuleResource::getUrl('index'))
                 ->icon('heroicon-o-arrow-left'),
         ];
     }

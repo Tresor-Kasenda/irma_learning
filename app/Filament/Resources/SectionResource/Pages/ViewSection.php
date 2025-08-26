@@ -28,20 +28,26 @@ class ViewSection extends ViewRecord
                         Infolists\Components\TextEntry::make('order_position')
                             ->label('Position'),
                         Infolists\Components\TextEntry::make('description')
-                            ->columnSpanFull(),
+                            ->label('Description')
+                            ->columnSpanFull()
+                            ->placeholder('Aucune description'),
                     ])
                     ->columns(2),
 
-                Infolists\Components\Section::make('Statistiques')
+                Infolists\Components\Section::make('Statut')
                     ->schema([
+                        Infolists\Components\TextEntry::make('is_active')
+                            ->label('Active')
+                            ->badge()
+                            ->formatStateUsing(fn(bool $state): string => $state ? 'Active' : 'Inactive')
+                            ->color(fn(bool $state): string => $state ? 'success' : 'danger'),
+                        Infolists\Components\TextEntry::make('estimated_duration')
+                            ->label('Durée estimée (minutes)')
+                            ->suffix(' min')
+                            ->placeholder('Non définie'),
                         Infolists\Components\TextEntry::make('chapters_count')
                             ->label('Nombre de chapitres')
                             ->getStateUsing(fn(Section $record): int => $record->chapters()->count()),
-                        Infolists\Components\IconEntry::make('is_active')
-                            ->label('Active')
-                            ->boolean(),
-                        Infolists\Components\TextEntry::make('estimated_duration')
-                            ->label('Durée estimée (minutes)'),
                     ])
                     ->columns(3),
             ]);
@@ -56,5 +62,4 @@ class ViewSection extends ViewRecord
                 ->icon('heroicon-o-arrow-left')
         ];
     }
-
 }

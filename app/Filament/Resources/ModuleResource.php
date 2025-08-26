@@ -4,6 +4,7 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\ModuleResource\Pages;
 use App\Filament\Resources\ModuleResource\RelationManagers;
+use App\Models\Formation;
 use App\Models\Module;
 use Filament\Forms;
 use Filament\Forms\Form;
@@ -34,16 +35,20 @@ class ModuleResource extends Resource
                         Forms\Components\Select::make('formation_id')
                             ->label('Formation')
                             ->relationship('formation', 'title')
+                            ->getOptionLabelFromRecordUsing(fn($record) => strlen($record->title) > 50
+                                ? substr($record->title, 0, 50) . '...'
+                                : $record->title
+                            )
+                            ->extraAttributes(function ($get) {
+                                $formationId = $get('formation_id');
+                                if ($formationId) {
+                                    $formation = Formation::find($formationId);
+                                    return $formation ? ['title' => $formation->title] : [];
+                                }
+                                return [];
+                            })
                             ->searchable()
-                            ->preload()
-                            ->required()
-                            ->createOptionForm([
-                                Forms\Components\TextInput::make('title')
-                                    ->label('Titre de la formation')
-                                    ->required(),
-                                Forms\Components\Textarea::make('description')
-                                    ->label('Description'),
-                            ]),
+                            ->required(),
 
                         Forms\Components\TextInput::make('title')
                             ->label('Titre du module')

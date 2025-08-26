@@ -20,23 +20,20 @@ class ConvertPdf extends Component
     #[Validate('required|file|mimes:pdf|max:20480')]
     public $pdfFile;
 
-    // Options de traitement
     public $extractImages = true;
     public $extractTables = true;
     public $extractCode = true;
     public $createTableOfContents = true;
     public $generateCoverImage = true;
     public $ignorePageNumbers = true;
-    public $ignoredPages = []; // Pages à ignorer complètement
+    public $ignoredPages = [];
 
-    // Progress tracking
     public $isProcessing = false;
     public $progress = 0;
     public $totalPages = 0;
     public $currentPage = 0;
     public $processingStep = 'initializing';
 
-    // Results storage
     public $markdownContent = '';
     public $temporaryPath = '';
     public $metadata = [];
@@ -136,7 +133,6 @@ class ConvertPdf extends Component
         $this->temporaryPath = $this->pdfFile->getRealPath();
 
         try {
-            // Générer l'image de couverture d'abord
             if ($this->generateCoverImage) {
                 $this->processingStep = 'generating_cover';
                 $this->generateCoverImage();

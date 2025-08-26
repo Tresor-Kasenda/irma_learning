@@ -75,7 +75,9 @@ class FormationResource extends Resource
                     ->schema([
                         Forms\Components\Select::make('difficulty_level')
                             ->label('Niveau de difficulté')
-                            ->options(FormationLevelEnum::class)
+                            ->options(collect(FormationLevelEnum::cases())->mapWithKeys(
+                                fn(FormationLevelEnum $enum) => [$enum->value => $enum->getLabel()]
+                            ))
                             ->required(),
 
                         Forms\Components\TextInput::make('price')
@@ -155,7 +157,7 @@ class FormationResource extends Resource
     {
         return $table
             ->columns([
-                ImageColumn::make('avatar')
+                ImageColumn::make('image')
                     ->label('Image')
                     ->circular()
                     ->extraImgAttributes(['loading' => 'lazy'])
@@ -193,17 +195,8 @@ class FormationResource extends Resource
                     ->money('EUR')
                     ->sortable(),
 
-                Tables\Columns\TextColumn::make('enrollments_count')
-                    ->label('Inscriptions')
-                    ->counts('enrollments')
-                    ->sortable(),
-
                 Tables\Columns\IconColumn::make('is_active')
                     ->label('Actif')
-                    ->boolean(),
-
-                Tables\Columns\IconColumn::make('is_featured')
-                    ->label('En vedette')
                     ->boolean(),
             ])
             ->filters([
