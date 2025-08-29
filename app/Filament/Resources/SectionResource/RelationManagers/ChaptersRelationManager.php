@@ -230,8 +230,9 @@ class ChaptersRelationManager extends RelationManager
                         ->label('Aperçu')
                         ->icon('heroicon-o-eye')
                         ->color('info')
+                        ->slideOver()
                         ->modalContent(fn(Chapter $record) => view('filament.resources.chapter.preview', ['chapter' => $record]))
-                        ->modalWidth('5xl'),
+                        ->modalWidth('xl'),
 
                     Tables\Actions\Action::make('duplicate')
                         ->label('Dupliquer')

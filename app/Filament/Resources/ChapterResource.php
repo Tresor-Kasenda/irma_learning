@@ -4,7 +4,9 @@ namespace App\Filament\Resources;
 
 use App\Enums\ChapterTypeEnum;
 use App\Filament\Resources\ChapterResource\Pages;
+use App\Forms\Components\JsonViewer;
 use App\Models\Chapter;
+use App\Models\Section;
 use App\Service\PdfExtractionService;
 use App\Service\ReadingDurationCalculatorService;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -68,11 +70,11 @@ class ChapterResource extends Resource
                     ->label('Type')
                     ->badge()
                     ->color(fn(ChapterTypeEnum $state): string => match ($state) {
-                        'text' => 'success',
-                        'video' => 'warning',
-                        'audio' => 'danger',
-                        'pdf' => 'info',
-                        'interactive' => 'primary',
+                        ChapterTypeEnum::TEXT => 'success',
+                        ChapterTypeEnum::VIDEO => 'warning',
+                        ChapterTypeEnum::AUDIO => 'danger',
+                        ChapterTypeEnum::PDF => 'info',
+                        ChapterTypeEnum::INTERACTIVE => 'primary',
                         default => 'gray',
                     }),
 
@@ -174,14 +176,6 @@ class ChapterResource extends Resource
                             static::recalculateReadingDuration($record, $data['reading_level']);
                         }),
 
-                    Tables\Actions\Action::make('view_reading_analysis')
-                        ->label('Analyse de lecture')
-                        ->icon('heroicon-o-chart-bar')
-                        ->visible(fn($record) => !empty($record->metadata['reading_analysis'] ?? []))
-                        ->action(function ($record) {
-                            static::showReadingAnalysis($record);
-                        }),
-
                     Tables\Actions\Action::make('debug_file')
                         ->label('Debug Fichier')
                         ->icon('heroicon-o-bug-ant')
@@ -273,80 +267,75 @@ class ChapterResource extends Resource
             ->schema([
                 Forms\Components\Section::make('Source du chapitre')
                     ->schema([
-                        Forms\Components\Tabs::make('source_type')
-                            ->tabs([
-                                Forms\Components\Tabs\Tab::make('Manuel')
-                                    ->schema([
-                                        Forms\Components\Select::make('section_id')
-                                            ->label('Section')
-                                            ->relationship('section', 'title')
-                                            ->searchable()
-                                            ->preload()
-                                            ->required()
-                                            ->createOptionForm([
-                                                Forms\Components\Select::make('module_id')
-                                                    ->label('Module')
-                                                    ->relationship('module', 'title')
-                                                    ->required(),
-                                                Forms\Components\TextInput::make('title')
-                                                    ->label('Titre de la section')
-                                                    ->required(),
-                                            ]),
+                        Forms\Components\Select::make('section_id')
+                            ->label('Section')
+                            ->relationship('section', 'title')
+                            ->searchable()
+                            ->getOptionLabelFromRecordUsing(fn($record) => strlen($record->title) > 50
+                                ? substr($record->title, 0, 50) . '...'
+                                : $record->title
+                            )
+                            ->extraAttributes(function ($get) {
+                                $sectionId = $get('section_id');
+                                if ($sectionId) {
+                                    $formation = Section::find($sectionId);
+                                    return $formation ? ['title' => $formation->title] : [];
+                                }
+                                return [];
+                            })
+                            ->required(),
 
-                                        Forms\Components\TextInput::make('title')
-                                            ->label('Titre du chapitre')
-                                            ->required()
-                                            ->maxLength(255),
+                        Forms\Components\TextInput::make('title')
+                            ->label('Titre du chapitre')
+                            ->required()
+                            ->maxLength(255),
 
-                                        Forms\Components\Select::make('content_type')
-                                            ->label('Type de contenu')
-                                            ->options([
-                                                'text' => 'Texte',
-                                                'video' => 'Vidéo',
-                                                'audio' => 'Audio',
-                                                'pdf' => 'PDF',
-                                                'interactive' => 'Interactif',
-                                            ])
-                                            ->required()
-                                            ->default('text')
-                                            ->live()
-                                            ->afterStateUpdated(function ($state, Forms\Set $set) {
-                                                $set('metadata', []);
-                                                $set('media_url', null);
-                                            }),
-
-                                        Forms\Components\FileUpload::make('media_url')
-                                            ->label('Fichier de contenu')
-                                            ->disk('public')
-                                            ->directory('chapters')
-                                            ->visibility('public')
-                                            ->preserveFilenames()
-                                            ->columnSpanFull()
-                                            ->acceptedFileTypes(['application/pdf'])
-                                            ->maxSize(50 * 1024)
-                                            ->helperText('Uploadez un PDF pour extraction automatique du contenu.')
-                                            ->visible(fn(Forms\Get $get) => $get('content_type') === 'pdf')
-                                            ->required(fn(Forms\Get $get) => $get('content_type') === 'pdf')
-                                            ->live()
-                                            ->afterStateUpdated(function ($state, Forms\Set $set, Forms\Get $get) {
-                                                if ($state) {
-                                                    static::extractPdfContent($state, $set, $get);
-                                                }
-                                            })
-                                            ->afterStateHydrated(function ($component, $state) {
-                                                if ($state && $component->getContainer()->getOperation() === 'edit') {
-                                                    if (!Storage::disk('public')->exists($state)) {
-                                                        Notification::make()
-                                                            ->title('Fichier manquant')
-                                                            ->body('Le fichier PDF original est introuvable.')
-                                                            ->warning()
-                                                            ->send();
-                                                    }
-                                                }
-                                            })
-                                    ]),
+                        Forms\Components\Select::make('content_type')
+                            ->label('Type de contenu')
+                            ->options([
+                                'text' => 'Texte',
+                                'video' => 'Vidéo',
+                                'audio' => 'Audio',
+                                'pdf' => 'PDF',
+                                'interactive' => 'Interactif',
                             ])
-                            ->columnSpanFull(),
+                            ->required()
+                            ->default('text')
+                            ->live()
+                            ->afterStateUpdated(function ($state, Forms\Set $set) {
+                                $set('metadata', []);
+                                $set('media_url', null);
+                            }),
+
+                        Forms\Components\FileUpload::make('media_url')
+                            ->label('Fichier de contenu')
+                            ->disk('public')
+                            ->directory('chapters')
+                            ->visibility('public')
+                            ->preserveFilenames()
+                            ->columnSpanFull()
+                            ->acceptedFileTypes(['application/pdf'])
+                            ->maxSize(50 * 1024)
+                            ->helperText('Uploadez un PDF pour extraction automatique du contenu.')
+                            ->visible(fn(Forms\Get $get) => $get('content_type') === 'pdf')
+                            ->required(fn(Forms\Get $get) => $get('content_type') === 'pdf')
+                            ->live()
+                            ->afterStateUpdated(function ($state, Forms\Set $set, Forms\Get $get) {
+                                if ($state) {
+                                    static::extractPdfContent($state, $set, $get);
+                                }
+                            })
+                            ->afterStateHydrated(function ($component, $state) {
+                                if ($state && $component->getContainer()->getOperation() === 'edit') {
+                                    if (!Storage::disk('public')->exists($state)) {
+                                        Notification::make()
+                                            ->title('Fichier manquant')
+                                            ->body('Le fichier PDF original est introuvable.')
+                                            ->warning()
+                                            ->send();
+                                    }
+                                }
+                            })
                     ]),
 
                 Forms\Components\Section::make('Configuration du contenu')
@@ -356,9 +345,12 @@ class ChapterResource extends Resource
                             ->columnSpanFull()
                             ->helperText('Le contenu sera automatiquement rempli lors de l\'import PDF'),
 
-                        Forms\Components\KeyValue::make('metadata')
+                        JsonViewer::make('metadata')
                             ->label('Métadonnées')
-                            ->helperText('Informations supplémentaires (URL vidéo, fichier PDF, données d\'extraction, etc.)')
+                            ->collapsible(true)
+                            ->maxDepth(8)
+                            ->hideKeys(['sensitive_data', 'internal_cache'])
+                            ->helperText('Informations détaillées sur l\'extraction et l\'analyse du contenu')
                             ->columnSpanFull(),
                     ])
                     ->columns(2),
@@ -622,7 +614,6 @@ class ChapterResource extends Resource
                 $record->metadata ?? []
             );
 
-            // Mettre à jour le record
             $updatedMetadata = array_merge($record->metadata ?? [], [
                 'reading_analysis' => $readingAnalysis['analysis'],
                 'duration_breakdown' => $readingAnalysis['breakdown'],
@@ -688,7 +679,7 @@ class ChapterResource extends Resource
                 $debug['file_checks'][$key] = [
                     'path' => $path,
                     'exists' => file_exists($path),
-                    'is_readable' => file_exists($path) ? is_readable($path) : false,
+                    'is_readable' => file_exists($path) && is_readable($path),
                     'size' => file_exists($path) ? filesize($path) : null,
                     'mime_type' => file_exists($path) ? mime_content_type($path) : null,
                 ];

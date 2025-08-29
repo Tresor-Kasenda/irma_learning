@@ -18,6 +18,8 @@ final class Chapter extends Model
     /** @use HasFactory<ChapterFactory> */
     use HasFactory;
 
+    protected $guarded = [];
+
     public function section(): BelongsTo
     {
         return $this->belongsTo(Section::class, 'section_id');
