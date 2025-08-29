@@ -22,4 +22,14 @@ class CreateExam extends CreateRecord
             ->title('Examen créé avec succès')
             ->body('L\'examen a été créé avec succès.');
     }
+
+    protected function mutateFormDataBeforeCreate(array $data): array
+    {
+        unset(
+            $data['formation_id'],
+            $data['module_id'],
+            $data['section_id']
+        );
+        return $data;
+    }
 }

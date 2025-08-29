@@ -24,4 +24,15 @@ class EditExam extends EditRecord
                 ->url(ModuleResource::getUrl('view', ['record' => $this->record])),
         ];
     }
+
+    protected function mutateFormDataBeforeSave(array $data): array
+    {
+        // unset data
+        unset(
+            $data['formation_id'],
+            $data['module_id'],
+            $data['section_id']
+        );
+        return $data;
+    }
 }

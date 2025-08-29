@@ -27,6 +27,7 @@ class ViewExam extends ViewRecord
                     ->schema([
                         TextEntry::make('title')
                             ->label('Titre'),
+
                         TextEntry::make('examable_type')
                             ->label('Type d\'élément')
                             ->formatStateUsing(fn(string $state): string => match ($state) {
@@ -36,11 +37,22 @@ class ViewExam extends ViewRecord
                                 Chapter::class => 'Chapitre',
                                 default => 'Inconnu',
                             })
-                            ->badge(),
+                            ->badge()
+                            ->color(fn($state): string => match ($state) {
+                                Formation::class => 'success',
+                                Module::class => 'info',
+                                Section::class => 'warning',
+                                Chapter::class => 'danger',
+                                default => 'gray',
+                            }),
+
                         TextEntry::make('examable.title')
                             ->label('Élément associé'),
+
                         TextEntry::make('description')
+                            ->label('Description')
                             ->columnSpanFull(),
+
                         TextEntry::make('instructions')
                             ->label('Instructions')
                             ->html()
@@ -48,33 +60,48 @@ class ViewExam extends ViewRecord
                     ])
                     ->columns(3),
 
-                Section::make('Configuration')
+                \Filament\Infolists\Components\Section::make('Configuration de l\'examen')
                     ->schema([
                         TextEntry::make('duration_minutes')
-                            ->label('Durée (minutes)'),
+                            ->label('Durée (minutes)')
+                            ->numeric(),
+
                         TextEntry::make('passing_score')
-                            ->label('Score minimum (%)'),
+                            ->label('Score minimum (%)')
+                            ->numeric(),
+
                         TextEntry::make('max_attempts')
-                            ->label('Tentatives maximum'),
+                            ->label('Tentatives maximum')
+                            ->numeric()
+                            ->helperText('0 pour tentatives illimitées'),
+
                         TextEntry::make('available_from')
                             ->label('Disponible à partir de')
                             ->dateTime(),
+
                         TextEntry::make('available_until')
                             ->label('Disponible jusqu\'au')
                             ->dateTime(),
+                    ])
+                    ->columns(3),
+
+                \Filament\Infolists\Components\Section::make('Options')
+                    ->schema([
                         IconEntry::make('randomize_questions')
                             ->label('Questions mélangées')
                             ->boolean(),
+
                         IconEntry::make('show_results_immediately')
                             ->label('Résultats immédiats')
                             ->boolean(),
+
                         IconEntry::make('is_active')
                             ->label('Actif')
                             ->boolean(),
                     ])
                     ->columns(3),
 
-                Section::make('Statistiques')
+                \Filament\Infolists\Components\Section::make('Statistiques')
                     ->schema([
                         TextEntry::make('questions_count')
                             ->label('Nombre de questions')

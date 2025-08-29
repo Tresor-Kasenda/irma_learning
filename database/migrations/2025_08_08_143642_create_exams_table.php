@@ -12,7 +12,7 @@ return new class extends Migration {
     {
         Schema::create('exams', function (Blueprint $table) {
             $table->id();
-            $table->nullableMorphs('examable'); // Polymorphic relation (chapter, section, module, formation)
+            $table->nullableMorphs('examable');
             $table->string('title');
             $table->text('description')->nullable();
             $table->text('instructions')->nullable();
@@ -22,6 +22,8 @@ return new class extends Migration {
             $table->boolean('randomize_questions')->default(false);
             $table->boolean('show_results_immediately')->default(true);
             $table->boolean('is_active')->default(true);
+            $table->timestamp('available_from')->nullable();
+            $table->timestamp('available_until')->nullable();
             $table->timestamps();
         });
     }

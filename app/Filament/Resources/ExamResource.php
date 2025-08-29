@@ -13,6 +13,7 @@ use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
+use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 
@@ -63,12 +64,70 @@ class ExamResource extends Resource
                             ->live()
                             ->afterStateUpdated(fn(Forms\Set $set) => $set('examable_id', null)),
 
-                        Forms\Components\Select::make('examable_id')
-                            ->label('Élément associé')
-                            ->required()
+                        Forms\Components\Select::make('formation_id')
+                            ->label('Formation')
+                            ->options(fn() => Formation::pluck('title', 'id')->toArray())
                             ->searchable()
                             ->preload()
-                            ->options(function (Forms\Get $get): array {
+                            ->required()
+                            ->live()
+                            ->visible(fn(Forms\Get $get) => !empty($get('examable_type')))
+                            ->afterStateUpdated(function (Forms\Set $set) {
+                                $set('module_id', null);
+                                $set('section_id', null);
+                                $set('examable_id', null);
+                            }),
+
+                        Forms\Components\Select::make('module_id')
+                            ->label('Module')
+                            ->options(function (Forms\Get $get) {
+                                $formationId = $get('formation_id');
+                                if (!$formationId) {
+                                    return [];
+                                }
+                                return Module::where('formation_id', $formationId)
+                                    ->pluck('title', 'id')
+                                    ->toArray();
+                            })
+                            ->searchable()
+                            ->preload()
+                            ->live()
+                            ->required(fn(Forms\Get $get) => in_array($get('examable_type'), [Module::class, Section::class, Chapter::class]))
+                            ->visible(fn(Forms\Get $get) => in_array($get('examable_type'), [Module::class, Section::class, Chapter::class]) &&
+                                !empty($get('formation_id')))
+                            ->afterStateUpdated(function (Forms\Set $set) {
+                                $set('section_id', null);
+                                $set('examable_id', null);
+                            }),
+
+                        Forms\Components\Select::make('section_id')
+                            ->label('Section')
+                            ->options(function (Forms\Get $get) {
+                                $moduleId = $get('module_id');
+                                if (!$moduleId) {
+                                    return [];
+                                }
+                                return Section::where('module_id', $moduleId)
+                                    ->pluck('title', 'id')
+                                    ->toArray();
+                            })
+                            ->searchable()
+                            ->preload()
+                            ->live()
+                            ->required(fn(Forms\Get $get) => in_array($get('examable_type'), [Section::class, Chapter::class]))
+                            ->visible(fn(Forms\Get $get) => in_array($get('examable_type'), [Section::class, Chapter::class]) &&
+                                !empty($get('module_id')))
+                            ->afterStateUpdated(fn(Forms\Set $set) => $set('examable_id', null)),
+
+                        Forms\Components\Select::make('examable_id')
+                            ->label(fn(Forms\Get $get) => match ($get('examable_type')) {
+                                Formation::class => 'Formation',
+                                Module::class => 'Module',
+                                Section::class => 'Section',
+                                Chapter::class => 'Chapitre',
+                                default => 'Élément associé',
+                            })
+                            ->options(function (Forms\Get $get) {
                                 $type = $get('examable_type');
 
                                 if (!$type) {
@@ -76,19 +135,41 @@ class ExamResource extends Resource
                                 }
 
                                 return match ($type) {
-                                    Formation::class => Formation::pluck('title', 'id')->toArray(),
-                                    Module::class => Module::with('formation')->get()
-                                        ->mapWithKeys(fn($module) => [$module->id => "{$module->formation->title} > {$module->title}"])
-                                        ->toArray(),
-                                    Section::class => Section::with('module.formation')->get()
-                                        ->mapWithKeys(fn($section) => [$section->id => "{$section->module->formation->title} > {$section->module->title} > {$section->title}"])
-                                        ->toArray(),
-                                    Chapter::class => Chapter::with('section.module.formation')->get()
-                                        ->mapWithKeys(fn($chapter) => [$chapter->id => "{$chapter->section->module->formation->title} > {$chapter->section->module->title} > {$chapter->section->title} > {$chapter->title}"])
+                                    Formation::class => [$get('formation_id') => Formation::find($get('formation_id'))?->title ?? ''],
+                                    Module::class => [$get('module_id') => Module::find($get('module_id'))?->title ?? ''],
+                                    Section::class => [$get('section_id') => Section::find($get('section_id'))?->title ?? ''],
+                                    Chapter::class => Chapter::where('section_id', $get('section_id'))
+                                        ->pluck('title', 'id')
                                         ->toArray(),
                                     default => [],
                                 };
-                            }),
+                            })
+                            ->searchable()
+                            ->preload()
+                            ->required()
+                            ->hidden(fn(Forms\Get $get) => ($get('examable_type') === Formation::class && empty($get('formation_id'))) ||
+                                ($get('examable_type') === Module::class && empty($get('module_id'))) ||
+                                ($get('examable_type') === Section::class && empty($get('section_id'))) ||
+                                ($get('examable_type') === Chapter::class && empty($get('section_id'))) ||
+                                empty($get('examable_type'))),
+
+                        Forms\Components\Hidden::make('examable_id')
+                            ->default(function (Forms\Get $get) {
+                                $type = $get('examable_type');
+
+                                if (!$type) {
+                                    return null;
+                                }
+
+                                return match ($type) {
+                                    Formation::class => $get('formation_id'),
+                                    Module::class => $get('module_id'),
+                                    Section::class => $get('section_id'),
+                                    default => null,
+                                };
+                            })
+                            ->dehydrated()
+                            ->visible(fn(Forms\Get $get) => in_array($get('examable_type'), [Formation::class, Module::class, Section::class])),
                     ])
                     ->columns(2),
 
@@ -112,21 +193,21 @@ class ExamResource extends Resource
                         Forms\Components\TextInput::make('max_attempts')
                             ->label('Nombre maximum de tentatives')
                             ->numeric()
-                            ->minValue(1)
+                            ->minValue(0)
+                            ->helperText('0 pour tentatives illimitées')
                             ->default(3),
 
                         Forms\Components\DateTimePicker::make('available_from')
                             ->label('Disponible à partir de')
                             ->default(now())
-                            ->required()
-                            ->native(false),
+                            ->native(false)
+                            ->nullable(),
 
                         Forms\Components\DateTimePicker::make('available_until')
                             ->label('Disponible jusqu\'au')
                             ->native(false)
-                            ->default(now())
-                            ->placeholder('Aucune date limite')
-                            ->after('available_from'),
+                            ->after('available_from')
+                            ->nullable(),
                     ])
                     ->columns(2),
 
@@ -135,12 +216,14 @@ class ExamResource extends Resource
                         Forms\Components\Toggle::make('randomize_questions')
                             ->label('Mélanger les questions')
                             ->inline(false)
-                            ->helperText('Les questions seront présentées dans un ordre aléatoire'),
+                            ->helperText('Les questions seront présentées dans un ordre aléatoire')
+                            ->default(false),
 
                         Forms\Components\Toggle::make('show_results_immediately')
                             ->label('Afficher les résultats immédiatement')
                             ->inline(false)
-                            ->helperText('Afficher le score et les corrections dès la fin de l\'examen'),
+                            ->helperText('Afficher le score et les corrections dès la fin de l\'examen')
+                            ->default(true),
 
                         Forms\Components\Toggle::make('is_active')
                             ->label('Examen actif')
@@ -158,6 +241,14 @@ class ExamResource extends Resource
                 Tables\Columns\TextColumn::make('title')
                     ->label('Titre')
                     ->searchable()
+                    ->limit(30)
+                    ->tooltip(function (TextColumn $column): ?string {
+                        $state = $column->getState();
+                        if (strlen($state) <= $column->getCharacterLimit()) {
+                            return null;
+                        }
+                        return $state;
+                    })
                     ->sortable(),
 
                 Tables\Columns\TextColumn::make('examable_type')
@@ -191,16 +282,6 @@ class ExamResource extends Resource
                 Tables\Columns\TextColumn::make('passing_score')
                     ->label('Score min. (%)')
                     ->numeric()
-                    ->sortable(),
-
-                Tables\Columns\TextColumn::make('questions_count')
-                    ->label('Questions')
-                    ->counts('questions')
-                    ->sortable(),
-
-                Tables\Columns\TextColumn::make('attempts_count')
-                    ->label('Tentatives')
-                    ->counts('attempts')
                     ->sortable(),
 
                 Tables\Columns\IconColumn::make('is_active')
@@ -259,6 +340,15 @@ class ExamResource extends Resource
                         ->action(fn(Builder $query) => $query->update(['is_active' => false])),
                     Tables\Actions\BulkAction::make('duplicate')
                         ->label('Dupliquer')
+                        ->icon('heroicon-o-document-duplicate')
+                        ->action(function (array $records): void {
+                            foreach ($records as $record) {
+                                $exam = Exam::find($record);
+                                $newExam = $exam->replicate();
+                                $newExam->title = "Copie de {$exam->title}";
+                                $newExam->save();
+                            }
+                        }),
                 ]),
             ])
             ->defaultSort('created_at', 'desc');
@@ -268,7 +358,6 @@ class ExamResource extends Resource
     {
         return [
             RelationManagers\QuestionsRelationManager::class,
-            RelationManagers\AttemptsRelationManager::class,
         ];
     }
 

@@ -28,15 +28,14 @@ class QuestionsRelationManager extends RelationManager
             ->schema([
                 Forms\Components\Section::make('Question')
                     ->schema([
-                        Forms\Components\Textarea::make('question_text')
+                        Forms\Components\TextInput::make('question_text')
                             ->label('Texte de la question')
                             ->required()
-                            ->rows(3)
                             ->columnSpanFull(),
 
                         Forms\Components\Select::make('question_type')
                             ->label('Type de question')
-                            ->options(QuestionTypeEnum::class)
+                            ->options(collect(QuestionTypeEnum::cases())->mapWithKeys(fn($type) => [$type->value => $type->getLabel()]))
                             ->required()
                             ->native(false)
                             ->live(),
@@ -50,16 +49,17 @@ class QuestionsRelationManager extends RelationManager
                                     ->default(1)
                                     ->required(),
 
-                                Forms\Components\TextInput::make('order_position')
-                                    ->label('Position')
-                                    ->numeric()
-                                    ->default(1)
-                                    ->required(),
+                                Forms\Components\Toggle::make('is_required')
+                                    ->label('Question obligatoire')
+                                    ->inline(false)
+                                    ->default(true),
                             ]),
 
-                        Forms\Components\Toggle::make('is_required')
-                            ->label('Question obligatoire')
-                            ->default(true),
+                        Forms\Components\TextInput::make('order_position')
+                            ->label('Position')
+                            ->numeric()
+                            ->default(1)
+                            ->required(),
 
                         Forms\Components\Textarea::make('explanation')
                             ->label('Explication (optionnelle)')
@@ -74,38 +74,54 @@ class QuestionsRelationManager extends RelationManager
                             ->label('Options')
                             ->relationship()
                             ->schema([
-                                Forms\Components\Grid::make([
-                                    'default' => 1,
-                                    'sm' => 2,
-                                ])
+                                Forms\Components\TextInput::make('option_text')
+                                    ->label('Texte de l\'option')
+                                    ->required(),
+
+                                Forms\Components\Grid::make(2)
                                     ->schema([
-                                        Forms\Components\Textarea::make('option_text')
-                                            ->label('Texte de l\'option')
-                                            ->required()
-                                            ->rows(2),
+                                        Forms\Components\TextInput::make('order_position')
+                                            ->label('Position')
+                                            ->numeric()
+                                            ->default(function (Forms\Get $get) {
+                                                $options = collect($get('../../options') ?? []);
+                                                return $options->count() > 0 ? $options->max('order_position') + 1 : 1;
+                                            })
+                                            ->disabled()
+                                            ->dehydrated(),
+                                        Forms\Components\Toggle::make('is_correct')
+                                            ->label('Réponse correcte')
+                                            ->inline(false)
+                                            ->afterStateUpdated(function ($state, Forms\Set $set, Forms\Get $get) {
+                                                if ($get('../../question_type') === QuestionTypeEnum::SINGLE_CHOICE->value && $state) {
+                                                    $options = collect($get('../../options') ?? []);
 
-                                        Forms\Components\Grid::make(2)
-                                            ->schema([
-                                                Forms\Components\Toggle::make('is_correct')
-                                                    ->label('Réponse correcte')
-                                                    ->default(false),
-
-                                                Forms\Components\TextInput::make('order_position')
-                                                    ->label('Position')
-                                                    ->numeric()
-                                                    ->default(1),
-                                            ]),
+                                                    $options->each(function ($option, $index) use ($set, $get) {
+                                                        if ($index !== $get('../../_index')) {
+                                                            $set("../../options.{$index}.is_correct", false);
+                                                        }
+                                                    });
+                                                }
+                                            })
+                                            ->visible(fn(Forms\Get $get) => in_array($get('../../question_type'), [
+                                                QuestionTypeEnum::SINGLE_CHOICE->value,
+                                                QuestionTypeEnum::MULTIPLE_CHOICE->value
+                                            ]))
+                                            ->default(false),
                                     ]),
                             ])
-                            ->minItems(2)
-                            ->maxItems(6)
+                            ->minItems(4)
+                            ->maxItems(5)
                             ->defaultItems(4)
                             ->itemLabel(fn(array $state): ?string => $state['option_text'] ?? 'Nouvelle option')
                             ->collapsed()
                             ->cloneable()
                             ->reorderable()
                             ->columnSpanFull()
-                            ->visible(fn(Forms\Get $get) => in_array($get('question_type'), ['single_choice', 'multiple_choice'])),
+                            ->visible(fn(Forms\Get $get) => in_array($get('question_type'), [
+                                QuestionTypeEnum::SINGLE_CHOICE->value,
+                                QuestionTypeEnum::MULTIPLE_CHOICE->value,
+                            ])),
                     ])
                     ->visible(fn(Forms\Get $get) => in_array($get('question_type'), ['single_choice', 'multiple_choice'])),
             ]);
@@ -129,6 +145,7 @@ class QuestionsRelationManager extends RelationManager
 
                 Tables\Columns\TextColumn::make('question_type')
                     ->label('Type')
+                    ->formatStateUsing(fn($state) => $state->getLabel())
                     ->badge()
                     ->color(fn($state) => match ($state) {
                         QuestionTypeEnum::SINGLE_CHOICE => 'success',
@@ -152,16 +169,11 @@ class QuestionsRelationManager extends RelationManager
                     ->label('Obligatoire')
                     ->boolean()
                     ->alignCenter(),
-
-                Tables\Columns\TextColumn::make('answers_count')
-                    ->label('Réponses')
-                    ->counts('answers')
-                    ->alignCenter(),
             ])
             ->filters([
                 Tables\Filters\SelectFilter::make('question_type')
                     ->label('Type de question')
-                    ->options(QuestionTypeEnum::class)
+                    ->options(collect(QuestionTypeEnum::cases())->mapWithKeys(fn($type) => [$type->value => $type->getLabel()]))
                     ->multiple(),
 
                 Tables\Filters\TernaryFilter::make('is_required')
@@ -197,7 +209,7 @@ class QuestionsRelationManager extends RelationManager
                         ->icon('heroicon-o-eye')
                         ->color('info')
                         ->slideOver()
-                        //->modalContent(fn(Question $record) => view('filament.resources.question.preview', ['question' => $record]))
+                        ->modalContent(fn(Question $record) => view('filament.resources.question.preview', ['question' => $record]))
                         ->modalWidth('3xl'),
 
                     Tables\Actions\Action::make('duplicate')
@@ -205,7 +217,7 @@ class QuestionsRelationManager extends RelationManager
                         ->icon('heroicon-o-document-duplicate')
                         ->color('warning')
                         ->action(function (Question $record) {
-                            $newQuestion = $record->replicate();
+                            $newQuestion = $record->replicate(['options_count', 'answers_count']);
                             $newQuestion->question_text = $record->question_text . ' (Copie)';
                             $newQuestion->order_position = Question::query()
                                     ->where('exam_id', '=', $record->exam_id)
