@@ -5,6 +5,7 @@ namespace App\Filament\Resources\ExamResource\Pages;
 use App\Filament\Resources\ExamResource;
 use App\Filament\Resources\ModuleResource;
 use Filament\Actions;
+use Filament\Notifications\Notification;
 use Filament\Resources\Pages\EditRecord;
 
 class EditExam extends EditRecord
@@ -34,5 +35,18 @@ class EditExam extends EditRecord
             $data['section_id']
         );
         return $data;
+    }
+
+    protected function getRedirectUrl(): string
+    {
+        return $this->previousUrl ?? $this->getResource()::getUrl('index');
+    }
+
+    protected function getSavedNotification(): ?Notification
+    {
+        return Notification::make()
+            ->success()
+            ->title('Exam saved')
+            ->body('The exam has been successfully updated.');
     }
 }

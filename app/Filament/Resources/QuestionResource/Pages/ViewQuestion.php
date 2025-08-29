@@ -22,6 +22,7 @@ class ViewQuestion extends ViewRecord
                         Infolists\Components\TextEntry::make('exam.title')
                             ->label('Examen'),
                         Infolists\Components\TextEntry::make('question_type')
+                            ->formatStateUsing(fn($state) => $state->getLabel())
                             ->label('Type de question')
                             ->badge(),
                         Infolists\Components\TextEntry::make('points')
@@ -94,7 +95,10 @@ class ViewQuestion extends ViewRecord
     protected function getHeaderActions(): array
     {
         return [
-            Actions\EditAction::make(),
+            Actions\Action::make('back')
+                ->label('Retour')
+                ->url(QuestionResource::getUrl('index'))
+                ->icon('heroicon-o-arrow-left'),
         ];
     }
 }

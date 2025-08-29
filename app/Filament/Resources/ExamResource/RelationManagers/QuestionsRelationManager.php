@@ -58,8 +58,17 @@ class QuestionsRelationManager extends RelationManager
                         Forms\Components\TextInput::make('order_position')
                             ->label('Position')
                             ->numeric()
-                            ->default(1)
-                            ->required(),
+                            ->default(function (Forms\Get $get) {
+                                $examId = $get('exam_id');
+                                if (!$examId) return 1;
+
+                                return Question::query()
+                                        ->where('exam_id', $examId)
+                                        ->max('order_position') + 1;
+                            })
+                            ->required()
+                            ->disabled()
+                            ->dehydrated(),
 
                         Forms\Components\Textarea::make('explanation')
                             ->label('Explication (optionnelle)')

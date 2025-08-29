@@ -7,8 +7,6 @@ use App\Models\Question;
 use App\Models\QuestionOption;
 use Filament\Forms;
 use Filament\Forms\Form;
-use Filament\Infolists;
-use Filament\Infolists\Infolist;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
@@ -36,24 +34,24 @@ class QuestionOptionResource extends Resource
                         Forms\Components\Select::make('question_id')
                             ->label('Question')
                             ->relationship('question', 'question_text')
-                            ->getOptionLabelFromRecordUsing(fn(Question $record) => Str::limit(strip_tags($record->question_text), 60)
+                            ->getOptionLabelFromRecordUsing(
+                                fn(Question $record) => Str::limit(strip_tags($record->question_text), 60)
                             )
                             ->searchable()
                             ->preload()
                             ->required(),
 
-                        Forms\Components\Textarea::make('option_text')
+                        Forms\Components\TextInput::make('option_text')
                             ->label('Texte de l\'option')
-                            ->required()
-                            ->rows(3)
-                            ->columnSpanFull(),
+                            ->required(),
 
-                        Forms\Components\Textarea::make('explanation')
-                            ->label('Explication (optionnelle)')
-                            ->helperText('Explication affichée si cette option est sélectionnée')
-                            ->rows(2)
+                        Forms\Components\FileUpload::make('image')
+                            ->label('Image (optionnelle)')
+                            ->image()
+                            ->directory('question-options')
                             ->columnSpanFull(),
-                    ]),
+                    ])
+                    ->columns(2),
 
                 Forms\Components\Section::make('Configuration')
                     ->schema([
@@ -62,10 +60,16 @@ class QuestionOptionResource extends Resource
                             ->helperText('Marquer cette option comme la bonne réponse'),
 
                         Forms\Components\TextInput::make('order_position')
-                            ->label('Position dans la liste')
+                            ->label('Position')
                             ->numeric()
-                            ->minValue(1)
-                            ->default(1)
+                            ->default(function (Forms\Get $get) {
+                                $questionId = $get('question_id');
+                                if (!$questionId) return 1;
+
+                                return QuestionOption::query()
+                                        ->where('question_id', $questionId)
+                                        ->max('order_position') + 1;
+                            })
                             ->required(),
                     ])
                     ->columns(2),
@@ -76,6 +80,10 @@ class QuestionOptionResource extends Resource
     {
         return $table
             ->columns([
+                Tables\Columns\ImageColumn::make('image')
+                    ->label('Image')
+                    ->circular(),
+
                 Tables\Columns\TextColumn::make('question.exam.title')
                     ->label('Examen')
                     ->sortable()
@@ -102,22 +110,6 @@ class QuestionOptionResource extends Resource
                     ->falseIcon('heroicon-o-x-circle')
                     ->trueColor('success')
                     ->falseColor('danger'),
-
-                Tables\Columns\TextColumn::make('order_position')
-                    ->label('Position')
-                    ->numeric()
-                    ->sortable(),
-
-                Tables\Columns\TextColumn::make('user_answers_count')
-                    ->label('Sélections')
-                    ->counts('userAnswers')
-                    ->sortable(),
-
-                Tables\Columns\TextColumn::make('created_at')
-                    ->label('Créée le')
-                    ->dateTime()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
                 Tables\Filters\SelectFilter::make('question')
@@ -135,71 +127,25 @@ class QuestionOptionResource extends Resource
                     ->falseLabel('Incorrectes uniquement'),
             ])
             ->actions([
-                Tables\Actions\ViewAction::make(),
-                Tables\Actions\EditAction::make(),
-                Tables\Actions\DeleteAction::make(),
+                Tables\Actions\ActionGroup::make([
+                    Tables\Actions\EditAction::make()
+                        ->label('Modifier')
+                        ->icon('heroicon-o-pencil'),
+                    Tables\Actions\DeleteAction::make()
+                        ->label('Supprimer')
+                        ->icon('heroicon-o-trash')
+                        ->requiresConfirmation(),
+                ])
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
+                    Tables\Actions\DeleteBulkAction::make()
+                        ->label('Supprimer')
+                        ->icon('heroicon-o-trash')
+                        ->requiresConfirmation(),
                 ]),
             ])
             ->defaultSort('order_position', 'asc');
-    }
-
-    public static function infolist(Infolist $infolist): Infolist
-    {
-        return $infolist
-            ->schema([
-                Infolists\Components\Section::make('Informations générales')
-                    ->schema([
-                        Infolists\Components\TextEntry::make('question.exam.title')
-                            ->label('Examen'),
-                        Infolists\Components\TextEntry::make('question.question_text')
-                            ->label('Question')
-                            ->html()
-                            ->columnSpanFull(),
-                    ]),
-
-                Infolists\Components\Section::make('Option de réponse')
-                    ->schema([
-                        Infolists\Components\TextEntry::make('option_text')
-                            ->label('Texte de l\'option')
-                            ->columnSpanFull(),
-
-                        Infolists\Components\TextEntry::make('explanation')
-                            ->label('Explication')
-                            ->columnSpanFull()
-                            ->placeholder('Aucune explication fournie'),
-
-                        Infolists\Components\IconEntry::make('is_correct')
-                            ->label('Réponse correcte')
-                            ->boolean(),
-
-                        Infolists\Components\TextEntry::make('order_position')
-                            ->label('Position'),
-                    ])
-                    ->columns(2),
-
-                Infolists\Components\Section::make('Statistiques')
-                    ->schema([
-                        Infolists\Components\TextEntry::make('user_answers_count')
-                            ->label('Nombre de sélections')
-                            ->getStateUsing(fn(QuestionOption $record): int => $record->userAnswers()->count()),
-
-                        Infolists\Components\TextEntry::make('selection_rate')
-                            ->label('Taux de sélection (%)')
-                            ->getStateUsing(function (QuestionOption $record): string {
-                                $totalAnswers = $record->question->answers()->count();
-                                if ($totalAnswers === 0) {
-                                    return 'N/A';
-                                }
-                                $selections = $record->userAnswers()->count();
-                                return round(($selections / $totalAnswers) * 100, 1) . '%';
-                            }),
-                    ])
-                    ->columns(2),
-            ]);
     }
 
     public static function getPages(): array
@@ -207,7 +153,6 @@ class QuestionOptionResource extends Resource
         return [
             'index' => Pages\ListQuestionOptions::route('/'),
             'create' => Pages\CreateQuestionOption::route('/create'),
-            'view' => Pages\ViewQuestionOption::route('/{record}'),
             'edit' => Pages\EditQuestionOption::route('/{record}/edit'),
         ];
     }

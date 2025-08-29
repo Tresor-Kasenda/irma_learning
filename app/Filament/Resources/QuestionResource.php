@@ -10,6 +10,7 @@ use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
+use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 
@@ -23,103 +24,7 @@ class QuestionResource extends Resource
 
     protected static ?string $navigationGroup = 'Évaluations';
 
-    protected static ?int $navigationSort = 5;
-
-    public static function form(Form $form): Form
-    {
-        return $form
-            ->schema([
-                Forms\Components\Section::make('Question')
-                    ->schema([
-                        Forms\Components\Select::make('exam_id')
-                            ->label('Examen')
-                            ->relationship('exam', 'title')
-                            ->searchable()
-                            ->preload()
-                            ->required()
-                            ->createOptionForm([
-                                Forms\Components\TextInput::make('title')
-                                    ->label('Titre de l\'examen')
-                                    ->required(),
-                                Forms\Components\Textarea::make('description')
-                                    ->label('Description'),
-                            ]),
-
-                        Forms\Components\Select::make('question_type')
-                            ->label('Type de question')
-                            ->options(QuestionTypeEnum::class)
-                            ->required()
-                            ->native(false)
-                            ->live(),
-
-                        Forms\Components\RichEditor::make('question_text')
-                            ->label('Texte de la question')
-                            ->required()
-                            ->columnSpanFull(),
-
-                        Forms\Components\Textarea::make('explanation')
-                            ->label('Explication (optionnelle)')
-                            ->helperText('Explication affichée après la réponse')
-                            ->rows(3)
-                            ->columnSpanFull(),
-                    ])
-                    ->columns(2),
-
-                Forms\Components\Section::make('Configuration')
-                    ->schema([
-                        Forms\Components\TextInput::make('points')
-                            ->label('Points attribués')
-                            ->numeric()
-                            ->minValue(1)
-                            ->default(1)
-                            ->required(),
-
-                        Forms\Components\TextInput::make('order_position')
-                            ->label('Position dans l\'examen')
-                            ->numeric()
-                            ->minValue(1)
-                            ->default(1)
-                            ->required(),
-
-                        Forms\Components\Toggle::make('is_required')
-                            ->label('Question obligatoire')
-                            ->default(true),
-                    ])
-                    ->columns(3),
-
-                Forms\Components\Section::make('Options de réponse')
-                    ->schema([
-                        Forms\Components\Repeater::make('options')
-                            ->relationship()
-                            ->schema([
-                                Forms\Components\TextInput::make('option_text')
-                                    ->label('Texte de l\'option')
-                                    ->required()
-                                    ->columnSpan(2),
-
-                                Forms\Components\Toggle::make('is_correct')
-                                    ->label('Réponse correcte')
-                                    ->columnSpan(1),
-
-                                Forms\Components\TextInput::make('order_position')
-                                    ->label('Position')
-                                    ->numeric()
-                                    ->default(1)
-                                    ->columnSpan(1),
-                            ])
-                            ->columns(4)
-                            ->reorderable('order_position')
-                            ->collapsible()
-                            ->itemLabel(fn(array $state): ?string => $state['option_text'] ?? null)
-                            ->addActionLabel('Ajouter une option')
-                            ->minItems(2)
-                            ->maxItems(10)
-                            ->columnSpanFull(),
-                    ])
-                    ->visible(fn(Forms\Get $get): bool => in_array($get('question_type'), ['multiple_choice', 'single_choice'])
-                    ),
-            ]);
-    }
+    protected static ?int $navigationSort = 1;
 
     public static function table(Table $table): Table
     {
@@ -128,24 +33,33 @@ class QuestionResource extends Resource
                 Tables\Columns\TextColumn::make('exam.title')
                     ->label('Examen')
                     ->sortable()
+                    ->limit(20)
+                    ->tooltip(function (TextColumn $column): ?string {
+                        $state = $column->getState();
+                        if (strlen($state) <= $column->getCharacterLimit()) {
+                            return null;
+                        }
+                        return $state;
+                    })
                     ->searchable(),
 
                 Tables\Columns\TextColumn::make('question_text')
                     ->label('Question')
                     ->limit(60)
-                    ->tooltip(fn($record) => $record->question_text)
+                    ->tooltip(fn($record) => strip_tags($record->question_text))
                     ->html()
                     ->searchable(),
 
                 Tables\Columns\TextColumn::make('question_type')
                     ->label('Type')
                     ->badge()
-                    ->color(fn(string $state): string => match ($state) {
-                        'single_choice' => 'success',
-                        'multiple_choice' => 'info',
-                        'true_false' => 'warning',
-                        'short_answer' => 'danger',
-                        default => 'gray',
+                    ->formatStateUsing(fn($state) => $state->getLabel())
+                    ->color(fn(QuestionTypeEnum $state): string => match ($state) {
+                        QuestionTypeEnum::SINGLE_CHOICE => 'success',
+                        QuestionTypeEnum::MULTIPLE_CHOICE => 'info',
+                        QuestionTypeEnum::TRUE_FALSE => 'warning',
+                        QuestionTypeEnum::ESSAY => 'gray',
+                        default => 'primary',
                     }),
 
                 Tables\Columns\TextColumn::make('points')
@@ -157,21 +71,6 @@ class QuestionResource extends Resource
                     ->label('Position')
                     ->numeric()
                     ->sortable(),
-
-                Tables\Columns\TextColumn::make('options_count')
-                    ->label('Options')
-                    ->counts('options')
-                    ->sortable(),
-
-                Tables\Columns\IconColumn::make('is_required')
-                    ->label('Obligatoire')
-                    ->boolean(),
-
-                Tables\Columns\TextColumn::make('created_at')
-                    ->label('Créée le')
-                    ->dateTime()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
                 Tables\Filters\SelectFilter::make('exam')
@@ -183,14 +82,20 @@ class QuestionResource extends Resource
                 Tables\Filters\SelectFilter::make('question_type')
                     ->label('Type de question')
                     ->options(QuestionTypeEnum::class),
-
-                Tables\Filters\TernaryFilter::make('is_required')
-                    ->label('Question obligatoire'),
             ])
             ->actions([
-                Tables\Actions\ViewAction::make(),
-                Tables\Actions\EditAction::make(),
-                Tables\Actions\DeleteAction::make(),
+                Tables\Actions\ActionGroup::make([
+                    Tables\Actions\ViewAction::make()
+                        ->label('Voir')
+                        ->icon('heroicon-o-eye'),
+                    Tables\Actions\EditAction::make()
+                        ->label('Modifier')
+                        ->icon('heroicon-o-pencil'),
+                    Tables\Actions\DeleteAction::make()
+                        ->label('Supprimer')
+                        ->icon('heroicon-o-trash')
+                        ->requiresConfirmation(),
+                ])
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
@@ -222,5 +127,129 @@ class QuestionResource extends Resource
         return parent::getEloquentQuery()
             ->withoutGlobalScopes()
             ->with(['exam', 'options']);
+    }
+
+    public static function form(Form $form): Form
+    {
+        return $form
+            ->schema([
+                Forms\Components\Section::make('Question')
+                    ->schema([
+                        Forms\Components\Select::make('exam_id')
+                            ->label('Examen')
+                            ->relationship('exam', 'title')
+                            ->live()
+                            ->afterStateUpdated(function (Forms\Set $set, $state) {
+                                if (!$state) {
+                                    $set('order_position', 1);
+                                    return;
+                                }
+
+                                $nextPosition = Question::query()
+                                    ->where('exam_id', $state)
+                                    ->max('order_position');
+
+                                $set('order_position', ($nextPosition ?? 0) + 1);
+                            })
+                            ->required(),
+                        Forms\Components\TextInput::make('question_text')
+                            ->label('Texte de la question')
+                            ->required()
+                            ->columnSpanFull(),
+
+                        Forms\Components\Select::make('question_type')
+                            ->label('Type de question')
+                            ->options(collect(QuestionTypeEnum::cases())->mapWithKeys(fn($type) => [$type->value => $type->getLabel()]))
+                            ->required()
+                            ->native(false)
+                            ->live(),
+
+                        Forms\Components\Grid::make(2)
+                            ->schema([
+                                Forms\Components\TextInput::make('points')
+                                    ->label('Points')
+                                    ->numeric()
+                                    ->minValue(1)
+                                    ->default(1)
+                                    ->required(),
+
+                                Forms\Components\Toggle::make('is_required')
+                                    ->label('Question obligatoire')
+                                    ->inline(false)
+                                    ->default(true),
+                            ]),
+
+                        Forms\Components\TextInput::make('order_position')
+                            ->label('Position')
+                            ->numeric()
+                            ->default(1)
+                            ->disabled()
+                            ->dehydrated(true)
+                            ->required(),
+
+                        Forms\Components\Textarea::make('explanation')
+                            ->label('Explication (optionnelle)')
+                            ->helperText('Explication affichée après la réponse')
+                            ->rows(2)
+                            ->columnSpanFull(),
+                    ]),
+
+                Forms\Components\Section::make('Options de réponse')
+                    ->schema([
+                        Forms\Components\Repeater::make('options')
+                            ->label('Options')
+                            ->relationship()
+                            ->schema([
+                                Forms\Components\TextInput::make('option_text')
+                                    ->label('Texte de l\'option')
+                                    ->required(),
+
+                                Forms\Components\Grid::make(2)
+                                    ->schema([
+                                        Forms\Components\TextInput::make('order_position')
+                                            ->label('Position')
+                                            ->numeric()
+                                            ->default(function (Forms\Get $get) {
+                                                $options = collect($get('../../options') ?? []);
+                                                return $options->count() > 0 ? $options->max('order_position') + 1 : 1;
+                                            })
+                                            ->disabled()
+                                            ->dehydrated(),
+                                        Forms\Components\Toggle::make('is_correct')
+                                            ->label('Réponse correcte')
+                                            ->inline(false)
+                                            ->afterStateUpdated(function ($state, Forms\Set $set, Forms\Get $get) {
+                                                if ($get('../../question_type') === QuestionTypeEnum::SINGLE_CHOICE->value && $state) {
+                                                    $options = collect($get('../../options') ?? []);
+
+                                                    $options->each(function ($option, $index) use ($set, $get) {
+                                                        if ($index !== $get('../../_index')) {
+                                                            $set("../../options.{$index}.is_correct", false);
+                                                        }
+                                                    });
+                                                }
+                                            })
+                                            ->visible(fn(Forms\Get $get) => in_array($get('../../question_type'), [
+                                                QuestionTypeEnum::SINGLE_CHOICE->value,
+                                                QuestionTypeEnum::MULTIPLE_CHOICE->value
+                                            ]))
+                                            ->default(false),
+                                    ]),
+                            ])
+                            ->minItems(4)
+                            ->maxItems(5)
+                            ->defaultItems(4)
+                            ->itemLabel(fn(array $state): ?string => $state['option_text'] ?? 'Nouvelle option')
+                            ->collapsed()
+                            ->cloneable()
+                            ->reorderable()
+                            ->columnSpanFull()
+                            ->visible(fn(Forms\Get $get) => in_array($get('question_type'), [
+                                QuestionTypeEnum::SINGLE_CHOICE->value,
+                                QuestionTypeEnum::MULTIPLE_CHOICE->value,
+                            ])),
+                    ])
+                    ->visible(fn(Forms\Get $get) => in_array($get('question_type'), ['single_choice', 'multiple_choice'])),
+            ]);
     }
 }

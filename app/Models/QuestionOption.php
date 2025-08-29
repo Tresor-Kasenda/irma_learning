@@ -13,6 +13,8 @@ class QuestionOption extends Model
     /** @use HasFactory<QuestionOptionFactory> */
     use HasFactory;
 
+    protected $guarded = [];
+
     public function question(): BelongsTo
     {
         return $this->belongsTo(Question::class, 'question_id');

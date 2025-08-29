@@ -13,7 +13,9 @@ class ListQuestions extends ListRecords
     protected function getHeaderActions(): array
     {
         return [
-            Actions\CreateAction::make(),
+            Actions\CreateAction::make()
+                ->label('Créer une question')
+                ->icon('heroicon-o-plus'),
         ];
     }
 }

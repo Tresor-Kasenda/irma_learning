@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\QuestionResource\RelationManagers;
 
+use App\Enums\QuestionTypeEnum;
 use App\Models\QuestionOption;
 use Filament\Forms;
 use Filament\Forms\Form;
@@ -93,40 +94,61 @@ class OptionsRelationManager extends RelationManager
                     ->toggle(),
             ])
             ->headerActions([
-                Tables\Actions\CreateAction::make(),
+                Tables\Actions\CreateAction::make()
+                    ->label('Ajouter une option')
+                    ->icon('heroicon-o-plus')
+                    ->slideOver(),
             ])
             ->actions([
-                Tables\Actions\ViewAction::make(),
-                Tables\Actions\EditAction::make(),
-                Tables\Actions\DeleteAction::make(),
+                Tables\Actions\ActionGroup::make([
+                    Tables\Actions\ViewAction::make()
+                        ->slideOver()
+                        ->modalWidth('2xl')
+                        ->label('Voir')
+                        ->icon('heroicon-o-eye'),
+                    Tables\Actions\EditAction::make()
+                        ->label('Modifier')
+                        ->slideOver()
+                        ->modalWidth('2xl')
+                        ->icon('heroicon-o-pencil'),
+                    Tables\Actions\DeleteAction::make()
+                        ->icon('heroicon-o-trash')
+                        ->requiresConfirmation(),
 
-                Tables\Actions\Action::make('toggle_correct')
-                    ->label(fn(QuestionOption $record) => $record->is_correct ? 'Marquer incorrect' : 'Marquer correct')
-                    ->icon(fn(QuestionOption $record) => $record->is_correct ? 'heroicon-o-x-circle' : 'heroicon-o-check-circle')
-                    ->color(fn(QuestionOption $record) => $record->is_correct ? 'danger' : 'success')
-                    ->action(function (QuestionOption $record) {
-                        $record->update(['is_correct' => !$record->is_correct]);
-                    })
-                    ->successNotificationTitle('Statut mis à jour'),
+                    Tables\Actions\Action::make('toggle_correct')
+                        ->label(fn(QuestionOption $record): string => $record->is_correct ? 'Marquer incorrect' : 'Marquer correct')
+                        ->icon(fn(QuestionOption $record): string => $record->is_correct ? 'heroicon-o-x-circle' : 'heroicon-o-check-circle')
+                        ->color(fn(QuestionOption $record): string => $record->is_correct ? 'danger' : 'success')
+                        ->action(function (QuestionOption $record): void {
+                            $question = $record->question;
+                            if ($question->question_type === QuestionTypeEnum::SINGLE_CHOICE->value) {
+                                $question->options()->update(['is_correct' => false]);
+                                $record->update(['is_correct' => true]);
+                            } else {
+                                $record->update(['is_correct' => !$record->is_correct]);
+                            }
+                        })
+                        ->successNotificationTitle('Statut mis à jour'),
 
-                Tables\Actions\Action::make('view_answers')
-                    ->label('Voir réponses')
-                    ->icon('heroicon-o-document-text')
-                    ->color('info')
-                    ->visible(fn(QuestionOption $record) => $record->userAnswers()->exists())
-                    ->modalContent(function (QuestionOption $record) {
-                        $answers = $record->userAnswers()
-                            ->with('examAttempt.user')
-                            ->latest()
-                            ->limit(10)
-                            ->get();
+                    Tables\Actions\Action::make('view_answers')
+                        ->label('Voir réponses')
+                        ->icon('heroicon-o-document-text')
+                        ->color('info')
+                        ->visible(fn(QuestionOption $record) => $record->userAnswers()->exists())
+                        ->modalContent(function (QuestionOption $record) {
+                            $answers = $record->userAnswers()
+                                ->with('examAttempt.user')
+                                ->latest()
+                                ->limit(10)
+                                ->get();
 
-                        return view('filament.resources.question-option.answers-modal', [
-                            'option' => $record,
-                            'answers' => $answers
-                        ]);
-                    })
-                    ->modalWidth('4xl'),
+                            return view('filament.resources.question-option.answers-modal', [
+                                'option' => $record,
+                                'answers' => $answers
+                            ]);
+                        })
+                        ->modalWidth('4xl'),
+                ])
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
@@ -172,31 +194,36 @@ class OptionsRelationManager extends RelationManager
             ->schema([
                 Forms\Components\Section::make('Option de réponse')
                     ->schema([
-                        Forms\Components\Textarea::make('option_text')
+                        Forms\Components\TextInput::make('option_text')
                             ->label('Texte de l\'option')
-                            ->required()
-                            ->rows(3)
+                            ->required(),
+
+                        Forms\Components\FileUpload::make('image')
+                            ->label('Image (optionnelle)')
+                            ->image()
+                            ->directory('question-options')
                             ->columnSpanFull(),
 
-                        Forms\Components\Grid::make(2)
+                        Forms\Components\Section::make('Configuration')
                             ->schema([
                                 Forms\Components\Toggle::make('is_correct')
-                                    ->label('Réponse correcte')
-                                    ->default(false)
-                                    ->helperText('Cochez si cette option est une bonne réponse'),
+                                    ->inline(false)
+                                    ->label('Réponse correcte'),
 
                                 Forms\Components\TextInput::make('order_position')
                                     ->label('Position')
                                     ->numeric()
-                                    ->default(1)
-                                    ->required(),
-                            ]),
+                                    ->default(function (Forms\Get $get) {
+                                        $questionId = $get('question_id');
+                                        if (!$questionId) return 1;
 
-                        Forms\Components\Textarea::make('explanation')
-                            ->label('Explication (optionnelle)')
-                            ->helperText('Explication affichée lorsque cette option est sélectionnée')
-                            ->rows(2)
-                            ->columnSpanFull(),
+                                        return QuestionOption::query()
+                                                ->where('question_id', $questionId)
+                                                ->max('order_position') + 1;
+                                    })
+                                    ->required(),
+                            ])
+                            ->columns(2),
                     ]),
             ]);
     }
