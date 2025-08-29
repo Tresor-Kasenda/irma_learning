@@ -2,7 +2,8 @@
 
 namespace App\Filament\Widgets;
 
-use App\Models\Payment;
+use App\Enums\EnrollmentPaymentEnum;
+use App\Models\Enrollment;
 use Carbon\Carbon;
 use Filament\Widgets\ChartWidget;
 use Illuminate\Support\Facades\DB;
@@ -14,7 +15,6 @@ class PaymentAnalyticsWidget extends ChartWidget
 
     protected function getData(): array
     {
-        // Monthly revenue for the last 6 months
         $monthlyRevenue = [];
         $monthlyLabels = [];
 
@@ -22,22 +22,22 @@ class PaymentAnalyticsWidget extends ChartWidget
             $month = Carbon::now()->subMonths($i);
             $monthlyLabels[] = $month->format('M Y');
 
-            $revenue = Payment::where('status', 'completed')
+            $revenue = Enrollment::query()
+                ->where('payment_status', '=', EnrollmentPaymentEnum::PAID)
                 ->whereYear('created_at', $month->year)
                 ->whereMonth('created_at', $month->month)
-                ->sum('amount');
+                ->sum('amount_paid');
 
             $monthlyRevenue[] = $revenue;
         }
 
-        // Revenue by formation
-        $formationRevenue = Payment::select(
+        $formationRevenue = Enrollment::select(
             'formations.title',
-            DB::raw('SUM(payments.amount) as total_revenue'),
-            DB::raw('COUNT(payments.id) as payment_count')
+            DB::raw('SUM(enrollments.amount_paid) as total_revenue'),
+            DB::raw('COUNT(enrollments.id) as payment_count')
         )
-            ->join('formations', 'payments.formation_id', '=', 'formations.id')
-            ->where('payments.status', 'completed')
+            ->join('formations', 'enrollments.formation_id', '=', 'formations.id')
+            ->where('enrollments.payment_status', '=', EnrollmentPaymentEnum::PAID)
             ->groupBy('formations.id', 'formations.title')
             ->orderByDesc('total_revenue')
             ->limit(5)
@@ -46,9 +46,9 @@ class PaymentAnalyticsWidget extends ChartWidget
         $formationLabels = $formationRevenue->pluck('title')->toArray();
         $formationAmounts = $formationRevenue->pluck('total_revenue')->toArray();
 
-        // Calculate total revenue and average transaction value
         $totalRevenue = array_sum($monthlyRevenue);
-        $avgTransactionValue = Payment::where('status', 'completed')->avg('amount') ?? 0;
+        $avgTransactionValue = Enrollment::query()
+            ->where('payment_status', '=', EnrollmentPaymentEnum::PAID)->avg('amount') ?? 0;
 
         return [
             'datasets' => [

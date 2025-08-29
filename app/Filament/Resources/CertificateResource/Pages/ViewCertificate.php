@@ -30,10 +30,11 @@ class ViewCertificate extends ViewRecord
                         TextEntry::make('status')
                             ->label('Statut')
                             ->badge()
-                            ->color(fn(string $state): string => match ($state) {
+                            ->color(fn($state): string => match ($state) {
                                 'active' => 'success',
                                 'revoked' => 'danger',
                                 'suspended' => 'warning',
+                                default => 'gray',
                             }),
                         TextEntry::make('is_valid')
                             ->label('Valide')
@@ -85,7 +86,10 @@ class ViewCertificate extends ViewRecord
     protected function getHeaderActions(): array
     {
         return [
-            Actions\EditAction::make(),
+            Actions\Action::make('back')
+                ->label('Retour')
+                ->url(CertificateResource::getUrl('index'))
+                ->icon('heroicon-o-arrow-left'),
         ];
     }
 }

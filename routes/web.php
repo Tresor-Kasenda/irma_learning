@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Http\Controllers\AccountController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\EnrollmentController;
 use App\Livewire\ConvertPdf;
 use App\Livewire\Pages\Admins\DashboardAdmin;
 use App\Livewire\Pages\Courses\Certifications;
@@ -39,6 +40,14 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/inactive-account', [AccountController::class, 'inactive'])
         ->middleware('check.status:inactive');
+});
+
+
+Route::group(['prefix' => 'enrollments'], function () {
+    Route::get('/{enrollment}/invoice', EnrollmentController::class)
+        ->name('enrollments.invoice');
+    Route::post('/{enrollment}/refund', [EnrollmentController::class, 'refund'])
+        ->name('enrollments.refund');
 });
 
 require __DIR__ . '/auth.php';

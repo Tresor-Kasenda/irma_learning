@@ -135,19 +135,6 @@ class CertificateResource extends Resource
                     ->label('Date d\'émission')
                     ->date()
                     ->sortable(),
-
-                Tables\Columns\IconColumn::make('is_valid')
-                    ->label('Valide')
-                    ->boolean()
-                    ->getStateUsing(fn(Certificate $record) => $record->isValid())
-                    ->trueColor('success')
-                    ->falseColor('danger'),
-
-                Tables\Columns\TextColumn::make('expiry_date')
-                    ->label('Expire le')
-                    ->date()
-                    ->sortable()
-                    ->toggleable(),
             ])
             ->filters([
                 Tables\Filters\SelectFilter::make('status')
@@ -170,30 +157,36 @@ class CertificateResource extends Resource
                     ->query(fn(Builder $query): Builder => $query->where('final_score', '>=', 80)),
             ])
             ->actions([
-                Tables\Actions\Action::make('download')
-                    ->label('Télécharger')
-                    ->icon('heroicon-o-arrow-down-tray')
-                    ->color('primary')
-                    ->url(fn(Certificate $record) => $record->download_url)
-                    ->openUrlInNewTab(),
+                Tables\Actions\ActionGroup::make([
+                    Tables\Actions\Action::make('download')
+                        ->label('Télécharger')
+                        ->icon('heroicon-o-arrow-down-tray')
+                        ->color('primary')
+                        ->url(fn(Certificate $record) => $record->download_url)
+                        ->openUrlInNewTab(),
 
-                Tables\Actions\Action::make('verify')
-                    ->label('Vérifier')
-                    ->icon('heroicon-o-shield-check')
-                    ->color('success')
-                    ->url(fn(Certificate $record) => $record->verification_url)
-                    ->openUrlInNewTab(),
+                    Tables\Actions\Action::make('verify')
+                        ->label('Vérifier')
+                        ->icon('heroicon-o-shield-check')
+                        ->color('success')
+                        ->url(fn(Certificate $record) => $record->verification_url)
+                        ->openUrlInNewTab(),
 
-                Tables\Actions\Action::make('revoke')
-                    ->label('Révoquer')
-                    ->icon('heroicon-o-x-circle')
-                    ->color('danger')
-                    ->requiresConfirmation()
-                    ->action(fn(Certificate $record) => $record->update(['status' => CertificateStatusEnum::REVOKED]))
-                    ->visible(fn(Certificate $record) => $record->status === CertificateStatusEnum::ACTIVE),
+                    Tables\Actions\Action::make('revoke')
+                        ->label('Révoquer')
+                        ->icon('heroicon-o-x-circle')
+                        ->color('danger')
+                        ->requiresConfirmation()
+                        ->action(fn(Certificate $record) => $record->update(['status' => CertificateStatusEnum::REVOKED]))
+                        ->visible(fn(Certificate $record) => $record->status === CertificateStatusEnum::ACTIVE),
 
-                Tables\Actions\ViewAction::make(),
-                Tables\Actions\EditAction::make(),
+                    Tables\Actions\ViewAction::make()
+                        ->label('Voir')
+                        ->icon('heroicon-o-eye'),
+                    Tables\Actions\EditAction::make()
+                        ->label('Modifier')
+                        ->icon('heroicon-o-pencil'),
+                ])
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([

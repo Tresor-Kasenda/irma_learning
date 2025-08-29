@@ -19,6 +19,17 @@ return new class extends Migration {
             $table->enum('status', ['active', 'completed', 'suspended', 'cancelled'])->default('active');
             $table->enum('payment_status', ['pending', 'paid', 'failed', 'refunded'])->default('pending');
             $table->decimal('amount_paid', 8, 2)->default(0);
+
+            $table->string('payment_transaction_id')->nullable()->after('amount_paid');
+            $table->string('payment_method')->nullable()->after('payment_transaction_id');
+            $table->string('payment_gateway')->nullable()->after('payment_method');
+            $table->timestamp('payment_processed_at')->nullable()->after('payment_gateway');
+            $table->json('payment_gateway_response')->nullable()->after('payment_processed_at');
+            $table->text('payment_notes')->nullable()->after('payment_gateway_response');
+
+            $table->index('payment_transaction_id');
+            $table->index(['payment_status', 'payment_processed_at']);
+
             $table->timestamps();
 
             $table->unique(['user_id', 'formation_id']);

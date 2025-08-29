@@ -71,11 +71,13 @@ class Certificate extends Model
 
     public function getDownloadUrlAttribute(): string
     {
+        return 'new';
         //return route('certificates.download', ['certificate' => $this->certificate_number]);
     }
 
     public function getVerificationUrlAttribute(): string
     {
+        return 'new';
         //return route('certificates.verify', ['hash' => $this->verification_hash]);
     }
 

@@ -19,6 +19,15 @@ class Enrollment extends Model
 
     protected $guarded = [];
 
+    protected static function booted(): void
+    {
+        static::creating(function (self $enrollment): void {
+            if (empty($enrollment->payment_transaction_id)) {
+                $enrollment->payment_transaction_id = 'pi_' . bin2hex(random_bytes(8));
+            }
+        });
+    }
+
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class, 'user_id');
@@ -49,29 +58,29 @@ class Enrollment extends Model
         return LogOptions::defaults()->logFillable();
     }
 
-    public function updateProgress(): void
+    public function markAsPaid(array $paymentData = []): void
     {
-        $totalChapters = $this->formation->getTotalChaptersCount();
-        $completedChapters = UserProgress::where('user_id', $this->user_id)
-            ->where('status', EnrollmentStatusEnum::Completed->value)
-            ->whereHasMorph('trackable', [Chapter::class], function ($query) {
-                $query->whereHas('section.module', function ($q) {
-                    $q->where('formation_id', $this->formation_id);
-                });
-            })
-            ->count();
-
-        $this->progress_percentage = $totalChapters > 0 ? ($completedChapters / $totalChapters) * 100 : 0;
-        $this->last_accessed_at = now();
-
-        if ($this->progress_percentage >= 100) {
-            $this->status = EnrollmentStatusEnum::Completed->value;
-            $this->completion_date = now();
-        }
-
-        $this->save();
+        $this->update([
+            'payment_status' => EnrollmentPaymentEnum::PAID,
+            'payment_processed_at' => now(),
+            'status' => EnrollmentStatusEnum::Active,
+            'payment_transaction_id' => $paymentData['transaction_id'] ?? null,
+            'payment_method' => $paymentData['method'] ?? null,
+            'payment_gateway' => $paymentData['gateway'] ?? null,
+            'payment_gateway_response' => $paymentData['gateway_response'] ?? null,
+        ]);
     }
 
+
+    public function refund(string $reason = ''): void
+    {
+        $this->update([
+            'payment_status' => EnrollmentPaymentEnum::REFUNDED,
+            'status' => EnrollmentStatusEnum::Suspended,
+            'payment_notes' => ($this->payment_notes ? $this->payment_notes . "\n\n" : '') .
+                'REMBOURSEMENT: ' . $reason . ' (' . now()->format('d/m/Y H:i') . ')',
+        ]);
+    }
 
     protected function casts(): array
     {
@@ -82,7 +91,9 @@ class Enrollment extends Model
             'amount_paid' => 'decimal:2',
             'progress_percentage' => 'decimal:2',
             'status' => EnrollmentStatusEnum::class,
-            'payment_status' => EnrollmentPaymentEnum::class
+            'payment_status' => EnrollmentPaymentEnum::class,
+            'payment_gateway_response' => 'array',
+            'payment_processed_at' => 'datetime',
         ];
     }
 }

@@ -5,7 +5,6 @@ namespace App\Filament\Widgets;
 use App\Models\Certificate;
 use App\Models\Enrollment;
 use App\Models\Formation;
-use App\Models\Payment;
 use App\Models\User;
 use Filament\Widgets\StatsOverviewWidget as BaseWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
@@ -55,23 +54,6 @@ class StatsOverview extends BaseWidget
                     ->pluck('count')
                     ->toArray())
                 ->color('warning'),
-
-            Stat::make('Total Revenue', function () {
-                $totalAmount = Payment::where('status', 'completed')->sum('amount');
-                return '€' . number_format($totalAmount, 2);
-            })
-                ->description('From successful payments')
-                ->descriptionIcon('heroicon-m-currency-euro')
-                ->chart(Payment::query()
-                    ->where('status', 'completed')
-                    ->selectRaw('SUM(amount) as total')
-                    ->selectRaw('DATE(created_at) as date')
-                    ->groupBy('date')
-                    ->orderBy('date')
-                    ->limit(7)
-                    ->pluck('total')
-                    ->toArray())
-                ->color('success'),
 
             Stat::make('Certificates Issued', Certificate::count())
                 ->description('Completed courses')
