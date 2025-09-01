@@ -64,14 +64,15 @@ class DetailFormation extends Component
             return;
         }
 
-        $payment = auth()->user()
-            ->payments()
-            ->where('formation_id', $this->formation->id)
-            ->exists();
+        // $payment = auth()->user()
+        //     ->payments()
+        //     ->where('formation_id', $this->formation->id)
+        //     ->exists();
 
-        if (!$payment) {
-            $this->redirect(route('student.payment.create', $this->formation), navigate: true);
-        }
+        // if (!$payment) {
+        //     $this->redirect(route('student.payment.create', $this->formation), navigate: true);
+        // }
+        $this->redirect(route('student.payment.create', $this->formation), navigate: true);
     }
 
     public function render(): View
