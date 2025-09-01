@@ -360,9 +360,6 @@
                                     {{ $formation->title }}
                                 </div>
                             </h2>
-                            <p class="my-4 text-fg-subtext line-clamp-1">
-                                {!! str($formation->description)->limit(80) !!}
-                            </p>
 
                             <!-- Tags -->
                             @if ($formation->tags)
@@ -382,7 +379,7 @@
                                 </div>
                             @endif
 
-                            <div class="pb-5 flex flex-col flex-1">
+                            <div class="pb-5 pt-3 flex flex-col flex-1 justify-end">
                                 <div class="flex items-center justify-between text-sm text-fg-subtext">
                                     <div class="flex items-center gap-1">
                                         <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32"
@@ -399,7 +396,7 @@
                                 </div>
 
                                 <!-- Additional information -->
-                                <div class="flex flex-wrap justify-between mt-3 text-xs text-fg-subtext">
+                                <div class="flex flex-wrap justify-between gap-2 mt-3 text-xs text-fg-subtext">
                                     <div class="flex items-center gap-1">
                                         <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32"
                                             fill="currentColor" class="size-4" viewBox="0 0 256 256">
