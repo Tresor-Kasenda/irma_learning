@@ -17,7 +17,6 @@ return new class extends Migration {
             $table->foreignId('selected_option_id')->nullable()->constrained('question_options');
             $table->text('answer_text')->nullable()->comment('For text/essay questions');
             $table->boolean('is_correct')->default(false);
-            $table->integer('points_earned')->default(0);
             $table->json('selected_options')->nullable()->after('selected_option_id');
             $table->integer('points_earned')->default(0)->after('is_correct');
             $table->timestamps();
