@@ -3,26 +3,20 @@ import { initScrollToTop } from "./scroll-to-top";
 
 import { Dropdown } from "@flexilla/dropdown";
 
-import { $, $$, toggleNavbar } from "@flexilla/utilities";
-import { Collapse } from "@flexilla/collapse";
+import { $, toggleNavbar } from "@flexilla/utilities";
+
 
 import { notificationSystem } from "./utilities/notification";
 
 import confetti from "canvas-confetti";
-import { Accordion, Tabs } from "@flexilla/flexilla";
 import PluginTabs from "@flexilla/alpine-tabs";
+import PluginAccordion from "@flexilla/alpine-accordion";
 
 window.notificationSystem = notificationSystem;
 const initAllScript = () => {
     window.confetti = confetti;
     Dropdown.autoInit("[data-ui-dropdown]");
-    Accordion.autoInit("[data-ui-accordion]");
-    const collaspibles = $$("[data-ui-collapsible]");
-    if (collaspibles && collaspibles.length > 0) {
-        for (const collapsible of collaspibles) {
-            new Collapse(collapsible, { defaultState: "open" });
-        }
-    }
+    
     initScrollToTop();
     const navbarEl = document.querySelector("[data-main-navbar]");
     if (navbarEl instanceof HTMLElement) {
@@ -67,3 +61,4 @@ document.addEventListener("livewire:initialized", () => {
 });
 
 Alpine.plugin(PluginTabs)
+Alpine.plugin(PluginAccordion)

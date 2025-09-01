@@ -171,7 +171,7 @@
         <h2 class="font-medium relative text-3xl md:text-4xl text-fg-title max-w-xl mx-auto text-center capitalize">
             Nos services principaux
         </h2>
-        <div data-ui-accordion data-accordion-type="single"
+        <div x-data x-accordion data-accordion-type="single"
             class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 w-full relative">
             <div data-accordion-item data-accordion-value="item1"
                 class="h-max transition duration-500 fx-open:border-primary bg-bg/50 backdrop-blur-sm border rounded-lg border-border-light">
@@ -183,8 +183,7 @@
                         <span class="flex h-full w-0.5 absolute left-1/2 -translate-x-1/2 bg-fg-title/60"></span>
                     </div>
                 </button>
-                <div data-accordion-content
-                    class="ease-linear transition-all max-h-0 fx-close:max-h-0 overflow-hidden">
+                <div data-accordion-content class="ease-linear transition-all h-0 fx-open:h-auto overflow-hidden">
                     <div class="p-4 border-t border-border-light">
                         <p class="text-fg-subtext">
                             La formation continue repose sur des programmes courts permettant aux professionnels
@@ -204,8 +203,7 @@
                         <span class="flex h-full w-0.5 absolute left-1/2 -translate-x-1/2 bg-fg-title/60"></span>
                     </div>
                 </button>
-                <div data-accordion-content
-                    class="ease-linear transition-all max-h-0 fx-close:max-h-0 overflow-hidden">
+                <div data-accordion-content class="ease-linear transition-all h-0 fx-open:h-auto overflow-hidden">
                     <div class="p-4 border-t border-border-light grid lg:grid-cols-2 gap-12">
                         <ul class="list-disc list-outside pl-5 text-fg-subtext text-sm space-y-2">
                             <li>
@@ -278,12 +276,12 @@
             <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
                 @forelse($trainings as $training)
                     <div wire:key="{{ $training->id }}"
-                        class="bg-bg border border-border-light overflow-hidden shadow-sm shadow-gray-100/40 group hover:shadow-gray-200/50 rounded-lg">
+                        class="bg-bg border border-border-light overflow-hidden shadow-sm shadow-gray-100/40 group hover:shadow-gray-200/50 rounded-lg flex flex-col">
                         <div class="rounded bg-bg-light aspect-video">
                             <img src="{{ asset('storage/' . $training->images) }}" alt="{{ $training->title }}"
                                 width="2000" height="1333" class="w-full h-full rounded-md object-cover">
                         </div>
-                        <div class="p-6">
+                        <div class="p-6 flex flex-col justify-between flex-1">
                             <h2>
                                 <a href="{{ route('formation-details', $training) }}" wire:navigate
                                     class="text-lg sm:text-xl font-semibold text-fg-subtitle group-hover:text-primary-600 ease-linear duration-200">
@@ -293,13 +291,15 @@
                             <p class="my-4 text-fg-subtext line-clamp-1">
                                 {!! str($training->description)->limit(80) !!}
                             </p>
-                            <a href="{{ route('formation-details', $training) }}" wire:navigate
-                                class="btn btn-md rounded w-full justify-center mt-7 btn-solid bg-primary-600 text-white group">
-                                <span class="relative z-10">
-                                    Suivre la formation
-                                </span>
-                                <span data-btn-layer class=" before:bg-primary-800"></span>
-                            </a>
+                            <div class="flex flex-1">
+                                <a href="{{ route('formation-details', $training) }}" wire:navigate
+                                    class="btn btn-md rounded w-full justify-center mt-7 btn-solid bg-primary-600 text-white group">
+                                    <span class="relative z-10">
+                                        Suivre la formation
+                                    </span>
+                                    <span data-btn-layer class=" before:bg-primary-800"></span>
+                                </a>
+                            </div>
                         </div>
                     </div>
                 @empty
