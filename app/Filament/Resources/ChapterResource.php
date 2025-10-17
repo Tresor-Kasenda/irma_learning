@@ -39,6 +39,7 @@ class ChapterResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
+            ->modifyQueryUsing(fn(Builder $query) => $query->groupBy('section'))
             ->columns([
                 Tables\Columns\TextColumn::make('section.title')
                     ->label('Section')
