@@ -73,7 +73,7 @@ final class ChapterResource extends Resource
                 TextColumn::make('content_type')
                     ->label('Type')
                     ->badge()
-                    ->color(fn(ChapterTypeEnum $state): string => match ($state) {
+                    ->color(fn (ChapterTypeEnum $state): string => match ($state) {
                         ChapterTypeEnum::TEXT => 'success',
                         ChapterTypeEnum::VIDEO => 'warning',
                         ChapterTypeEnum::PDF => 'info',
@@ -85,7 +85,7 @@ final class ChapterResource extends Resource
                     ->numeric()
                     ->sortable()
                     ->badge()
-                    ->color(fn(int $state): string => match (true) {
+                    ->color(fn (int $state): string => match (true) {
                         $state <= 15 => 'success',
                         $state <= 30 => 'warning',
                         $state <= 60 => 'info',
@@ -143,8 +143,8 @@ final class ChapterResource extends Resource
                 Tables\Filters\TernaryFilter::make('from_pdf')
                     ->label('Source PDF')
                     ->queries(
-                        true: fn(Builder $query) => $query->whereNotNull('metadata->pdf_info'),
-                        false: fn(Builder $query) => $query->whereNull('metadata->pdf_info'),
+                        true: fn (Builder $query) => $query->whereNotNull('metadata->pdf_info'),
+                        false: fn (Builder $query) => $query->whereNull('metadata->pdf_info'),
                     ),
             ])
             ->actions([
@@ -160,7 +160,7 @@ final class ChapterResource extends Resource
                     Tables\Actions\Action::make('recalculate_duration')
                         ->label('Recalculer durée')
                         ->icon('heroicon-o-clock')
-                        ->visible(fn($record) => !empty($record->content))
+                        ->visible(fn ($record) => ! empty($record->content))
                         ->form([
                             Forms\Components\Select::make('reading_level')
                                 ->label('Niveau de lecture')
@@ -180,7 +180,7 @@ final class ChapterResource extends Resource
                     Tables\Actions\Action::make('export_pdf')
                         ->label('Exporter en PDF')
                         ->icon('heroicon-o-document-arrow-down')
-                        ->visible(fn($record) => !empty($record->media_url ?? []))
+                        ->visible(fn ($record) => ! empty($record->media_url ?? []))
                         ->action(function ($record) {
                             ChapterResource::exportToPdf($record);
                         })
@@ -202,7 +202,7 @@ final class ChapterResource extends Resource
                         ->icon('heroicon-o-power')
                         ->action(function ($records) {
                             foreach ($records as $record) {
-                                $record->update(['is_active' => !$record->is_active]);
+                                $record->update(['is_active' => ! $record->is_active]);
                             }
                         }),
 
@@ -211,7 +211,7 @@ final class ChapterResource extends Resource
                         ->icon('heroicon-o-currency-dollar')
                         ->action(function ($records) {
                             foreach ($records as $record) {
-                                $record->update(['is_free' => !$record->is_free]);
+                                $record->update(['is_free' => ! $record->is_free]);
                             }
                         }),
 
@@ -237,8 +237,8 @@ final class ChapterResource extends Resource
                             ->label('Section')
                             ->relationship('section', 'title')
                             ->searchable()
-                            ->getOptionLabelFromRecordUsing(fn($record) => mb_strlen($record->title) > 50
-                                ? mb_substr($record->title, 0, 50) . '...'
+                            ->getOptionLabelFromRecordUsing(fn ($record) => mb_strlen($record->title) > 50
+                                ? mb_substr($record->title, 0, 50).'...'
                                 : $record->title
                             )
                             ->extraAttributes(function ($get) {
@@ -272,7 +272,7 @@ final class ChapterResource extends Resource
                                 $set('media_url', null);
                             }),
 
-                        Forms\Components\FileUpload::make('media_url')
+                        FileUpload::make('media_url')
                             ->label('Fichier de contenu')
                             ->disk('public')
                             ->directory('chapters')
@@ -282,17 +282,17 @@ final class ChapterResource extends Resource
                             ->acceptedFileTypes(['application/pdf'])
                             ->maxSize(50 * 1024)
                             ->helperText('Uploadez un PDF pour extraction automatique du contenu.')
-                            ->visible(fn(Forms\Get $get) => $get('content_type') === 'pdf')
-                            ->required(fn(Forms\Get $get) => $get('content_type') === 'pdf')
+                            ->visible(fn (Get $get) => $get('content_type') === 'pdf')
+                            ->required(fn (Get $get) => $get('content_type') === 'pdf')
                             ->live()
-                            ->afterStateUpdated(function ($state, Forms\Set $set, Forms\Get $get) {
+                            ->afterStateUpdated(function ($state, Forms\Set $set, Get $get) {
                                 if ($state) {
                                     ChapterResource::extractPdfContent($state, $set, $get);
                                 }
                             })
                             ->afterStateHydrated(function ($component, $state) {
                                 if ($state && $component->getContainer()->getOperation() === 'edit') {
-                                    if (!Storage::disk('public')->exists($state)) {
+                                    if (! Storage::disk('public')->exists($state)) {
                                         Notification::make()
                                             ->title('Fichier manquant')
                                             ->body('Le fichier PDF original est introuvable.')
@@ -311,11 +311,13 @@ final class ChapterResource extends Resource
                             ->columnSpanFull()
                             ->acceptedFileTypes(['video/*'])
                             ->visible(
-                                fn(Get $get) => $get('content_type') === 'video'
+                                fn (Get $get) => $get('content_type') === 'video'
                             )
                             ->required(
-                                fn(Get $get) => $get('content_type') === 'video'
+                                fn (Get $get) => $get('content_type') === 'video'
                             ),
+
+                        Forms\Components\Hidden::make('cover_image'),
                     ])
                     ->columns(2),
 
@@ -335,11 +337,12 @@ final class ChapterResource extends Resource
                             ->numeric()
                             ->disabled()
                             ->dehydrated(false)
-                            ->default(function (Forms\Get $get) {
+                            ->default(function (Get $get) {
                                 $sectionId = $get('section_id');
                                 if ($sectionId) {
                                     return (Chapter::where('section_id', $sectionId)->max('order_position') ?? 0) + 1;
                                 }
+
                                 return 1;
                             })
                             ->helperText('Position automatique (prochaine disponible dans cette section)'),
@@ -366,13 +369,37 @@ final class ChapterResource extends Resource
             ]);
     }
 
+    public static function getRelations(): array
+    {
+        return [
+            //
+        ];
+    }
+
+    public static function getPages(): array
+    {
+        return [
+            'index' => Pages\ListChapters::route('/'),
+            'create' => Pages\CreateChapter::route('/create'),
+            'view' => Pages\ViewChapter::route('/{record}/show'),
+            'edit' => Pages\EditChapter::route('/{record}/edit'),
+        ];
+    }
+
+    public static function getEloquentQuery(): Builder
+    {
+        return parent::getEloquentQuery()
+            ->withoutGlobalScopes()
+            ->with(['section.formation']);
+    }
+
     /**
      * Extrait le contenu du PDF et met à jour les champs du formulaire
      */
-    protected static function extractPdfContent($pdfFile, Forms\Set $set, Forms\Get $get): void
+    protected static function extractPdfContent($pdfFile, Forms\Set $set, Get $get): void
     {
         try {
-            if (!$pdfFile) {
+            if (! $pdfFile) {
                 return;
             }
             $filePath = '';
@@ -384,11 +411,11 @@ final class ChapterResource extends Resource
                 $pdfFile = $filePath;
             }
 
-            if (!$filePath || !file_exists($filePath)) {
+            if (! $filePath || ! file_exists($filePath)) {
                 throw new Exception('Impossible de trouver le fichier PDF.');
             }
 
-            if (!$filePath || !file_exists($filePath)) {
+            if (! $filePath || ! file_exists($filePath)) {
                 Notification::make()
                     ->title('Erreur')
                     ->body('Impossible de trouver le fichier PDF.')
@@ -400,11 +427,7 @@ final class ChapterResource extends Resource
 
             $extractionService = app(DocumentConversionService::class);
             $result = $extractionService->convert($filePath, [
-                'extractImages' => true,
-                'extractTables' => true,
-                'extractFormulas' => true,
-                'extractCode' => true,
-                'generateTOC' => true,
+                'generateThumbnail' => true,
                 'ignorePageNumbers' => true,
             ]);
 
@@ -413,6 +436,7 @@ final class ChapterResource extends Resource
                 'description' => $result['description'],
                 'content' => $result['content'],
                 'estimated_duration' => $result['estimated_duration'],
+                'thumbnail_path' => $result['thumbnail_path'] ?? null,
             ];
 
             $durationService = app(ReadingDurationCalculatorService::class);
@@ -426,10 +450,14 @@ final class ChapterResource extends Resource
             );
 
             $set('title', $extractedData['title']);
-            $set('description', $extractedData['description']);
             $set('content', $extractedData['content']);
             $set('duration_minutes', $readingAnalysis['total_minutes']); // Durée calculée précisément
             $set('content_type', 'pdf');
+
+            // Définir l'image de couverture si disponible
+            if (! empty($extractedData['thumbnail_path'])) {
+                $set('cover_image', $extractedData['thumbnail_path']);
+            }
 
             Notification::make()
                 ->title('Extraction PDF réussie')
@@ -440,7 +468,7 @@ final class ChapterResource extends Resource
         } catch (Exception $e) {
             Notification::make()
                 ->title('Erreur d\'extraction PDF')
-                ->body('Erreur lors de l\'extraction: ' . $e->getMessage())
+                ->body('Erreur lors de l\'extraction: '.$e->getMessage())
                 ->danger()
                 ->send();
         }
@@ -466,7 +494,7 @@ final class ChapterResource extends Resource
             );
 
             $record->update([
-                'duration_minutes' => $readingAnalysis['total_minutes']
+                'duration_minutes' => $readingAnalysis['total_minutes'],
             ]);
 
             Notification::make()
@@ -478,7 +506,7 @@ final class ChapterResource extends Resource
         } catch (Exception $e) {
             Notification::make()
                 ->title('Erreur de calcul')
-                ->body('Erreur: ' . $e->getMessage())
+                ->body('Erreur: '.$e->getMessage())
                 ->danger()
                 ->send();
         }
@@ -493,10 +521,10 @@ final class ChapterResource extends Resource
             $html = self::convertMarkdownToHtml($record->content);
             $pdf = Pdf::loadHTML($html);
 
-            $filename = 'chapitre-' . $record->id . '-' . time() . '.pdf';
-            $path = storage_path('app/public/exports/' . $filename);
+            $filename = 'chapitre-'.$record->id.'-'.time().'.pdf';
+            $path = storage_path('app/public/exports/'.$filename);
 
-            if (!file_exists(dirname($path))) {
+            if (! file_exists(dirname($path))) {
                 mkdir(dirname($path), 0755, true);
             }
 
@@ -509,7 +537,7 @@ final class ChapterResource extends Resource
                 ->actions([
                     Action::make('download')
                         ->button()
-                        ->url(asset('storage/exports/' . $filename))
+                        ->url(asset('storage/exports/'.$filename))
                         ->openUrlInNewTab(),
                 ])
                 ->send();
@@ -517,7 +545,7 @@ final class ChapterResource extends Resource
         } catch (Exception $e) {
             Notification::make()
                 ->title('Erreur d\'export')
-                ->body('Erreur lors de l\'export PDF: ' . $e->getMessage())
+                ->body('Erreur lors de l\'export PDF: '.$e->getMessage())
                 ->danger()
                 ->send();
         }
@@ -539,7 +567,7 @@ final class ChapterResource extends Resource
         $html = preg_replace('/```(\w+)?\n(.*?)\n```/s', '<pre><code class="$1">$2</code></pre>', $html);
 
         $html = preg_replace('/\n\n/', '</p><p>', $html);
-        $html = '<p>' . $html . '</p>';
+        $html = '<p>'.$html.'</p>';
 
         $css = '
             <style>
@@ -550,7 +578,7 @@ final class ChapterResource extends Resource
                 img { max-width: 100%; height: auto; }
             </style>';
 
-        return $css . $html;
+        return $css.$html;
     }
 
     /**
@@ -562,16 +590,16 @@ final class ChapterResource extends Resource
             $combinedHtml = '';
 
             foreach ($records as $record) {
-                $combinedHtml .= '<h1>' . e($record->title) . '</h1>';
+                $combinedHtml .= '<h1>'.e($record->title).'</h1>';
                 $combinedHtml .= self::convertMarkdownToHtml($record->content);
                 $combinedHtml .= '<div style="page-break-after: always;"></div>';
             }
 
             $pdf = Pdf::loadHTML($combinedHtml);
-            $filename = 'chapitres-combines-' . time() . '.pdf';
-            $path = storage_path('app/public/exports/' . $filename);
+            $filename = 'chapitres-combines-'.time().'.pdf';
+            $path = storage_path('app/public/exports/'.$filename);
 
-            if (!file_exists(dirname($path))) {
+            if (! file_exists(dirname($path))) {
                 mkdir(dirname($path), 0755, true);
             }
 
@@ -584,7 +612,7 @@ final class ChapterResource extends Resource
                 ->actions([
                     Action::make('download')
                         ->button()
-                        ->url(asset('storage/exports/' . $filename))
+                        ->url(asset('storage/exports/'.$filename))
                         ->openUrlInNewTab(),
                 ])
                 ->send();
@@ -592,33 +620,9 @@ final class ChapterResource extends Resource
         } catch (Exception $e) {
             Notification::make()
                 ->title('Erreur d\'export combiné')
-                ->body('Erreur: ' . $e->getMessage())
+                ->body('Erreur: '.$e->getMessage())
                 ->danger()
                 ->send();
         }
-    }
-
-    public static function getRelations(): array
-    {
-        return [
-            //
-        ];
-    }
-
-    public static function getPages(): array
-    {
-        return [
-            'index' => Pages\ListChapters::route('/'),
-            'create' => Pages\CreateChapter::route('/create'),
-            'view' => Pages\ViewChapter::route('/{record}/show'),
-            'edit' => Pages\EditChapter::route('/{record}/edit'),
-        ];
-    }
-
-    public static function getEloquentQuery(): Builder
-    {
-        return parent::getEloquentQuery()
-            ->withoutGlobalScopes()
-            ->with(['section.formation']);
     }
 }

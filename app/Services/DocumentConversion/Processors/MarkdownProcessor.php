@@ -22,6 +22,11 @@ final class MarkdownProcessor implements ContentProcessorInterface
         return $content;
     }
 
+    public function getPriority(): int
+    {
+        return 50; // Exécuté après l'extraction des éléments
+    }
+
     /**
      * Convertit le contenu en Markdown
      */
@@ -66,76 +71,56 @@ final class MarkdownProcessor implements ContentProcessorInterface
     {
         $lines = explode("\n", $text);
         $formattedLines = [];
-        $previousLine = '';
+        $currentParagraph = [];
 
         foreach ($lines as $line) {
-            $line = mb_trim($line);
+            $trimmedLine = mb_trim($line);
 
-            if (empty($line)) {
+            // Ligne vide = nouveau paragraphe
+            if (empty($trimmedLine)) {
+                if (! empty($currentParagraph)) {
+                    $formattedLines[] = implode("\n", $currentParagraph);
+                    $currentParagraph = [];
+                }
                 $formattedLines[] = '';
 
                 continue;
             }
 
-            // Détecte les titres
-            if ($this->isTitle($line, $previousLine)) {
-                $level = $this->getTitleLevel($line);
-                $formattedLines[] = str_repeat('#', $level) . ' ' . $line;
-            } // Détecte les listes à puces
-            elseif ($this->isBulletPoint($line)) {
-                $formattedLines[] = '- ' . mb_ltrim($line, '•-*• ');
-            } // Détecte les listes numérotées
-            elseif ($this->isNumberedList($line)) {
-                $formattedLines[] = $line;
-            } // Texte normal
-            else {
-                $formattedLines[] = $line;
+            // Détecte les listes à puces
+            if ($this->isBulletPoint($trimmedLine)) {
+                // Vider le paragraphe en cours
+                if (! empty($currentParagraph)) {
+                    $formattedLines[] = implode("\n", $currentParagraph);
+                    $currentParagraph = [];
+                }
+                $formattedLines[] = '- '.mb_ltrim($trimmedLine, '•-*• ');
+
+                continue;
             }
 
-            $previousLine = $line;
+            // Détecte les listes numérotées
+            if ($this->isNumberedList($trimmedLine)) {
+                // Vider le paragraphe en cours
+                if (! empty($currentParagraph)) {
+                    $formattedLines[] = implode("\n", $currentParagraph);
+                    $currentParagraph = [];
+                }
+                $formattedLines[] = $trimmedLine;
+
+                continue;
+            }
+
+            // Ligne normale = ajouter au paragraphe
+            $currentParagraph[] = $trimmedLine;
         }
 
-        return implode("\n", $formattedLines) . "\n\n";
-    }
-
-    /**
-     * Vérifie si une ligne est un titre
-     */
-    private function isTitle(string $line, string $previousLine = ''): bool
-    {
-        // Numérotation de section (1.2.3 Titre)
-        if (preg_match('/^(\d+(\.\d+)*)\s+.+/', $line)) {
-            return true;
+        // Vider le dernier paragraphe
+        if (! empty($currentParagraph)) {
+            $formattedLines[] = implode("\n", $currentParagraph);
         }
 
-        // Titre en majuscules
-        if (mb_strlen($line) > 5 && $line === mb_strtoupper($line) &&
-            preg_match('/^[A-ZÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖØÙÚÛÜÝÞ\s\d\-\.]+$/u', $line)) {
-            return true;
-        }
-
-        return false;
-    }
-
-    /**
-     * Détermine le niveau du titre
-     */
-    private function getTitleLevel(string $line): int
-    {
-        // Titre numéroté
-        if (preg_match('/^(\d+(\.\d+)*)\s+/', $line, $matches)) {
-            $numbering = $matches[1];
-            $level = mb_substr_count($numbering, '.') + 1;
-
-            return min($level, 6);
-        }
-
-        // Titre court en majuscules = H1
-        if (mb_strlen($line) < 20 && $line === mb_strtoupper($line)) {
-            return 1;
-        }
-
-        return 2;
+        return implode("\n", $formattedLines)."\n\n";
     }
 
     /**
@@ -183,7 +168,7 @@ final class MarkdownProcessor implements ContentProcessorInterface
             $markdown .= "\n*{$caption}*";
         }
 
-        return $markdown . "\n\n";
+        return $markdown."\n\n";
     }
 
     /**
@@ -201,19 +186,19 @@ final class MarkdownProcessor implements ContentProcessorInterface
         $markdown = [];
 
         // En-têtes
-        $markdown[] = '| ' . implode(' | ', $headers) . ' |';
+        $markdown[] = '| '.implode(' | ', $headers).' |';
 
         // Séparateur
-        $markdown[] = '| ' . implode(' | ', array_fill(0, count($headers), '---')) . ' |';
+        $markdown[] = '| '.implode(' | ', array_fill(0, count($headers), '---')).' |';
 
         // Lignes de données
         foreach ($rows as $row) {
             // Assurer le même nombre de colonnes
             $row = array_pad($row, count($headers), '');
-            $markdown[] = '| ' . implode(' | ', $row) . ' |';
+            $markdown[] = '| '.implode(' | ', $row).' |';
         }
 
-        return implode("\n", $markdown) . "\n\n";
+        return implode("\n", $markdown)."\n\n";
     }
 
     /**
@@ -238,10 +223,5 @@ final class MarkdownProcessor implements ContentProcessorInterface
         $language = $element->getAttribute('language', '');
 
         return "```{$language}\n{$element->content}\n```\n\n";
-    }
-
-    public function getPriority(): int
-    {
-        return 50; // Exécuté après l'extraction des éléments
     }
 }
