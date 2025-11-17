@@ -1,7 +1,6 @@
 <?php
 
 use App\Livewire\Actions\Logout;
-use App\Models\ExamResult;
 use Livewire\Volt\Component;
 
 new class extends Component {
@@ -41,78 +40,92 @@ new class extends Component {
                         Dashboard
                     </a>
                 </li>
-                {{--                <li data-state="{{ request()->routeIs('resultats') ? 'active' : 'inactive' }}"--}}
-                {{--                    class="md:h-full flex items-center group fx-active:border-primary border-b-2 border-transparent fx-active:text-fg-title">--}}
-                {{--                    <a href="{{ route('resultats') }}"--}}
-                {{--                       wire:navigate--}}
-                {{--                       class="w-full sm:w-max flex items-center gap-2 px-3 py-1.5 rounded-md hover:bg-bg-light group-fx-active:bg-bg border border-transparent group-fx-active:border-border/40">--}}
-                {{--                        Resultats--}}
-                {{--                        @php--}}
-                {{--                            $showNewResult = ExamResult::query()->where('student_id', auth()->id())->exists();--}}
-                {{--                        @endphp--}}
-                {{--                        @if($showNewResult)--}}
-                {{--                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"--}}
-                {{--                                 stroke="currentColor" class="size-5 text-red-700">--}}
-                {{--                                <path stroke-linecap="round" stroke-linejoin="round"--}}
-                {{--                                      d="M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0"/>--}}
-                {{--                            </svg>--}}
-                {{--                        @endif--}}
-                {{--                    </a>--}}
-                {{--                </li>--}}
-
-                {{--                <li data-state="{{ request()->routeIs('student.history.lists') ? 'active' : 'inactive' }}"--}}
-                {{--                    class="md:h-full flex items-center group fx-active:border-primary border-b-2 border-transparent fx-active:text-fg-title">--}}
-                {{--                    <a href="{{ route('student.history.lists') }}"--}}
-                {{--                       wire:navigate--}}
-                {{--                       class="w-full sm:w-max flex px-3 py-1.5 rounded-md hover:bg-bg-light group-fx-active:bg-bg border border-transparent group-fx-active:border-border/40">--}}
-                {{--                        Historique d'apprentissage--}}
-                {{--                    </a>--}}
-                {{--                </li>--}}
             </ul>
         </div>
 
         <div class="flex items-center gap-3">
+            {{-- Indicateur visuel utilisateur connecté --}}
+            <div
+                class="hidden md:flex items-center gap-2 px-3 py-1.5 bg-primary-50 border border-primary-200 rounded-lg">
+                <div class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                <span class="text-sm font-medium text-primary-700">Connecté</span>
+            </div>
+
+            {{-- Nom de l'utilisateur (visible sur desktop) --}}
+            <div class="hidden lg:flex flex-col items-end">
+                <span class="text-sm font-semibold text-fg-subtitle">{{ auth()->user()?->name }}</span>
+                <span class="text-xs text-fg-subtext">{{ ucfirst(auth()->user()?->role->value ?? 'Étudiant') }}</span>
+            </div>
+
             <button aria-label="Afficher dropdown profile" data-dropdown-trigger data-dropdown-id="user-dropdown"
-                    class="border-4 border-border-high size-10 min-w-10 rounded-full overflow-hidden">
-                <img src="{{ asset('images/avatar.webp') }}" width="200" height="200" alt="User avatar"
-                     class="size-full object-cover">
+                    class="border-4 border-primary-200 size-10 min-w-10 rounded-full overflow-hidden hover:border-primary-400 transition-colors duration-200 relative group">
+                <img
+                    src="{{ auth()->user()?->avatar ? Storage::url(auth()->user()->avatar) : asset('images/avatar.webp') }}"
+                    width="200" height="200" alt="User avatar"
+                    class="size-full object-cover">
+                {{-- Badge de notification (optionnel) --}}
+                <span class="absolute -top-1 -right-1 w-3 h-3 bg-green-500 border-2 border-white rounded-full"></span>
             </button>
+
             <div role="menu" data-ui-dropdown id="user-dropdown" aria-labelledby="pm-dropdown"
-                 class="ui-popper z-10 w-60 bg-bg origin-top-right p-2 border border-border backdrop-blur-xl rounded-lg invisible fx-open:visible opacity-0 fx-open:opacity-100 translate-y-5 fx-open:translate-y-0 ease-linear duration-100 transition-[visibility_opacity_transform]">
-                <ul class="flex flex-col space-y-3" role="menu" aria-orientation="vertical"
+                 class="ui-popper z-10 w-72 bg-bg origin-top-right p-2 border border-border backdrop-blur-xl rounded-lg shadow-xl invisible fx-open:visible opacity-0 fx-open:opacity-100 translate-y-5 fx-open:translate-y-0 ease-linear duration-100 transition-[visibility_opacity_transform]">
+                <ul class="flex flex-col space-y-1" role="menu" aria-orientation="vertical"
                     aria-labelledby="dropdown-avatar">
-                    <li class="flex items-center gap-3 px-2 border-b pb-2 border-b-border">
+                    {{-- En-tête du dropdown avec infos utilisateur --}}
+                    <li class="flex items-center gap-3 px-3 py-3 border-b border-b-border bg-gradient-to-r from-primary-50 to-transparent rounded-t-lg">
                         <div class="w-max">
-                            <div class="w-10 rounded-full overflow-hidden">
-                                <img src="{{ asset('images/avatar.webp') }}" alt="User Avatar"
-                                     class="size-10 rounded-full object-cover"/>
+                            <div class="w-12 h-12 rounded-full overflow-hidden ring-2 ring-primary-200">
+                                <img
+                                    src="{{ auth()->user()?->avatar ? Storage::url(auth()->user()->avatar) : asset('images/avatar.webp') }}"
+                                    alt="User Avatar"
+                                    class="size-full rounded-full object-cover"/>
                             </div>
                         </div>
                         <div class="flex-1">
-                            <h6 class="text-fg-subtitle text-base font-semibold truncate">{{ auth()->user()?->name }}
-                            </h6>
+                            <h6 class="text-fg-subtitle text-base font-semibold truncate">{{ auth()->user()?->name }}</h6>
                             <small
                                 class="text-fg-subtext text-sm font-normal truncate flex">{{ auth()->user()?->email }}</small>
+                            <span
+                                class="inline-flex items-center gap-1 mt-1 px-2 py-0.5 bg-primary-100 text-primary-700 text-xs font-medium rounded-full">
+                                <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                                    <path d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"/>
+                                </svg>
+                                {{ ucfirst(auth()->user()?->role->value ?? 'Étudiant') }}
+                            </span>
                         </div>
                     </li>
-                    {{--                    <li>--}}
-                    {{--                        <a class="ui-dropdown-item gap-x-2" href="{{ route('profile') }}" wire:navigate>--}}
-                    {{--                            <svg id="Layer_1" data-name="Layer 1" xmlns="http://www.w3.org/2000/svg"--}}
-                    {{--                                 viewBox="0 0 24 24" stroke-width="1.5" width="24" height="24"--}}
-                    {{--                                 color="currentColor" class="size-5 *:stroke-current *:fill-none">--}}
-                    {{--                                <circle cx="12" cy="7.25" r="5.73"></circle>--}}
-                    {{--                                <path--}}
-                    {{--                                    d="M1.5,23.48l.37-2.05A10.3,10.3,0,0,1,12,13h0a10.3,10.3,0,0,1,10.13,8.45l.37,2.05">--}}
-                    {{--                                </path>--}}
-                    {{--                            </svg>--}}
-                    {{--                            <span>--}}
-                    {{--                                Profile--}}
-                    {{--                            </span>--}}
-                    {{--                        </a>--}}
-                    {{--                    </li>--}}
+
+                    {{-- Lien vers le profil --}}
+                    <li>
+                        <a class="ui-dropdown-item gap-x-2 hover:bg-primary-50" href="{{ route('profile') }}"
+                           wire:navigate>
+                            <svg class="size-5 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                      d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                            </svg>
+                            <span class="font-medium">Mon Profil</span>
+                        </a>
+                    </li>
+
+                    {{-- Lien vers Mes formations --}}
+                    <li>
+                        <a class="ui-dropdown-item gap-x-2 hover:bg-primary-50" href="{{ route('formations-lists') }}"
+                           wire:navigate>
+                            <svg class="size-5 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                      d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+                            </svg>
+                            <span class="font-medium">Mes Formations</span>
+                        </a>
+                    </li>
+
+                    {{-- Divider --}}
+                    <li class="my-1 border-t border-border"></li>
+
+                    {{-- Déconnexion --}}
                     <li>
                         <button wire:click="logout"
-                                class="ui-dropdown-item text-red-600 hover:bg-red-100/60 w-full focus:outline-red-600 focus:bg-red-50 gap-x-2">
+                                class="ui-dropdown-item text-red-600 hover:bg-red-50 w-full focus:outline-red-600 focus:bg-red-50 gap-x-2">
                             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"
                                  class="size-5">
                                 <path fill-rule="evenodd"
@@ -122,8 +135,8 @@ new class extends Component {
                                       d="M14 10a.75.75 0 0 0-.75-.75H3.704l1.048-.943a.75.75 0 1 0-1.004-1.114l-2.5 2.25a.75.75 0 0 0 0 1.114l2.5 2.25a.75.75 0 1 0 1.004-1.114l-1.048-.943h9.546A.75.75 0 0 0 14 10Z"
                                       clip-rule="evenodd"/>
                             </svg>
-                            <span>
-                                Se deconnerter
+                            <span class="font-medium">
+                                Se déconnecter
                             </span>
                         </button>
                     </li>

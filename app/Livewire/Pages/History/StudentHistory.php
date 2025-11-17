@@ -12,7 +12,7 @@ use Livewire\Attributes\Computed;
 use Livewire\Attributes\Url;
 use Livewire\Component;
 
-class StudentHistory extends Component
+final class StudentHistory extends Component
 {
     #[Url('q')]
     public ?string $search = null;
@@ -40,16 +40,16 @@ class StudentHistory extends Component
                             'title',
                             'description',
                             'content',
-                            'points'
-                        ], 'like', '%' . $this->search . '%');
+                            'points',
+                        ], 'like', '%'.$this->search.'%');
                     })
                         ->orWhereHas('examination', function ($subQuery) {
                             $subQuery->whereAny([
                                 'title',
                                 'description',
                                 'duration',
-                                'passing_score'
-                            ], 'like', '%' . $this->search . '%');
+                                'passing_score',
+                            ], 'like', '%'.$this->search.'%');
                         });
                 });
             }

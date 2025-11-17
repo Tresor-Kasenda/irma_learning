@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Livewire\Pages\Frontend\Payments;
 
 use App\Enums\EnrollmentPaymentEnum;
@@ -12,11 +14,13 @@ use Livewire\Attributes\Title;
 use Livewire\Component;
 
 #[Layout('welcome')]
-#[Title("Paiement & Confirmation")]
-class StudentPayment extends Component
+#[Title('Paiement & Confirmation')]
+final class StudentPayment extends Component
 {
     public Formation $formation;
+
     public string $code = '';
+
     public bool $isCodeSent = false;
 
     public function mount(Formation $formation): void
@@ -26,7 +30,7 @@ class StudentPayment extends Component
 
     public function confirmEnrollment(): void
     {
-        if (strlen($this->code) < 6) {
+        if (mb_strlen($this->code) < 6) {
             $this->dispatch(
                 'notify',
                 message: 'Le code doit contenir au moins 6 caractères.',
@@ -42,7 +46,7 @@ class StudentPayment extends Component
 
         if (
             $payment &&
-            !$user->enrollments()
+            ! $user->enrollments()
                 ->where('formation_id', $this->formation->id)
                 ->exists()
         ) {
@@ -51,7 +55,7 @@ class StudentPayment extends Component
                 'enrollment_date' => Carbon::now(),
                 'status' => EnrollmentStatusEnum::Active,
                 'payment_status' => EnrollmentPaymentEnum::PAID,
-                'progress_percentage' => 0
+                'progress_percentage' => 0,
             ]);
         }
 

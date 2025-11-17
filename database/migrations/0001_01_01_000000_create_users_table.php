@@ -22,10 +22,10 @@ return new class extends Migration {
             $table->timestamp('email_verified_at')->nullable();
             $table->string('phone')->nullable();
             $table->string('avatar')->nullable();
-            $table->enum('status', ['active', 'inactive', 'suspended'])->default('active');
+            $table->string('status')->default('active');
+            $table->boolean('must_change_password')->default(false);
             $table->string('role')->default(UserRoleEnum::STUDENT->value);
             $table->string('password');
-            $table->boolean('must_change_password')->default(false);
             $table->rememberToken();
             $table->timestamps();
         });

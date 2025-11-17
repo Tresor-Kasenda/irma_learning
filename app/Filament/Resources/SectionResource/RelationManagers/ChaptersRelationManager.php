@@ -68,8 +68,12 @@ class ChaptersRelationManager extends RelationManager
                                 Forms\Components\TextInput::make('order_position')
                                     ->label('Position')
                                     ->numeric()
-                                    ->default(1)
-                                    ->required(),
+                                    ->disabled()
+                                    ->dehydrated(false)
+                                    ->default(fn($livewire) => (Chapter::where('section_id', $livewire->getOwnerRecord()->id)
+                                            ->max('order_position') ?? 0) + 1
+                                    )
+                                    ->helperText('Position automatique (prochaine disponible)'),
 
                                 Forms\Components\TextInput::make('duration_minutes')
                                     ->label('Durée (minutes)')
@@ -241,9 +245,7 @@ class ChaptersRelationManager extends RelationManager
                         ->action(function (Chapter $record) {
                             $newChapter = $record->replicate();
                             $newChapter->title = $record->title . ' (Copie)';
-                            $newChapter->order_position = Chapter::query()
-                                    ->where('section_id', '=', $record->section_id)
-                                    ->max('order_position') + 1;
+                            // order_position sera calculé automatiquement par le modèle
                             $newChapter->save();
 
                             $this->mountedTableActionRecord = $newChapter->getKey();

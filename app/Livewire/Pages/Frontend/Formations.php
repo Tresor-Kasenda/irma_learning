@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Livewire\Pages\Frontend;
 
 use App\Models\Formation;
@@ -10,7 +12,7 @@ use Livewire\Component;
 
 #[Layout('welcome')]
 #[Title('Formations')]
-class Formations extends Component
+final class Formations extends Component
 {
     public function render(): View
     {
@@ -18,7 +20,7 @@ class Formations extends Component
             'course' => Formation::query()
                 ->active()
                 ->latest('created_at')
-                ->first()
+                ->first(),
         ]);
     }
 }

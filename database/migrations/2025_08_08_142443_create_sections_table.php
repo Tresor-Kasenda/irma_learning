@@ -12,15 +12,15 @@ return new class extends Migration {
     {
         Schema::create('sections', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('module_id')->constrained();
-            $table->string('title');
+            $table->foreignId('formation_id')->constrained();
+            $table->string('title')->unique();
             $table->text('description')->nullable();
             $table->integer('order_position');
-            $table->integer('estimated_duration')->nullable()->comment('Duration in minutes');
+            $table->integer('duration')
+                ->nullable()
+                ->comment('Duration in minutes');
             $table->boolean('is_active')->default(true);
             $table->timestamps();
-
-            $table->index(['module_id', 'order_position']);
         });
     }
 

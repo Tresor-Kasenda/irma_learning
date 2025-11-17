@@ -4,6 +4,7 @@ namespace App\Livewire;
 
 use App\Models\Formation;
 use App\Models\FormationAccessCode;
+use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 
@@ -13,18 +14,19 @@ class ValidateFormationAccess extends Component
     public string $accessCode = '';
     public string $error = '';
 
-    public function mount(Formation $formation)
+    public function mount(Formation $formation): void
     {
         $this->formation = $formation;
     }
 
-    public function validateCode()
+    public function validateCode(): void
     {
         $this->validate([
             'accessCode' => 'required|string|min:6'
         ]);
 
-        $code = FormationAccessCode::where('formation_id', $this->formation->id)
+        $code = FormationAccessCode::query()
+            ->whereBelongsTo($this->formation)
             ->where('code', $this->accessCode)
             ->where('is_used', false)
             ->first();
@@ -52,7 +54,7 @@ class ValidateFormationAccess extends Component
         $this->redirect(route('student.formation.show', $this->formation));
     }
 
-    public function render()
+    public function render(): View
     {
         return view('livewire.validate-formation-access');
     }

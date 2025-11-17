@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Livewire\Pages\Admins;
 
 use Illuminate\Contracts\View\View;
@@ -12,7 +14,7 @@ use Livewire\Component;
 
 #[Layout('layouts.app')]
 #[Title('Administration')]
-class DashboardAdmin extends Component
+final class DashboardAdmin extends Component
 {
     #[Url(as: 'tab')]
     public string $activeTab = 'overview';

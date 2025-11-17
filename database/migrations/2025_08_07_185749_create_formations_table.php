@@ -14,18 +14,15 @@ return new class extends Migration {
             $table->id();
             $table->string('title');
             $table->string('slug')->unique();
-            $table->text('short_description')->nullable();
-            $table->text('description');
+            $table->mediumText('short_description')->nullable();
+            $table->longText('description');
             $table->string('image')->nullable();
-            $table->decimal('price', 8, 2);
+            $table->decimal('price', 8, 2)->nullable();
             $table->integer('duration_hours');
-            $table->enum('difficulty_level', ['beginner', 'intermediate', 'advanced'])->default('beginner');
-            $table->integer('certification_threshold')->default(70)->comment('Percentage required for certification');
+            $table->string('difficulty_level')->default('beginner');
             $table->boolean('is_active')->default(true);
             $table->boolean('is_featured')->default(false);
             $table->json('tags')->nullable();
-            $table->string('language', 5)->default('fr');
-            $table->foreignId('created_by')->constrained('users');
             $table->timestamps();
         });
     }

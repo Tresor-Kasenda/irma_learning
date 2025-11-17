@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Models\Section;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -14,17 +15,16 @@ return new class extends Migration {
     {
         Schema::create('chapters', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('section_id')->constrained();
-            $table->string('title');
+            $table->foreignIdFor(Section::class)->constrained();
+            $table->string('title')->unique();
             $table->longText('content');
-            $table->enum('content_type', ['text', 'video', 'audio', 'pdf', 'interactive'])->default('text');
+            $table->string('content_type')->default('text');
             $table->string('media_url')->nullable();
             $table->integer('duration_minutes')->nullable();
-            $table->integer('order_position');
+            $table->integer('order_position')->default(0);
             $table->boolean('is_free')->default(false);
             $table->boolean('is_active')->default(true);
             $table->longText('description')->nullable()->comment('Description of the content');
-            $table->json('metadata')->nullable()->comment('Additional content metadata');
             $table->timestamps();
 
             $table->index(['section_id', 'order_position']);

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Livewire\Pages\Courses;
 
-use App\Models\Training;
+use App\Models\Formation;
 use Illuminate\Contracts\View\View;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
@@ -22,21 +22,24 @@ final class FormationsLists extends Component
 
     public function render(): View
     {
-        $formations = Training::query()
+        $formations = Formation::query()
+            ->where('is_active', true)
             ->when(
                 $this->search,
                 fn ($query) => $query
-                    ->whereAny([
-                        'title',
-                        'description',
-                    ], 'like', sprintf('%%%s%%', $this->search)))
+                    ->where(function ($q) {
+                        $q->where('title', 'like', sprintf('%%%s%%', $this->search))
+                            ->orWhere('description', 'like', sprintf('%%%s%%', $this->search));
+                    })
+            )
             ->latest('created_at')
-            ->take(5)
+            ->take(12)
             ->get();
 
         return view('livewire.pages.courses.formations-lists', [
             'formations' => $formations,
-            'trainings' => Training::query()
+            'trainings' => Formation::query()
+                ->where('is_active', true)
                 ->latest('created_at')
                 ->take(9)
                 ->get(),

@@ -68,6 +68,12 @@
         </div>
         <div class="lg:min-w-max flex justify-end items-center gap-x-2">
             @guest
+                <a href="{{ route('login') }}" wire:navigate
+                   class="hidden sm:flex btn btn-sm sm:btn-md btn-ghost text-fg-subtitle hover:bg-primary-50 group">
+                    <span class="relative z-10">
+                        Se connecter
+                    </span>
+                </a>
                 <a href="{{ route('register') }}" wire:navigate
                    class="btn btn-sm sm:btn-md btn-solid bg-primary-600 text-white group">
                     <span class="relative z-10">
@@ -78,9 +84,18 @@
             @endguest
             @auth
                 <div class="flex items-center gap-2">
+                    {{-- Indicateur visuel utilisateur connecté --}}
+                    <div class="hidden md:flex items-center gap-2 px-3 py-1.5 bg-green-50 border border-green-200 rounded-lg">
+                        <div class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                        <span class="text-sm font-medium text-green-700">{{ auth()->user()->name }}</span>
+                    </div>
+
                     <a href="{{ route('dashboard') }}" wire:navigate
                        class="btn btn-sm sm:btn-md btn-solid bg-primary-600 text-white group">
-                        <span class="relative z-10">
+                        <span class="relative z-10 flex items-center gap-2">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+                            </svg>
                             Mon Espace
                         </span>
                         <span data-btn-layer class="before:bg-primary-800"></span>

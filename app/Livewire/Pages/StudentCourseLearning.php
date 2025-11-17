@@ -53,6 +53,7 @@ final class StudentCourseLearning extends Component implements HasForms
 
             if ($matchingChapter) {
                 $this->setActiveChapter($matchingChapter->id);
+
                 return;
             }
         }
@@ -74,31 +75,33 @@ final class StudentCourseLearning extends Component implements HasForms
         $previousChapter = $this->getPreviousChapter($chapterId);
         $chapter = $this->masterClass->chapters->find($chapterId);
 
-        if (!$this->canAccessChapter($chapter)) {
+        if (! $this->canAccessChapter($chapter)) {
             $this->dispatch(
-                'notify', 
-                message: 'Vous devez avoir un code de référence pour accéder à ce chapitre.', 
+                'notify',
+                message: 'Vous devez avoir un code de référence pour accéder à ce chapitre.',
                 type: 'error'
             );
+
             return;
         }
 
-        if ($previousChapter && !$previousChapter->isCompleted()) {
+        if ($previousChapter && ! $previousChapter->isCompleted()) {
             $this->dispatch(
-                'notify', 
-                message: 'Vous devez d\'abord passer l\'examen du chapitre précédent.', 
+                'notify',
+                message: 'Vous devez d\'abord passer l\'examen du chapitre précédent.',
                 type: 'error'
             );
+
             return;
         }
 
         $this->activeChapter = $chapter->load(['examination', 'progress']);
         $this->dispatch('urlChanged', url: route('student.course.learning', [
             'masterClass' => $this->masterClass->id,
-            'chapter' => Str::slug($chapter->title)
+            'chapter' => Str::slug($chapter->title),
         ]));
 
-        if (!$this->masterClass->subscriptions()->whereBelongsTo(Auth::user())->exists()) {
+        if (! $this->masterClass->subscriptions()->whereBelongsTo(Auth::user())->exists()) {
             $this->masterClass->subscriptions()->create([
                 'user_id' => Auth::user()->id,
                 'status' => SubscriptionEnum::ACTIVE,
@@ -106,15 +109,15 @@ final class StudentCourseLearning extends Component implements HasForms
                 'started_at' => now(),
             ]);
             $this->dispatch(
-                'notify', 
-                message: 'Vous êtes maintenant inscrit à cette formation !', 
+                'notify',
+                message: 'Vous êtes maintenant inscrit à cette formation !',
                 type: 'success'
             );
         }
 
         $subscriptionId = Subscription::query()->whereBelongsTo(Auth::user())->firstOrFail('id');
 
-        if (!$chapter->hasProgress()) {
+        if (! $chapter->hasProgress()) {
             $chapter->progress()->create([
                 'subscription_id' => $subscriptionId->id,
                 'status' => 'in_progress',
@@ -124,14 +127,6 @@ final class StudentCourseLearning extends Component implements HasForms
         }
 
         session()->put("active_chapter_{$this->masterClass->id}", $chapterId);
-    }
-
-    private function getPreviousChapter($currentChapterId): ?Chapter
-    {
-        $chapters = $this->masterClass->chapters;
-        $currentIndex = $chapters->search(fn($chapter) => $chapter->id === $currentChapterId);
-
-        return $currentIndex > 0 ? $chapters[$currentIndex - 1] : null;
     }
 
     public function canAccessChapter(Chapter $chapter): bool
@@ -158,7 +153,7 @@ final class StudentCourseLearning extends Component implements HasForms
             return $chapter->isCompleted();
         })->count();
 
-        return (int)round(($completedChapters / $this->masterClass->chapters->count()) * 100);
+        return (int) round(($completedChapters / $this->masterClass->chapters->count()) * 100);
     }
 
     public function setPreviousChapter(): void
@@ -175,7 +170,7 @@ final class StudentCourseLearning extends Component implements HasForms
 
     public function setNextChapter(): void
     {
-        if (!$this->activeChapter->isCompleted()) {
+        if (! $this->activeChapter->isCompleted()) {
             $this->dispatch(
                 'notify',
                 message: 'Vous devez terminer le chapitre en cours avant de passer au suivant.',
@@ -208,7 +203,7 @@ final class StudentCourseLearning extends Component implements HasForms
             ->schema([
                 FileUpload::make('file_path')
                     ->label("Soumettre l'examen")
-                    ->placeholder("Choisissez un fichier")
+                    ->placeholder('Choisissez un fichier')
                     ->directory('examens')
                     ->downloadable()
                     ->previewable()
@@ -247,7 +242,6 @@ final class StudentCourseLearning extends Component implements HasForms
 
         $data = $this->form->getState();
 
-
         $submission = $this->activeChapter->examination->submission()->create([
             'user_id' => Auth::user()->id,
             'chapter_id' => $this->activeChapter->id,
@@ -266,12 +260,13 @@ final class StudentCourseLearning extends Component implements HasForms
 
     public function completeChapter(Chapter $chapter): void
     {
-        if ($chapter->examination && !$chapter->submission()->where('user_id', '=', Auth::user()->id)->exists()) {
+        if ($chapter->examination && ! $chapter->submission()->where('user_id', '=', Auth::user()->id)->exists()) {
             $this->dispatch(
                 'notify',
                 message: 'Vous devez soumettre l\'examen avant de terminer ce chapitre.',
                 type: 'error'
             );
+
             return;
         }
 
@@ -313,7 +308,7 @@ final class StudentCourseLearning extends Component implements HasForms
         }
 
         $chapters = $this->masterClass->chapters;
-        $currentIndex = $chapters->search(fn($ch) => $ch->id === $chapter->id);
+        $currentIndex = $chapters->search(fn ($ch) => $ch->id === $chapter->id);
         $nextChapter = $currentIndex < $chapters->count() - 1 ? $chapters[$currentIndex + 1] : null;
 
         if ($nextChapter) {
@@ -326,6 +321,21 @@ final class StudentCourseLearning extends Component implements HasForms
         }
     }
 
+    public function hasSubmittedExam(): bool
+    {
+        return $this->activeChapter->submission()
+            ->where('user_id', '=', Auth::user()->id)
+            ->exists();
+    }
+
+    private function getPreviousChapter($currentChapterId): ?Chapter
+    {
+        $chapters = $this->masterClass->chapters;
+        $currentIndex = $chapters->search(fn ($chapter) => $chapter->id === $currentChapterId);
+
+        return $currentIndex > 0 ? $chapters[$currentIndex - 1] : null;
+    }
+
     private function hasCompletedAllChapters(): bool
     {
         return $this->masterClass
@@ -335,12 +345,5 @@ final class StudentCourseLearning extends Component implements HasForms
                     ->where('status', 'completed');
             })
             ->doesntExist();
-    }
-
-    public function hasSubmittedExam(): bool
-    {
-        return $this->activeChapter->submission()
-            ->where('user_id', '=', Auth::user()->id)
-            ->exists();
     }
 }

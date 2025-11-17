@@ -22,11 +22,11 @@ class FormationStatsChart extends ChartWidget
             ->toArray();
 
         // Get active vs inactive formations
-        $activeFormations = Formation::where('is_active', true)->count();
-        $inactiveFormations = Formation::where('is_active', false)->count();
+        $activeFormations = Formation::query()->where('is_active', '=', true)->count();
+        $inactiveFormations = Formation::query()->where('is_active', '=', false)->count();
 
         // Get featured formations
-        $featuredFormations = Formation::where('is_featured', true)->count();
+        $featuredFormations = Formation::query()->where('is_featured', '=', true)->count();
 
         // Prepare data for the chart
         $labels = [];

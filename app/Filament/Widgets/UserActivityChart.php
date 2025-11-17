@@ -2,9 +2,8 @@
 
 namespace App\Filament\Widgets;
 
-use App\Models\ExamAttempt;
+use App\Enums\UserRoleEnum;
 use App\Models\User;
-use App\Models\UserProgress;
 use Carbon\Carbon;
 use Filament\Widgets\ChartWidget;
 
@@ -18,8 +17,12 @@ class UserActivityChart extends ChartWidget
         // Get data for the last 7 days
         $range = [Carbon::now()->subDays(6)->startOfDay(), Carbon::now()->endOfDay()];
 
+        $user = User::query();
+
         // New user registrations
-        $newUsers = User::whereBetween('created_at', $range)
+        $newUsers = $user
+            ->where('role', '=', UserRoleEnum::STUDENT->value)
+            ->whereBetween('created_at', $range)
             ->selectRaw('DATE(created_at) as date, COUNT(*) as count')
             ->groupBy('date')
             ->orderBy('date')
@@ -27,7 +30,9 @@ class UserActivityChart extends ChartWidget
             ->toArray();
 
         // Progress entries
-        $progressEntries = UserProgress::whereBetween('created_at', $range)
+        $progressEntries = $user
+            ->where('role', '=', UserRoleEnum::STUDENT->value)
+            ->whereBetween('created_at', $range)
             ->selectRaw('DATE(created_at) as date, COUNT(*) as count')
             ->groupBy('date')
             ->orderBy('date')
@@ -35,7 +40,9 @@ class UserActivityChart extends ChartWidget
             ->toArray();
 
         // Exam attempts
-        $examAttempts = ExamAttempt::whereBetween('created_at', $range)
+        $examAttempts = $user
+            ->where('role', '=', UserRoleEnum::STUDENT->value)
+            ->whereBetween('created_at', $range)
             ->selectRaw('DATE(created_at) as date, COUNT(*) as count')
             ->groupBy('date')
             ->orderBy('date')

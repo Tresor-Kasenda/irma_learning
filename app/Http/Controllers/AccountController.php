@@ -6,7 +6,6 @@ use Illuminate\Http\Request;
 
 class AccountController extends Controller
 {
-    //
     public function suspended(Request $request)
     {
 

@@ -10,12 +10,14 @@ class ListFormations extends ListRecords
 {
     protected static string $resource = FormationResource::class;
 
+    protected static ?string $title = "Liste des formations";
+
     protected function getHeaderActions(): array
     {
         return [
             Actions\CreateAction::make()
-            ->label('Créer une formation')
-            ->icon('heroicon-o-plus'),
+                ->label('Ajouter une formation')
+                ->icon('heroicon-o-plus-circle'),
         ];
     }
 }

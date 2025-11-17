@@ -1,10 +1,12 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\SectionResource\Pages;
 use App\Filament\Resources\SectionResource\RelationManagers;
-use App\Models\Module;
+use App\Models\Formation;
 use App\Models\Section;
 use Filament\Forms;
 use Filament\Forms\Form;
@@ -14,7 +16,7 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 
-class SectionResource extends Resource
+final class SectionResource extends Resource
 {
     protected static ?string $model = Section::class;
 
@@ -26,121 +28,46 @@ class SectionResource extends Resource
 
     protected static ?int $navigationSort = 3;
 
-    public static function form(Form $form): Form
-    {
-        return $form
-            ->schema([
-                Forms\Components\Section::make('Informations de la section')
-                    ->schema([
-                        Forms\Components\Select::make('module_id')
-                            ->label('Module')
-                            ->relationship('module', 'title')
-                            ->searchable()
-                            ->getOptionLabelFromRecordUsing(fn($record) => strlen($record->title) > 50
-                                ? substr($record->title, 0, 50) . '...'
-                                : $record->title
-                            )
-                            ->extraAttributes(function ($get) {
-                                $formationId = $get('module_id_id');
-                                if ($formationId) {
-                                    $formation = Module::find($formationId);
-                                    return $formation ? ['title' => $formation->title] : [];
-                                }
-                                return [];
-                            })
-                            ->required(),
-
-                        Forms\Components\TextInput::make('title')
-                            ->label('Titre de la section')
-                            ->required()
-                            ->maxLength(255),
-                        Forms\Components\RichEditor::make('description')
-                            ->label('Contenu de la section')
-                            ->columnSpanFull(),
-                    ])
-                    ->columns(2),
-
-                Forms\Components\Section::make('Configuration')
-                    ->schema([
-                        Forms\Components\TextInput::make('order_position')
-                            ->label('Position dans le module')
-                            ->numeric()
-                            ->default(1)
-                            ->required()
-                            ->minValue(1),
-
-                        Forms\Components\TextInput::make('estimated_duration')
-                            ->label('Durée estimée (minutes)')
-                            ->numeric()
-                            ->minValue(0)
-                            ->default(30),
-
-                        Forms\Components\Toggle::make('is_active')
-                            ->label('Section active')
-                            ->inline(false)
-                            ->default(true),
-                    ])
-                    ->columns(3),
-            ]);
-    }
-
     public static function table(Table $table): Table
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('module.formation.title')
+                TextColumn::make('order_position')
+                    ->label('Position')
+                    ->numeric()
+                    ->sortable(),
+                TextColumn::make('formation.title')
                     ->label('Formation')
                     ->sortable()
                     ->searchable()
                     ->limit(20)
                     ->tooltip(function (TextColumn $column): ?string {
                         $state = $column->getState();
-                        if (strlen($state) <= $column->getCharacterLimit()) {
+                        if (mb_strlen($state) <= $column->getCharacterLimit()) {
                             return null;
                         }
+
                         return $state;
                     })
                     ->toggleable(),
 
-                Tables\Columns\TextColumn::make('module.title')
-                    ->label('Module')
-                    ->sortable()
-                    ->limit(20)
-                    ->tooltip(function (TextColumn $column): ?string {
-                        $state = $column->getState();
-                        if (strlen($state) <= $column->getCharacterLimit()) {
-                            return null;
-                        }
-                        return $state;
-                    })
-                    ->searchable(),
-
-                Tables\Columns\TextColumn::make('title')
+                TextColumn::make('title')
                     ->label('Titre de la section')
                     ->searchable()
                     ->limit(20)
                     ->tooltip(function (TextColumn $column): ?string {
                         $state = $column->getState();
-                        if (strlen($state) <= $column->getCharacterLimit()) {
+                        if (mb_strlen($state) <= $column->getCharacterLimit()) {
                             return null;
                         }
+
                         return $state;
                     })
                     ->sortable(),
 
-                Tables\Columns\TextColumn::make('order_position')
-                    ->label('Position')
-                    ->numeric()
-                    ->sortable(),
-
-                Tables\Columns\TextColumn::make('estimated_duration')
+                TextColumn::make('duration')
                     ->label('Durée (min)')
                     ->numeric()
-                    ->sortable(),
-
-                Tables\Columns\TextColumn::make('chapters_count')
-                    ->label('Chapitres')
-                    ->counts('chapters')
                     ->sortable(),
 
                 Tables\Columns\IconColumn::make('is_active')
@@ -148,9 +75,9 @@ class SectionResource extends Resource
                     ->boolean(),
             ])
             ->filters([
-                Tables\Filters\SelectFilter::make('module')
-                    ->label('Module')
-                    ->relationship('module', 'title')
+                Tables\Filters\SelectFilter::make('formation')
+                    ->label('Formation')
+                    ->relationship('formation', 'title')
                     ->searchable()
                     ->preload(),
 
@@ -172,7 +99,7 @@ class SectionResource extends Resource
                         ->label('Supprimer')
                         ->icon('heroicon-o-trash')
                         ->requiresConfirmation(),
-                ])
+                ]),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
@@ -193,6 +120,92 @@ class SectionResource extends Resource
             ->defaultSort('order_position', 'asc');
     }
 
+    public static function form(Form $form): Form
+    {
+        return $form
+            ->schema([
+                Forms\Components\Section::make('Informations de la section')
+                    ->schema([
+                        Forms\Components\Select::make('formation_id')
+                            ->label('Formation')
+                            ->relationship('formation', 'title')
+                            ->searchable()
+                            ->live()
+                            ->getOptionLabelFromRecordUsing(fn($record) => mb_strlen($record->title) > 50
+                                ? mb_substr($record->title, 0, 50) . '...'
+                                : $record->title
+                            )
+                            ->extraAttributes(function ($get) {
+                                $formationId = $get('formation_id');
+                                if ($formationId) {
+                                    $formation = Formation::find($formationId);
+
+                                    return $formation ? ['title' => $formation->title] : [];
+                                }
+
+                                return [];
+                            })
+                            ->required(),
+
+                        Forms\Components\TextInput::make('title')
+                            ->label('Titre de la section')
+                            ->required()
+                            ->maxLength(255),
+                        Forms\Components\RichEditor::make('description')
+                            ->label('Contenu de la section')
+                            ->columnSpanFull(),
+                    ])
+                    ->columns(2),
+
+                Forms\Components\Section::make('Configuration')
+                    ->schema([
+                        Forms\Components\TextInput::make('order_position')
+                            ->label('Position dans la formation')
+                            ->numeric()
+                            ->disabled()
+                            ->dehydrated(false)
+                            ->default(function (Forms\Get $get) {
+                                $formationId = $get('formation_id');
+                                if ($formationId) {
+                                    return (Section::query()->whereBelongsTo($formationId)->max('order_position') ?? 0) + 1;
+                                }
+                                return 1;
+                            })
+                            ->helperText('Position automatique (prochaine disponible dans cette formation)'),
+
+                        Forms\Components\TextInput::make('duration')
+                            ->label('Durée estimée (minutes)')
+                            ->numeric()
+                            ->default(function (Forms\Get $get) {
+                                $formationId = $get('formation_id');
+                                if (!$formationId) {
+                                    return null;
+                                }
+
+                                $formation = Formation::find($formationId);
+                                if (!$formation || !$formation->duration_hours) {
+                                    return null;
+                                }
+
+                                // Convert formation duration from hours to minutes
+                                $formationDurationMinutes = $formation->duration_hours * 60;
+
+                                // Get the number of existing sections + 1 (for the new section being added)
+                                $totalSections = Section::where('formation_id', $formationId)->count() + 1;
+
+                                // Calculate average duration per section
+                                return (int)round($formationDurationMinutes / $totalSections);
+                            })
+                            ->helperText('Durée calculée automatiquement. Vous pouvez la modifier si nécessaire.'),
+
+                        Forms\Components\Toggle::make('is_active')
+                            ->label('Section active')
+                            ->inline(false)
+                            ->default(true),
+                    ])
+                    ->columns(3),
+            ]);
+    }
 
     public static function getRelations(): array
     {
@@ -215,11 +228,11 @@ class SectionResource extends Resource
     {
         return parent::getEloquentQuery()
             ->withoutGlobalScopes()
-            ->with(['module.formation']);
+            ->with('formation');
     }
 
     public static function getNavigationBadge(): ?string
     {
-        return static::getModel()::count();
+        return (string)self::getModel()::count();
     }
 }

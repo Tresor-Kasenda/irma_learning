@@ -2,6 +2,7 @@
 
 namespace App\Filament\Widgets;
 
+use App\Enums\UserRoleEnum;
 use App\Models\Certificate;
 use App\Models\Enrollment;
 use App\Models\Formation;
@@ -15,57 +16,69 @@ class StatsOverview extends BaseWidget
 
     protected function getStats(): array
     {
+        $user = User::query()->where('role', '=', UserRoleEnum::STUDENT->value);
         return [
-            Stat::make('Total Users', User::count())
+            Stat::make(
+                'Total Users',
+                $user->count()
+            )
                 ->description('Total registered users')
                 ->descriptionIcon('heroicon-m-user')
-                ->chart(User::query()
-                    ->selectRaw('COUNT(*) as count')
-                    ->selectRaw('DATE(created_at) as date')
-                    ->groupBy('date')
-                    ->orderBy('date')
-                    ->limit(7)
-                    ->pluck('count')
-                    ->toArray())
+                ->chart(
+                    $user
+                        ->selectRaw('COUNT(*) as count')
+                        ->selectRaw('DATE(created_at) as date')
+                        ->groupBy('date')
+                        ->orderBy('date')
+                        ->limit(7)
+                        ->pluck('count')
+                        ->toArray()
+                )
                 ->color('success'),
 
             Stat::make('Total Formations', Formation::count())
                 ->description('Available courses')
                 ->descriptionIcon('heroicon-m-academic-cap')
-                ->chart(Formation::query()
-                    ->selectRaw('COUNT(*) as count')
-                    ->selectRaw('DATE(created_at) as date')
-                    ->groupBy('date')
-                    ->orderBy('date')
-                    ->limit(7)
-                    ->pluck('count')
-                    ->toArray())
+                ->chart(
+                    Formation::query()
+                        ->selectRaw('COUNT(*) as count')
+                        ->selectRaw('DATE(created_at) as date')
+                        ->groupBy('date')
+                        ->orderBy('date')
+                        ->limit(7)
+                        ->pluck('count')
+                        ->toArray()
+                )
                 ->color('primary'),
 
             Stat::make('Total Enrollments', Enrollment::count())
                 ->description('Course enrollments')
                 ->descriptionIcon('heroicon-m-book-open')
-                ->chart(Enrollment::query()
-                    ->selectRaw('COUNT(*) as count')
-                    ->selectRaw('DATE(created_at) as date')
-                    ->groupBy('date')
-                    ->orderBy('date')
-                    ->limit(7)
-                    ->pluck('count')
-                    ->toArray())
+                ->chart(
+                    Enrollment::query()
+                        ->selectRaw('COUNT(*) as count')
+                        ->selectRaw('DATE(created_at) as date')
+                        ->groupBy('date')
+                        ->orderBy('date')
+                        ->limit(7)
+                        ->pluck('count')
+                        ->toArray()
+                )
                 ->color('warning'),
 
             Stat::make('Certificates Issued', Certificate::count())
                 ->description('Completed courses')
                 ->descriptionIcon('heroicon-m-document-check')
-                ->chart(Certificate::query()
-                    ->selectRaw('COUNT(*) as count')
-                    ->selectRaw('DATE(created_at) as date')
-                    ->groupBy('date')
-                    ->orderBy('date')
-                    ->limit(7)
-                    ->pluck('count')
-                    ->toArray())
+                ->chart(
+                    Certificate::query()
+                        ->selectRaw('COUNT(*) as count')
+                        ->selectRaw('DATE(created_at) as date')
+                        ->groupBy('date')
+                        ->orderBy('date')
+                        ->limit(7)
+                        ->pluck('count')
+                        ->toArray()
+                )
                 ->color('info'),
         ];
     }

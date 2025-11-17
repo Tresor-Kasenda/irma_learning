@@ -16,9 +16,9 @@ enum UserStatusEnum: string
     public function getLabel(): string
     {
         return match ($this) {
-            self::ACTIVE => 'Active',
-            self::INACTIVE => 'Inactive',
-            self::BANNED => 'Suspended',
+            self::ACTIVE => 'Actif',
+            self::INACTIVE => 'Inactif',
+            self::BANNED => 'Suspendue',
         };
     }
 }

@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Service;
+namespace App\Services;
 
 use App\Enums\EnrollmentPaymentEnum;
 use App\Enums\EnrollmentStatusEnum;
@@ -68,10 +68,11 @@ final class EnrollmentService
 
     private function expirePreviousCodes(User $user, Formation $formation): void
     {
-        VerificationCode::where('user_id', $user->id)
-            ->where('formation_id', $formation->id)
-            ->where('status', VerificationCodeStatusEnum::Pending)
-            ->update(['status' => VerificationCodeStatusEnum::Expired]);
+        VerificationCode::query()
+            ->whereBelongsTo($user)
+            ->whereBelongsTo($formation)
+            ->where('status', '=', VerificationCodeStatusEnum::Pending->value)
+            ->update(['status' => VerificationCodeStatusEnum::Expired->value]);
     }
 
     public function verifyCodeAndCreateEnrollment(User $user, Formation $formation, string $code): array
@@ -80,8 +81,8 @@ final class EnrollmentService
             DB::beginTransaction();
 
             $verificationCode = VerificationCode::where('code', $code)
-                ->where('user_id', $user->id)
-                ->where('formation_id', $formation->id)
+                ->whereBelongsTo($user)
+                ->whereBelongsTo($formation)
                 ->active()
                 ->first();
 
@@ -102,8 +103,8 @@ final class EnrollmentService
             $enrollment = Enrollment::create([
                 'user_id' => $user->id,
                 'formation_id' => $formation->id,
-                'status' => EnrollmentStatusEnum::Suspended,
-                'payment_status' => EnrollmentPaymentEnum::PENDING,
+                'status' => EnrollmentStatusEnum::Suspended->value,
+                'payment_status' => EnrollmentPaymentEnum::PENDING->value,
                 'enrollment_date' => now(),
             ]);
 
@@ -143,7 +144,7 @@ final class EnrollmentService
                 'amount' => $enrollment->formation->price,
                 'gateway' => $paymentData['gateway'],
                 'gateway_transaction_id' => $paymentData['transaction_id'] ?? null,
-                'status' => PaymentStatusEnum::PENDING,
+                'status' => PaymentStatusEnum::PENDING->value,
             ]);
 
             $paymentResult = $this->processPaymentGateway($payment, $paymentData);
@@ -152,8 +153,8 @@ final class EnrollmentService
                 $payment->markAsSuccess();
 
                 $enrollment->update([
-                    'status' => EnrollmentStatusEnum::Active,
-                    'payment_status' => EnrollmentPaymentEnum::PAID,
+                    'status' => EnrollmentStatusEnum::Active->value,
+                    'payment_status' => EnrollmentPaymentEnum::PAID->value,
                     'amount_paid' => $payment->amount,
                 ]);
 
@@ -165,7 +166,7 @@ final class EnrollmentService
                     'payment' => $payment
                 ];
             } else {
-                $payment->update(['status' => PaymentStatusEnum::FAILED]);
+                $payment->update(['status' => PaymentStatusEnum::FAILED->value]);
                 DB::rollBack();
 
                 return [
@@ -199,6 +200,52 @@ final class EnrollmentService
         ];
     }
 
+    public function createFreeEnrollment(User $user, Formation $formation): array
+    {
+        try {
+            DB::beginTransaction();
+
+            if ($user->enrollments()->whereBelongsTo($formation)->exists()) {
+                return [
+                    'success' => false,
+                    'message' => 'Vous êtes déjà inscrit à cette formation.',
+                    'code' => 'ALREADY_ENROLLED',
+                ];
+            }
+
+            $enrollment = Enrollment::create([
+                'user_id' => $user->id,
+                'formation_id' => $formation->id,
+                'enrollment_date' => now(),
+                'status' => EnrollmentStatusEnum::Active->value,
+                'payment_status' => EnrollmentPaymentEnum::FREE->value,
+                'amount_paid' => 0,
+                'progress_percentage' => 0,
+            ]);
+
+            DB::commit();
+
+            return [
+                'success' => true,
+                'message' => 'Inscription réussie ! Vous pouvez maintenant commencer la formation.',
+                'enrollment' => $enrollment,
+            ];
+        } catch (Exception $e) {
+            DB::rollBack();
+            Log::error('Erreur lors de l\'inscription gratuite', [
+                'user_id' => $user->id,
+                'formation_id' => $formation->id,
+                'error' => $e->getMessage(),
+            ]);
+
+            return [
+                'success' => false,
+                'message' => 'Une erreur est survenue lors de l\'inscription.',
+                'code' => 'ENROLLMENT_ERROR',
+            ];
+        }
+    }
+
     public function getEnrollmentProgress(Enrollment $enrollment): array
     {
         $formation = $enrollment->formation;
@@ -209,8 +256,7 @@ final class EnrollmentService
                     ->where('up.trackable_type', '=', Chapter::class);
             })
             ->join('sections as s', 'c.section_id', '=', 's.id')
-            ->join('modules as m', 's.module_id', '=', 'm.id')
-            ->where('m.formation_id', $formation->id)
+            ->where('s.formation_id', $formation->id)
             ->where('up.user_id', $enrollment->user_id)
             ->select([
                 'm.id as module_id',

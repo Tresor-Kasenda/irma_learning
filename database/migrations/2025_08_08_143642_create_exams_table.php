@@ -17,7 +17,10 @@ return new class extends Migration {
             $table->text('description')->nullable();
             $table->text('instructions')->nullable();
             $table->integer('duration_minutes')->default(60);
-            $table->integer('passing_score')->default(70)->comment('Percentage required to pass');
+            $table->integer('passing_score')
+                ->nullable()
+                ->default(70)
+                ->comment('Percentage required to pass');
             $table->integer('max_attempts')->default(3);
             $table->boolean('randomize_questions')->default(false);
             $table->boolean('show_results_immediately')->default(true);

@@ -20,6 +20,18 @@ final class Chapter extends Model
 
     protected $guarded = [];
 
+    protected static function booted(): void
+    {
+        static::creating(function (Chapter $chapter) {
+            if (empty($chapter->order_position)) {
+                // Calculer automatiquement la prochaine position dans cette section
+                $maxPosition = static::where('section_id', $chapter->section_id)
+                    ->max('order_position') ?? 0;
+                $chapter->order_position = $maxPosition + 1;
+            }
+        });
+    }
+
     public function section(): BelongsTo
     {
         return $this->belongsTo(Section::class, 'section_id');

@@ -5,6 +5,7 @@ namespace App\Livewire\Formations;
 use App\Models\Formation;
 use App\Models\FormationAccessCode;
 use App\Notifications\FormationAccessCodeNotification;
+use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 use Livewire\Component;
@@ -22,12 +23,12 @@ class PaymentForm extends Component
         'cvv' => 'required|string|size:3',
     ];
 
-    public function mount(Formation $formation)
+    public function mount(Formation $formation): void
     {
         $this->formation = $formation;
     }
 
-    public function processPayment()
+    public function processPayment(): void
     {
         $this->validate();
 
@@ -59,7 +60,7 @@ class PaymentForm extends Component
         ]));
     }
 
-    public function render()
+    public function render(): View
     {
         return view('livewire.formations.payment-form');
     }

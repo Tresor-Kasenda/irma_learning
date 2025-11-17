@@ -5,7 +5,6 @@ namespace App\Filament\Resources\ChapterResource\Pages;
 use App\Filament\Resources\ChapterResource;
 use Filament\Actions;
 use Filament\Infolists\Components\IconEntry;
-use Filament\Infolists\Components\KeyValueEntry;
 use Filament\Infolists\Components\Section;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Infolists\Infolist;
@@ -21,10 +20,8 @@ class ViewChapter extends ViewRecord
             ->schema([
                 Section::make('Informations du chapitre')
                     ->schema([
-                        TextEntry::make('section.module.formation.title')
+                        TextEntry::make('section.formation.title')
                             ->label('Formation'),
-                        TextEntry::make('section.module.title')
-                            ->label('Module'),
                         TextEntry::make('section.title')
                             ->label('Section'),
                         TextEntry::make('title')
@@ -51,10 +48,7 @@ class ViewChapter extends ViewRecord
                     ->schema([
                         TextEntry::make('content')
                             ->label('Contenu principal')
-                            ->html()
-                            ->columnSpanFull(),
-                        KeyValueEntry::make('metadata')
-                            ->label('Métadonnées')
+                            ->markdown()
                             ->columnSpanFull(),
                     ]),
             ]);

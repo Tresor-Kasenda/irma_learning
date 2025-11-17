@@ -1,17 +1,47 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Filament\Resources\SectionResource\Pages;
 
 use App\Filament\Resources\SectionResource;
 use App\Models\Section;
 use Filament\Actions;
+use Filament\Forms\Components\FileUpload;
+use Filament\Forms\Components\RichEditor;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Toggle;
+use Filament\Forms\Get;
+use Filament\Forms\Set;
 use Filament\Infolists;
 use Filament\Infolists\Infolist;
+use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ViewRecord;
+use Filament\Support\Colors\Color;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 
-class ViewSection extends ViewRecord
+final class ViewSection extends ViewRecord
 {
     protected static string $resource = SectionResource::class;
+
+    protected function calculateChapterDuration(): int
+    {
+        // Get section duration in minutes
+        $sectionDurationMinutes = $this->record->duration ?? 0;
+
+        // Get the number of existing chapters + 1 (for the new chapter being added)
+        $totalChapters = $this->record->chapters()->count() + 1;
+
+        // If no duration is set or no chapters, return 0
+        if ($sectionDurationMinutes <= 0 || $totalChapters <= 0) {
+            return 0;
+        }
+
+        // Calculate average duration per chapter
+        return (int) round($sectionDurationMinutes / $totalChapters);
+    }
 
     public function infolist(Infolist $infolist): Infolist
     {
@@ -19,16 +49,15 @@ class ViewSection extends ViewRecord
             ->schema([
                 Infolists\Components\Section::make('Informations de la section')
                     ->schema([
-                        Infolists\Components\TextEntry::make('module.formation.title')
+                        Infolists\Components\TextEntry::make('formation.title')
                             ->label('Formation'),
-                        Infolists\Components\TextEntry::make('module.title')
-                            ->label('Module'),
                         Infolists\Components\TextEntry::make('title')
                             ->label('Titre'),
                         Infolists\Components\TextEntry::make('order_position')
                             ->label('Position'),
                         Infolists\Components\TextEntry::make('description')
                             ->label('Description')
+                            ->html()
                             ->columnSpanFull()
                             ->placeholder('Aucune description'),
                     ])
@@ -59,7 +88,130 @@ class ViewSection extends ViewRecord
             Actions\Action::make('back')
                 ->label('Retour')
                 ->url(SectionResource::getUrl('index'))
-                ->icon('heroicon-o-arrow-left')
+                ->icon('heroicon-o-arrow-left'),
+            Actions\Action::make('addChapter')
+                ->label('Ajouter un chapitre')
+                ->icon('heroicon-o-plus-circle')
+                ->color(Color::Slate)
+                ->slideOver()
+                ->form([
+                    TextInput::make('title')
+                        ->label('Titre du chapitre')
+                        ->required()
+                        ->maxLength(255),
+
+                    Select::make('content_type')
+                        ->label('Type de contenu')
+                        ->options([
+                            'text' => 'Texte',
+                            'video' => 'Vidéo',
+                            'audio' => 'Audio',
+                            'pdf' => 'PDF',
+                            'interactive' => 'Interactif',
+                        ])
+                        ->required()
+                        ->default('text')
+                        ->live()
+                        ->afterStateUpdated(function ($state, Set $set) {
+                            $set('media_url', null);
+                        }),
+
+                    FileUpload::make('media_url')
+                        ->label('Fichier de contenu')
+                        ->disk('public')
+                        ->directory('chapters')
+                        ->visibility('public')
+                        ->preserveFilenames()
+                        ->columnSpanFull()
+                        ->acceptedFileTypes(['application/pdf'])
+                        ->maxSize(50 * 1024)
+                        ->helperText('Uploadez un PDF pour extraction automatique du contenu.')
+                        ->visible(fn(Get $get) => $get('content_type') === 'pdf')
+                        ->required(fn(Get $get) => $get('content_type') === 'pdf')
+                        ->live()
+                        ->afterStateUpdated(function ($state, Set $set, Get $get) {
+                            if ($state) {
+                                static::extractPdfContent($state, $set, $get);
+                            }
+                        })
+                        ->afterStateHydrated(function ($component, $state) {
+                            if ($state && $component->getContainer()->getOperation() === 'edit') {
+                                if (!Storage::disk('public')->exists($state)) {
+                                    Notification::make()
+                                        ->title('Fichier manquant')
+                                        ->body('Le fichier PDF original est introuvable.')
+                                        ->warning()
+                                        ->send();
+                                }
+                            }
+                        }),
+
+                    RichEditor::make('content')
+                        ->label('Contenu principal')
+                        ->columnSpanFull()
+                        ->helperText('Le contenu sera automatiquement rempli lors de l\'import PDF'),
+
+                    TextInput::make('order_position')
+                        ->label('Position du chapitre')
+                        ->numeric()
+                        ->default(fn() => (($this->record->chapters()->max('order_position') ?? 0) + 1))
+                        ->required()
+                        ->minValue(1),
+
+                    TextInput::make('duration_minutes')
+                        ->label('Durée estimée (minutes)')
+                        ->numeric()
+                        ->suffix('minutes')
+                        ->disabled()
+                        ->dehydrated(false)
+                        ->default(fn() => $this->calculateChapterDuration())
+                        ->helperText('Durée calculée automatiquement selon la section'),
+
+                    Toggle::make('is_free')
+                        ->label('Gratuit (aperçu)')
+                        ->inline(false)
+                        ->helperText('Ce chapitre sera accessible sans inscription'),
+
+                    Toggle::make('is_active')
+                        ->label('Chapitre actif')
+                        ->inline(false)
+                        ->helperText('Ce chapitre sera visible dans la formation')
+                        ->default(true),
+                ])
+                ->action(function (array $data) {
+                    DB::transaction(function () use ($data) {
+                        $providedPosition = isset($data['order_position']) ? (int)$data['order_position'] : null;
+                        $nextPosition = ($this->record->chapters()->max('order_position') ?? 0) + 1;
+                        $position = ($providedPosition && $providedPosition > 0) ? $providedPosition : $nextPosition;
+
+                        // Calculer automatiquement la durée
+                        $calculatedDuration = $this->calculateChapterDuration();
+
+                        $payload = [
+                            'title' => $data['title'],
+                            'content_type' => $data['content_type'] ?? 'text',
+                            'media_url' => $data['media_url'] ?? null,
+                            'metadata' => $data['metadata'] ?? [],
+                            'content' => $data['content'] ?? null,
+                            'order_position' => $position,
+                            'duration_minutes' => $calculatedDuration,
+                            'is_free' => !empty($data['is_free']),
+                            'is_active' => !empty($data['is_active']),
+                        ];
+
+                        $this->record->chapters()->create($payload);
+                    });
+
+                    $this->record->refresh();
+
+                    Notification::make()
+                        ->title('Succès')
+                        ->body('Le chapitre a été ajouté à la section avec succès.')
+                        ->success()
+                        ->send();
+
+                    $this->dispatch('refresh');
+                }),
         ];
     }
 }

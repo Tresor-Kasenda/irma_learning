@@ -1,216 +1,298 @@
-<div>
-    <div class="absolute inset-x-0 -top-2 h-56 bg-bg-lighter rounded-b-xl"></div>
-    <div class="px-4 sm:px-10 lg:px-5 xl:px-8 xl:max-w-[85rem] w-full mx-auto">
-        <div class="relative pt-8 grid gap-8">
-            <div class="flex flex-col">
-                <h1 class="text-xl font-semibold text-fg-subtitle">Mes statistiques</h1>
+<div class="min-h-screen bg-gray-50">
+    {{-- Hero Section avec fond décoratif --}}
+    <div class="relative bg-gradient-to-br from-primary-600 to-primary-700 overflow-hidden">
+        <div class="absolute inset-0 opacity-10">
+            <svg class="absolute right-0 top-0 h-full w-auto" viewBox="0 0 400 400" fill="none">
+                <circle cx="300" cy="100" r="200" fill="white"/>
+            </svg>
+        </div>
+
+        <div class="relative px-4 sm:px-6 lg:px-8 xl:max-w-7xl mx-auto py-8 sm:py-12">
+            <div class="text-white">
+                <h1 class="text-2xl sm:text-3xl lg:text-4xl font-bold mb-2">
+                    Bonjour, {{ auth()->user()->name }} 👋
+                </h1>
+                <p class="text-primary-100 text-sm sm:text-base">
+                    Continuez votre parcours d'apprentissage
+                </p>
             </div>
-            <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-                <div class="bg-bg border border-border-light rounded-md p-6 shadow-sm shadow-gray-100/40">
-                    <div class="flex justify-between items-start mb-4">
-                        <h3 class="text-lg font-medium text-fg-title">Mes formations</h3>
-                        <div class="p-2 bg-primary-100 rounded-lg">
-                            <svg class="w-5 h-5 text-primary-600" fill="none" stroke="currentColor"
-                                 viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                      d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+
+            {{-- Statistiques --}}
+            <div class="mt-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                {{-- Total Formations --}}
+                <div class="bg-white rounded-xl p-5 shadow-lg hover:shadow-xl transition-shadow duration-300">
+                    <div class="flex items-center justify-between">
+                        <div class="flex-1">
+                            <p class="text-sm font-medium text-gray-600">Total formations</p>
+                            <p class="text-3xl font-bold text-gray-900 mt-1">{{ $totalEnrollments }}</p>
+                        </div>
+                        <div class="ml-4 p-3 bg-blue-100 rounded-lg">
+                            <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
                             </svg>
                         </div>
-                    </div>
-                    <div class="flex items-end gap-2">
-                        <p class="text-3xl sm:text-4xl font-semibold text-fg-subtitle">10</p>
-                        <p class="text-fg-subtext">Participations</p>
                     </div>
                 </div>
-                <div class="bg-bg border border-border-light rounded-md p-6 shadow-sm shadow-gray-100/40">
-                    <div class="flex justify-between items-start mb-4">
-                        <h3 class="text-lg font-medium text-fg-title">Masterclass en cours</h3>
-                        <div class="p-2 bg-purple-100 rounded-lg">
-                            <svg class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor"
-                                 viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                      d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+
+                {{-- Formations en cours --}}
+                <div class="bg-white rounded-xl p-5 shadow-lg hover:shadow-xl transition-shadow duration-300">
+                    <div class="flex items-center justify-between">
+                        <div class="flex-1">
+                            <p class="text-sm font-medium text-gray-600">En cours</p>
+                            <p class="text-3xl font-bold text-gray-900 mt-1">{{ $activeEnrollments }}</p>
+                        </div>
+                        <div class="ml-4 p-3 bg-yellow-100 rounded-lg">
+                            <svg class="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
                             </svg>
                         </div>
-                    </div>
-                    <div class="flex items-end gap-2">
-                        <p class="text-3xl sm:text-4xl font-semibold text-fg-subtitle">20</p>
-                        <p class="text-fg-subtext">En cours</p>
                     </div>
                 </div>
-                <div class="bg-bg border border-border-light rounded-md p-6 shadow-sm shadow-gray-100/40">
-                    <div class="flex justify-between items-start mb-4">
-                        <h3 class="text-lg font-medium text-fg-title">Masterclass completees</h3>
-                        <div class="p-2 bg-purple-100 rounded-lg">
-                            <svg class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor"
-                                 viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                      d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+
+                {{-- Formations complétées --}}
+                <div class="bg-white rounded-xl p-5 shadow-lg hover:shadow-xl transition-shadow duration-300">
+                    <div class="flex items-center justify-between">
+                        <div class="flex-1">
+                            <p class="text-sm font-medium text-gray-600">Complétées</p>
+                            <p class="text-3xl font-bold text-gray-900 mt-1">{{ $completedEnrollments }}</p>
+                        </div>
+                        <div class="ml-4 p-3 bg-green-100 rounded-lg">
+                            <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
                             </svg>
                         </div>
-                    </div>
-                    <div class="flex items-end gap-2">
-                        <p class="text-3xl sm:text-4xl font-semibold text-fg-subtitle">10</p>
-                        <p class="text-fg-subtext">Completed</p>
                     </div>
                 </div>
-                <div class="bg-bg border border-border-light rounded-md p-6 shadow-sm shadow-gray-100/40">
-                    <div class="flex justify-between items-start mb-4">
-                        <h3 class="text-lg font-medium text-fg-title">Masterclass completees</h3>
-                        <div class="p-2 bg-purple-100 rounded-lg">
-                            <svg class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor"
-                                 viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                      d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+
+                {{-- Progression moyenne --}}
+                <div class="bg-white rounded-xl p-5 shadow-lg hover:shadow-xl transition-shadow duration-300">
+                    <div class="flex items-center justify-between">
+                        <div class="flex-1">
+                            <p class="text-sm font-medium text-gray-600">Progression</p>
+                            <p class="text-3xl font-bold text-gray-900 mt-1">{{ $averageProgress }}%</p>
+                        </div>
+                        <div class="ml-4 p-3 bg-purple-100 rounded-lg">
+                            <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
                             </svg>
                         </div>
-                    </div>
-                    <div class="flex items-end gap-2">
-                        <p class="text-3xl sm:text-4xl font-semibold text-fg-subtitle">10</p>
-                        <p class="text-fg-subtext">Completed</p>
                     </div>
                 </div>
             </div>
         </div>
-        <div class="mt-16 grid gap-8">
+    </div>
 
-            <div class="flex justify-between items-center">
-                <div class="text-sm md:text-base text-fg-subtext">
-                    <h1 class="text-xl font-semibold text-fg-subtitle">Liste des cours</h1>
+    {{-- Contenu principal --}}
+    <div class="px-4 sm:px-6 lg:px-8 xl:max-w-7xl mx-auto py-8 space-y-8">
+
+        {{-- Mes formations en cours --}}
+        @if($myFormations->count() > 0)
+        <section>
+            <div class="flex items-center justify-between mb-6">
+                <div>
+                    <h2 class="text-2xl font-bold text-gray-900">Mes formations en cours</h2>
+                    <p class="text-gray-600 text-sm mt-1">Reprenez là où vous vous êtes arrêté</p>
                 </div>
-                <div class="flex gap-3 items-center">
-                    <div class="relative w-[230px] sm:w-80">
-                        <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="32" height="32"
-                             fill="currentColor"
-                             class="size-4 text-fg-subtext absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none"
-                             viewBox="0 0 256 256">
-                            <path
-                                d="M229.66,218.34l-50.07-50.06a88.11,88.11,0,1,0-11.31,11.31l50.06,50.07a8,8,0,0,0,11.32-11.32ZM40,112a72,72,0,1,1,72,72A72.08,72.08,0,0,1,40,112Z">
-                            </path>
-                        </svg>
-                        <input
-                            type="text"
-                            placeholder="Rechercher"
-                            wire:model="search"
-                            class="ui-form-input px-4 h-9 rounded-md peer w-full ps-9"
-                        />
-                    </div>
-                </div>
+                @if(Route::has('formations.index'))
+                <a href="{{ route('formations.index') }}" class="text-primary-600 hover:text-primary-700 font-medium text-sm flex items-center gap-1">
+                    Voir tout
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                    </svg>
+                </a>
+                @endif
             </div>
 
-            <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-                <div
-                    class="bg-bg border border-border-light rounded-lg p-0.5 shadow-sm shadow-gray-100/40 group hover:shadow-gray-200/50">
-                    <div class="p-4 sm:p-5">
-                        <h2
-                            class="text-lg sm:text-xl font-semibold text-fg-subtitle group-hover:text-primary-600 ease-linear duration-200">
-                            kasenda
-                        </h2>
-
-                        <div class="flex mt-3">
-                                <span class="flex items-center gap-1 text-sm text-fg-subtext">
-                                    <svg class="w-4 h-4 text-primary-600" fill="none" stroke="currentColor"
-                                         viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                              d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                @foreach($myFormations as $enrollment)
+                    @if($enrollment->formation)
+                    <div class="bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden group">
+                        {{-- Image de la formation --}}
+                        <div class="relative h-48 bg-gradient-to-br from-primary-500 to-primary-600 overflow-hidden">
+                            @if($enrollment->formation->image)
+                                <img src="{{ Storage::url($enrollment->formation->image) }}" alt="{{ $enrollment->formation->title }}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300">
+                            @else
+                                <div class="flex items-center justify-center h-full">
+                                    <svg class="w-20 h-20 text-white opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
                                     </svg>
-                                    10 Chapitres
+                                </div>
+                            @endif
+
+                            {{-- Badge niveau --}}
+                            <div class="absolute top-3 left-3">
+                                <span class="px-3 py-1 bg-white/90 backdrop-blur-sm text-xs font-semibold rounded-full text-gray-700">
+                                    {{ $enrollment->formation->difficulty_level?->value ?? 'Débutant' }}
                                 </span>
-                        </div>
-
-
-                        <div class="mt-3 flex flex-col gap-1.5">
-                            <div class="justify-between w-full flex items-center text-sm text-fg-subtext">
-                                <span>10/100</span>
-                                <span>1%</span>
-                            </div>
-                            <div class="w-full flex bg-bg-high rounded-full h-1">
-                                        <span
-                                            class="bg-primary-600 h-full rounded-full"
-                                            style="width: 10%;"
-                                        ></span>
                             </div>
                         </div>
-                        <div class="flex w-full mt-7 pb-2">
-                            <div class="flex w-full mt-7 pb-2">
-                                <a href="#"
-                                   class="w-full btn btn-md justify-center before:bg-primary-600 btn-styled-y group rounded before:rounded border border-border-light shadow-lg shadow-gray-50 text-fg-subtitle hover:text-white">
-                                    <span class="relative">S'inscrire</span>
-                                </a>
+
+                        {{-- Contenu --}}
+                        <div class="p-5">
+                            <h3 class="text-lg font-bold text-gray-900 mb-2 line-clamp-2 group-hover:text-primary-600 transition-colors">
+                                {{ $enrollment->formation->title }}
+                            </h3>
+
+                            <p class="text-sm text-gray-600 line-clamp-2 mb-4">
+                                {{ $enrollment->formation->short_description ?? 'Formation de qualité professionnelle' }}
+                            </p>
+
+                            {{-- Progression --}}
+                            <div class="mb-4">
+                                <div class="flex justify-between items-center text-sm mb-2">
+                                    <span class="text-gray-600 font-medium">Progression</span>
+                                    <span class="text-primary-600 font-bold">{{ round($enrollment->progress_percentage ?? 0) }}%</span>
+                                </div>
+                                <div class="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
+                                    <div class="bg-gradient-to-r from-primary-500 to-primary-600 h-full rounded-full transition-all duration-500"
+                                         style="width: {{ $enrollment->progress_percentage ?? 0 }}%">
+                                    </div>
+                                </div>
                             </div>
+
+                            {{-- Actions --}}
+                            @if(Route::has('formations.show'))
+                            <a href="{{ route('formations.show', $enrollment->formation->slug) }}"
+                               class="block w-full text-center bg-primary-600 hover:bg-primary-700 text-white font-semibold py-3 rounded-lg transition-colors duration-300">
+                                Continuer
+                            </a>
+                            @else
+                            <button disabled
+                               class="block w-full text-center bg-gray-400 text-white font-semibold py-3 rounded-lg cursor-not-allowed">
+                                Continuer
+                            </button>
+                            @endif
                         </div>
                     </div>
+                    @endif
+                @endforeach
+            </div>
+        </section>
+        @endif
+
+        {{-- Formations recommandées --}}
+        <section>
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+                <div>
+                    <h2 class="text-2xl font-bold text-gray-900">Découvrir de nouvelles formations</h2>
+                    <p class="text-gray-600 text-sm mt-1">Développez vos compétences avec nos meilleures formations</p>
                 </div>
 
-                <div class="w-full col-span-full">
-                    <div
-                        class="w-full flex flex-col items-center px-5 sm:px-10 py-8 sm:py-16 lg:py-20 lg:px-16 border border-dashed rounded-md bg-primary-50/20">
-                        <svg class="mx-auto" xmlns="http://www.w3.org/2000/svg" width="168" height="164"
-                             viewBox="0 0 168 164" fill="none">
-                            <g filter="url(#filter0_d_14133_736)">
-                                <path
-                                    d="M3.99988 81.0083C3.99988 36.7097 39.9078 1 84.0081 1C128.042 1 164 36.6932 164 81.0083C164 99.8046 157.525 117.098 146.657 130.741C131.676 149.653 108.784 161 84.0081 161C59.0675 161 36.3071 149.57 21.3427 130.741C10.4745 117.098 3.99988 99.8046 3.99988 81.0083Z"
-                                    fill="#ECFDF5"/>
-                            </g>
-                            <path
-                                d="M145.544 77.4619H146.044V76.9619V48.9851C146.044 43.424 141.543 38.9227 135.982 38.9227H67.9223C64.839 38.9227 61.9759 37.3578 60.3174 34.7606L60.3159 34.7583L56.8477 29.3908L56.8472 29.3901C54.9884 26.5237 51.8086 24.7856 48.3848 24.7856H26.4195C20.8584 24.7856 16.3571 29.287 16.3571 34.848V76.9619V77.4619H16.8571H145.544Z"
-                                fill="#D1FAE5" stroke="#6EE7B7"/>
-                            <path
-                                d="M63.9999 26.2856C63.9999 25.7334 64.4476 25.2856 64.9999 25.2856H141.428C143.638 25.2856 145.428 27.0765 145.428 29.2856V33.8571H67.9999C65.7907 33.8571 63.9999 32.0662 63.9999 29.8571V26.2856Z"
-                                fill="#6EE7B7"/>
-                            <ellipse cx="1.42857" cy="1.42857" rx="1.42857" ry="1.42857"
-                                     transform="matrix(-1 0 0 1 46.8571 31)" fill="#10B981"/>
-                            <ellipse cx="1.42857" cy="1.42857" rx="1.42857" ry="1.42857"
-                                     transform="matrix(-1 0 0 1 38.2859 31)" fill="#10B981"/>
-                            <ellipse cx="1.42857" cy="1.42857" rx="1.42857" ry="1.42857"
-                                     transform="matrix(-1 0 0 1 29.7141 31)" fill="#10B981"/>
-                            <path
-                                d="M148.321 126.907L148.321 126.906L160.559 76.3043C162.7 67.5161 156.036 59.0715 147.01 59.0715H14.5902C5.56258 59.0715 -1.08326 67.5168 1.04059 76.3034L1.04064 76.3036L13.2949 126.906C14.9181 133.621 20.9323 138.354 27.8354 138.354H133.764C140.685 138.354 146.681 133.621 148.321 126.907Z"
-                                fill="#FFFFFF" stroke="#D1FAE5"/>
-                            <path
-                                d="M86.3858 109.572C85.2055 109.572 84.2268 108.593 84.2268 107.384C84.2268 102.547 76.9147 102.547 76.9147 107.384C76.9147 108.593 75.9359 109.572 74.7269 109.572C73.5466 109.572 72.5678 108.593 72.5678 107.384C72.5678 96.7899 88.5737 96.8186 88.5737 107.384C88.5737 108.593 87.5949 109.572 86.3858 109.572Z"
-                                fill="#10B981"/>
-                            <path
-                                d="M104.954 91.0616H95.9144C94.7053 91.0616 93.7265 90.0829 93.7265 88.8738C93.7265 87.6935 94.7053 86.7147 95.9144 86.7147H104.954C106.163 86.7147 107.141 87.6935 107.141 88.8738C107.141 90.0829 106.163 91.0616 104.954 91.0616Z"
-                                fill="#10B981"/>
-                            <path
-                                d="M65.227 91.0613H56.1877C54.9787 91.0613 53.9999 90.0825 53.9999 88.8734C53.9999 87.6931 54.9787 86.7144 56.1877 86.7144H65.227C66.4073 86.7144 67.3861 87.6931 67.3861 88.8734C67.3861 90.0825 66.4073 91.0613 65.227 91.0613Z"
-                                fill="#10B981"/>
-                            <circle cx="142.572" cy="121" r="24.7857" fill="#D1FAE5" stroke="#6EE7B7"/>
-                            <path
-                                d="M152.214 130.643L149.535 127.964M150.071 119.928C150.071 115.195 146.234 111.357 141.5 111.357C136.766 111.357 132.928 115.195 132.928 119.928C132.928 124.662 136.766 128.5 141.5 128.5C143.858 128.5 145.993 127.548 147.543 126.007C149.104 124.455 150.071 122.305 150.071 119.928Z"
-                                stroke="#10B981" stroke-width="1.6" stroke-linecap="round"/>
-                            <defs>
-                                <filter id="filter0_d_14133_736" x="1.99988" y="0" width="164" height="164"
-                                        filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
-                                    <feFlood flood-opacity="0" result="BackgroundImageFix"/>
-                                    <feColorMatrix in="SourceAlpha" type="matrix"
-                                                   values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0"
-                                                   result="hardAlpha"/>
-                                    <feOffset dy="1"/>
-                                    <feGaussianBlur stdDeviation="1"/>
-                                    <feComposite in2="hardAlpha" operator="out"/>
-                                    <feColorMatrix type="matrix"
-                                                   values="0 0 0 0 0.0627451 0 0 0 0 0.0941176 0 0 0 0 0.156863 0 0 0 0.05 0"/>
-                                    <feBlend mode="normal" in2="BackgroundImageFix"
-                                             result="effect1_dropShadow_14133_736"/>
-                                    <feBlend mode="normal" in="SourceGraphic" in2="effect1_dropShadow_14133_736"
-                                             result="shape"/>
-                                </filter>
-                            </defs>
-                        </svg>
-                        <div>
-                            <h2 class="text-center text-fg-title text-xl font-semibold leading-loose pb-2">
-                                Aucune certification trouvée
-                            </h2>
-                            <p
-                                class="text-center text-fg text-base font-normal leading-relaxed pb-4 max-w-sm mx-auto">
-                                Aucune certification disponible pour le moment. Veuillez vérifier plus tard.
-                            </p>
-                        </div>
-                    </div>
+                {{-- Barre de recherche --}}
+                <div class="relative w-full sm:w-80">
+                    <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                    </svg>
+                    <input
+                        type="text"
+                        wire:model.live.debounce.300ms="search"
+                        placeholder="Rechercher une formation..."
+                        class="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all"
+                    >
                 </div>
             </div>
-        </div>
+
+            @if($availableFormations->count() > 0)
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                @foreach($availableFormations as $formation)
+                <div class="bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden group">
+                    {{-- Image --}}
+                    <div class="relative h-48 bg-gradient-to-br from-gray-400 to-gray-500 overflow-hidden">
+                        @if($formation->image)
+                            <img src="{{ Storage::url($formation->image) }}" alt="{{ $formation->title }}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300">
+                        @else
+                            <div class="flex items-center justify-center h-full">
+                                <svg class="w-20 h-20 text-white opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+                                </svg>
+                            </div>
+                        @endif
+
+                        {{-- Badge niveau --}}
+                        <div class="absolute top-3 left-3">
+                            <span class="px-3 py-1 bg-white/90 backdrop-blur-sm text-xs font-semibold rounded-full text-gray-700">
+                                {{ $formation->difficulty_level?->value ?? 'Débutant' }}
+                            </span>
+                        </div>
+
+                        {{-- Badge nouveau --}}
+                        <div class="absolute top-3 right-3">
+                            <span class="px-3 py-1 bg-green-500 text-white text-xs font-semibold rounded-full">
+                                Nouveau
+                            </span>
+                        </div>
+                    </div>
+
+                    {{-- Contenu --}}
+                    <div class="p-5">
+                        <h3 class="text-lg font-bold text-gray-900 mb-2 line-clamp-2 group-hover:text-primary-600 transition-colors">
+                            {{ $formation->title }}
+                        </h3>
+
+                        <p class="text-sm text-gray-600 line-clamp-2 mb-4">
+                            {{ $formation->short_description ?? 'Formation de qualité professionnelle' }}
+                        </p>
+
+                        {{-- Infos --}}
+                        <div class="flex items-center gap-4 text-sm text-gray-500 mb-4">
+                            @if($formation->duration_hours)
+                            <div class="flex items-center gap-1">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                </svg>
+                                <span>{{ $formation->duration_hours }}h</span>
+                            </div>
+                            @endif
+                        </div>
+
+                        {{-- Prix et action --}}
+                        <div class="flex items-center justify-between">
+                            <div>
+                                @if($formation->price > 0)
+                                    <span class="text-2xl font-bold text-gray-900">{{ number_format($formation->price, 0, ',', ' ') }} FCFA</span>
+                                @else
+                                    <span class="text-2xl font-bold text-green-600">Gratuit</span>
+                                @endif
+                            </div>
+                            @if(Route::has('formations.show'))
+                            <a href="{{ route('formations.show', $formation->slug) }}"
+                               class="px-6 py-2.5 bg-primary-600 hover:bg-primary-700 text-white font-semibold rounded-lg transition-colors duration-300 flex items-center gap-2">
+                                S'inscrire
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                                </svg>
+                            </a>
+                            @else
+                            <button disabled
+                               class="px-6 py-2.5 bg-gray-400 text-white font-semibold rounded-lg cursor-not-allowed flex items-center gap-2">
+                                S'inscrire
+                            </button>
+                            @endif
+                        </div>
+                    </div>
+                </div>
+                @endforeach
+            </div>
+            @else
+            <div class="bg-white rounded-xl p-12 text-center">
+                <svg class="mx-auto w-24 h-24 text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                <h3 class="text-xl font-bold text-gray-900 mb-2">Aucune formation trouvée</h3>
+                <p class="text-gray-600 mb-6">
+                    @if($search)
+                        Aucune formation ne correspond à votre recherche "{{ $search }}"
+                    @else
+                        Toutes les formations disponibles sont déjà dans votre bibliothèque !
+                    @endif
+                </p>
+                @if($search)
+                <button wire:click="$set('search', '')" class="px-6 py-2.5 bg-primary-600 hover:bg-primary-700 text-white font-semibold rounded-lg transition-colors">
+                    Réinitialiser la recherche
+                </button>
+                @endif
+            </div>
+            @endif
+        </section>
     </div>
 </div>

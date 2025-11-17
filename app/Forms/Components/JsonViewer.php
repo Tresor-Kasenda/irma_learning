@@ -14,9 +14,20 @@ class JsonViewer extends Field
     protected bool $isCollapsible = true;
     protected bool $isDefaultCollapsed = false;
     protected int $maxDepth = 10;
-    protected array $hiddenKeys = [];
+    protected array $hiddenKeys = [] {
+        get {
+            return $this->hiddenKeys;
+        }
+    }
     protected bool $showTypes = true;
-    protected string $theme = 'light';
+    protected string $theme = 'light' {
+        get {
+            return $this->theme;
+        }
+        set(string $value) {
+            $this->theme = in_array($value, ['light', 'dark']) ? $value : 'light';
+        }
+    }
     protected bool $showToolbar = true;
     protected bool $enableSearch = false;
     protected bool $showLineNumbers = false;
@@ -103,19 +114,9 @@ class JsonViewer extends Field
         return $this->maxDepth;
     }
 
-    public function getHiddenKeys(): array
-    {
-        return $this->hiddenKeys;
-    }
-
     public function shouldShowTypes(): bool
     {
         return $this->showTypes;
-    }
-
-    public function getTheme(): string
-    {
-        return $this->theme;
     }
 
     public function hasToolbar(): bool

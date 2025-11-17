@@ -6,13 +6,15 @@ use App\Http\Controllers\AccountController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\EnrollmentController;
 use App\Livewire\ConvertPdf;
-use App\Livewire\Pages\Admins\DashboardAdmin;
 use App\Livewire\Pages\Courses\Certifications;
+use App\Livewire\Pages\Courses\CoursePlayer;
 use App\Livewire\Pages\Courses\FormationsLists;
 use App\Livewire\Pages\Courses\LearningCourse;
 use App\Livewire\Pages\Frontend\Formations;
 use App\Livewire\Pages\Frontend\Payments\StudentPayment;
 use App\Livewire\Pages\Frontend\ShowFormation\DetailFormation;
+use App\Livewire\Pages\Profile;
+use App\Livewire\Pages\Students\DashboardStudent;
 use Illuminate\Support\Facades\Route;
 use Livewire\Volt\Volt;
 
@@ -30,10 +32,21 @@ Route::get('/formations-continue', FormationsLists::class)->name('formations-lis
 Volt::route('/nos-tarifs', 'pages.pricings')->name('pages.pricings');
 
 Route::middleware('auth')->group(function () {
-    Route::get('/dashboard', DashboardAdmin::class)->name('dashboard');
+    // Redirection vers la liste des formations après connexion
+    Route::get('/dashboard', DashboardStudent::class)->name('dashboard');
+
+    // Page profil utilisateur avec statistiques
+    Route::get('/profile', Profile::class)->name('profile');
+
     Route::get('/dash', [DashboardController::class, 'index'])->name('content');
     Route::get('/formation/{formation}/payment', StudentPayment::class)
         ->name('student.payment.create');
+
+    // Nouvelle route pour le lecteur de cours type Udemy
+    Route::get('/course/{formation}/learn', CoursePlayer::class)
+        ->name('course.player');
+
+    // Ancienne route master-class (à conserver pour compatibilité)
     Route::get('/master-class/{masterClass}/formations', LearningCourse::class)
         ->name('master-class')
         ->middleware('restrict.student.access');
@@ -42,7 +55,6 @@ Route::middleware('auth')->group(function () {
         ->middleware('check.status:inactive');
 });
 
-
 Route::group(['prefix' => 'enrollments'], function () {
     Route::get('/{enrollment}/invoice', EnrollmentController::class)
         ->name('enrollments.invoice');
@@ -50,4 +62,4 @@ Route::group(['prefix' => 'enrollments'], function () {
         ->name('enrollments.refund');
 });
 
-require __DIR__ . '/auth.php';
+require __DIR__.'/auth.php';

@@ -3,7 +3,6 @@
 namespace App\Filament\Resources;
 
 use App\Enums\FormationLevelEnum;
-use App\Enums\UserRoleEnum;
 use App\Filament\Resources\FormationResource\Pages;
 use App\Filament\Resources\FormationResource\RelationManagers;
 use App\Models\Formation;
@@ -86,38 +85,11 @@ class FormationResource extends Resource
                             ->prefix('€')
                             ->step(0.01),
 
-                        Forms\Components\TextInput::make('certification_threshold')
-                            ->label('Seuil de certification (%)')
-                            ->numeric()
-                            ->minValue(0)
-                            ->maxValue(100)
-                            ->default(80),
-
-                        Forms\Components\Select::make('created_by')
-                            ->label('Créé par')
-                            ->relationship('creator', 'name', fn($query) => $query->whereIn('role', [UserRoleEnum::ADMIN, UserRoleEnum::INSTRUCTOR]))
-                            ->searchable()
-                            ->preload()
-                            ->default(auth()->id())
-                            ->required(),
-
                         Forms\Components\TextInput::make('duration_hours')
                             ->label('Durée (heures)')
                             ->numeric()
                             ->minValue(0)
                             ->default(0),
-
-                        Forms\Components\Select::make('language')
-                            ->label('Langue')
-                            ->options([
-                                'fr' => 'Français',
-                                'en' => 'Anglais',
-                                'es' => 'Espagnol',
-                                'de' => 'Allemand',
-                                'it' => 'Italien',
-                                'pt' => 'Portugais',
-                                'ru' => 'Russe',
-                            ])
                     ])
                     ->columns(2),
 
@@ -133,7 +105,7 @@ class FormationResource extends Resource
                             ->label('En vedette'),
 
                         Forms\Components\TagsInput::make('tags')
-                            ->label('Tags')
+                            ->label('Secteur de formation')
                             ->separator(','),
                     ])
                     ->columns(3),
@@ -175,11 +147,6 @@ class FormationResource extends Resource
                     })
                     ->sortable(),
 
-                Tables\Columns\TextColumn::make('creator.name')
-                    ->label('Créateur')
-                    ->sortable()
-                    ->searchable(),
-
                 Tables\Columns\TextColumn::make('difficulty_level')
                     ->label('Niveau')
                     ->badge()
@@ -213,12 +180,6 @@ class FormationResource extends Resource
                 Tables\Filters\SelectFilter::make('difficulty_level')
                     ->label('Niveau de difficulté')
                     ->options(FormationLevelEnum::class),
-
-                Tables\Filters\SelectFilter::make('creator')
-                    ->label('Créateur')
-                    ->relationship('creator', 'name')
-                    ->searchable()
-                    ->preload(),
             ])
             ->actions([
                 Tables\Actions\ActionGroup::make([
@@ -256,7 +217,6 @@ class FormationResource extends Resource
     public static function getRelations(): array
     {
         return [
-            RelationManagers\ModulesRelationManager::class,
             RelationManagers\StudentsRelationManager::class,
         ];
     }

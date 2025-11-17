@@ -18,7 +18,7 @@ return new class extends Migration {
             $table->timestamp('issue_date')->useCurrent();
             $table->timestamp('expiry_date')->nullable();
             $table->string('verification_hash', 64)->unique();
-            $table->enum('status', ['active', 'revoked', 'expired'])->default('active');
+            $table->string('status')->default('active');
             $table->string('file_path')->nullable();
             $table->decimal('final_score', 5, 2);
             $table->json('metadata')->nullable()->comment('Additional certificate data');

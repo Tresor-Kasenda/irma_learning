@@ -35,6 +35,7 @@ final class LearningCourse extends Component
     {
         if (! auth()->check()) {
             $this->redirect(route('login'), navigate: true);
+
             return;
         }
 
@@ -43,6 +44,7 @@ final class LearningCourse extends Component
         // Si l'utilisateur est un étudiant, le rediriger vers sa page de formations
         if ($user->isStudent()) {
             $this->redirect(route('student.my-master-classes', ['activeTab' => 'available']), navigate: true);
+
             return;
         }
 

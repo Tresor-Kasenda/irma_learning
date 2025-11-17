@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Database\Factories;
 
 use App\Models\Chapter;
-use App\Models\MasterClass;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -21,13 +20,15 @@ final class ChapterFactory extends Factory
     public function definition(): array
     {
         return [
-            'master_class_id' => MasterClass::factory(),
-            'title' => $this->faker->sentence,
-            'content' => $this->faker->paragraph,
-            'points' => $this->faker->numberBetween(1, 20),
-            'order_sequence' => $this->faker->numberBetween(1, 10),
-            'description' => $this->faker->paragraph,
-            'path' => $this->faker->url,
+            'title' => $this->faker->sentence(4),
+            'content' => $this->faker->paragraphs(3, true),
+            'content_type' => $this->faker->randomElement(['text', 'video', 'pdf', 'audio', 'interactive']),
+            'media_url' => $this->faker->optional()->url,
+            'duration_minutes' => $this->faker->numberBetween(5, 60),
+            'order_position' => $this->faker->numberBetween(1, 20),
+            'is_free' => $this->faker->boolean(20),
+            'is_active' => true,
+            'description' => $this->faker->sentence(),
         ];
     }
 }

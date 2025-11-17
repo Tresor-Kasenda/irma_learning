@@ -12,10 +12,12 @@ return new class extends Migration {
     {
         Schema::create('user_progress', function (Blueprint $table) {
             $table->foreignId('user_id')->constrained();
-            $table->morphs('trackable'); // Polymorphic relation (chapter, section, module, formation)
+            $table->morphs('trackable');
             $table->decimal('progress_percentage', 5, 2)->default(0);
-            $table->integer('time_spent')->default(0)->comment('Time in seconds');
-            $table->enum('status', ['not_started', 'in_progress', 'completed'])->default('not_started');
+            $table->integer('time_spent')
+                ->default(0)
+                ->comment('Time in seconds');
+            $table->string('status')->default('not_started');
             $table->timestamp('started_at')->nullable();
             $table->timestamp('completed_at')->nullable();
             $table->timestamps();

@@ -15,7 +15,7 @@ class ListSections extends ListRecords
         return [
             Actions\CreateAction::make()
                 ->label('Créer une section')
-                ->icon('heroicon-o-plus'),
+                ->icon('heroicon-o-plus-circle'),
         ];
     }
 }

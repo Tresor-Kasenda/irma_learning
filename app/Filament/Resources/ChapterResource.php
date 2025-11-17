@@ -1,14 +1,15 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Filament\Resources;
 
 use App\Enums\ChapterTypeEnum;
 use App\Filament\Resources\ChapterResource\Pages;
-use App\Forms\Components\JsonViewer;
 use App\Models\Chapter;
 use App\Models\Section;
-use App\Service\PdfExtractionService;
-use App\Service\ReadingDurationCalculatorService;
+use App\Services\DocumentConversionService;
+use App\Services\ReadingDurationCalculatorService;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Exception;
 use Filament\Forms;
@@ -22,9 +23,8 @@ use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
-use Log;
 
-class ChapterResource extends Resource
+final class ChapterResource extends Resource
 {
     protected static ?string $model = Chapter::class;
 
@@ -41,33 +41,35 @@ class ChapterResource extends Resource
         return $table
             ->modifyQueryUsing(fn(Builder $query) => $query->groupBy('section'))
             ->columns([
-                Tables\Columns\TextColumn::make('section.title')
+                TextColumn::make('section.title')
                     ->label('Section')
                     ->sortable()
                     ->searchable()
                     ->limit(30)
                     ->tooltip(function (TextColumn $column): ?string {
                         $state = $column->getState();
-                        if (strlen($state) <= $column->getCharacterLimit()) {
+                        if (mb_strlen($state) <= $column->getCharacterLimit()) {
                             return null;
                         }
+
                         return $state;
                     }),
 
-                Tables\Columns\TextColumn::make('title')
+                TextColumn::make('title')
                     ->label('Titre du chapitre')
                     ->searchable()
                     ->sortable()
                     ->limit(40)
                     ->tooltip(function (TextColumn $column): ?string {
                         $state = $column->getState();
-                        if (strlen($state) <= $column->getCharacterLimit()) {
+                        if (mb_strlen($state) <= $column->getCharacterLimit()) {
                             return null;
                         }
+
                         return $state;
                     }),
 
-                Tables\Columns\TextColumn::make('content_type')
+                TextColumn::make('content_type')
                     ->label('Type')
                     ->badge()
                     ->color(fn(ChapterTypeEnum $state): string => match ($state) {
@@ -79,7 +81,7 @@ class ChapterResource extends Resource
                         default => 'gray',
                     }),
 
-                Tables\Columns\TextColumn::make('duration_minutes')
+                TextColumn::make('duration_minutes')
                     ->label('Durée (min)')
                     ->numeric()
                     ->sortable()
@@ -97,6 +99,7 @@ class ChapterResource extends Resource
                         if ($hours > 0) {
                             return "{$hours}h {$minutes}min";
                         }
+
                         return "{$minutes} min";
                     }),
 
@@ -174,22 +177,7 @@ class ChapterResource extends Resource
                                 ->required(),
                         ])
                         ->action(function ($record, array $data) {
-                            static::recalculateReadingDuration($record, $data['reading_level']);
-                        }),
-
-                    Tables\Actions\Action::make('debug_file')
-                        ->label('Debug Fichier')
-                        ->icon('heroicon-o-bug-ant')
-                        ->visible(fn($record) => !empty($record->media_url))
-                        ->action(function ($record) {
-                            $debugInfo = static::debugFileLocation($record->media_url);
-
-                            Notification::make()
-                                ->title('Debug Info')
-                                ->body('<pre>' . json_encode($debugInfo, JSON_PRETTY_PRINT) . '</pre>')
-                                ->info()
-                                ->persistent()
-                                ->send();
+                            ChapterResource::recalculateReadingDuration($record, $data['reading_level']);
                         }),
 
                     Tables\Actions\Action::make('export_pdf')
@@ -197,34 +185,14 @@ class ChapterResource extends Resource
                         ->icon('heroicon-o-document-arrow-down')
                         ->visible(fn($record) => !empty($record->media_url ?? []))
                         ->action(function ($record) {
-                            static::exportToPdf($record);
+                            ChapterResource::exportToPdf($record);
                         })
                         ->tooltip('Exporter le chapitre vers un nouveau PDF'),
-
-                    Tables\Actions\Action::make('re_extract')
-                        ->label('Re-extraire du PDF')
-                        ->icon('heroicon-o-arrow-path')
-                        ->visible(fn($record) => !empty($record->media_url ?? []))
-                        ->form([
-                            Forms\Components\Toggle::make('extract_images')
-                                ->label('Extraire les images')
-                                ->default(true),
-                            Forms\Components\Toggle::make('extract_code')
-                                ->label('Détecter et formater le code')
-                                ->default(true),
-                            Forms\Components\Toggle::make('create_toc')
-                                ->label('Créer une table des matières')
-                                ->default(true),
-                        ])
-                        ->action(function ($record, array $data) {
-                            static::reExtractFromPdf($record, $data);
-                        })
-                        ->tooltip('Re-extraire le contenu avec de nouveaux paramètres'),
-
                     Tables\Actions\DeleteAction::make()
                         ->label('Supprimer')
-                        ->icon('heroicon-o-trash'),
-                ])
+                        ->icon('heroicon-o-trash')
+                        ->requiresConfirmation(),
+                ]),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
@@ -254,10 +222,10 @@ class ChapterResource extends Resource
                         ->label('Exporter en PDF (Sélection)')
                         ->icon('heroicon-o-document-arrow-down')
                         ->action(function ($records) {
-                            static::exportMultipleToPdf($records);
+                            ChapterResource::exportMultipleToPdf($records);
                         })
                         ->deselectRecordsAfterCompletion(),
-                ])
+                ]),
             ])
             ->defaultSort('order_position', 'asc');
     }
@@ -272,16 +240,18 @@ class ChapterResource extends Resource
                             ->label('Section')
                             ->relationship('section', 'title')
                             ->searchable()
-                            ->getOptionLabelFromRecordUsing(fn($record) => strlen($record->title) > 50
-                                ? substr($record->title, 0, 50) . '...'
+                            ->getOptionLabelFromRecordUsing(fn($record) => mb_strlen($record->title) > 50
+                                ? mb_substr($record->title, 0, 50) . '...'
                                 : $record->title
                             )
                             ->extraAttributes(function ($get) {
                                 $sectionId = $get('section_id');
                                 if ($sectionId) {
                                     $formation = Section::find($sectionId);
+
                                     return $formation ? ['title' => $formation->title] : [];
                                 }
+
                                 return [];
                             })
                             ->required(),
@@ -304,7 +274,6 @@ class ChapterResource extends Resource
                             ->default('text')
                             ->live()
                             ->afterStateUpdated(function ($state, Forms\Set $set) {
-                                $set('metadata', []);
                                 $set('media_url', null);
                             }),
 
@@ -323,7 +292,7 @@ class ChapterResource extends Resource
                             ->live()
                             ->afterStateUpdated(function ($state, Forms\Set $set, Forms\Get $get) {
                                 if ($state) {
-                                    static::extractPdfContent($state, $set, $get);
+                                    ChapterResource::extractPdfContent($state, $set, $get);
                                 }
                             })
                             ->afterStateHydrated(function ($component, $state) {
@@ -336,8 +305,9 @@ class ChapterResource extends Resource
                                             ->send();
                                     }
                                 }
-                            })
-                    ]),
+                            }),
+                    ])
+                    ->columns(2),
 
                 Forms\Components\Section::make('Configuration du contenu')
                     ->schema([
@@ -345,25 +315,24 @@ class ChapterResource extends Resource
                             ->label('Contenu principal')
                             ->columnSpanFull()
                             ->helperText('Le contenu sera automatiquement rempli lors de l\'import PDF'),
-
-                        JsonViewer::make('metadata')
-                            ->label('Métadonnées')
-                            ->collapsible(true)
-                            ->maxDepth(8)
-                            ->hideKeys(['sensitive_data', 'internal_cache'])
-                            ->helperText('Informations détaillées sur l\'extraction et l\'analyse du contenu')
-                            ->columnSpanFull(),
                     ])
                     ->columns(2),
 
                 Forms\Components\Section::make('Paramètres')
                     ->schema([
                         Forms\Components\TextInput::make('order_position')
-                            ->label('Position dans la section')
+                            ->label('Position du chapitre')
                             ->numeric()
-                            ->default(1)
-                            ->required()
-                            ->minValue(1),
+                            ->disabled()
+                            ->dehydrated(false)
+                            ->default(function (Forms\Get $get) {
+                                $sectionId = $get('section_id');
+                                if ($sectionId) {
+                                    return (Chapter::where('section_id', $sectionId)->max('order_position') ?? 0) + 1;
+                                }
+                                return 1;
+                            })
+                            ->helperText('Position automatique (prochaine disponible dans cette section)'),
 
                         Forms\Components\TextInput::make('duration_minutes')
                             ->label('Durée estimée (minutes)')
@@ -396,19 +365,11 @@ class ChapterResource extends Resource
             if (!$pdfFile) {
                 return;
             }
+            $filePath = '';
 
             if ($pdfFile instanceof TemporaryUploadedFile) {
                 $filePath = $pdfFile->getRealPath();
                 $permanentPath = $pdfFile->store('chapters', 'public');
-
-                $currentMetadata = $get('metadata') ?? [];
-                $currentMetadata['pdf_info'] = array_merge($currentMetadata['pdf_info'] ?? [], [
-                    'original_path' => $filePath,
-                    'storage_path' => $permanentPath,
-                    'filename' => $pdfFile->getClientOriginalName(),
-                    'uploaded_at' => now()->toDateTimeString(),
-                ]);
-                $set('metadata', $currentMetadata);
 
                 $pdfFile = $filePath;
             }
@@ -423,40 +384,35 @@ class ChapterResource extends Resource
                     ->body('Impossible de trouver le fichier PDF.')
                     ->danger()
                     ->send();
+
                 return;
             }
 
-            $currentMetadata = $get('metadata') ?? [];
-            $currentMetadata['pdf_info'] = array_merge($currentMetadata['pdf_info'] ?? [], [
-                'original_path' => $filePath,
-                'filename' => basename($pdfFile),
-                'storage_path' => $pdfFile,
-                'storage_disk' => 'public',
-                'uploaded_at' => now()->toDateTimeString(),
-            ]);
-            $set('metadata', $currentMetadata);
-
-            $options = [
-                'extractImages' => $get('extract_images') ?? true,
-                'extractCode' => $get('extract_code') ?? true,
-                'createTableOfContents' => $get('create_toc') ?? true,
-                'generateCoverImage' => $get('generate_cover') ?? true,
+            $extractionService = app(DocumentConversionService::class);
+            $result = $extractionService->convert($filePath, [
+                'extractImages' => true,
+                'extractTables' => true,
+                'extractFormulas' => true,
+                'extractCode' => true,
+                'generateTOC' => true,
                 'ignorePageNumbers' => true,
-            ];
+            ]);
 
-            $extractionService = app(PdfExtractionService::class);
-            $extractedData = $extractionService->extractPdfContent($filePath, $options);
+            $extractedData = [
+                'title' => $result['title'],
+                'description' => $result['description'],
+                'content' => $result['content'],
+                'estimated_duration' => $result['estimated_duration'],
+            ];
 
             $durationService = app(ReadingDurationCalculatorService::class);
             $readingAnalysis = $durationService->calculateReadingDuration(
                 $extractedData['content'],
-                $extractedData['metadata'],
                 'average' // Niveau par défaut
             );
 
             $multiLevelAnalysis = $durationService->getMultiLevelEstimation(
                 $extractedData['content'],
-                $extractedData['metadata']
             );
 
             $set('title', $extractedData['title']);
@@ -464,48 +420,6 @@ class ChapterResource extends Resource
             $set('content', $extractedData['content']);
             $set('duration_minutes', $readingAnalysis['total_minutes']); // Durée calculée précisément
             $set('content_type', 'pdf');
-
-            // Sauvegarder l'analyse complète dans les métadonnées
-            $mergedMetadata = array_merge(
-                $get('metadata') ?? [],
-                $extractedData['metadata'],
-                [
-                    'reading_analysis' => $readingAnalysis['analysis'],
-                    'duration_breakdown' => $readingAnalysis['breakdown'],
-                    'multi_level_estimations' => $multiLevelAnalysis,
-                    'recommendations' => $readingAnalysis['recommendations'],
-                ]
-            );
-            $set('metadata', $mergedMetadata);
-
-            $preview = static::generateExtractionPreview($extractedData, $readingAnalysis, $multiLevelAnalysis);
-            $set('extraction_preview', $preview);
-
-            // Merge extracted metadata with our file info
-            $mergedMetadata = array_merge($currentMetadata, $extractedData['metadata']);
-            $set('metadata', $mergedMetadata);
-
-            $preview = "✅ Extraction réussie!\n\n";
-            $preview .= "📄 Titre: {$extractedData['title']}\n";
-            $preview .= "⏱️ Durée estimée: {$extractedData['estimated_duration']} minutes\n";
-            $preview .= "📊 Nombre de pages: {$extractedData['metadata']['pdf_info']['page_count']}\n";
-
-            if (!empty($extractedData['metadata']['extracted_images'])) {
-                $imageCount = count($extractedData['metadata']['extracted_images']);
-                $preview .= "🖼️ Images extraites: {$imageCount}\n";
-            }
-
-            if (!empty($extractedData['metadata']['table_of_contents'])) {
-                $tocCount = count($extractedData['metadata']['table_of_contents']);
-                $preview .= "📋 Sections détectées: {$tocCount}\n";
-            }
-
-            if (!empty($extractedData['metadata']['cover_image'])) {
-                $preview .= "🎨 Image de couverture générée\n";
-            }
-
-            $preview .= "\n📝 Contenu prêt pour la publication!";
-            $set('extraction_preview', $preview);
 
             Notification::make()
                 ->title('Extraction PDF réussie')
@@ -519,81 +433,7 @@ class ChapterResource extends Resource
                 ->body('Erreur lors de l\'extraction: ' . $e->getMessage())
                 ->danger()
                 ->send();
-
-            $set('extraction_preview', '❌ Erreur lors de l\'extraction du PDF');
         }
-    }
-
-    /**
-     * Génère un aperçu détaillé de l'extraction
-     */
-    private static function generateExtractionPreview(
-        array $extractedData,
-        array $readingAnalysis,
-        array $multiLevelAnalysis
-    ): string
-    {
-        $preview = "✅ **Extraction réussie!**\n\n";
-
-        // Informations de base
-        $preview .= "📄 **Titre:** {$extractedData['title']}\n";
-        $preview .= "📊 **Pages:** {$extractedData['metadata']['pdf_info']['page_count']}\n";
-        $preview .= "📝 **Mots:** " . number_format($readingAnalysis['analysis']['word_count']) . "\n\n";
-
-        // Durées par niveau
-        $preview .= "⏱️ **Durées de lecture estimées:**\n";
-        foreach ($multiLevelAnalysis as $level => $analysis) {
-            $levelName = match ($level) {
-                'beginner' => 'Débutant',
-                'average' => 'Moyen',
-                'advanced' => 'Avancé',
-                'professional' => 'Professionnel'
-            };
-            $preview .= "  • {$levelName}: {$analysis['total_minutes']} minutes\n";
-        }
-        $preview .= "\n";
-
-        // Analyse de complexité
-        $difficulty = match ($readingAnalysis['analysis']['reading_difficulty']) {
-            'easy' => 'Facile 😊',
-            'medium' => 'Moyen 📚',
-            'hard' => 'Difficile 🤔',
-            'very_hard' => 'Très difficile 🎓'
-        };
-        $preview .= "🎯 **Difficulté:** {$difficulty}\n";
-        $preview .= "🔧 **Termes techniques:** {$readingAnalysis['analysis']['technical_terms']}\n";
-        $preview .= "💻 **Blocs de code:** {$readingAnalysis['analysis']['code_blocks']}\n\n";
-
-        // Détail du temps
-        $breakdown = $readingAnalysis['breakdown'];
-        $preview .= "📊 **Répartition du temps:**\n";
-        $preview .= "  • Lecture de base: {$breakdown['base_reading']} min\n";
-        $preview .= "  • Ajustement complexité: {$breakdown['complexity_adjustment']} min\n";
-        $preview .= "  • Éléments spéciaux: {$breakdown['elements_time']} min\n";
-        $preview .= "  • Temps d'interaction: {$breakdown['interaction_time']} min\n\n";
-
-        // Éléments extraits
-        if (!empty($extractedData['metadata']['extracted_images'])) {
-            $imageCount = count($extractedData['metadata']['extracted_images']);
-            $preview .= "🖼️ **Images extraites:** {$imageCount}\n";
-        }
-
-        if (!empty($extractedData['metadata']['table_of_contents'])) {
-            $tocCount = count($extractedData['metadata']['table_of_contents']);
-            $preview .= "📋 **Sections détectées:** {$tocCount}\n";
-        }
-
-        // Recommandations
-        if (!empty($readingAnalysis['recommendations'])) {
-            $preview .= "\n💡 **Recommandations:**\n";
-            foreach ($readingAnalysis['recommendations'] as $recommendation) {
-                $preview .= "  • {$recommendation}\n";
-            }
-        }
-
-        $preview .= "\n✨ **Contenu prêt pour la publication!**";
-
-        return $preview;
     }
 
     protected static function recalculateReadingDuration($record, string $level = 'average'): void
@@ -610,22 +450,13 @@ class ChapterResource extends Resource
                 $level
             );
 
-            $multiLevelAnalysis = $durationService->getMultiLevelEstimation(
+            $durationService->getMultiLevelEstimation(
                 $record->content,
                 $record->metadata ?? []
             );
 
-            $updatedMetadata = array_merge($record->metadata ?? [], [
-                'reading_analysis' => $readingAnalysis['analysis'],
-                'duration_breakdown' => $readingAnalysis['breakdown'],
-                'multi_level_estimations' => $multiLevelAnalysis,
-                'recommendations' => $readingAnalysis['recommendations'],
-                'last_duration_calculation' => now()->toDateTimeString(),
-            ]);
-
             $record->update([
-                'duration_minutes' => $readingAnalysis['total_minutes'],
-                'metadata' => $updatedMetadata,
+                'duration_minutes' => $readingAnalysis['total_minutes']
             ]);
 
             Notification::make()
@@ -644,59 +475,12 @@ class ChapterResource extends Resource
     }
 
     /**
-     * Méthode de débogage pour diagnostiquer les problèmes de fichiers
-     */
-    public static function debugFileLocation($pdfFile): array
-    {
-        $debug = [
-            'original_value' => $pdfFile,
-            'type' => gettype($pdfFile),
-            'is_array' => is_array($pdfFile),
-            'storage_info' => [],
-            'file_checks' => [],
-        ];
-
-        $debug['storage_info'] = [
-            'public_path' => Storage::disk('public')->path(''),
-            'local_path' => Storage::disk('local')->path(''),
-            'chapters_files' => Storage::disk('public')->allFiles('chapters'),
-            'temp_files' => Storage::disk('public')->allFiles('livewire-tmp'),
-        ];
-
-        $fileName = is_array($pdfFile) ? ($pdfFile[0] ?? null) : $pdfFile;
-
-        if ($fileName) {
-            $pathsToTest = [
-                'direct' => $fileName,
-                'storage_public' => Storage::disk('public')->path($fileName),
-                'storage_public_chapters' => Storage::disk('public')->path('chapters/' . basename($fileName)),
-                'storage_local' => Storage::disk('local')->path($fileName),
-                'absolute_public' => storage_path('app/public/' . $fileName),
-                'absolute_chapters' => storage_path('app/public/chapters/' . basename($fileName)),
-                'livewire_tmp' => storage_path('app/public/livewire-tmp/' . basename($fileName)),
-            ];
-
-            foreach ($pathsToTest as $key => $path) {
-                $debug['file_checks'][$key] = [
-                    'path' => $path,
-                    'exists' => file_exists($path),
-                    'is_readable' => file_exists($path) && is_readable($path),
-                    'size' => file_exists($path) ? filesize($path) : null,
-                    'mime_type' => file_exists($path) ? mime_content_type($path) : null,
-                ];
-            }
-        }
-
-        return $debug;
-    }
-
-    /**
      * Exporte un chapitre vers un PDF
      */
     protected static function exportToPdf($record): void
     {
         try {
-            $html = static::convertMarkdownToHtml($record->content);
+            $html = self::convertMarkdownToHtml($record->content);
             $pdf = Pdf::loadHTML($html);
 
             $filename = 'chapitre-' . $record->id . '-' . time() . '.pdf';
@@ -716,7 +500,7 @@ class ChapterResource extends Resource
                     Action::make('download')
                         ->button()
                         ->url(asset('storage/exports/' . $filename))
-                        ->openUrlInNewTab()
+                        ->openUrlInNewTab(),
                 ])
                 ->send();
 
@@ -760,42 +544,6 @@ class ChapterResource extends Resource
     }
 
     /**
-     * Re-extrait le contenu à partir du PDF original avec de nouveaux paramètres
-     */
-    protected static function reExtractFromPdf($record, array $options): void
-    {
-        try {
-            $originalPdfPath = $record->metadata['pdf_info']['original_path'] ?? null;
-
-            if (!$originalPdfPath || !file_exists($originalPdfPath)) {
-                throw new Exception('Fichier PDF original introuvable');
-            }
-
-            $extractionService = app(PdfExtractionService::class);
-            $extractedData = $extractionService->extractPdfContent($originalPdfPath, $options);
-
-            $record->update([
-                'content' => $extractedData['content'],
-                'duration_minutes' => $extractedData['estimated_duration'],
-                'metadata' => array_merge($record->metadata ?? [], $extractedData['metadata']),
-            ]);
-
-            Notification::make()
-                ->title('Re-extraction réussie')
-                ->body('Le contenu a été re-extrait avec succès avec les nouveaux paramètres.')
-                ->success()
-                ->send();
-
-        } catch (Exception $e) {
-            Notification::make()
-                ->title('Erreur de re-extraction')
-                ->body('Erreur: ' . $e->getMessage())
-                ->danger()
-                ->send();
-        }
-    }
-
-    /**
      * Exporte plusieurs chapitres en un seul PDF
      */
     protected static function exportMultipleToPdf($records): void
@@ -805,7 +553,7 @@ class ChapterResource extends Resource
 
             foreach ($records as $record) {
                 $combinedHtml .= '<h1>' . e($record->title) . '</h1>';
-                $combinedHtml .= static::convertMarkdownToHtml($record->content);
+                $combinedHtml .= self::convertMarkdownToHtml($record->content);
                 $combinedHtml .= '<div style="page-break-after: always;"></div>';
             }
 
@@ -827,7 +575,7 @@ class ChapterResource extends Resource
                     Action::make('download')
                         ->button()
                         ->url(asset('storage/exports/' . $filename))
-                        ->openUrlInNewTab()
+                        ->openUrlInNewTab(),
                 ])
                 ->send();
 
@@ -861,11 +609,6 @@ class ChapterResource extends Resource
     {
         return parent::getEloquentQuery()
             ->withoutGlobalScopes()
-            ->with(['section.module.formation']);
-    }
-
-    public static function getNavigationBadge(): ?string
-    {
-        return static::getModel()::count();
+            ->with(['section.formation']);
     }
 }

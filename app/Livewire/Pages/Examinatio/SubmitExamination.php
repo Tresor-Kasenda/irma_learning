@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Livewire\Pages\Examinatio;
 
 use App\Models\MasterClass;
@@ -15,7 +17,7 @@ use Livewire\Attributes\Locked;
 use Livewire\Attributes\Validate;
 use Livewire\Component;
 
-class SubmitExamination extends Component implements HasForms
+final class SubmitExamination extends Component implements HasForms
 {
     use InteractsWithForms;
 
@@ -29,7 +31,7 @@ class SubmitExamination extends Component implements HasForms
 
     public function mount(MasterClass $masterClass): void
     {
-        if (!$this->canAccessFinalExam()) {
+        if (! $this->canAccessFinalExam()) {
             $this->redirect(route('student.course.learning', $masterClass));
         }
 
@@ -42,11 +44,6 @@ class SubmitExamination extends Component implements HasForms
 
         $this->masterClass = $masterClass->load('finalExam');
         $this->form->fill();
-    }
-
-    private function canAccessFinalExam(): bool
-    {
-        return $this->masterClass->chapters->every(fn($chapter) => $chapter->isCompleted());
     }
 
     public function hasSubmittedFinalExam(): bool
@@ -66,7 +63,7 @@ class SubmitExamination extends Component implements HasForms
                     ->acceptedFileTypes(['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'])
                     ->maxSize(10240)
                     ->disabled($this->hasSubmittedFinalExam())
-                    ->directory('final-exam-submissions')
+                    ->directory('final-exam-submissions'),
             ])
             ->disabled($this->hasSubmittedFinalExam());
     }
@@ -94,12 +91,17 @@ class SubmitExamination extends Component implements HasForms
         );
 
         $this->redirect(route('student.course.learning', [
-            'masterClass' => $this->masterClass
+            'masterClass' => $this->masterClass,
         ]));
     }
 
     public function render(): View
     {
         return view('livewire.pages.examinatio.submit-examination');
+    }
+
+    private function canAccessFinalExam(): bool
+    {
+        return $this->masterClass->chapters->every(fn ($chapter) => $chapter->isCompleted());
     }
 }

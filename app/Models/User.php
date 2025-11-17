@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
-use App\Enums\PermissionEnum;
 use App\Enums\UserRoleEnum;
 use App\Enums\UserStatusEnum;
 use Database\Factories\UserFactory;
@@ -13,7 +12,6 @@ use Exception;
 use Filament\Models\Contracts\FilamentUser;
 use Filament\Panel;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasManyThrough;
@@ -43,6 +41,7 @@ final class User extends Authenticatable implements FilamentUser
         'phone',
         'avatar',
         'status',
+        'must_change_password'
     ];
 
     /**
@@ -65,11 +64,6 @@ final class User extends Authenticatable implements FilamentUser
         return $this->hasMany(UserProgress::class);
     }
 
-    public function createdFormations(): HasMany
-    {
-        return $this->hasMany(Formation::class, 'created_by');
-    }
-
     public function examAttempts(): HasMany
     {
         return $this->hasMany(ExamAttempt::class);
@@ -85,21 +79,6 @@ final class User extends Authenticatable implements FilamentUser
         return $this->hasManyThrough(UserAnswer::class, ExamAttempt::class);
     }
 
-    public function scopeActive($query): Model
-    {
-        return $query->where('status', 'active');
-    }
-
-    public function scopeStudents($query): Model
-    {
-        return $query->where('role', 'student');
-    }
-
-    public function scopeInstructors($query): Model
-    {
-        return $query->where('role', 'instructor');
-    }
-
     public function isEnrolledIn(Formation $formation): bool
     {
         return $this->formations()->where('formation_id', $formation->id)->exists();
@@ -112,14 +91,6 @@ final class User extends Authenticatable implements FilamentUser
             ->withTimestamps();
     }
 
-    public function hasCompletedFormation(Formation $formation): bool
-    {
-        return $this->enrollments()
-            ->where('formation_id', $formation->id)
-            ->where('status', 'completed')
-            ->exists();
-    }
-
     public function enrollments(): HasMany
     {
         return $this->hasMany(Enrollment::class);
@@ -128,25 +99,6 @@ final class User extends Authenticatable implements FilamentUser
     public function certificates(): HasMany
     {
         return $this->hasMany(Certificate::class);
-    }
-
-    public function hasPermission(PermissionEnum $permission): bool
-    {
-        if ($this->isRoot()) {
-            return true;
-        }
-
-        return match ($this->role) {
-            UserRoleEnum::ADMIN->value => $this
-                ->getAdminPermissions()
-                ->contains($permission->value),
-            default => false,
-        };
-    }
-
-    public function isRoot(): bool
-    {
-        return $this->role === UserRoleEnum::ROOT;
     }
 
     /**
@@ -163,12 +115,17 @@ final class User extends Authenticatable implements FilamentUser
 
     public function isAdmin(): bool
     {
-        return $this->role === UserRoleEnum::ADMIN;
+        return $this->role->value === UserRoleEnum::ADMIN->value;
     }
 
     public function isSuperAdmin(): bool
     {
         return $this->isRoot();
+    }
+
+    public function isRoot(): bool
+    {
+        return $this->role->value === UserRoleEnum::ROOT->value;
     }
 
     public function getActivitylogOptions(): LogOptions
@@ -189,25 +146,7 @@ final class User extends Authenticatable implements FilamentUser
 
     public function isStudent(): bool
     {
-        return $this->role === UserRoleEnum::STUDENT;
-    }
-
-    public function getEnrollmentsWithProgress()
-    {
-        return $this->enrollments()
-            ->with([
-                'formation' => function ($query) {
-                    $query->select('id', 'title', 'slug', 'difficulty_level', 'price')
-                        ->withCount('modules');
-                },
-                'formation.modules' => function ($query) {
-                    $query->select('id', 'formation_id', 'title')
-                        ->withCount('sections');
-                }
-            ])
-            ->paid()
-            ->latest()
-            ->get();
+        return $this->role->value === UserRoleEnum::STUDENT->value;
     }
 
     /**

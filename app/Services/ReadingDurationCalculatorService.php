@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Service;
+namespace App\Services;
 
 class ReadingDurationCalculatorService
 {
@@ -9,14 +9,6 @@ class ReadingDurationCalculatorService
         'average' => 200,
         'advanced' => 250,
         'professional' => 300,
-    ];
-
-    private const array COMPLEXITY_FACTORS = [
-        'technical' => 1.5,
-        'code' => 2.0,
-        'mathematical' => 1.8,
-        'diagram' => 1.3,
-        'normal' => 1.0,
     ];
 
     private const array ELEMENT_TIME = [
@@ -35,7 +27,7 @@ class ReadingDurationCalculatorService
         $estimations = [];
 
         foreach (self::READING_SPEEDS as $level => $speed) {
-            $estimations[$level] = $this->calculateReadingDuration($content, $metadata, $level);
+            $estimations[$level] = $this->calculateReadingDuration($content, $level);
         }
 
         return $estimations;
@@ -46,17 +38,15 @@ class ReadingDurationCalculatorService
      */
     public function calculateReadingDuration(
         string $content,
-        array  $metadata = [],
         string $level = 'average'
     ): array
     {
         $analysis = $this->analyzeContent($content);
         $baseReadingTime = $this->calculateBaseReadingTime($analysis['word_count'], $level);
         $complexityAdjustment = $this->calculateComplexityAdjustment($analysis, $baseReadingTime);
-        $elementsTime = $this->calculateElementsTime($metadata);
         $interactionTime = $this->calculateInteractionTime($analysis);
 
-        $totalMinutes = $baseReadingTime + $complexityAdjustment + $elementsTime + $interactionTime;
+        $totalMinutes = $baseReadingTime + $complexityAdjustment + $interactionTime;
 
         $totalMinutes = ceil($totalMinutes);
 
@@ -65,7 +55,6 @@ class ReadingDurationCalculatorService
             'breakdown' => [
                 'base_reading' => round($baseReadingTime, 1),
                 'complexity_adjustment' => round($complexityAdjustment, 1),
-                'elements_time' => round($elementsTime, 1),
                 'interaction_time' => round($interactionTime, 1),
             ],
             'analysis' => $analysis,
@@ -282,28 +271,6 @@ class ReadingDurationCalculatorService
         }
 
         return $baseTime * ($complexityFactor - 1.0);
-    }
-
-    /**
-     * Calcule le temps pour les éléments spéciaux
-     */
-    private function calculateElementsTime(array $metadata): float
-    {
-        $totalTime = 0;
-
-        if (!empty($metadata['extracted_images'])) {
-            $totalTime += count($metadata['extracted_images']) * self::ELEMENT_TIME['image'];
-        }
-
-        if (!empty($metadata['tables'])) {
-            $totalTime += count($metadata['tables']) * self::ELEMENT_TIME['table'];
-        }
-
-        if (!empty($metadata['exercises'])) {
-            $totalTime += count($metadata['exercises']) * self::ELEMENT_TIME['exercise'];
-        }
-
-        return $totalTime;
     }
 
     /**

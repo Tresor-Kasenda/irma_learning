@@ -1,18 +1,27 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Filament\Resources\FormationResource\Pages;
 
 use App\Enums\FormationLevelEnum;
 use App\Filament\Resources\FormationResource;
 use App\Models\Formation;
 use Filament\Actions;
+use Filament\Forms\Components\Grid;
+use Filament\Forms\Components\Textarea;
+use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Toggle;
 use Filament\Infolists\Components\ImageEntry;
 use Filament\Infolists\Components\Section;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Infolists\Infolist;
+use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ViewRecord;
+use Filament\Support\Colors\Color;
+use Illuminate\Support\Facades\DB;
 
-class ViewFormation extends ViewRecord
+final class ViewFormation extends ViewRecord
 {
     protected static string $resource = FormationResource::class;
 
@@ -63,7 +72,8 @@ class ViewFormation extends ViewRecord
                             ->label('Tags')
                             ->badge()
                             ->separator(',')
-                            ->getStateUsing(fn(Formation $record): array => is_string($record->tags) ? json_decode($record->tags, true) ?? [] : ($record->tags ?? [])
+                            ->getStateUsing(
+                                fn(Formation $record): array => is_string($record->tags) ? json_decode($record->tags, true) ?? [] : ($record->tags ?? [])
                             ),
                     ])
                     ->columns(3),
@@ -80,25 +90,6 @@ class ViewFormation extends ViewRecord
                             ->badge()
                             ->formatStateUsing(fn(bool $state): string => $state ? 'Oui' : 'Non')
                             ->color(fn(bool $state): string => $state ? 'warning' : 'gray'),
-                        TextEntry::make('created_by')
-                            ->label('Créé par')
-                            ->getStateUsing(fn(Formation $record): string => $record->creator->name ?? 'N/A'),
-                    ])
-                    ->columns(3),
-
-                Section::make('Statistiques')
-                    ->schema([
-                        TextEntry::make('enrollments_count')
-                            ->label('Nombre d\'inscriptions')
-                            ->getStateUsing(fn(Formation $record): int => $record->getEnrollmentCount()),
-
-                        TextEntry::make('total_chapters')
-                            ->label('Nombre de chapitres')
-                            ->getStateUsing(fn(Formation $record): int => $record->getTotalChaptersCount()),
-
-                        TextEntry::make('estimated_duration')
-                            ->label('Durée estimée (minutes)')
-                            ->getStateUsing(fn(Formation $record): int => $record->getEstimatedDuration()),
                     ])
                     ->columns(3),
             ]);
@@ -111,6 +102,90 @@ class ViewFormation extends ViewRecord
                 ->label('Retour')
                 ->url(FormationResource::getUrl('index'))
                 ->icon('heroicon-o-arrow-left'),
+
+            Actions\Action::make('addSections')
+                ->label('Ajouter une section')
+                ->icon('heroicon-o-plus-circle')
+                ->color(Color::Slate)
+                ->slideOver()
+                ->form([
+                    TextInput::make('title')
+                        ->required()
+                        ->placeholder('Titre de la section')
+                        ->maxLength(255)
+                        ->unique('sections'),
+                    Textarea::make('description')
+                        ->rows(3)
+                        ->autosize()
+                        ->maxLength(65535)
+                        ->placeholder('Description de la section')
+                        ->columnSpanFull(),
+
+                    Grid::make(2)
+                        ->schema([
+                            TextInput::make('order_position')
+                                ->label('Position')
+                                ->numeric()
+                                ->disabled()
+                                ->dehydrated(false)
+                                ->default(fn() => ($this->record->sections()->max('order_position') ?? 0) + 1)
+                                ->helperText('Position automatique (prochaine disponible)'),
+
+                            TextInput::make('duration')
+                                ->label('Durée estimée (minutes)')
+                                ->numeric()
+                                ->disabled()
+                                ->dehydrated(false)
+                                ->default(fn() => $this->calculateSectionDuration())
+                                ->helperText('Durée calculée automatiquement selon la formation'),
+                        ]),
+
+                    Toggle::make('is_active')
+                        ->default(true)
+                        ->helperText('Module actif et visible pour les étudiants'),
+                ])
+                ->action(function (array $data) {
+                    DB::transaction(function () use ($data) {
+                        $nextPosition = ($this->record->sections()->max('order_position') ?? 0) + 1;
+
+                        $calculatedDuration = $this->calculateSectionDuration();
+
+                        $payload = [
+                            'title' => $data['title'],
+                            'description' => $data['description'] ?? null,
+                            'order_position' => $nextPosition,
+                            'duration' => $calculatedDuration,
+                            'is_active' => !empty($data['is_active']),
+                        ];
+
+                        $this->record->sections()->create($payload);
+                    });
+
+                    $this->record->refresh();
+
+                    Notification::make()
+                        ->title('Section ajoutée avec succès')
+                        ->body('La section a été ajoutée à la formation avec succès.')
+                        ->success()
+                        ->send();
+                }),
         ];
+    }
+
+    protected function calculateSectionDuration(): int
+    {
+        // Convert formation duration from hours to minutes
+        $formationDurationMinutes = ($this->record->duration_hours ?? 0) * 60;
+
+        // Get the number of existing sections + 1 (for the new section being added)
+        $totalSections = $this->record->sections()->count() + 1;
+
+        // If no duration is set or no sections, return 0
+        if ($formationDurationMinutes <= 0 || $totalSections <= 0) {
+            return 0;
+        }
+
+        // Calculate average duration per section
+        return (int)round($formationDurationMinutes / $totalSections);
     }
 }

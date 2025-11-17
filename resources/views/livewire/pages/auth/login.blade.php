@@ -5,7 +5,8 @@ use Illuminate\Support\Facades\Session;
 use Livewire\Attributes\Layout;
 use Livewire\Volt\Component;
 
-new #[Layout('layouts.guest')] class extends Component {
+new #[Layout('layouts.guest')]
+class extends Component {
     public LoginForm $form;
 
     /**
@@ -125,9 +126,11 @@ new #[Layout('layouts.guest')] class extends Component {
         </div>
         <div class="bg-bg-light rounded px-5 sm:px-6 py-4">
             <p class="text-center text-sm">
-                Soucis pour vous connecter ?
-                <a href="{{ route('help') }}" wire:navigate
-                   class="inline text-primary hover:text-primary-700 font-medium">Obtenir de l'aide</a>
+                Vous n'avez pas de compte ?
+                <a href="{{ route('register') }}" wire:navigate
+                   class="inline text-primary hover:text-primary-700 font-medium">
+                    S'inscrire
+                </a>
             </p>
         </div>
     </form>

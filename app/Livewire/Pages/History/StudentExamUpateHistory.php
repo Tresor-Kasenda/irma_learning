@@ -14,7 +14,7 @@ use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Locked;
 use Livewire\Component;
 
-class StudentExamUpateHistory extends Component implements HasForms
+final class StudentExamUpateHistory extends Component implements HasForms
 {
     use InteractsWithForms;
 
@@ -44,7 +44,6 @@ class StudentExamUpateHistory extends Component implements HasForms
             ->model($this->submission);
     }
 
-
     public function update(): void
     {
         $this->form->validate();
@@ -57,6 +56,7 @@ class StudentExamUpateHistory extends Component implements HasForms
                 type: 'error',
                 message: 'Vous ne pouvez pas modifier cette soumission d\'examen.'
             );
+
             return;
         }
         $data = $this->form->getState();

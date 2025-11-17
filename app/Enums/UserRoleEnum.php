@@ -6,13 +6,13 @@ namespace App\Enums;
 
 enum UserRoleEnum: string
 {
-    case STUDENT = 'STUDENT';
+    case STUDENT = 'student';
 
-    case ADMIN = 'ADMIN';
+    case ADMIN = 'admin';
 
-    case ROOT = 'ROOT';
+    case ROOT = 'root';
 
-    case INSTRUCTOR = 'INSTRUCTOR';
+    case INSTRUCTOR = 'instructor';
 
 
     public function getLabel(): string
