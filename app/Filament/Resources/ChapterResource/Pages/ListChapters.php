@@ -15,7 +15,7 @@ class ListChapters extends ListRecords
         return [
             Actions\CreateAction::make()
                 ->label('Créer un chapitre')
-                ->icon('heroicon-o-plus'),
+                ->icon('heroicon-o-plus-circle'),
         ];
     }
 }

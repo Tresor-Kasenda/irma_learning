@@ -20,6 +20,7 @@ return new class extends Migration {
             $table->longText('content');
             $table->string('content_type')->default('text');
             $table->string('media_url')->nullable();
+            $table->string('video_url')->nullable();
             $table->integer('duration_minutes')->nullable();
             $table->integer('order_position')->default(0);
             $table->boolean('is_free')->default(false);

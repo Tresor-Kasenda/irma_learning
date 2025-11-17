@@ -26,23 +26,6 @@ final class ViewSection extends ViewRecord
 {
     protected static string $resource = SectionResource::class;
 
-    protected function calculateChapterDuration(): int
-    {
-        // Get section duration in minutes
-        $sectionDurationMinutes = $this->record->duration ?? 0;
-
-        // Get the number of existing chapters + 1 (for the new chapter being added)
-        $totalChapters = $this->record->chapters()->count() + 1;
-
-        // If no duration is set or no chapters, return 0
-        if ($sectionDurationMinutes <= 0 || $totalChapters <= 0) {
-            return 0;
-        }
-
-        // Calculate average duration per chapter
-        return (int) round($sectionDurationMinutes / $totalChapters);
-    }
-
     public function infolist(Infolist $infolist): Infolist
     {
         return $infolist
@@ -105,9 +88,7 @@ final class ViewSection extends ViewRecord
                         ->options([
                             'text' => 'Texte',
                             'video' => 'Vidéo',
-                            'audio' => 'Audio',
                             'pdf' => 'PDF',
-                            'interactive' => 'Interactif',
                         ])
                         ->required()
                         ->default('text')
@@ -115,6 +96,20 @@ final class ViewSection extends ViewRecord
                         ->afterStateUpdated(function ($state, Set $set) {
                             $set('media_url', null);
                         }),
+
+                    FileUpload::make('video_url')
+                        ->label('Vidéo')
+                        ->disk('public')
+                        ->directory('chapters')
+                        ->visibility('public')
+                        ->preserveFilenames()
+                        ->acceptedFileTypes(['video/*'])
+                        ->visible(
+                            fn(Get $get) => $get('content_type') === 'video'
+                        )
+                        ->required(
+                            fn(Get $get) => $get('content_type') === 'video'
+                        ),
 
                     FileUpload::make('media_url')
                         ->label('Fichier de contenu')
@@ -213,5 +208,22 @@ final class ViewSection extends ViewRecord
                     $this->dispatch('refresh');
                 }),
         ];
+    }
+
+    protected function calculateChapterDuration(): int
+    {
+        // Get section duration in minutes
+        $sectionDurationMinutes = $this->record->duration ?? 0;
+
+        // Get the number of existing chapters + 1 (for the new chapter being added)
+        $totalChapters = $this->record->chapters()->count() + 1;
+
+        // If no duration is set or no chapters, return 0
+        if ($sectionDurationMinutes <= 0 || $totalChapters <= 0) {
+            return 0;
+        }
+
+        // Calculate average duration per chapter
+        return (int)round($sectionDurationMinutes / $totalChapters);
     }
 }

@@ -13,7 +13,9 @@ use App\Services\ReadingDurationCalculatorService;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Exception;
 use Filament\Forms;
+use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Form;
+use Filament\Forms\Get;
 use Filament\Notifications\Actions\Action;
 use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
@@ -39,7 +41,6 @@ final class ChapterResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
-            ->modifyQueryUsing(fn(Builder $query) => $query->groupBy('section'))
             ->columns([
                 TextColumn::make('section.title')
                     ->label('Section')
@@ -75,9 +76,7 @@ final class ChapterResource extends Resource
                     ->color(fn(ChapterTypeEnum $state): string => match ($state) {
                         ChapterTypeEnum::TEXT => 'success',
                         ChapterTypeEnum::VIDEO => 'warning',
-                        ChapterTypeEnum::AUDIO => 'danger',
                         ChapterTypeEnum::PDF => 'info',
-                        ChapterTypeEnum::INTERACTIVE => 'primary',
                         default => 'gray',
                     }),
 
@@ -117,7 +116,7 @@ final class ChapterResource extends Resource
                     ->boolean(),
             ])
             ->filters([
-                Tables\Filters\SelectFilter::make('section')
+                Tables\Filters\SelectFilter::make('section_id')
                     ->label('Section')
                     ->relationship('section', 'title')
                     ->searchable()
@@ -128,9 +127,7 @@ final class ChapterResource extends Resource
                     ->options([
                         'text' => 'Texte',
                         'video' => 'Vidéo',
-                        'audio' => 'Audio',
                         'pdf' => 'PDF',
-                        'interactive' => 'Interactif',
                     ]),
 
                 Tables\Filters\TernaryFilter::make('is_free')
@@ -266,9 +263,7 @@ final class ChapterResource extends Resource
                             ->options([
                                 'text' => 'Texte',
                                 'video' => 'Vidéo',
-                                'audio' => 'Audio',
                                 'pdf' => 'PDF',
-                                'interactive' => 'Interactif',
                             ])
                             ->required()
                             ->default('text')
@@ -306,6 +301,21 @@ final class ChapterResource extends Resource
                                     }
                                 }
                             }),
+
+                        FileUpload::make('video_url')
+                            ->label('Vidéo')
+                            ->disk('public')
+                            ->directory('chapters')
+                            ->visibility('public')
+                            ->preserveFilenames()
+                            ->columnSpanFull()
+                            ->acceptedFileTypes(['video/*'])
+                            ->visible(
+                                fn(Get $get) => $get('content_type') === 'video'
+                            )
+                            ->required(
+                                fn(Get $get) => $get('content_type') === 'video'
+                            ),
                     ])
                     ->columns(2),
 
