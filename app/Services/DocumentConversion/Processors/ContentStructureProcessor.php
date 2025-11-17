@@ -16,21 +16,29 @@ final class ContentStructureProcessor implements ContentProcessorInterface
      * Patterns pour détecter les différents types de contenu
      */
     private const array TITLE_PATTERNS = [
-        // Titres numérotés (1.2.3 Titre)
-        '/^(\d+(?:\.\d+)*)\s+(.+)$/' => 'numbered',
-        // Titres en majuscules
-        '/^([A-ZÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖØÙÚÛÜÝÞ\s\d\-\.\'\"]{3,})$/' => 'uppercase',
-        // Chapitres (Chapitre 1, Chapter 1, etc.)
-        '/^(chapitre|chapter|partie|part)\s+(\d+|[ivxlcdm]+)[\s\:]+(.+)/i' => 'chapter',
+        // Titres avec ## déjà présents
+        '/^#{1,6}\s+(.+)$/' => 'markdown',
+        // Titres numérotés (1. Titre, 1.1 Titre, etc.)
+        '/^(\d+(?:\.\d+)*\.?)\s+([A-ZÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖØÙÚÛÜÝÞ].+)$/' => 'numbered',
+        // Titres en MAJUSCULES (minimum 10 caractères pour éviter faux positifs)
+        '/^([A-ZÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖØÙÚÛÜÝÞ\s\d\-\'\",]{10,})$/' => 'uppercase',
+        // Chapitres/Parties (Chapitre 1, Part II, etc.)
+        '/^(chapitre|chapter|partie|part|section)\s+(\d+|[ivxlcdm]+)[\s\:\-]*(.*)$/i' => 'chapter',
     ];
 
     private const array LIST_PATTERNS = [
-        // Listes à puces
-        '/^[•\-\*\+]\s+(.+)$/' => 'bullet',
-        // Listes numérotées
-        '/^(\d+|[a-z])\.\s+(.+)$/' => 'numbered',
-        // Listes avec parenthèses
-        '/^(\d+|[a-z])\)\s+(.+)$/' => 'parenthesis',
+        // Sous-sections avec lettres majuscules après un titre (A), B), C))
+        '/^([A-Z])\)\s+([A-ZÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖØÙÚÛÜÝÞ].+)$/' => 'subsection',
+        // Sous-sections avec lettres minuscules après un titre (a), b), c))
+        '/^([a-z])\)\s+([A-ZÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖØÙÚÛÜÝÞ].+)$/' => 'subsection',
+        // Listes à puces (y compris les tirets longs − et o)
+        '/^[•\-\*\+−–—o]\s+(.+)$/' => 'bullet',
+        // Listes numérotées avec point
+        '/^(\d+)\.\s+(.+)$/' => 'numbered',
+        // Listes avec parenthèses (chiffres uniquement)
+        '/^(\d+)\)\s+(.+)$/' => 'parenthesis',
+        // Listes avec lettres minuscules (pour les sous-listes)
+        '/^([a-z])\)\s+(.+)$/' => 'parenthesis',
     ];
 
     public function process(DocumentContent $content): DocumentContent
@@ -156,9 +164,10 @@ final class ContentStructureProcessor implements ContentProcessorInterface
         $matches = $titleInfo['matches'];
 
         return match ($type) {
-            'chapter' => 1,
+            'markdown' => mb_substr_count($matches[0], '#'), // Compter les #
+            'chapter' => 1, // Les chapitres sont toujours H1
             'numbered' => $this->getTitleLevelFromNumbering($matches[1]),
-            'uppercase' => $this->getTitleLevelFromLength($titleInfo['line']),
+            'uppercase' => 2, // Les titres en MAJUSCULES sont H2
             default => 2,
         };
     }
@@ -200,12 +209,16 @@ final class ContentStructureProcessor implements ContentProcessorInterface
         $type = $titleInfo['type'];
         $matches = $titleInfo['matches'];
 
-        return match ($type) {
-            'numbered' => mb_trim($matches[2] ?? $line),
-            'chapter' => mb_trim($matches[3] ?? $line),
-            'uppercase' => mb_convert_case(mb_strtolower($line), MB_CASE_TITLE),
+        $text = match ($type) {
+            'markdown' => mb_trim($matches[1] ?? $line), // Texte après les #
+            'numbered' => mb_trim($matches[2] ?? $line), // Texte après le numéro
+            'chapter' => mb_trim(($matches[3] ?? '') !== '' ? $matches[3] : ($matches[1].' '.$matches[2])), // Chapitre + numéro ou texte
+            'uppercase' => mb_convert_case(mb_strtolower($line), MB_CASE_TITLE), // Convertir en Title Case
             default => mb_trim($line),
         };
+
+        // Nettoyer les espaces multiples
+        return preg_replace('/\s+/', ' ', $text);
     }
 
     /**
@@ -294,7 +307,7 @@ final class ContentStructureProcessor implements ContentProcessorInterface
      */
     private function isSpecialLine(string $line): bool
     {
-        return (bool) preg_match('/^(#{1,6}\s|[-*+]\s|\d+\.\s|\|.*\||```|>|\$\$)/', $line);
+        return (bool) preg_match('/^(#{1,6}\s|[•\-\*\+−–—]\s|\d+\.\s|[a-z]\)\s|\|.*\||```|>|\$\$)/i', $line);
     }
 
     /**
@@ -305,6 +318,7 @@ final class ContentStructureProcessor implements ContentProcessorInterface
         $lines = explode("\n", $markdown);
         $structuredLines = [];
         $inList = false;
+        $previousWasTitle = false;
 
         foreach ($lines as $line) {
             $trimmedLine = mb_trim($line);
@@ -316,23 +330,37 @@ final class ContentStructureProcessor implements ContentProcessorInterface
                     $inList = false;
                 }
                 $structuredLines[] = $line;
+                $previousWasTitle = false;
 
                 continue;
             }
+
+            // Vérifier si c'est un titre
+            $isTitle = preg_match('/^#{1,6}\s+/', $trimmedLine);
 
             // Détecter les listes
             $listInfo = $this->detectList($trimmedLine);
 
             if ($listInfo) {
-                // Début de liste
-                if (! $inList) {
-                    if (! empty($structuredLines) && mb_trim(end($structuredLines)) !== '') {
-                        $structuredLines[] = '';
+                // Si c'est une subsection (a), b), c)) juste après un titre, la convertir en H3
+                if ($listInfo['type'] === 'subsection' && $previousWasTitle) {
+                    $structuredLines[] = '';
+                    $structuredLines[] = $this->formatListItem($trimmedLine, $listInfo);
+                    $structuredLines[] = '';
+                    $previousWasTitle = false;
+                    $inList = false;
+                } else {
+                    // Début de liste normale
+                    if (! $inList) {
+                        if (! empty($structuredLines) && mb_trim(end($structuredLines)) !== '') {
+                            $structuredLines[] = '';
+                        }
+                        $inList = true;
                     }
-                    $inList = true;
-                }
 
-                $structuredLines[] = $this->formatListItem($trimmedLine, $listInfo);
+                    $structuredLines[] = $this->formatListItem($trimmedLine, $listInfo);
+                    $previousWasTitle = false;
+                }
             } else {
                 // Fin de liste
                 if ($inList) {
@@ -340,6 +368,7 @@ final class ContentStructureProcessor implements ContentProcessorInterface
                     $inList = false;
                 }
                 $structuredLines[] = $line;
+                $previousWasTitle = $isTitle;
             }
         }
 
@@ -374,7 +403,8 @@ final class ContentStructureProcessor implements ContentProcessorInterface
         return match ($type) {
             'bullet' => '- '.mb_trim($matches[1]),
             'numbered' => $matches[1].'. '.mb_trim($matches[2]),
-            'parenthesis' => $matches[1].') '.mb_trim($matches[2]),
+            'parenthesis' => '  - '.mb_trim($matches[2]), // Sous-liste indentée
+            'subsection' => '### '.mb_trim($matches[2]), // Sous-section en H3
             default => $line,
         };
     }

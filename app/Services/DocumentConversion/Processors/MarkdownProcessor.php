@@ -128,7 +128,7 @@ final class MarkdownProcessor implements ContentProcessorInterface
      */
     private function isBulletPoint(string $line): int
     {
-        return preg_match('/^[•\-\*]\s+/', $line);
+        return preg_match('/^[•\-\*\+−–—o]\s+/', $line);
     }
 
     /**

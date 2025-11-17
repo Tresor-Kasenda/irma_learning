@@ -62,8 +62,8 @@ final class PdfExtractor implements DocumentExtractorInterface
             // Extraire les métadonnées
             $metadata = $this->extractMetadata($document);
 
-            // Extraire le texte brut
-            $rawText = $document->getText();
+            // Extraire le texte page par page (en ignorant la première si demandé)
+            $rawText = $this->extractTextFromPages($document, $options);
 
             // Nettoyer le texte
             $cleanedText = $this->cleanText($rawText, $options);
@@ -79,6 +79,7 @@ final class PdfExtractor implements DocumentExtractorInterface
                 'file' => $filePath,
                 'pages' => $metadata->pageCount,
                 'text_length' => mb_strlen($cleanedText),
+                'first_page_skipped' => $options['skipFirstPage'] ?? false,
             ]);
 
             return $content;
@@ -89,8 +90,37 @@ final class PdfExtractor implements DocumentExtractorInterface
                 'error' => $e->getMessage(),
             ]);
 
-            throw new Exception('Erreur lors de l\'extraction du PDF: ' . $e->getMessage());
+            throw new Exception('Erreur lors de l\'extraction du PDF: '.$e->getMessage());
         }
+    }
+
+    public function getSupportedMimeTypes(): array
+    {
+        return self::SUPPORTED_MIMES;
+    }
+
+    /**
+     * Extrait le texte des pages du PDF (en ignorant la première page si demandé)
+     */
+    private function extractTextFromPages($document, array $options): string
+    {
+        $pages = $document->getPages();
+        $skipFirstPage = $options['skipFirstPage'] ?? false;
+        $textParts = [];
+
+        foreach ($pages as $pageNumber => $page) {
+            // Ignorer la première page (index 0) si demandé
+            if ($skipFirstPage && $pageNumber === 0) {
+                continue;
+            }
+
+            $pageText = $page->getText();
+            if (! empty(mb_trim($pageText))) {
+                $textParts[] = $pageText;
+            }
+        }
+
+        return implode("\n\n", $textParts);
     }
 
     /**
@@ -129,7 +159,7 @@ final class PdfExtractor implements DocumentExtractorInterface
             }
 
             // Ignorer les lignes trop courtes (sauf si importantes)
-            if (mb_strlen($line) < 3 && !$this->isImportantShortLine($line)) {
+            if (mb_strlen($line) < 3 && ! $this->isImportantShortLine($line)) {
                 continue;
             }
 
@@ -150,7 +180,7 @@ final class PdfExtractor implements DocumentExtractorInterface
     private function isImportantShortLine(string $line): bool
     {
         // Lignes avec lettres majuscules et chiffres
-        return preg_match('/^[A-Z0-9\s\-\.]{1,3}$/', $line) && !preg_match('/^\d+$/', $line);
+        return preg_match('/^[A-Z0-9\s\-\.]{1,3}$/', $line) && ! preg_match('/^\d+$/', $line);
     }
 
     /**
@@ -183,10 +213,5 @@ final class PdfExtractor implements DocumentExtractorInterface
         return preg_match('/^(Page\s+)?\d+(\s+of\s+\d+)?$/i', $line) ||
             preg_match('/^-\s*\d+\s*-$/', $line) ||
             (is_numeric($line) && mb_strlen($line) <= 3);
-    }
-
-    public function getSupportedMimeTypes(): array
-    {
-        return self::SUPPORTED_MIMES;
     }
 }

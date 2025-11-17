@@ -81,10 +81,14 @@ final class ViewSection extends ViewRecord
             }
 
             $filePath = '';
+            $originalFileName = null;
 
             if ($pdfFile instanceof TemporaryUploadedFile) {
                 $filePath = $pdfFile->getRealPath();
                 $permanentPath = $pdfFile->store('chapters', 'public');
+
+                // Extraire le nom du fichier sans l'extension
+                $originalFileName = pathinfo($pdfFile->getClientOriginalName(), PATHINFO_FILENAME);
 
                 $pdfFile = $filePath;
             }
@@ -97,6 +101,7 @@ final class ViewSection extends ViewRecord
             $result = $extractionService->convert($filePath, [
                 'generateThumbnail' => true,
                 'ignorePageNumbers' => true,
+                'customTitle' => $originalFileName,
             ]);
 
             $extractedData = [
@@ -121,6 +126,11 @@ final class ViewSection extends ViewRecord
             // Définir l'image de couverture si disponible
             if (! empty($extractedData['thumbnail_path'])) {
                 $set('cover_image', $extractedData['thumbnail_path']);
+            }
+
+            // Définir le fichier Markdown si disponible
+            if (! empty($extractedData['markdown_file'])) {
+                $set('markdown_file', $extractedData['markdown_file']);
             }
 
             Notification::make()
@@ -221,6 +231,8 @@ final class ViewSection extends ViewRecord
 
                     Forms\Components\Hidden::make('cover_image'),
 
+                    Forms\Components\Hidden::make('markdown_file'),
+
                     Forms\Components\Hidden::make('metadata'),
 
                     TextInput::make('order_position')
@@ -264,6 +276,7 @@ final class ViewSection extends ViewRecord
                             'media_url' => $data['media_url'] ?? null,
                             'video_url' => $data['video_url'] ?? null,
                             'cover_image' => $data['cover_image'] ?? null,
+                            'markdown_file' => $data['markdown_file'] ?? null,
                             'metadata' => $data['metadata'] ?? [],
                             'content' => $data['content'] ?? null,
                             'order_position' => $position,

@@ -34,7 +34,8 @@ final class DocumentConversionService
     private array $processors = [];
 
     public function __construct(
-        private readonly PdfThumbnailService $thumbnailService
+        private readonly PdfThumbnailService $thumbnailService,
+        private readonly MarkdownFileService $markdownFileService
     ) {
         $this->registerDefaultExtractors();
         $this->registerDefaultProcessors();
@@ -46,6 +47,8 @@ final class DocumentConversionService
      * @param  array  $options  Options de conversion:
      *                          - generateThumbnail: bool (défaut: true)
      *                          - ignorePageNumbers: bool (défaut: true)
+     *                          - skipFirstPage: bool (défaut: true)
+     *                          - customTitle: string|null (titre personnalisé)
      *                          - customProcessors: array<ContentProcessorInterface>
      */
     public function convert(string $filePath, array $options = []): array
@@ -55,6 +58,8 @@ final class DocumentConversionService
             $options = array_merge([
                 'generateThumbnail' => true,
                 'ignorePageNumbers' => true,
+                'skipFirstPage' => true,
+                'customTitle' => null,
                 'customProcessors' => [],
             ], $options);
 
@@ -72,11 +77,22 @@ final class DocumentConversionService
             // 2. Extraire le contenu brut du document
             $content = $this->extractDocument($filePath, $options);
 
-            // 3. Traiter le contenu (conversion en Markdown, structuration)
+            // 3. Utiliser le titre personnalisé si fourni
+            if (! empty($options['customTitle'])) {
+                $content->metadata->title = $options['customTitle'];
+            }
+
+            // 4. Traiter le contenu (conversion en Markdown, structuration)
             $content = $this->processContent($content, $options);
 
-            // 4. Retourner le résultat formaté
-            return $this->formatResult($content, $thumbnailPath);
+            // 5. Sauvegarder le fichier Markdown
+            $markdownFilePath = $this->markdownFileService->saveMarkdownFile(
+                $content->markdown,
+                $content->metadata->title
+            );
+
+            // 6. Retourner le résultat formaté
+            return $this->formatResult($content, $thumbnailPath, $markdownFilePath);
 
         } catch (Exception $e) {
             Log::error('Document conversion failed', [
@@ -187,13 +203,14 @@ final class DocumentConversionService
     /**
      * Formate le résultat final
      */
-    private function formatResult(DocumentContent $content, ?string $thumbnailPath = null): array
+    private function formatResult(DocumentContent $content, ?string $thumbnailPath = null, ?string $markdownFilePath = null): array
     {
         return [
             'title' => $content->metadata->title ?? 'Document',
             'description' => $content->metadata->subject ?? 'Document extrait automatiquement',
             'content' => $content->markdown,
             'thumbnail_path' => $thumbnailPath,
+            'markdown_file' => $markdownFilePath,
             'metadata' => [
                 'document_info' => $content->metadata->toArray(),
                 'statistics' => $content->getStats(),
