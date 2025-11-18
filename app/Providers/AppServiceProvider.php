@@ -6,6 +6,7 @@ namespace App\Providers;
 
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
@@ -26,6 +27,22 @@ final class AppServiceProvider extends ServiceProvider
         $this->configureDates();
         $this->configurePasswordValidation();
         Schema::defaultStringLength(191);
+
+        Blade::directive('markdown', function ($expression) {
+            return "<?php echo app('markdown')->toHtml($expression); ?>";
+        });
+
+        Blade::directive('markdownSafe', function ($expression) {
+            return "<?php echo app('markdown')->toSafeHtml($expression); ?>";
+        });
+
+        Blade::directive('md', function ($expression) {
+            return "<?php echo app('markdown')->toHtml($expression); ?>";
+        });
+
+        Blade::directive('markdownExcerpt', function ($expression) {
+            return "<?php echo app('markdown')->excerpt($expression); ?>";
+        });
     }
 
     public function configureCommands(): void
@@ -43,9 +60,14 @@ final class AppServiceProvider extends ServiceProvider
     public function shouldBeStrict(): void
     {
         Model::automaticallyEagerLoadRelationships();
-        Model::shouldBeStrict(!$this->app->isProduction());
+        Model::shouldBeStrict(! $this->app->isProduction());
         Model::unguard();
     }
+
+    /**
+     * Register any application services.
+     */
+    public function register(): void {}
 
     /**
      * Configure the dates.
@@ -60,13 +82,6 @@ final class AppServiceProvider extends ServiceProvider
      */
     private function configurePasswordValidation(): void
     {
-        Password::defaults(fn() => $this->app->isProduction() ? Password::min(8)->uncompromised() : null);
-    }
-
-    /**
-     * Register any application services.
-     */
-    public function register(): void
-    {
+        Password::defaults(fn () => $this->app->isProduction() ? Password::min(8)->uncompromised() : null);
     }
 }

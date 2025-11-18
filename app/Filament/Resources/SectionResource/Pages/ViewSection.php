@@ -56,18 +56,96 @@ final class ViewSection extends ViewRecord
                         Infolists\Components\TextEntry::make('is_active')
                             ->label('Active')
                             ->badge()
-                            ->formatStateUsing(fn(bool $state): string => $state ? 'Active' : 'Inactive')
-                            ->color(fn(bool $state): string => $state ? 'success' : 'danger'),
+                            ->formatStateUsing(fn (bool $state): string => $state ? 'Active' : 'Inactive')
+                            ->color(fn (bool $state): string => $state ? 'success' : 'danger'),
                         Infolists\Components\TextEntry::make('estimated_duration')
                             ->label('Durée estimée (minutes)')
                             ->suffix(' min')
                             ->placeholder('Non définie'),
                         Infolists\Components\TextEntry::make('chapters_count')
                             ->label('Nombre de chapitres')
-                            ->getStateUsing(fn(Section $record): int => $record->chapters()->count()),
+                            ->getStateUsing(fn (Section $record): int => $record->chapters()->count()),
                     ])
                     ->columns(3),
             ]);
+    }
+
+    /**
+     * Extrait le contenu du PDF et met à jour les champs du formulaire
+     */
+    protected static function extractPdfContent($pdfFile, Set $set, Get $get): void
+    {
+        try {
+            if (! $pdfFile) {
+                return;
+            }
+
+            $filePath = '';
+            $originalFileName = null;
+
+            if ($pdfFile instanceof TemporaryUploadedFile) {
+                $filePath = $pdfFile->getRealPath();
+                $permanentPath = $pdfFile->store('chapters', 'public');
+
+                // Extraire le nom du fichier sans l'extension
+                $originalFileName = pathinfo($pdfFile->getClientOriginalName(), PATHINFO_FILENAME);
+
+                $pdfFile = $filePath;
+            }
+
+            if (! $filePath || ! file_exists($filePath)) {
+                throw new Exception('Impossible de trouver le fichier PDF.');
+            }
+
+            $extractionService = app(DocumentConversionService::class);
+            $result = $extractionService->convert($filePath, [
+                'generateThumbnail' => true,
+                'ignorePageNumbers' => true,
+                'customTitle' => $originalFileName,
+            ]);
+
+            $extractedData = [
+                'title' => $result['title'],
+                'description' => $result['description'],
+                'content' => $result['content'],
+                'estimated_duration' => $result['estimated_duration'],
+                'thumbnail_path' => $result['thumbnail_path'] ?? null,
+            ];
+
+            $durationService = app(ReadingDurationCalculatorService::class);
+            $readingAnalysis = $durationService->calculateReadingDuration(
+                $extractedData['content'],
+                'average' // Niveau par défaut
+            );
+
+            $set('title', $extractedData['title']);
+            $set('content', $extractedData['content']);
+            $set('duration_minutes', $readingAnalysis['total_minutes']);
+            $set('content_type', 'pdf');
+
+            // Définir l'image de couverture si disponible
+            if (! empty($extractedData['thumbnail_path'])) {
+                $set('cover_image', $extractedData['thumbnail_path']);
+            }
+
+            // Définir le fichier Markdown si disponible
+            if (! empty($extractedData['markdown_file'])) {
+                $set('markdown_file', $extractedData['markdown_file']);
+            }
+
+            Notification::make()
+                ->title('Extraction PDF réussie')
+                ->body("Le contenu a été extrait avec succès. Durée estimée: {$extractedData['estimated_duration']} minutes.")
+                ->success()
+                ->send();
+
+        } catch (Exception $e) {
+            Notification::make()
+                ->title('Erreur d\'extraction PDF')
+                ->body('Erreur lors de l\'extraction: '.$e->getMessage())
+                ->danger()
+                ->send();
+        }
     }
 
     protected function getHeaderActions(): array
@@ -110,10 +188,10 @@ final class ViewSection extends ViewRecord
                         ->preserveFilenames()
                         ->acceptedFileTypes(['video/*'])
                         ->visible(
-                            fn(Get $get) => $get('content_type') === 'video'
+                            fn (Get $get) => $get('content_type') === 'video'
                         )
                         ->required(
-                            fn(Get $get) => $get('content_type') === 'video'
+                            fn (Get $get) => $get('content_type') === 'video'
                         ),
 
                     FileUpload::make('media_url')
@@ -123,11 +201,15 @@ final class ViewSection extends ViewRecord
                         ->visibility('public')
                         ->preserveFilenames()
                         ->columnSpanFull()
-                        ->acceptedFileTypes(['application/pdf'])
+                        ->acceptedFileTypes([
+                            'application/pdf',
+                            'application/msword',
+                            'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+                        ])
                         ->maxSize(50 * 1024)
                         ->helperText('Uploadez un PDF pour extraction automatique du contenu.')
-                        ->visible(fn(Get $get) => $get('content_type') === 'pdf')
-                        ->required(fn(Get $get) => $get('content_type') === 'pdf')
+                        ->visible(fn (Get $get) => $get('content_type') === 'pdf')
+                        ->required(fn (Get $get) => $get('content_type') === 'pdf')
                         ->live()
                         ->afterStateUpdated(function ($state, Set $set, Get $get) {
                             if ($state) {
@@ -136,7 +218,7 @@ final class ViewSection extends ViewRecord
                         })
                         ->afterStateHydrated(function ($component, $state) {
                             if ($state && $component->getContainer()->getOperation() === 'edit') {
-                                if (!Storage::disk('public')->exists($state)) {
+                                if (! Storage::disk('public')->exists($state)) {
                                     Notification::make()
                                         ->title('Fichier manquant')
                                         ->body('Le fichier PDF original est introuvable.')
@@ -160,7 +242,7 @@ final class ViewSection extends ViewRecord
                     TextInput::make('order_position')
                         ->label('Position du chapitre')
                         ->numeric()
-                        ->default(fn() => (($this->record->chapters()->max('order_position') ?? 0) + 1))
+                        ->default(fn () => (($this->record->chapters()->max('order_position') ?? 0) + 1))
                         ->required()
                         ->minValue(1),
 
@@ -169,7 +251,7 @@ final class ViewSection extends ViewRecord
                         ->numeric()
                         ->suffix('minutes')
                         ->live()
-                        ->default(fn() => $this->calculateChapterDuration())
+                        ->default(fn () => $this->calculateChapterDuration())
                         ->helperText('Durée calculée automatiquement (PDF) ou selon la section'),
 
                     Toggle::make('is_free')
@@ -185,7 +267,7 @@ final class ViewSection extends ViewRecord
                 ])
                 ->action(function (array $data) {
                     DB::transaction(function () use ($data) {
-                        $providedPosition = isset($data['order_position']) ? (int)$data['order_position'] : null;
+                        $providedPosition = isset($data['order_position']) ? (int) $data['order_position'] : null;
                         $nextPosition = ($this->record->chapters()->max('order_position') ?? 0) + 1;
                         $position = ($providedPosition && $providedPosition > 0) ? $providedPosition : $nextPosition;
 
@@ -202,8 +284,8 @@ final class ViewSection extends ViewRecord
                             'content' => $data['content'] ?? null,
                             'order_position' => $position,
                             'duration_minutes' => $duration,
-                            'is_free' => !empty($data['is_free']),
-                            'is_active' => !empty($data['is_active']),
+                            'is_free' => ! empty($data['is_free']),
+                            'is_active' => ! empty($data['is_active']),
                         ];
 
                         $this->record->chapters()->create($payload);
@@ -222,84 +304,6 @@ final class ViewSection extends ViewRecord
         ];
     }
 
-    /**
-     * Extrait le contenu du PDF et met à jour les champs du formulaire
-     */
-    protected static function extractPdfContent($pdfFile, Set $set, Get $get): void
-    {
-        try {
-            if (!$pdfFile) {
-                return;
-            }
-
-            $filePath = '';
-            $originalFileName = null;
-
-            if ($pdfFile instanceof TemporaryUploadedFile) {
-                $filePath = $pdfFile->getRealPath();
-                $permanentPath = $pdfFile->store('chapters', 'public');
-
-                // Extraire le nom du fichier sans l'extension
-                $originalFileName = pathinfo($pdfFile->getClientOriginalName(), PATHINFO_FILENAME);
-
-                $pdfFile = $filePath;
-            }
-
-            if (!$filePath || !file_exists($filePath)) {
-                throw new Exception('Impossible de trouver le fichier PDF.');
-            }
-
-            $extractionService = app(DocumentConversionService::class);
-            $result = $extractionService->convert($filePath, [
-                'generateThumbnail' => true,
-                'ignorePageNumbers' => true,
-                'customTitle' => $originalFileName,
-            ]);
-
-            $extractedData = [
-                'title' => $result['title'],
-                'description' => $result['description'],
-                'content' => $result['content'],
-                'estimated_duration' => $result['estimated_duration'],
-                'thumbnail_path' => $result['thumbnail_path'] ?? null,
-            ];
-
-            $durationService = app(ReadingDurationCalculatorService::class);
-            $readingAnalysis = $durationService->calculateReadingDuration(
-                $extractedData['content'],
-                'average' // Niveau par défaut
-            );
-
-            $set('title', $extractedData['title']);
-            $set('content', $extractedData['content']);
-            $set('duration_minutes', $readingAnalysis['total_minutes']);
-            $set('content_type', 'pdf');
-
-            // Définir l'image de couverture si disponible
-            if (!empty($extractedData['thumbnail_path'])) {
-                $set('cover_image', $extractedData['thumbnail_path']);
-            }
-
-            // Définir le fichier Markdown si disponible
-            if (!empty($extractedData['markdown_file'])) {
-                $set('markdown_file', $extractedData['markdown_file']);
-            }
-
-            Notification::make()
-                ->title('Extraction PDF réussie')
-                ->body("Le contenu a été extrait avec succès. Durée estimée: {$extractedData['estimated_duration']} minutes.")
-                ->success()
-                ->send();
-
-        } catch (Exception $e) {
-            Notification::make()
-                ->title('Erreur d\'extraction PDF')
-                ->body('Erreur lors de l\'extraction: ' . $e->getMessage())
-                ->danger()
-                ->send();
-        }
-    }
-
     protected function calculateChapterDuration(): int
     {
         // Get section duration in minutes
@@ -314,6 +318,6 @@ final class ViewSection extends ViewRecord
         }
 
         // Calculate average duration per chapter
-        return (int)round($sectionDurationMinutes / $totalChapters);
+        return (int) round($sectionDurationMinutes / $totalChapters);
     }
 }

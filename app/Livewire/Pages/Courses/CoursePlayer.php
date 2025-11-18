@@ -170,6 +170,7 @@ final class CoursePlayer extends Component
     {
         return view('livewire.pages.courses.course-player', [
             'completedChapters' => $this->getCompletedChaptersProperty(),
+            'htmlContent' => $this->currentChapter?->getHtmlContent() ?? '',
         ]);
     }
 

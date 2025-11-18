@@ -64,7 +64,7 @@
         </div>
     @endif
 
-    @if($chapter->media_url && in_array($chapter->content_type->value, ['pdf', 'video', 'audio']))
+    @if($chapter->media_url && in_array($chapter->content_type->value, ['pdf', 'video']))
         <div class="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4">
             <h3 class="text-sm font-medium text-gray-900 dark:text-white mb-3">Fichier de contenu</h3>
 
@@ -122,31 +122,6 @@
                         Votre navigateur ne supporte pas la lecture vidéo.
                     </video>
                 </div>
-            @elseif($chapter->content_type->value === 'audio')
-                <div class="space-y-3">
-                    <div class="flex items-center gap-3 mb-3">
-                        <div class="flex-shrink-0">
-                            <svg class="w-8 h-8 text-green-500" fill="currentColor" viewBox="0 0 20 20">
-                                <path
-                                    d="M18 3a1 1 0 00-1.196-.98l-10 2A1 1 0 006 5v9.114A4.369 4.369 0 005 14c-1.657 0-3 .895-3 2s1.343 2 3 2 3-.895 3-2V7.82l8-1.6v5.894A4.37 4.37 0 0015 12c-1.657 0-3 .895-3 2s1.343 2 3 2 3-.895 3-2V3z"/>
-                            </svg>
-                        </div>
-                        <div class="flex-1 min-w-0">
-                            <p class="text-sm font-medium text-gray-900 dark:text-white truncate">
-                                {{ basename($chapter->media_url) }}
-                            </p>
-                            <p class="text-xs text-gray-500 dark:text-gray-400">
-                                Type: Audio
-                            </p>
-                        </div>
-                    </div>
-                    <audio controls class="w-full">
-                        <source src="{{ Storage::url($chapter->media_url) }}" type="audio/mpeg">
-                        <source src="{{ Storage::url($chapter->media_url) }}" type="audio/ogg">
-                        <source src="{{ Storage::url($chapter->media_url) }}" type="audio/wav">
-                        Votre navigateur ne supporte pas la lecture audio.
-                    </audio>
-                </div>
             @endif
         </div>
     @endif
@@ -154,23 +129,9 @@
     <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
         <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4">Contenu du chapitre</h3>
         <div class="prose prose-sm max-w-none dark:prose-invert">
-            {!! $chapter->content !!}
+            {!! markdown($chapter->content) !!}
         </div>
     </div>
-
-    @if($chapter->metadata && count($chapter->metadata) > 0)
-        <div class="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
-            <h3 class="text-sm font-medium text-gray-900 dark:text-white mb-3">Métadonnées</h3>
-            <dl class="grid grid-cols-1 gap-2 sm:grid-cols-2">
-                @foreach($chapter->metadata as $key => $value)
-                    <div class="flex justify-between text-sm">
-                        <dt class="font-medium text-gray-500 dark:text-gray-400">{{ $key }}:</dt>
-                        <dd class="text-gray-900 dark:text-white ml-2 break-all">{{ $value }}</dd>
-                    </div>
-                @endforeach
-            </dl>
-        </div>
-    @endif
 
     <div class="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
         <h3 class="text-sm font-medium text-gray-900 dark:text-white mb-3">Informations techniques</h3>

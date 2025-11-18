@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Filament\Resources\SectionResource\RelationManagers;
 
 use App\Enums\ChapterTypeEnum;
@@ -12,7 +14,7 @@ use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Collection;
 
-class ChaptersRelationManager extends RelationManager
+final class ChaptersRelationManager extends RelationManager
 {
     protected static string $relationship = 'chapters';
 
@@ -34,9 +36,7 @@ class ChaptersRelationManager extends RelationManager
                             ->options([
                                 'text' => 'Texte',
                                 'video' => 'Vidéo',
-                                'audio' => 'Audio',
                                 'pdf' => 'PDF',
-                                'interactive' => 'Interactif',
                             ])
                             ->required()
                             ->default('text')
@@ -53,10 +53,14 @@ class ChaptersRelationManager extends RelationManager
                             ->visibility('public')
                             ->preserveFilenames()
                             ->columnSpanFull()
-                            ->acceptedFileTypes(['application/pdf', 'video/*', 'audio/*'])
+                            ->acceptedFileTypes([
+                                'application/pdf',
+                                'application/msword',
+                                'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+                            ])
                             ->helperText('Uploadez un fichier selon le type de contenu.')
-                            ->visible(fn(Forms\Get $get) => in_array($get('content_type'), ['pdf', 'video', 'audio'], true))
-                            ->required(fn(Forms\Get $get) => in_array($get('content_type'), ['pdf', 'video', 'audio'], true))
+                            ->visible(fn (Forms\Get $get) => in_array($get('content_type'), ['pdf'], true))
+                            ->required(fn (Forms\Get $get) => in_array($get('content_type'), ['pdf'], true))
                             ->afterStateUpdated(function ($state, Forms\Set $set, Forms\Get $get) {
                                 $meta = $get('metadata') ?? [];
                                 $meta['source_file'] = $state;
@@ -70,8 +74,8 @@ class ChaptersRelationManager extends RelationManager
                                     ->numeric()
                                     ->disabled()
                                     ->dehydrated(false)
-                                    ->default(fn($livewire) => (Chapter::where('section_id', $livewire->getOwnerRecord()->id)
-                                            ->max('order_position') ?? 0) + 1
+                                    ->default(fn ($livewire) => (Chapter::where('section_id', $livewire->getOwnerRecord()->id)
+                                        ->max('order_position') ?? 0) + 1
                                     )
                                     ->helperText('Position automatique (prochaine disponible)'),
 
@@ -156,12 +160,10 @@ class ChaptersRelationManager extends RelationManager
                 Tables\Columns\TextColumn::make('content_type')
                     ->label('Type')
                     ->badge()
-                    ->color(fn($state) => match ($state) {
+                    ->color(fn ($state) => match ($state) {
                         ChapterTypeEnum::VIDEO => 'info',
                         ChapterTypeEnum::TEXT => 'success',
                         ChapterTypeEnum::PDF => 'warning',
-                        ChapterTypeEnum::INTERACTIVE => 'gray',
-                        default => 'primary',
                     }),
 
                 Tables\Columns\TextColumn::make('duration_minutes')
@@ -220,7 +222,7 @@ class ChaptersRelationManager extends RelationManager
             ->actions([
                 Tables\Actions\ActionGroup::make([
                     Tables\Actions\ViewAction::make()
-                        ->url(fn(Chapter $record): string => ChapterResource::getUrl('view', ['record' => $record]))
+                        ->url(fn (Chapter $record): string => ChapterResource::getUrl('view', ['record' => $record]))
                         ->label('Voir')
                         ->icon('heroicon-o-eye'),
                     Tables\Actions\EditAction::make()
@@ -235,7 +237,7 @@ class ChaptersRelationManager extends RelationManager
                         ->icon('heroicon-o-eye')
                         ->color('info')
                         ->slideOver()
-                        ->modalContent(fn(Chapter $record) => view('filament.resources.chapter.preview', ['chapter' => $record]))
+                        ->modalContent(fn (Chapter $record) => view('filament.resources.chapter.preview', ['chapter' => $record]))
                         ->modalWidth('xl'),
 
                     Tables\Actions\Action::make('duplicate')
@@ -244,14 +246,14 @@ class ChaptersRelationManager extends RelationManager
                         ->color('warning')
                         ->action(function (Chapter $record) {
                             $newChapter = $record->replicate();
-                            $newChapter->title = $record->title . ' (Copie)';
+                            $newChapter->title = $record->title.' (Copie)';
                             // order_position sera calculé automatiquement par le modèle
                             $newChapter->save();
 
                             $this->mountedTableActionRecord = $newChapter->getKey();
                         })
                         ->successNotificationTitle('Chapitre dupliqué avec succès'),
-                ])
+                ]),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
@@ -260,22 +262,22 @@ class ChaptersRelationManager extends RelationManager
                         ->label('Activer')
                         ->icon('heroicon-o-check-circle')
                         ->color('success')
-                        ->action(fn(Collection $records) => $records->each->update(['is_active' => true])),
+                        ->action(fn (Collection $records) => $records->each->update(['is_active' => true])),
                     Tables\Actions\BulkAction::make('deactivate')
                         ->label('Désactiver')
                         ->icon('heroicon-o-x-circle')
                         ->color('danger')
-                        ->action(fn(Collection $records) => $records->each->update(['is_active' => false])),
+                        ->action(fn (Collection $records) => $records->each->update(['is_active' => false])),
                     Tables\Actions\BulkAction::make('make_free')
                         ->label('Rendre gratuit')
                         ->icon('heroicon-o-gift')
                         ->color('success')
-                        ->action(fn(Collection $records) => $records->each->update(['is_free' => true])),
+                        ->action(fn (Collection $records) => $records->each->update(['is_free' => true])),
                     Tables\Actions\BulkAction::make('make_paid')
                         ->label('Rendre payant')
                         ->icon('heroicon-o-lock-closed')
                         ->color('warning')
-                        ->action(fn(Collection $records) => $records->each->update(['is_free' => false])),
+                        ->action(fn (Collection $records) => $records->each->update(['is_free' => false])),
                 ]),
             ])
             ->defaultSort('order_position')

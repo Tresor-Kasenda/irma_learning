@@ -69,10 +69,10 @@
                         </video>
                     </div>
                 @elseif($currentChapter->content_type === 'text' || $currentChapter->content)
-                    {{-- Contenu texte --}}
-                    <div class="prose prose-invert prose-lg max-w-none mb-8">
-                        <div class="bg-gray-800 rounded-lg p-6 text-gray-200">
-                            {!! $currentChapter->content !!}
+                    {{-- Contenu texte converti en HTML --}}
+                    <div class="mb-8">
+                        <div class="bg-gray-800 rounded-lg p-6">
+                            {!! $htmlContent !!}
                         </div>
                     </div>
                 @endif

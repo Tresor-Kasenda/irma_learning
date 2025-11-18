@@ -31,8 +31,8 @@ final class ContentStructureProcessor implements ContentProcessorInterface
         '/^([A-Z])\)\s+([A-ZÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖØÙÚÛÜÝÞ].+)$/' => 'subsection',
         // Sous-sections avec lettres minuscules après un titre (a), b), c))
         '/^([a-z])\)\s+([A-ZÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖØÙÚÛÜÝÞ].+)$/' => 'subsection',
-        // Listes à puces (y compris les tirets longs − et o)
-        '/^[•\-\*\+−–—o]\s+(.+)$/' => 'bullet',
+        // Listes à puces (tous les caractères Unicode de puces)
+        '/^[•●○◦▪▫■□▸►▹‣⁃⁌⁍◘◙◉◎⦾⦿⚫⚪🔘🔲🔳➢➣➤➥➔→⇒➡\-\*\+−–—o]\s+(.+)$/u' => 'bullet',
         // Listes numérotées avec point
         '/^(\d+)\.\s+(.+)$/' => 'numbered',
         // Listes avec parenthèses (chiffres uniquement)
@@ -290,8 +290,15 @@ final class ContentStructureProcessor implements ContentProcessorInterface
                 continue;
             }
 
-            // Accumuler les lignes du paragraphe
-            $currentParagraph[] = $trimmedLine;
+            // Ne PAS fusionner les lignes - garder chaque ligne séparée pour préserver la structure
+            // Si le paragraphe en cours n'est pas vide, le vider d'abord
+            if (! empty($currentParagraph)) {
+                $improvedLines[] = implode(' ', $currentParagraph);
+                $currentParagraph = [];
+            }
+
+            // Ajouter la ligne directement
+            $improvedLines[] = $line;
         }
 
         // Vider le dernier paragraphe
@@ -307,7 +314,7 @@ final class ContentStructureProcessor implements ContentProcessorInterface
      */
     private function isSpecialLine(string $line): bool
     {
-        return (bool) preg_match('/^(#{1,6}\s|[•\-\*\+−–—]\s|\d+\.\s|[a-z]\)\s|\|.*\||```|>|\$\$)/i', $line);
+        return (bool) preg_match('/^(#{1,6}\s|[•●○◦▪▫■□▸►▹‣⁃⁌⁍◘◙◉◎⦾⦿⚫⚪🔘🔲🔳➢➣➤➥➔→⇒➡\-\*\+−–—]\s|\d+\.\s|[a-z]\)\s|\|.*\||```|>|\$\$)/iu', $line);
     }
 
     /**
@@ -401,10 +408,10 @@ final class ContentStructureProcessor implements ContentProcessorInterface
         $matches = $listInfo['matches'];
 
         return match ($type) {
-            'bullet' => '- '.mb_trim($matches[1]),
-            'numbered' => $matches[1].'. '.mb_trim($matches[2]),
-            'parenthesis' => '  - '.mb_trim($matches[2]), // Sous-liste indentée
-            'subsection' => '### '.mb_trim($matches[2]), // Sous-section en H3
+            'bullet' => '- '.mb_trim($matches[1] ?? ''),
+            'numbered' => $matches[1].'. '.mb_trim($matches[2] ?? ''),
+            'parenthesis' => '  - '.mb_trim($matches[2] ?? ''), // Sous-liste indentée
+            'subsection' => '### '.mb_trim($matches[2] ?? ''), // Sous-section en H3
             default => $line,
         };
     }

@@ -81,12 +81,25 @@ final class MarkdownProcessor implements ContentProcessorInterface
                 continue;
             }
 
+            // Vérifier si c'est une case à cocher
+            if ($this->isCheckbox($trimmedLine)) {
+                if (! empty($currentParagraph)) {
+                    $formattedLines[] = implode(' ', $currentParagraph);
+                    $currentParagraph = [];
+                }
+                $formattedLines[] = $this->formatCheckbox($trimmedLine);
+
+                continue;
+            }
+
             if ($this->isBulletPoint($trimmedLine)) {
                 if (! empty($currentParagraph)) {
                     $formattedLines[] = implode(' ', $currentParagraph);
                     $currentParagraph = [];
                 }
-                $formattedLines[] = '- '.mb_ltrim($trimmedLine, '•-*• ');
+                // Nettoyer tous les caractères de puces Unicode et normaliser en tiret standard
+                $cleaned = preg_replace('/^[•●○◦▪▫■□▸►▹‣⁃⁌⁍◘◙◉◎⦾⦿⚫⚪🔘🔲🔳➢➣➤➥➔→⇒➡\-\*\+−–—o]\s*/u', '', $trimmedLine);
+                $formattedLines[] = '- '.mb_trim($cleaned);
 
                 continue;
             }
@@ -129,10 +142,12 @@ final class MarkdownProcessor implements ContentProcessorInterface
 
     /**
      * Vérifie si une ligne est une liste à puces
+     * Inclut tous les caractères Unicode de puces courants
      */
     private function isBulletPoint(string $line): bool
     {
-        return (bool) preg_match('/^[•\-\*\+−–—o]\s+/', $line);
+        // Liste complète des caractères de puces Unicode
+        return (bool) preg_match('/^[•●○◦▪▫■□▸►▹‣⁃⁌⁍◘◙◉◎⦾⦿⚫⚪🔘🔲🔳➢➣➤➥➔→⇒➡\-\*\+−–—o]\s+/u', $line);
     }
 
     /**
@@ -141,6 +156,38 @@ final class MarkdownProcessor implements ContentProcessorInterface
     private function isNumberedList(string $line): bool
     {
         return (bool) preg_match('/^\d+\.\s+/', $line);
+    }
+
+    /**
+     * Vérifie si une ligne est une case à cocher
+     */
+    private function isCheckbox(string $line): bool
+    {
+        // Cases à cocher vides : □ ☐
+        // Cases à cocher cochées : ☑ ☒ ✓ ✔ ✅
+        return (bool) preg_match('/^[□☐☑☒✓✔✅]\s+/u', $line);
+    }
+
+    /**
+     * Formate une case à cocher en syntaxe Markdown task list
+     */
+    private function formatCheckbox(string $line): string
+    {
+        // Cases vides
+        if (preg_match('/^[□☐]\s+/u', $line)) {
+            $cleaned = preg_replace('/^[□☐]\s*/u', '', $line);
+
+            return '- [ ] '.mb_trim($cleaned);
+        }
+
+        // Cases cochées
+        if (preg_match('/^[☑☒✓✔✅]\s+/u', $line)) {
+            $cleaned = preg_replace('/^[☑☒✓✔✅]\s*/u', '', $line);
+
+            return '- [x] '.mb_trim($cleaned);
+        }
+
+        return $line;
     }
 
     /**

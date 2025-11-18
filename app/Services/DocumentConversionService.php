@@ -9,6 +9,8 @@ use App\Contracts\DocumentExtractorInterface;
 use App\DTOs\DocumentContent;
 use App\Services\DocumentConversion\Extractors\PdfExtractor;
 use App\Services\DocumentConversion\Processors\ContentStructureProcessor;
+use App\Services\DocumentConversion\Processors\MarkdownEnhancementProcessor;
+use App\Services\DocumentConversion\Processors\MarkdownLineBreakProcessor;
 use App\Services\DocumentConversion\Processors\MarkdownProcessor;
 use App\Services\DocumentConversion\Processors\PdfFormulaProcessor;
 use App\Services\DocumentConversion\Processors\PdfImageProcessor;
@@ -130,11 +132,13 @@ final class DocumentConversionService
     private function registerDefaultProcessors(): void
     {
         $this->processors = [
-            new PdfImageProcessor,         // Priorité 20 - Extrait les images en premier
-            new PdfTableProcessor,         // Priorité 30 - Détecte les tableaux
-            new PdfFormulaProcessor,       // Priorité 40 - Détecte les formules
-            new MarkdownProcessor,         // Priorité 50 - Convertit en Markdown
-            new ContentStructureProcessor, // Priorité 60 - Structure le contenu
+            new PdfImageProcessor,            // Priorité 20 - Extrait les images en premier
+            new PdfTableProcessor,            // Priorité 30 - Détecte les tableaux
+            new PdfFormulaProcessor,          // Priorité 40 - Détecte les formules
+            new MarkdownProcessor,            // Priorité 50 - Convertit en Markdown
+            new MarkdownLineBreakProcessor,   // Priorité 55 - Assure les sauts de ligne corrects
+            new ContentStructureProcessor,    // Priorité 60 - Structure le contenu
+            new MarkdownEnhancementProcessor, // Priorité 70 - Améliore la qualité finale du Markdown
         ];
 
         usort($this->processors, fn ($a, $b) => $a->getPriority() <=> $b->getPriority());
