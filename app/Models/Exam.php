@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Models;
 
 use Database\Factories\ExamFactory;
@@ -8,10 +10,26 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 
-class Exam extends Model
+final class Exam extends Model
 {
     /** @use HasFactory<ExamFactory> */
     use HasFactory;
+
+    protected $fillable = [
+        'examable_type',
+        'examable_id',
+        'title',
+        'description',
+        'instructions',
+        'duration_minutes',
+        'passing_score',
+        'max_attempts',
+        'randomize_questions',
+        'show_results_immediately',
+        'is_active',
+        'available_from',
+        'available_until',
+    ];
 
     public function examable(): MorphTo
     {
@@ -56,7 +74,32 @@ class Exam extends Model
 
     public function getPassingScore(): float
     {
-        return $this->passing_score ?? 60;
+        return $this->passing_score ?? 70;
+    }
+
+    public function getFormationTitleAttribute(): ?string
+    {
+        if (! $this->examable) {
+            return null;
+        }
+
+        if ($this->examable_type === 'App\Models\Formation') {
+            return '📚 '.$this->examable->title;
+        }
+
+        if ($this->examable_type === 'App\Models\Section') {
+            $this->examable->loadMissing('formation');
+
+            return '📚 '.($this->examable->formation?->title ?? 'Formation inconnue');
+        }
+
+        if ($this->examable_type === 'App\Models\Chapter') {
+            $this->examable->loadMissing('section.formation');
+
+            return '📚 '.($this->examable->section?->formation?->title ?? 'Formation inconnue');
+        }
+
+        return null;
     }
 
     protected function casts(): array

@@ -10,6 +10,9 @@ use App\DTOs\DocumentContent;
 use App\Services\DocumentConversion\Extractors\PdfExtractor;
 use App\Services\DocumentConversion\Processors\ContentStructureProcessor;
 use App\Services\DocumentConversion\Processors\MarkdownProcessor;
+use App\Services\DocumentConversion\Processors\PdfFormulaProcessor;
+use App\Services\DocumentConversion\Processors\PdfImageProcessor;
+use App\Services\DocumentConversion\Processors\PdfTableProcessor;
 use Exception;
 use Illuminate\Support\Facades\Log;
 
@@ -50,11 +53,12 @@ final class DocumentConversionService
      *                          - skipFirstPage: bool (défaut: true)
      *                          - customTitle: string|null (titre personnalisé)
      *                          - customProcessors: array<ContentProcessorInterface>
+     *
+     * @throws Exception
      */
     public function convert(string $filePath, array $options = []): array
     {
         try {
-            // Options par défaut
             $options = array_merge([
                 'generateThumbnail' => true,
                 'ignorePageNumbers' => true,
@@ -63,35 +67,28 @@ final class DocumentConversionService
                 'customProcessors' => [],
             ], $options);
 
-            // Vérifier que le fichier existe
             if (! file_exists($filePath)) {
                 throw new Exception("Fichier non trouvé: {$filePath}");
             }
 
-            // 1. Générer la miniature de la première page
             $thumbnailPath = null;
             if ($options['generateThumbnail']) {
                 $thumbnailPath = $this->thumbnailService->generateThumbnail($filePath);
             }
 
-            // 2. Extraire le contenu brut du document
             $content = $this->extractDocument($filePath, $options);
 
-            // 3. Utiliser le titre personnalisé si fourni
             if (! empty($options['customTitle'])) {
                 $content->metadata->title = $options['customTitle'];
             }
 
-            // 4. Traiter le contenu (conversion en Markdown, structuration)
             $content = $this->processContent($content, $options);
 
-            // 5. Sauvegarder le fichier Markdown
             $markdownFilePath = $this->markdownFileService->saveMarkdownFile(
                 $content->markdown,
                 $content->metadata->title
             );
 
-            // 6. Retourner le résultat formaté
             return $this->formatResult($content, $thumbnailPath, $markdownFilePath);
 
         } catch (Exception $e) {
@@ -112,18 +109,7 @@ final class DocumentConversionService
     {
         $this->processors[] = $processor;
 
-        // Trier par priorité
         usort($this->processors, fn ($a, $b) => $a->getPriority() <=> $b->getPriority());
-
-        return $this;
-    }
-
-    /**
-     * Enregistre un extracteur de document personnalisé
-     */
-    public function registerExtractor(DocumentExtractorInterface $extractor): self
-    {
-        $this->extractors[] = $extractor;
 
         return $this;
     }
@@ -135,7 +121,6 @@ final class DocumentConversionService
     {
         $this->extractors = [
             new PdfExtractor,
-            // Ajouter d'autres extracteurs ici (Word, etc.)
         ];
     }
 
@@ -145,11 +130,13 @@ final class DocumentConversionService
     private function registerDefaultProcessors(): void
     {
         $this->processors = [
-            new MarkdownProcessor,
-            new ContentStructureProcessor,
+            new PdfImageProcessor,         // Priorité 20 - Extrait les images en premier
+            new PdfTableProcessor,         // Priorité 30 - Détecte les tableaux
+            new PdfFormulaProcessor,       // Priorité 40 - Détecte les formules
+            new MarkdownProcessor,         // Priorité 50 - Convertit en Markdown
+            new ContentStructureProcessor, // Priorité 60 - Structure le contenu
         ];
 
-        // Trier par priorité
         usort($this->processors, fn ($a, $b) => $a->getPriority() <=> $b->getPriority());
     }
 
@@ -176,12 +163,10 @@ final class DocumentConversionService
      */
     private function processContent(DocumentContent $content, array $options): DocumentContent
     {
-        // Ajouter les processors personnalisés
         foreach ($options['customProcessors'] ?? [] as $processor) {
             $this->registerProcessor($processor);
         }
 
-        // Exécuter les processors dans l'ordre de priorité
         foreach ($this->processors as $processor) {
             try {
                 $content = $processor->process($content);
@@ -226,7 +211,6 @@ final class DocumentConversionService
     {
         $wordCount = str_word_count(strip_tags($content->markdown));
 
-        // Moyenne de 200 mots par minute
         return max(5, (int) ceil($wordCount / 200));
     }
 }

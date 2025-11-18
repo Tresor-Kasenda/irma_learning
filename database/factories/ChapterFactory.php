@@ -22,7 +22,7 @@ final class ChapterFactory extends Factory
         return [
             'title' => $this->faker->sentence(4),
             'content' => $this->faker->paragraphs(3, true),
-            'content_type' => $this->faker->randomElement(['text', 'video', 'pdf', 'audio', 'interactive']),
+            'content_type' => $this->faker->randomElement(['text', 'video', 'pdf']),
             'media_url' => $this->faker->optional()->url,
             'duration_minutes' => $this->faker->numberBetween(5, 60),
             'order_position' => $this->faker->numberBetween(1, 20),

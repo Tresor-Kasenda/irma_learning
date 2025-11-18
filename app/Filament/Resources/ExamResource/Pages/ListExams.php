@@ -14,8 +14,8 @@ class ListExams extends ListRecords
     {
         return [
             Actions\CreateAction::make()
-                ->label('Créer un examen')
-                ->icon('heroicon-o-plus'),
+                ->label('Ajouter un examen')
+                ->icon('heroicon-o-plus-circle'),
         ];
     }
 }

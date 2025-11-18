@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Models;
 
 use App\Enums\QuestionTypeEnum;
@@ -9,10 +11,20 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-class Question extends Model
+final class Question extends Model
 {
     /** @use HasFactory<QuestionFactory> */
     use HasFactory;
+
+    protected $fillable = [
+        'exam_id',
+        'question_text',
+        'question_type',
+        'points',
+        'order_position',
+        'explanation',
+        'is_required',
+    ];
 
     public function exam(): BelongsTo
     {

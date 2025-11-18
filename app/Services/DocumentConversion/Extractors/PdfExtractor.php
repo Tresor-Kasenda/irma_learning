@@ -59,16 +59,14 @@ final class PdfExtractor implements DocumentExtractorInterface
 
             $document = $parser->parseFile($filePath);
 
-            // Extraire les métadonnées
             $metadata = $this->extractMetadata($document);
 
-            // Extraire le texte page par page (en ignorant la première si demandé)
             $rawText = $this->extractTextFromPages($document, $options);
 
-            // Nettoyer le texte
             $cleanedText = $this->cleanText($rawText, $options);
 
-            // Créer le DTO
+            $options['filePath'] = $filePath;
+
             $content = new DocumentContent(
                 rawText: $cleanedText,
                 metadata: $metadata,
@@ -100,30 +98,6 @@ final class PdfExtractor implements DocumentExtractorInterface
     }
 
     /**
-     * Extrait le texte des pages du PDF (en ignorant la première page si demandé)
-     */
-    private function extractTextFromPages($document, array $options): string
-    {
-        $pages = $document->getPages();
-        $skipFirstPage = $options['skipFirstPage'] ?? false;
-        $textParts = [];
-
-        foreach ($pages as $pageNumber => $page) {
-            // Ignorer la première page (index 0) si demandé
-            if ($skipFirstPage && $pageNumber === 0) {
-                continue;
-            }
-
-            $pageText = $page->getText();
-            if (! empty(mb_trim($pageText))) {
-                $textParts[] = $pageText;
-            }
-        }
-
-        return implode("\n\n", $textParts);
-    }
-
-    /**
      * Extrait les métadonnées du document
      */
     private function extractMetadata($document): DocumentMetadata
@@ -143,6 +117,29 @@ final class PdfExtractor implements DocumentExtractorInterface
     }
 
     /**
+     * Extrait le texte des pages du PDF (en ignorant la première page si demandé)
+     */
+    private function extractTextFromPages($document, array $options): string
+    {
+        $pages = $document->getPages();
+        $skipFirstPage = $options['skipFirstPage'] ?? false;
+        $textParts = [];
+
+        foreach ($pages as $pageNumber => $page) {
+            if ($skipFirstPage && $pageNumber === 0) {
+                continue;
+            }
+
+            $pageText = $page->getText();
+            if (! empty(mb_trim($pageText))) {
+                $textParts[] = $pageText;
+            }
+        }
+
+        return implode("\n\n", $textParts);
+    }
+
+    /**
      * Nettoie le texte extrait
      */
     private function cleanText(string $text, array $options): string
@@ -153,17 +150,14 @@ final class PdfExtractor implements DocumentExtractorInterface
         foreach ($lines as $line) {
             $line = mb_trim($line);
 
-            // Ignorer les lignes vides
             if (empty($line)) {
                 continue;
             }
 
-            // Ignorer les lignes trop courtes (sauf si importantes)
             if (mb_strlen($line) < 3 && ! $this->isImportantShortLine($line)) {
                 continue;
             }
 
-            // Ignorer les patterns non désirés
             if ($this->shouldIgnoreLine($line, $options)) {
                 continue;
             }
@@ -188,14 +182,12 @@ final class PdfExtractor implements DocumentExtractorInterface
      */
     private function shouldIgnoreLine(string $line, array $options): bool
     {
-        // Ignorer les numéros de page si demandé
         if ($options['ignorePageNumbers'] ?? true) {
             if ($this->isPageNumber($line)) {
                 return true;
             }
         }
 
-        // Vérifier les patterns d'ignorance
         foreach (self::IGNORED_PATTERNS as $pattern) {
             if (preg_match($pattern, $line)) {
                 return true;

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Models;
 
 use App\Enums\FormationLevelEnum;
@@ -15,12 +17,13 @@ use Spatie\Activitylog\Traits\LogsActivity;
 use Spatie\Sluggable\HasSlug;
 use Spatie\Sluggable\SlugOptions;
 
-class Formation extends Model
+final class Formation extends Model
 {
     /** @use HasFactory<FormationFactory> */
     use HasFactory;
-    use LogsActivity;
+
     use HasSlug;
+    use LogsActivity;
 
     public function getSlugOptions(): SlugOptions
     {
@@ -32,6 +35,11 @@ class Formation extends Model
     public function exam(): MorphOne
     {
         return $this->morphOne(Exam::class, 'examable');
+    }
+
+    public function exams(): MorphMany
+    {
+        return $this->morphMany(Exam::class, 'examable');
     }
 
     public function payments(): HasMany
@@ -86,7 +94,7 @@ class Formation extends Model
             'difficulty_level' => FormationLevelEnum::class,
             'tags' => 'array',
             'price' => 'decimal:2',
-            'duration_hours' => 'integer'
+            'duration_hours' => 'integer',
         ];
     }
 }

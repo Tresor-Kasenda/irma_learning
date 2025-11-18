@@ -22,7 +22,7 @@ final class SectionFactory extends Factory
             'title' => $this->faker->sentence(3),
             'description' => $this->faker->paragraph(),
             'order_position' => $this->faker->numberBetween(1, 10),
-            'estimated_duration' => $this->faker->numberBetween(30, 180),
+            'duration' => $this->faker->numberBetween(30, 180),
             'is_active' => true,
         ];
     }

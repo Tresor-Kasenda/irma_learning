@@ -35,7 +35,7 @@ final class Chapter extends Model
         return $this->belongsTo(Section::class, 'section_id');
     }
 
-    public function exam(): MorphOne
+    public function exams(): MorphOne
     {
         return $this->morphOne(Exam::class, 'examable');
     }

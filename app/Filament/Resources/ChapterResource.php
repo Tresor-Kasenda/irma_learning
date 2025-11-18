@@ -21,6 +21,7 @@ use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Grouping\Group;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Storage;
@@ -41,6 +42,13 @@ final class ChapterResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
+            ->groups([
+                Group::make('section.title')
+                    ->label('Section')
+                    ->collapsible()
+                    ->titlePrefixedWithLabel(false),
+            ])
+            ->defaultGroup('section.title')
             ->columns([
                 TextColumn::make('section.title')
                     ->label('Section')
@@ -333,7 +341,7 @@ final class ChapterResource extends Resource
                             })
                             ->afterStateHydrated(function ($component, $state) {
                                 if ($state && $component->getContainer()->getOperation() === 'edit') {
-                                    if (!Storage::disk('public')->exists($state)) {
+                                    if (!Storage::disk('public')->exists($state[0])) {
                                         Notification::make()
                                             ->title('Fichier manquant')
                                             ->body('Le fichier PDF original est introuvable.')

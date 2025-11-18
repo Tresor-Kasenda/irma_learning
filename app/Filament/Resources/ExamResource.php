@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\ExamResource\Pages;
@@ -7,7 +9,6 @@ use App\Filament\Resources\ExamResource\RelationManagers;
 use App\Models\Chapter;
 use App\Models\Exam;
 use App\Models\Formation;
-use App\Models\Module;
 use App\Models\Section;
 use Filament\Forms;
 use Filament\Forms\Form;
@@ -17,7 +18,7 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 
-class ExamResource extends Resource
+final class ExamResource extends Resource
 {
     protected static ?string $model = Exam::class;
 
@@ -33,30 +34,12 @@ class ExamResource extends Resource
     {
         return $form
             ->schema([
-                Forms\Components\Section::make('Informations générales')
-                    ->schema([
-                        Forms\Components\TextInput::make('title')
-                            ->label('Titre de l\'examen')
-                            ->required()
-                            ->maxLength(255),
-
-                        Forms\Components\Textarea::make('description')
-                            ->label('Description')
-                            ->rows(3)
-                            ->columnSpanFull(),
-
-                        Forms\Components\RichEditor::make('instructions')
-                            ->label('Instructions pour les étudiants')
-                            ->columnSpanFull(),
-                    ]),
-
                 Forms\Components\Section::make('Association')
                     ->schema([
                         Forms\Components\Select::make('examable_type')
                             ->label('Type d\'élément')
                             ->options([
                                 Formation::class => 'Formation',
-                                Module::class => 'Module',
                                 Section::class => 'Section',
                                 Chapter::class => 'Chapitre',
                             ])
@@ -73,29 +56,6 @@ class ExamResource extends Resource
                             ->live()
                             ->visible(fn(Forms\Get $get) => !empty($get('examable_type')))
                             ->afterStateUpdated(function (Forms\Set $set) {
-                                $set('module_id', null);
-                                $set('section_id', null);
-                                $set('examable_id', null);
-                            }),
-
-                        Forms\Components\Select::make('module_id')
-                            ->label('Module')
-                            ->options(function (Forms\Get $get) {
-                                $formationId = $get('formation_id');
-                                if (!$formationId) {
-                                    return [];
-                                }
-                                return Module::where('formation_id', $formationId)
-                                    ->pluck('title', 'id')
-                                    ->toArray();
-                            })
-                            ->searchable()
-                            ->preload()
-                            ->live()
-                            ->required(fn(Forms\Get $get) => in_array($get('examable_type'), [Module::class, Section::class, Chapter::class]))
-                            ->visible(fn(Forms\Get $get) => in_array($get('examable_type'), [Module::class, Section::class, Chapter::class]) &&
-                                !empty($get('formation_id')))
-                            ->afterStateUpdated(function (Forms\Set $set) {
                                 $set('section_id', null);
                                 $set('examable_id', null);
                             }),
@@ -103,29 +63,31 @@ class ExamResource extends Resource
                         Forms\Components\Select::make('section_id')
                             ->label('Section')
                             ->options(function (Forms\Get $get) {
-                                $moduleId = $get('module_id');
-                                if (!$moduleId) {
+                                $formationId = $get('formation_id');
+                                if (!$formationId) {
                                     return [];
                                 }
-                                return Section::where('module_id', $moduleId)
+
+                                return Section::where('formation_id', $formationId)
                                     ->pluck('title', 'id')
                                     ->toArray();
                             })
                             ->searchable()
                             ->preload()
                             ->live()
-                            ->required(fn(Forms\Get $get) => in_array($get('examable_type'), [Section::class, Chapter::class]))
-                            ->visible(fn(Forms\Get $get) => in_array($get('examable_type'), [Section::class, Chapter::class]) &&
-                                !empty($get('module_id')))
-                            ->afterStateUpdated(fn(Forms\Set $set) => $set('examable_id', null)),
+                            ->required(fn(Forms\Get $get) => $get('examable_type') === Chapter::class)
+                            ->visible(fn(Forms\Get $get) => $get('examable_type') === Chapter::class &&
+                                !empty($get('formation_id')))
+                            ->afterStateUpdated(function (Forms\Set $set) {
+                                $set('examable_id', null);
+                            }),
 
                         Forms\Components\Select::make('examable_id')
                             ->label(fn(Forms\Get $get) => match ($get('examable_type')) {
                                 Formation::class => 'Formation',
-                                Module::class => 'Module',
                                 Section::class => 'Section',
                                 Chapter::class => 'Chapitre',
-                                default => 'Élément associé',
+                                default => 'Élément',
                             })
                             ->options(function (Forms\Get $get) {
                                 $type = $get('examable_type');
@@ -136,8 +98,9 @@ class ExamResource extends Resource
 
                                 return match ($type) {
                                     Formation::class => [$get('formation_id') => Formation::find($get('formation_id'))?->title ?? ''],
-                                    Module::class => [$get('module_id') => Module::find($get('module_id'))?->title ?? ''],
-                                    Section::class => [$get('section_id') => Section::find($get('section_id'))?->title ?? ''],
+                                    Section::class => Section::where('formation_id', $get('formation_id'))
+                                        ->pluck('title', 'id')
+                                        ->toArray(),
                                     Chapter::class => Chapter::where('section_id', $get('section_id'))
                                         ->pluck('title', 'id')
                                         ->toArray(),
@@ -148,30 +111,28 @@ class ExamResource extends Resource
                             ->preload()
                             ->required()
                             ->hidden(fn(Forms\Get $get) => ($get('examable_type') === Formation::class && empty($get('formation_id'))) ||
-                                ($get('examable_type') === Module::class && empty($get('module_id'))) ||
-                                ($get('examable_type') === Section::class && empty($get('section_id'))) ||
+                                ($get('examable_type') === Section::class && empty($get('formation_id'))) ||
                                 ($get('examable_type') === Chapter::class && empty($get('section_id'))) ||
                                 empty($get('examable_type'))),
-
-                        Forms\Components\Hidden::make('examable_id')
-                            ->default(function (Forms\Get $get) {
-                                $type = $get('examable_type');
-
-                                if (!$type) {
-                                    return null;
-                                }
-
-                                return match ($type) {
-                                    Formation::class => $get('formation_id'),
-                                    Module::class => $get('module_id'),
-                                    Section::class => $get('section_id'),
-                                    default => null,
-                                };
-                            })
-                            ->dehydrated()
-                            ->visible(fn(Forms\Get $get) => in_array($get('examable_type'), [Formation::class, Module::class, Section::class])),
                     ])
                     ->columns(2),
+
+                Forms\Components\Section::make('Informations générales')
+                    ->schema([
+                        Forms\Components\TextInput::make('title')
+                            ->label('Titre de l\'examen')
+                            ->required()
+                            ->maxLength(255),
+
+                        Forms\Components\Textarea::make('description')
+                            ->label('Description')
+                            ->rows(3)
+                            ->columnSpanFull(),
+
+                        Forms\Components\RichEditor::make('instructions')
+                            ->label('Instructions pour les étudiants')
+                            ->columnSpanFull(),
+                    ]),
 
                 Forms\Components\Section::make('Configuration de l\'examen')
                     ->schema([
@@ -237,25 +198,36 @@ class ExamResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
+            ->groups([
+                Tables\Grouping\Group::make('examable_type')
+                    ->label('Type d\'examen')
+                    ->getTitleFromRecordUsing(fn($record) => match ($record->examable_type) {
+                        Formation::class => '📚 Formation',
+                        Section::class => '📖 Section',
+                        Chapter::class => '📄 Chapitre',
+                        default => 'Autre',
+                    })
+                    ->collapsible(),
+            ])
             ->columns([
-                Tables\Columns\TextColumn::make('title')
+                TextColumn::make('title')
                     ->label('Titre')
                     ->searchable()
                     ->limit(30)
                     ->tooltip(function (TextColumn $column): ?string {
                         $state = $column->getState();
-                        if (strlen($state) <= $column->getCharacterLimit()) {
+                        if (mb_strlen($state) <= $column->getCharacterLimit()) {
                             return null;
                         }
+
                         return $state;
                     })
                     ->sortable(),
 
-                Tables\Columns\TextColumn::make('examable_type')
+                TextColumn::make('examable_type')
                     ->label('Type')
                     ->formatStateUsing(fn($state): string => match ($state) {
                         Formation::class => 'Formation',
-                        Module::class => 'Module',
                         Section::class => 'Section',
                         Chapter::class => 'Chapitre',
                         default => 'Inconnu',
@@ -263,25 +235,37 @@ class ExamResource extends Resource
                     ->badge()
                     ->color(fn($state): string => match ($state) {
                         Formation::class => 'success',
-                        Module::class => 'info',
-                        Section::class => 'warning',
-                        Chapter::class => 'danger',
+                        Section::class => 'info',
+                        Chapter::class => 'warning',
                         default => 'gray',
                     }),
 
-                Tables\Columns\TextColumn::make('examable.title')
+                TextColumn::make('examable.title')
                     ->label('Élément associé')
                     ->searchable()
-                    ->limit(40),
+                    ->limit(40)
+                    ->description(fn(Exam $record): ?string => $record->formation_title),
 
-                Tables\Columns\TextColumn::make('duration_minutes')
+                TextColumn::make('duration_minutes')
                     ->label('Durée (min)')
                     ->numeric()
                     ->sortable(),
 
-                Tables\Columns\TextColumn::make('passing_score')
+                TextColumn::make('passing_score')
                     ->label('Score min. (%)')
                     ->numeric()
+                    ->sortable(),
+
+                TextColumn::make('questions_count')
+                    ->label('Questions')
+                    ->counts('questions')
+                    ->badge()
+                    ->color(fn($state): string => match (true) {
+                        $state === 0 => 'danger',
+                        $state < 5 => 'warning',
+                        $state >= 10 => 'success',
+                        default => 'info',
+                    })
                     ->sortable(),
 
                 Tables\Columns\IconColumn::make('is_active')
@@ -293,7 +277,6 @@ class ExamResource extends Resource
                     ->label('Type d\'élément')
                     ->options([
                         Formation::class => 'Formation',
-                        Module::class => 'Module',
                         Section::class => 'Section',
                         Chapter::class => 'Chapitre',
                     ]),
@@ -322,7 +305,7 @@ class ExamResource extends Resource
                         ->label('Supprimer')
                         ->icon('heroicon-o-trash')
                         ->requiresConfirmation(),
-                ])
+                ]),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
@@ -375,11 +358,12 @@ class ExamResource extends Resource
     {
         return parent::getEloquentQuery()
             ->withoutGlobalScopes()
-            ->with(['examable']);
+            ->with(['examable'])
+            ->withCount('questions');
     }
 
     public static function getNavigationBadge(): ?string
     {
-        return static::getModel()::count();
+        return (string)self::getModel()::count();
     }
 }

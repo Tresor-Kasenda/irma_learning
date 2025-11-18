@@ -29,6 +29,12 @@ class QuestionResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
+            ->groups([
+                Tables\Grouping\Group::make('exam.title')
+                    ->label('Examen')
+                    ->collapsible()
+            ])
+            ->defaultGroup('exam.title')
             ->columns([
                 Tables\Columns\TextColumn::make('exam.title')
                     ->label('Examen')

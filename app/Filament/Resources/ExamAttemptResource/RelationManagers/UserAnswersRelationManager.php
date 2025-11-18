@@ -41,13 +41,13 @@ class UserAnswersRelationManager extends RelationManager
                     ->label('Réponse choisie')
                     ->limit(30)
                     ->placeholder('Réponse libre')
-                    ->tooltip(fn($record) => $record->selectedOption?->option_text ?? $record->text_answer),
+                    ->tooltip(fn($record) => $record->selectedOption?->option_text ?? $record->answer_text),
 
-                Tables\Columns\TextColumn::make('text_answer')
+                Tables\Columns\TextColumn::make('answer_text')
                     ->label('Réponse texte')
                     ->limit(30)
                     ->placeholder('Pas de réponse texte')
-                    ->tooltip(fn($record) => $record->text_answer)
+                    ->tooltip(fn($record) => $record->answer_text)
                     ->toggleable(isToggledHiddenByDefault: true),
 
                 Tables\Columns\IconColumn::make('is_correct')
@@ -191,7 +191,7 @@ class UserAnswersRelationManager extends RelationManager
                                             '"' . str_replace('"', '""', $record->question->question_text) . '"',
                                             $record->question->question_type,
                                             '"' . str_replace('"', '""', $record->selectedOption?->option_text ?? '') . '"',
-                                            '"' . str_replace('"', '""', $record->text_answer ?? '') . '"',
+                                            '"' . str_replace('"', '""', $record->answer_text ?? '') . '"',
                                             $record->is_correct ? 'Oui' : 'Non',
                                             $record->points_earned,
                                             $record->question->points,
@@ -225,7 +225,7 @@ class UserAnswersRelationManager extends RelationManager
                             ->searchable()
                             ->preload(),
 
-                        Forms\Components\Textarea::make('text_answer')
+                        Forms\Components\Textarea::make('answer_text')
                             ->label('Réponse texte')
                             ->helperText('Pour les questions à réponse libre')
                             ->rows(3)

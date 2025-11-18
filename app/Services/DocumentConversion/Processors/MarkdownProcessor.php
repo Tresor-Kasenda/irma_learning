@@ -24,7 +24,7 @@ final class MarkdownProcessor implements ContentProcessorInterface
 
     public function getPriority(): int
     {
-        return 50; // Exécuté après l'extraction des éléments
+        return 50;
     }
 
     /**
@@ -32,7 +32,6 @@ final class MarkdownProcessor implements ContentProcessorInterface
      */
     private function convertToMarkdown(DocumentContent $content): string
     {
-        // Trier les éléments par position
         $content->sortElementsByPosition();
 
         $markdown = '';
@@ -41,21 +40,17 @@ final class MarkdownProcessor implements ContentProcessorInterface
         $lastPosition = 0;
 
         foreach ($elements as $element) {
-            // Ajouter le texte brut entre les éléments
             if ($element->position > $lastPosition) {
                 $textSegment = mb_substr($rawText, $lastPosition, $element->position - $lastPosition);
                 $markdown .= $this->formatTextSegment($textSegment);
             }
 
-            // Ajouter l'élément formaté
             $markdown .= $this->formatElement($element);
 
-            // Mettre à jour la position
             $contentLength = is_string($element->content) ? mb_strlen($element->content) : 0;
             $lastPosition = $element->position + $contentLength;
         }
 
-        // Ajouter le reste du texte
         if ($lastPosition < mb_strlen($rawText)) {
             $textSegment = mb_substr($rawText, $lastPosition);
             $markdown .= $this->formatTextSegment($textSegment);
@@ -65,7 +60,7 @@ final class MarkdownProcessor implements ContentProcessorInterface
     }
 
     /**
-     * Formate un segment de texte brut
+     * Formate un segment de texte brut avec respect des sauts de ligne
      */
     private function formatTextSegment(string $text): string
     {
@@ -76,10 +71,9 @@ final class MarkdownProcessor implements ContentProcessorInterface
         foreach ($lines as $line) {
             $trimmedLine = mb_trim($line);
 
-            // Ligne vide = nouveau paragraphe
             if (empty($trimmedLine)) {
                 if (! empty($currentParagraph)) {
-                    $formattedLines[] = implode("\n", $currentParagraph);
+                    $formattedLines[] = implode(' ', $currentParagraph);
                     $currentParagraph = [];
                 }
                 $formattedLines[] = '';
@@ -87,11 +81,9 @@ final class MarkdownProcessor implements ContentProcessorInterface
                 continue;
             }
 
-            // Détecte les listes à puces
             if ($this->isBulletPoint($trimmedLine)) {
-                // Vider le paragraphe en cours
                 if (! empty($currentParagraph)) {
-                    $formattedLines[] = implode("\n", $currentParagraph);
+                    $formattedLines[] = implode(' ', $currentParagraph);
                     $currentParagraph = [];
                 }
                 $formattedLines[] = '- '.mb_ltrim($trimmedLine, '•-*• ');
@@ -99,11 +91,9 @@ final class MarkdownProcessor implements ContentProcessorInterface
                 continue;
             }
 
-            // Détecte les listes numérotées
             if ($this->isNumberedList($trimmedLine)) {
-                // Vider le paragraphe en cours
                 if (! empty($currentParagraph)) {
-                    $formattedLines[] = implode("\n", $currentParagraph);
+                    $formattedLines[] = implode(' ', $currentParagraph);
                     $currentParagraph = [];
                 }
                 $formattedLines[] = $trimmedLine;
@@ -111,32 +101,46 @@ final class MarkdownProcessor implements ContentProcessorInterface
                 continue;
             }
 
-            // Ligne normale = ajouter au paragraphe
+            // Ajouter la ligne au paragraphe
             $currentParagraph[] = $trimmedLine;
+
+            // Si la ligne se termine par une ponctuation forte, terminer le paragraphe
+            if ($this->endsWithStrongPunctuation($trimmedLine)) {
+                $formattedLines[] = implode(' ', $currentParagraph);
+                $currentParagraph = [];
+                $formattedLines[] = '';
+            }
         }
 
-        // Vider le dernier paragraphe
         if (! empty($currentParagraph)) {
-            $formattedLines[] = implode("\n", $currentParagraph);
+            $formattedLines[] = implode(' ', $currentParagraph);
         }
 
         return implode("\n", $formattedLines)."\n\n";
     }
 
     /**
+     * Vérifie si une ligne se termine par une ponctuation forte
+     */
+    private function endsWithStrongPunctuation(string $line): bool
+    {
+        return (bool) preg_match('/[.!?]\s*$/', $line);
+    }
+
+    /**
      * Vérifie si une ligne est une liste à puces
      */
-    private function isBulletPoint(string $line): int
+    private function isBulletPoint(string $line): bool
     {
-        return preg_match('/^[•\-\*\+−–—o]\s+/', $line);
+        return (bool) preg_match('/^[•\-\*\+−–—o]\s+/', $line);
     }
 
     /**
      * Vérifie si une ligne est une liste numérotée
      */
-    private function isNumberedList(string $line): int
+    private function isNumberedList(string $line): bool
     {
-        return preg_match('/^\d+\.\s+/', $line);
+        return (bool) preg_match('/^\d+\.\s+/', $line);
     }
 
     /**
@@ -185,15 +189,11 @@ final class MarkdownProcessor implements ContentProcessorInterface
 
         $markdown = [];
 
-        // En-têtes
         $markdown[] = '| '.implode(' | ', $headers).' |';
 
-        // Séparateur
         $markdown[] = '| '.implode(' | ', array_fill(0, count($headers), '---')).' |';
 
-        // Lignes de données
         foreach ($rows as $row) {
-            // Assurer le même nombre de colonnes
             $row = array_pad($row, count($headers), '');
             $markdown[] = '| '.implode(' | ', $row).' |';
         }

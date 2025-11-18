@@ -10,6 +10,8 @@ use App\Livewire\Pages\Courses\Certifications;
 use App\Livewire\Pages\Courses\CoursePlayer;
 use App\Livewire\Pages\Courses\FormationsLists;
 use App\Livewire\Pages\Courses\LearningCourse;
+use App\Livewire\Pages\Exams\ExamResults;
+use App\Livewire\Pages\Exams\TakeExam;
 use App\Livewire\Pages\Frontend\Formations;
 use App\Livewire\Pages\Frontend\Payments\StudentPayment;
 use App\Livewire\Pages\Frontend\ShowFormation\DetailFormation;
@@ -45,6 +47,12 @@ Route::middleware('auth')->group(function () {
     // Nouvelle route pour le lecteur de cours type Udemy
     Route::get('/course/{formation}/learn', CoursePlayer::class)
         ->name('course.player');
+
+    // Routes pour les examens
+    Route::get('/exam/{exam}/take', TakeExam::class)
+        ->name('exam.take');
+    Route::get('/exam/attempt/{attempt}/results', ExamResults::class)
+        ->name('exam.results');
 
     // Ancienne route master-class (à conserver pour compatibilité)
     Route::get('/master-class/{masterClass}/formations', LearningCourse::class)
