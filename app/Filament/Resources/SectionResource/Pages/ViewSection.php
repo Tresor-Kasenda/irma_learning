@@ -6,9 +6,7 @@ namespace App\Filament\Resources\SectionResource\Pages;
 
 use App\Filament\Resources\SectionResource;
 use App\Models\Section;
-use App\Services\DocumentConversionService;
-use App\Services\ReadingDurationCalculatorService;
-use Exception;
+use App\Services\ChapterPdfExtractionService;
 use Filament\Actions;
 use Filament\Forms;
 use Filament\Forms\Components\FileUpload;
@@ -25,7 +23,6 @@ use Filament\Resources\Pages\ViewRecord;
 use Filament\Support\Colors\Color;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
-use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
 
 final class ViewSection extends ViewRecord
 {
@@ -68,84 +65,6 @@ final class ViewSection extends ViewRecord
                     ])
                     ->columns(3),
             ]);
-    }
-
-    /**
-     * Extrait le contenu du PDF et met à jour les champs du formulaire
-     */
-    protected static function extractPdfContent($pdfFile, Set $set, Get $get): void
-    {
-        try {
-            if (! $pdfFile) {
-                return;
-            }
-
-            $filePath = '';
-            $originalFileName = null;
-
-            if ($pdfFile instanceof TemporaryUploadedFile) {
-                $filePath = $pdfFile->getRealPath();
-                $permanentPath = $pdfFile->store('chapters', 'public');
-
-                // Extraire le nom du fichier sans l'extension
-                $originalFileName = pathinfo($pdfFile->getClientOriginalName(), PATHINFO_FILENAME);
-
-                $pdfFile = $filePath;
-            }
-
-            if (! $filePath || ! file_exists($filePath)) {
-                throw new Exception('Impossible de trouver le fichier PDF.');
-            }
-
-            $extractionService = app(DocumentConversionService::class);
-            $result = $extractionService->convert($filePath, [
-                'generateThumbnail' => true,
-                'ignorePageNumbers' => true,
-                'customTitle' => $originalFileName,
-            ]);
-
-            $extractedData = [
-                'title' => $result['title'],
-                'description' => $result['description'],
-                'content' => $result['content'],
-                'estimated_duration' => $result['estimated_duration'],
-                'thumbnail_path' => $result['thumbnail_path'] ?? null,
-            ];
-
-            $durationService = app(ReadingDurationCalculatorService::class);
-            $readingAnalysis = $durationService->calculateReadingDuration(
-                $extractedData['content'],
-                'average' // Niveau par défaut
-            );
-
-            $set('title', $extractedData['title']);
-            $set('content', $extractedData['content']);
-            $set('duration_minutes', $readingAnalysis['total_minutes']);
-            $set('content_type', 'pdf');
-
-            // Définir l'image de couverture si disponible
-            if (! empty($extractedData['thumbnail_path'])) {
-                $set('cover_image', $extractedData['thumbnail_path']);
-            }
-
-            // Définir le fichier Markdown si disponible
-            if (! empty($extractedData['markdown_file'])) {
-                $set('markdown_file', $extractedData['markdown_file']);
-            }
-
-            Notification::make()
-                ->title('Extraction PDF réussie')
-                ->body("Le contenu a été extrait avec succès. Durée estimée: {$extractedData['estimated_duration']} minutes.")
-                ->success()
-                ->send();
-
-        } catch (Exception $e) {
-            Notification::make()
-                ->title('Erreur d\'extraction PDF')
-                ->body('Erreur lors de l\'extraction: '.$e->getMessage())
-                ->danger()
-                ->send();
-        }
     }
 
     protected function getHeaderActions(): array
@@ -211,9 +130,9 @@ final class ViewSection extends ViewRecord
                         ->visible(fn (Get $get) => $get('content_type') === 'pdf')
                         ->required(fn (Get $get) => $get('content_type') === 'pdf')
                         ->live()
-                        ->afterStateUpdated(function ($state, Set $set, Get $get) {
+                        ->afterStateUpdated(function ($state, Set $set) {
                             if ($state) {
-                                static::extractPdfContent($state, $set, $get);
+                                app(ChapterPdfExtractionService::class)->extractAndSetFormData($state, $set);
                             }
                         })
                         ->afterStateHydrated(function ($component, $state) {

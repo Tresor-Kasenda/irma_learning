@@ -19,9 +19,10 @@ final class PdfTableProcessor implements ContentProcessorInterface
      * Patterns pour détecter les tableaux dans le texte
      */
     private const array TABLE_INDICATORS = [
-        '/^(?:[A-Za-zÀ-ÿ\s]+\s*\|){2,}/',  // Colonnes séparées par |
-        '/^(?:[A-Za-zÀ-ÿ0-9\s]+\t){2,}/',  // Colonnes séparées par tabulations
+        '/^(?:[A-Za-zÀ-ÿ0-9\s\.\-\(\)]+\s*\|){2,}/',  // Colonnes séparées par |
+        '/^(?:[A-Za-zÀ-ÿ0-9\s\.\-\(\)]+\t){2,}/',  // Colonnes séparées par tabulations
         '/^\s*[\|\+\-]{3,}/',              // Séparateurs de tableau
+        '/^(?:\S+(?: \S+)*\s{2,}){2,}\S+(?: \S+)*/', // Colonnes séparées par 2+ espaces (détection visuelle)
     ];
 
     private const int MIN_COLUMNS = 2;
@@ -90,7 +91,10 @@ final class PdfTableProcessor implements ContentProcessorInterface
                 if (empty($currentTable['headers']) && !$this->isSeparatorLine($line)) {
                     $currentTable['headers'] = $columns;
                 } elseif (!$this->isSeparatorLine($line) && count($columns) > 0) {
-                    $currentTable['rows'][] = $columns;
+                    // Vérifier la cohérence du nombre de colonnes
+                    if (empty($currentTable['headers']) || abs(count($currentTable['headers']) - count($columns)) <= 1) {
+                        $currentTable['rows'][] = $columns;
+                    }
                 }
             } else {
                 if ($currentTable !== null) {
@@ -154,10 +158,11 @@ final class PdfTableProcessor implements ContentProcessorInterface
         } elseif (str_contains($trimmed, "\t")) {
             $columns = explode("\t", $trimmed);
         } else {
+            // Séparation par 2 espaces ou plus
             $columns = preg_split('/\s{2,}/', $trimmed);
         }
 
-        return array_map(fn($col) => mb_trim($col), array_filter($columns, fn($col) => !empty(mb_trim($col))));
+        return array_values(array_map(fn($col) => mb_trim($col), array_filter($columns, fn($col) => !empty(mb_trim($col)))));
     }
 
     /**

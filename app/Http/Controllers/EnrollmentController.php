@@ -107,6 +107,10 @@ class EnrollmentController extends Controller
      */
     public function refund(Enrollment $enrollment, Request $request)
     {
+        if (!auth()->user()->isAdmin() && !auth()->user()->isSuperAdmin()) {
+            abort(403, 'Unauthorized action.');
+        }
+
         $request->validate([
             'reason' => 'required|string|max:500',
             'refund_amount' => 'nullable|numeric|min:0|max:' . $enrollment->amount_paid,

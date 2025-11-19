@@ -17,7 +17,27 @@ class Enrollment extends Model
     use HasFactory;
     use LogsActivity;
 
-    protected $guarded = [];
+    protected $fillable = [
+        'user_id',
+        'formation_id',
+        'status',
+        'payment_status',
+        'payment_method',
+        'payment_transaction_id',
+        'payment_gateway',
+        'payment_gateway_response',
+        'amount_paid',
+        'currency',
+        'enrollment_date',
+        'completion_date',
+        'last_accessed_at',
+        'progress_percentage',
+        'refunded_at',
+        'refund_amount',
+        'refund_reason',
+        'refund_transaction_id',
+        'payment_notes',
+    ];
 
     protected static function booted(): void
     {

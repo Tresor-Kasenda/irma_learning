@@ -114,6 +114,22 @@ final class MarkdownProcessor implements ContentProcessorInterface
                 continue;
             }
 
+            // Détection améliorée des titres
+            if ($this->isLikelyTitle($trimmedLine)) {
+                // Si on a un paragraphe en cours, on le ferme
+                if (! empty($currentParagraph)) {
+                    $formattedLines[] = implode(' ', $currentParagraph);
+                    $currentParagraph = [];
+                    $formattedLines[] = '';
+                }
+                
+                // On ajoute le titre tel quel (il sera structuré par ContentStructureProcessor)
+                $formattedLines[] = $trimmedLine;
+                $formattedLines[] = ''; // Saut de ligne après un titre
+                
+                continue;
+            }
+
             // Ajouter la ligne au paragraphe
             $currentParagraph[] = $trimmedLine;
 
@@ -130,6 +146,50 @@ final class MarkdownProcessor implements ContentProcessorInterface
         }
 
         return implode("\n", $formattedLines)."\n\n";
+    }
+
+    /**
+     * Vérifie si une ligne est probablement un titre
+     */
+    private function isLikelyTitle(string $line): bool
+    {
+        // Déjà un titre Markdown
+        if (preg_match('/^#{1,6}\s+/', $line)) {
+            return true;
+        }
+
+        // Trop long pour être un titre (sauf si très spécifique)
+        if (mb_strlen($line) > 150) {
+            return false;
+        }
+
+        // Patterns de titres communs
+        if (preg_match('/^(chapitre|chapter|partie|part|section|module)\s+(\d+|[ivxlcdm]+)/i', $line)) {
+            return true;
+        }
+
+        // Titres numérotés (1. Introduction)
+        if (preg_match('/^\d+(\.\d+)*\.?\s+[A-Z]/', $line)) {
+            return true;
+        }
+
+        // Titres en MAJUSCULES (au moins 5 caractères)
+        if (mb_strlen($line) > 5 && $line === mb_strtoupper($line) && !preg_match('/^\d+$/', $line)) {
+            return true;
+        }
+
+        // Lignes courtes sans ponctuation finale, commençant par une majuscule
+        // et ne contenant pas de séparateurs de phrase majeurs au milieu (comme un point suivi d'espace)
+        if (
+            mb_strlen($line) < 80 && 
+            preg_match('/^[A-ZÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖØÙÚÛÜÝÞ]/u', $line) && 
+            !preg_match('/[.!,;:]\s*$/', $line) &&
+            !preg_match('/[.!?]\s+[A-Z]/', $line) // Pas de fin de phrase au milieu
+        ) {
+            return true;
+        }
+
+        return false;
     }
 
     /**

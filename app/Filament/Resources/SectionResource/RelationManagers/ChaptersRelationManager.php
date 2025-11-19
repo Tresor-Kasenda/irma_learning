@@ -7,12 +7,16 @@ namespace App\Filament\Resources\SectionResource\RelationManagers;
 use App\Enums\ChapterTypeEnum;
 use App\Filament\Resources\ChapterResource;
 use App\Models\Chapter;
+use App\Services\ChapterPdfExtractionService;
+use Exception;
 use Filament\Forms;
 use Filament\Forms\Form;
+use Filament\Notifications\Notification;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Facades\Storage;
 
 final class ChaptersRelationManager extends RelationManager
 {
@@ -42,12 +46,11 @@ final class ChaptersRelationManager extends RelationManager
                             ->default('text')
                             ->live()
                             ->afterStateUpdated(function ($state, Forms\Set $set) {
-                                $set('metadata', []);
                                 $set('media_url', null);
                             }),
 
                         Forms\Components\FileUpload::make('media_url')
-                            ->label('Fichier de contenu')
+                            ->label('Fichier PDF')
                             ->disk('public')
                             ->directory('chapters')
                             ->visibility('public')
@@ -55,17 +58,43 @@ final class ChaptersRelationManager extends RelationManager
                             ->columnSpanFull()
                             ->acceptedFileTypes([
                                 'application/pdf',
-                                'application/msword',
-                                'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
                             ])
-                            ->helperText('Uploadez un fichier selon le type de contenu.')
-                            ->visible(fn (Forms\Get $get) => in_array($get('content_type'), ['pdf'], true))
-                            ->required(fn (Forms\Get $get) => in_array($get('content_type'), ['pdf'], true))
-                            ->afterStateUpdated(function ($state, Forms\Set $set, Forms\Get $get) {
-                                $meta = $get('metadata') ?? [];
-                                $meta['source_file'] = $state;
-                                $set('metadata', $meta);
+                            ->maxSize(50 * 1024)
+                            ->helperText('Uploadez un PDF. Le contenu sera extrait lors de la sauvegarde.')
+                            ->visible(fn(Forms\Get $get) => $get('content_type') === 'pdf')
+                            ->required(fn(Forms\Get $get) => $get('content_type') === 'pdf')
+                            ->downloadable()
+                            ->openable()
+                            ->afterStateHydrated(function ($component, $state) {
+                                if ($state && $component->getContainer()->getOperation() === 'edit') {
+                                    if (!Storage::disk('public')->exists($state[0])) {
+                                        Notification::make()
+                                            ->title('Fichier manquant')
+                                            ->body('Le fichier PDF original est introuvable.')
+                                            ->warning()
+                                            ->send();
+                                    }
+                                }
                             }),
+
+                        Forms\Components\FileUpload::make('video_url')
+                            ->label('Vidéo')
+                            ->disk('public')
+                            ->directory('chapters')
+                            ->visibility('public')
+                            ->preserveFilenames()
+                            ->columnSpanFull()
+                            ->acceptedFileTypes(['video/*'])
+                            ->visible(
+                                fn(Forms\Get $get) => $get('content_type') === 'video'
+                            )
+                            ->required(
+                                fn(Forms\Get $get) => $get('content_type') === 'video'
+                            ),
+
+                        Forms\Components\Hidden::make('cover_image'),
+
+                        Forms\Components\Hidden::make('markdown_file'),
 
                         Forms\Components\Grid::make(2)
                             ->schema([
@@ -74,8 +103,8 @@ final class ChaptersRelationManager extends RelationManager
                                     ->numeric()
                                     ->disabled()
                                     ->dehydrated(false)
-                                    ->default(fn ($livewire) => (Chapter::where('section_id', $livewire->getOwnerRecord()->id)
-                                        ->max('order_position') ?? 0) + 1
+                                    ->default(fn($livewire) => (Chapter::where('section_id', $livewire->getOwnerRecord()->id)
+                                            ->max('order_position') ?? 0) + 1
                                     )
                                     ->helperText('Position automatique (prochaine disponible)'),
 
@@ -97,8 +126,8 @@ final class ChaptersRelationManager extends RelationManager
                     ->schema([
                         Forms\Components\RichEditor::make('content')
                             ->label('Contenu principal')
-                            ->required()
                             ->columnSpanFull()
+                            ->helperText('Le contenu sera automatiquement rempli lors de l\'import PDF')
                             ->toolbarButtons([
                                 'blockquote',
                                 'bold',
@@ -160,7 +189,7 @@ final class ChaptersRelationManager extends RelationManager
                 Tables\Columns\TextColumn::make('content_type')
                     ->label('Type')
                     ->badge()
-                    ->color(fn ($state) => match ($state) {
+                    ->color(fn($state) => match ($state) {
                         ChapterTypeEnum::VIDEO => 'info',
                         ChapterTypeEnum::TEXT => 'success',
                         ChapterTypeEnum::PDF => 'warning',
@@ -217,12 +246,46 @@ final class ChaptersRelationManager extends RelationManager
                     ->label('Ajouter un chapitre')
                     ->icon('heroicon-o-plus-circle')
                     ->modalWidth('xl')
-                    ->slideOver(),
+                    ->slideOver()
+                    ->mutateFormDataUsing(function (array $data): array {
+                        // Extraire le contenu du PDF si c'est un PDF
+                        if (($data['content_type'] ?? 'text') === 'pdf' && !empty($data['media_url'])) {
+                            try {
+                                $pdfFile = $data['media_url'];
+                                $extractionService = app(ChapterPdfExtractionService::class);
+
+                                // Créer un setter temporaire pour capturer les données extraites
+                                $extractedData = [];
+                                $tempSet = function ($key, $value) use (&$extractedData) {
+                                    $extractedData[$key] = $value;
+                                };
+
+                                $extractionService->extractAndSetFormData($pdfFile, $tempSet);
+
+                                // Fusionner les données extraites avec les données du formulaire
+                                $data = array_merge($data, $extractedData);
+
+                                Notification::make()
+                                    ->title('Extraction PDF réussie')
+                                    ->body('Le contenu du PDF a été extrait avec succès.')
+                                    ->success()
+                                    ->send();
+                            } catch (Exception $e) {
+                                Notification::make()
+                                    ->title('Avertissement')
+                                    ->body('PDF uploadé mais extraction échouée: ' . $e->getMessage())
+                                    ->warning()
+                                    ->send();
+                            }
+                        }
+
+                        return $data;
+                    }),
             ])
             ->actions([
                 Tables\Actions\ActionGroup::make([
                     Tables\Actions\ViewAction::make()
-                        ->url(fn (Chapter $record): string => ChapterResource::getUrl('view', ['record' => $record]))
+                        ->url(fn(Chapter $record): string => ChapterResource::getUrl('view', ['record' => $record]))
                         ->label('Voir')
                         ->icon('heroicon-o-eye'),
                     Tables\Actions\EditAction::make()
@@ -237,7 +300,7 @@ final class ChaptersRelationManager extends RelationManager
                         ->icon('heroicon-o-eye')
                         ->color('info')
                         ->slideOver()
-                        ->modalContent(fn (Chapter $record) => view('filament.resources.chapter.preview', ['chapter' => $record]))
+                        ->modalContent(fn(Chapter $record) => view('filament.resources.chapter.preview', ['chapter' => $record]))
                         ->modalWidth('xl'),
 
                     Tables\Actions\Action::make('duplicate')
@@ -246,7 +309,7 @@ final class ChaptersRelationManager extends RelationManager
                         ->color('warning')
                         ->action(function (Chapter $record) {
                             $newChapter = $record->replicate();
-                            $newChapter->title = $record->title.' (Copie)';
+                            $newChapter->title = $record->title . ' (Copie)';
                             // order_position sera calculé automatiquement par le modèle
                             $newChapter->save();
 
@@ -262,22 +325,22 @@ final class ChaptersRelationManager extends RelationManager
                         ->label('Activer')
                         ->icon('heroicon-o-check-circle')
                         ->color('success')
-                        ->action(fn (Collection $records) => $records->each->update(['is_active' => true])),
+                        ->action(fn(Collection $records) => $records->each->update(['is_active' => true])),
                     Tables\Actions\BulkAction::make('deactivate')
                         ->label('Désactiver')
                         ->icon('heroicon-o-x-circle')
                         ->color('danger')
-                        ->action(fn (Collection $records) => $records->each->update(['is_active' => false])),
+                        ->action(fn(Collection $records) => $records->each->update(['is_active' => false])),
                     Tables\Actions\BulkAction::make('make_free')
                         ->label('Rendre gratuit')
                         ->icon('heroicon-o-gift')
                         ->color('success')
-                        ->action(fn (Collection $records) => $records->each->update(['is_free' => true])),
+                        ->action(fn(Collection $records) => $records->each->update(['is_free' => true])),
                     Tables\Actions\BulkAction::make('make_paid')
                         ->label('Rendre payant')
                         ->icon('heroicon-o-lock-closed')
                         ->color('warning')
-                        ->action(fn (Collection $records) => $records->each->update(['is_free' => false])),
+                        ->action(fn(Collection $records) => $records->each->update(['is_free' => false])),
                 ]),
             ])
             ->defaultSort('order_position')

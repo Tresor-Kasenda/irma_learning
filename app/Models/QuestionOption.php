@@ -13,7 +13,13 @@ class QuestionOption extends Model
     /** @use HasFactory<QuestionOptionFactory> */
     use HasFactory;
 
-    protected $guarded = [];
+    protected $fillable = [
+        'question_id',
+        'option_text',
+        'is_correct',
+        'order_position',
+        'explanation',
+    ];
 
     public function question(): BelongsTo
     {

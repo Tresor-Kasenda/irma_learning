@@ -18,16 +18,25 @@ final class ContentStructureProcessor implements ContentProcessorInterface
     private const array TITLE_PATTERNS = [
         // Titres avec ## déjà présents
         '/^#{1,6}\s+(.+)$/' => 'markdown',
-        // Titres numérotés (1. Titre, 1.1 Titre, etc.)
-        '/^(\d+(?:\.\d+)*\.?)\s+([A-ZÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖØÙÚÛÜÝÞ].+)$/' => 'numbered',
-        // Titres en MAJUSCULES (minimum 10 caractères pour éviter faux positifs)
-        '/^([A-ZÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖØÙÚÛÜÝÞ\s\d\-\'\",]{10,})$/' => 'uppercase',
-        // Chapitres/Parties (Chapitre 1, Part II, etc.)
-        '/^(chapitre|chapter|partie|part|section)\s+(\d+|[ivxlcdm]+)[\s\:\-]*(.*)$/i' => 'chapter',
+        
+        // H1: Chapitres, Parties, Sections majeures
+        '/^(chapitre|chapter|partie|part|section|module)\s+(\d+|[ivxlcdm]+)[\s\:\-]*(.*)$/i' => 'h1_chapter',
+        
+        // H2: Titres numérotés (1. Titre, I. Titre)
+        '/^(\d+|[IVXLCDM]+)\.\s+([A-ZÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖØÙÚÛÜÝÞ].+)$/' => 'h2_numbered',
+        
+        // H3: Sous-sections (1.1 Titre, 1.1. Titre, A. Titre)
+        '/^(\d+\.\d+\.?|[A-Z]\.)\s+([A-ZÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖØÙÚÛÜÝÞ].+)$/' => 'h3_subsection',
+        
+        // Titres en MAJUSCULES (H2 par défaut, H1 si très court et pas de chiffres)
+        '/^([A-ZÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖØÙÚÛÜÝÞ\s\-\'\",]{5,})$/' => 'uppercase',
+        
+        // Titres courts terminés par deux points (H3)
+        '/^([A-ZÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖØÙÚÛÜÝÞ][^:\n]{3,50}):$/' => 'h3_colon',
     ];
 
     private const array LIST_PATTERNS = [
-        // Sous-sections avec lettres majuscules après un titre (A), B), C))
+        // Sous-sections avec lettres majuscules après un titre (A), B), C)) -> traité comme liste ou H3 selon contexte
         '/^([A-Z])\)\s+([A-ZÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖØÙÚÛÜÝÞ].+)$/' => 'subsection',
         // Sous-sections avec lettres minuscules après un titre (a), b), c))
         '/^([a-z])\)\s+([A-ZÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖØÙÚÛÜÝÞ].+)$/' => 'subsection',
@@ -162,14 +171,30 @@ final class ContentStructureProcessor implements ContentProcessorInterface
     {
         $type = $titleInfo['type'];
         $matches = $titleInfo['matches'];
+        $line = $titleInfo['line'];
 
         return match ($type) {
             'markdown' => mb_substr_count($matches[0], '#'), // Compter les #
-            'chapter' => 1, // Les chapitres sont toujours H1
-            'numbered' => $this->getTitleLevelFromNumbering($matches[1]),
-            'uppercase' => 2, // Les titres en MAJUSCULES sont H2
+            'h1_chapter' => 1,
+            'h2_numbered' => 2,
+            'h3_subsection' => 3,
+            'h3_colon' => 3,
+            'uppercase' => $this->determineUppercaseLevel($line),
             default => 2,
         };
+    }
+
+    /**
+     * Détermine le niveau d'un titre en majuscules
+     */
+    private function determineUppercaseLevel(string $line): int
+    {
+        // Si très court (< 30 chars) et pas de chiffres -> H1 potentiel
+        if (mb_strlen($line) < 30 && !preg_match('/\d/', $line)) {
+            return 1;
+        }
+        
+        return 2;
     }
 
     /**
@@ -184,24 +209,6 @@ final class ContentStructureProcessor implements ContentProcessorInterface
     }
 
     /**
-     * Obtient le niveau de titre depuis la longueur
-     */
-    private function getTitleLevelFromLength(string $line): int
-    {
-        $length = mb_strlen($line);
-
-        if ($length < 20) {
-            return 1; // Court = H1
-        }
-        if ($length < 40) {
-            return 2; // Moyen = H2
-        }
-
-        return 3; // Long = H3
-
-    }
-
-    /**
      * Extrait le texte du titre
      */
     private function extractTitleText(string $line, array $titleInfo): string
@@ -210,10 +217,12 @@ final class ContentStructureProcessor implements ContentProcessorInterface
         $matches = $titleInfo['matches'];
 
         $text = match ($type) {
-            'markdown' => mb_trim($matches[1] ?? $line), // Texte après les #
-            'numbered' => mb_trim($matches[2] ?? $line), // Texte après le numéro
-            'chapter' => mb_trim(($matches[3] ?? '') !== '' ? $matches[3] : ($matches[1].' '.$matches[2])), // Chapitre + numéro ou texte
-            'uppercase' => mb_convert_case(mb_strtolower($line), MB_CASE_TITLE), // Convertir en Title Case
+            'markdown' => mb_trim($matches[1] ?? $line),
+            'h2_numbered' => mb_trim($matches[0]),
+            'h3_subsection' => mb_trim($matches[0]),
+            'h1_chapter' => mb_convert_case(mb_strtolower($matches[0]), MB_CASE_TITLE),
+            'uppercase' => mb_convert_case(mb_strtolower($line), MB_CASE_TITLE),
+            'h3_colon' => mb_trim($matches[1] ?? $line),
             default => mb_trim($line),
         };
 

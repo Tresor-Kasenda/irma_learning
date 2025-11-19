@@ -25,14 +25,70 @@ final class PdfImageProcessor implements ContentProcessorInterface
 {
     public function process(DocumentContent $content): DocumentContent
     {
-        // Désactivé temporairement - l'extraction d'images embarquées nécessite
-        // des outils spécialisés. Pour l'instant, on se concentre sur
-        // l'extraction de texte, tableaux et formules mathématiques.
+        $filePath = $content->options['filePath'] ?? null;
 
-        Log::debug('PdfImageProcessor: Image extraction is currently disabled', [
-            'file' => $content->options['filePath'] ?? 'unknown',
-            'reason' => 'Requires specialized tools like poppler-utils or Imagick',
-        ]);
+        if (! $filePath || ! file_exists($filePath)) {
+            return $content;
+        }
+
+        try {
+            // Vérifier si la classe Spatie\PdfToImage\Pdf existe
+            if (! class_exists(\Spatie\PdfToImage\Pdf::class)) {
+                Log::warning('Spatie\PdfToImage\Pdf class not found. Skipping image extraction.');
+                return $content;
+            }
+
+            $pdf = new \Spatie\PdfToImage\Pdf($filePath);
+            $totalPages = $pdf->pageCount();
+            $textLength = mb_strlen($content->rawText);
+
+            // Créer le dossier de destination s'il n'existe pas
+            $outputDir = storage_path('app/public/extracts/images');
+            if (! file_exists($outputDir)) {
+                mkdir($outputDir, 0755, true);
+            }
+
+            for ($pageNumber = 1; $pageNumber <= $totalPages; $pageNumber++) {
+                // Ignorer la première page si demandé (souvent la couverture)
+                if (($content->options['skipFirstPage'] ?? false) && $pageNumber === 1) {
+                    continue;
+                }
+
+                $imageName = uniqid() . '_page_' . $pageNumber . '.jpg';
+                $fullPath = $outputDir . '/' . $imageName;
+                $publicPath = 'extracts/images/' . $imageName;
+
+                // Extraire la page en image
+                $pdf->selectPage($pageNumber);
+                $pdf->save($fullPath);
+
+                // Ajouter l'élément image au contenu
+                // Note: Sans information de position précise dans le texte, 
+                // on ajoute les images à la fin du document pour l'instant.
+                // Une amélioration future serait de corréler avec le texte de la page.
+                $content->addElement(new \App\DTOs\DocumentElement(
+                    type: 'image',
+                    content: $publicPath,
+                    position: $textLength, // À la fin du document
+                    attributes: [
+                        'alt' => "Page {$pageNumber}",
+                        'caption' => "Image extraite de la page {$pageNumber}",
+                        'page' => $pageNumber,
+                    ]
+                ));
+            }
+
+            Log::info('Images extracted from PDF', [
+                'file' => $filePath,
+                'count' => $totalPages,
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Error extracting images from PDF', [
+                'file' => $filePath,
+                'error' => $e->getMessage(),
+            ]);
+        }
 
         return $content;
     }

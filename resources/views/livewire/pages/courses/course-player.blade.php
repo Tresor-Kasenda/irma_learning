@@ -106,14 +106,25 @@
                         Précédent
                     </button>
 
-                    <button
-                        wire:click="markChapterAsCompleted"
-                        class="flex items-center gap-2 px-6 py-3 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors font-semibold">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-                        </svg>
-                        Marquer comme terminé
-                    </button>
+                    @if($chapterExam && !$hasPassedExam)
+                        <button
+                            wire:click="takeExam"
+                            class="flex items-center gap-2 px-6 py-3 bg-warning-600 text-white rounded-lg hover:bg-warning-700 transition-colors font-semibold">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/>
+                            </svg>
+                            Passer l'examen
+                        </button>
+                    @else
+                        <button
+                            wire:click="markChapterAsCompleted"
+                            class="flex items-center gap-2 px-6 py-3 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors font-semibold">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                            </svg>
+                            {{ $hasPassedExam && $chapterExam ? 'Chapitre validé' : 'Marquer comme terminé' }}
+                        </button>
+                    @endif
 
                     <button
                         wire:click="nextChapter"

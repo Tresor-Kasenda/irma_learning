@@ -20,7 +20,21 @@ final class Chapter extends Model
     /** @use HasFactory<ChapterFactory> */
     use HasFactory;
 
-    protected $guarded = [];
+    protected $fillable = [
+        'section_id',
+        'title',
+        'slug',
+        'description',
+        'content',
+        'video_url',
+        'video_duration',
+        'is_free',
+        'is_active',
+        'order_position',
+        'metadata',
+        'content_type',
+        'excerpt',
+    ];
 
     public function section(): BelongsTo
     {
@@ -77,6 +91,20 @@ final class Chapter extends Model
     public function getContentHtmlAttribute(): string
     {
         return app(MarkdownService::class)->toHtml($this->content);
+    }
+
+    /**
+     * Obtenir la description en HTML
+     *
+     * @throws CommonMarkException
+     */
+    public function getDescriptionHtmlAttribute(): string
+    {
+        if (empty($this->description)) {
+            return '';
+        }
+
+        return app(MarkdownToHtmlConverter::class)->convert($this->description);
     }
 
     /**

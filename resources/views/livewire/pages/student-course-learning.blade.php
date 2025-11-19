@@ -398,7 +398,7 @@
 
                             <div
                                 class="'max-w-none markdow-content-block max-w-none mt-2 flex flex-col prose prose-invert'">
-                                {!! $activeChapter->content !!}
+                                {!! $activeChapter->getHtmlContentRaw() !!}
                             </div>
 
                             <div class="flex flex-col space-y-4 mt-4">
@@ -445,7 +445,7 @@
                                 'max-w-none markdow-content-block max-w-none mt-2 text-gray-700 leading-relaxed flex flex-col prose prose-invert',
                                 'blur-sm pointer-events-none' => !$this->canAccessChapter($activeChapter)
                             ])>
-                                {!! $activeChapter->description !!}
+                                {!! $activeChapter->description_html !!}
                             </div>
 
                             <div @class([

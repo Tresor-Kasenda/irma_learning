@@ -12,15 +12,17 @@ return new class extends Migration {
     {
         Schema::create('enrollments', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->constrained();
-            $table->foreignId('formation_id')->constrained();
+            $table->foreignId('user_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('formation_id')->constrained()->cascadeOnDelete();
 
             $table->string('status')->default('active');
-            $table->decimal('amount_paid', 8, 2)->default(0);
-            $table->string('percentage')->nullable();
-
+            $table->string('payment_status')->default('pending');
+            $table->decimal('amount_paid', 10, 2)->default(0);
+            $table->decimal('progress_percentage', 5, 2)->default(0);
+            
             $table->timestamp('enrollment_date')->useCurrent();
             $table->timestamp('completion_date')->nullable();
+            $table->timestamp('last_accessed_at')->nullable();
             $table->timestamps();
         });
     }

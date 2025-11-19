@@ -9,6 +9,7 @@ use App\Enums\EnrollmentStatusEnum;
 use App\Enums\UserProgressEnum;
 use App\Models\Chapter;
 use App\Models\Enrollment;
+use App\Models\Exam;
 use App\Models\Formation;
 use App\Models\UserProgress;
 use Illuminate\Contracts\View\View;
@@ -96,9 +97,47 @@ final class CoursePlayer extends Component
         $this->markChapterAsInProgress();
     }
 
+    public function getChapterExamProperty(): ?Exam
+    {
+        if (! $this->currentChapter) {
+            return null;
+        }
+
+        return $this->currentChapter->exams()->active()->first();
+    }
+
+    public function hasPassedExam(): bool
+    {
+        $exam = $this->chapterExam;
+
+        if (! $exam) {
+            return true;
+        }
+
+        return $exam->attempts()
+            ->where('user_id', auth()->id())
+            ->where('score', '>=', $exam->passing_score ?? 70) // Fallback to 70 if null, though model has default
+            ->exists();
+    }
+
+    public function takeExam(): void
+    {
+        if (! $this->chapterExam) {
+            return;
+        }
+
+        $this->redirect(route('exam.take', $this->chapterExam), navigate: true);
+    }
+
     public function markChapterAsCompleted(): void
     {
         if (! $this->currentChapter) {
+            return;
+        }
+
+        // Vérifier si un examen est requis et non passé
+        if ($this->chapterExam && ! $this->hasPassedExam()) {
+            $this->dispatch('notify', message: 'Vous devez réussir l\'examen pour valider ce chapitre.', type: 'warning');
             return;
         }
 
@@ -171,6 +210,8 @@ final class CoursePlayer extends Component
         return view('livewire.pages.courses.course-player', [
             'completedChapters' => $this->getCompletedChaptersProperty(),
             'htmlContent' => $this->currentChapter?->getHtmlContent() ?? '',
+            'chapterExam' => $this->chapterExam,
+            'hasPassedExam' => $this->hasPassedExam(),
         ]);
     }
 

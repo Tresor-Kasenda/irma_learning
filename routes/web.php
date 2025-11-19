@@ -59,15 +59,12 @@ Route::middleware('auth')->group(function () {
         ->name('master-class')
         ->middleware('restrict.student.access');
 
-    Route::get('/inactive-account', [AccountController::class, 'inactive'])
-        ->middleware('check.status:inactive');
-});
-
-Route::group(['prefix' => 'enrollments'], function () {
-    Route::get('/{enrollment}/invoice', EnrollmentController::class)
-        ->name('enrollments.invoice');
-    Route::post('/{enrollment}/refund', [EnrollmentController::class, 'refund'])
-        ->name('enrollments.refund');
+    Route::group(['prefix' => 'enrollments'], function () {
+        Route::get('/{enrollment}/invoice', EnrollmentController::class)
+            ->name('enrollments.invoice');
+        Route::post('/{enrollment}/refund', [EnrollmentController::class, 'refund'])
+            ->name('enrollments.refund');
+    });
 });
 
 require __DIR__.'/auth.php';

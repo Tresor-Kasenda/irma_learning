@@ -209,6 +209,26 @@ final class TakeExam extends Component
                 'score' => $totalScore,
                 'percentage' => $percentage,
             ]);
+
+            // Si l'examen est lié à un chapitre et réussi, marquer le chapitre comme terminé
+            if ($this->exam->examable_type === 'App\Models\Chapter' && $percentage >= ($this->exam->passing_score ?? 70)) {
+                $chapter = $this->exam->examable;
+                
+                // Mettre à jour ou créer la progression du chapitre
+                \App\Models\UserProgress::updateOrCreate(
+                    [
+                        'user_id' => auth()->id(),
+                        'trackable_type' => 'App\Models\Chapter',
+                        'trackable_id' => $chapter->id,
+                    ],
+                    [
+                        'progress_percentage' => 100,
+                        'status' => \App\Enums\UserProgressEnum::COMPLETED,
+                        'completed_at' => now(),
+                        'time_spent' => ($chapter->duration_minutes ?? 0) * 60,
+                    ]
+                );
+            }
         });
 
         session()->flash('success', 'Votre examen a été soumis avec succès!');
@@ -217,6 +237,16 @@ final class TakeExam extends Component
             $this->redirect(route('exam.results', $this->attempt), navigate: true);
 
             return;
+        }
+
+        // Redirection contextuelle
+        if ($this->exam->examable_type === 'App\Models\Chapter') {
+            $chapter = $this->exam->examable;
+            $chapter->load('section.formation');
+            if ($chapter->section && $chapter->section->formation) {
+                $this->redirect(route('course.player', ['formation' => $chapter->section->formation->slug, 'chapterId' => $chapter->id]), navigate: true);
+                return;
+            }
         }
 
         $this->redirect(route('dashboard'), navigate: true);

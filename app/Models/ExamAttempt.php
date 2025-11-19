@@ -16,7 +16,19 @@ class ExamAttempt extends Model
     use HasFactory;
 
 
-    protected $guarded = [];
+    protected $fillable = [
+        'user_id',
+        'exam_id',
+        'started_at',
+        'completed_at',
+        'score',
+        'max_score',
+        'percentage',
+        'status',
+        'answers',
+        'attempt_number',
+        'time_taken',
+    ];
 
     public function user(): BelongsTo
     {
