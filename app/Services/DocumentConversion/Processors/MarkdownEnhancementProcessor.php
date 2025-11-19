@@ -37,26 +37,16 @@ final class MarkdownEnhancementProcessor implements ContentProcessorInterface
         return $content;
     }
 
-    public function getPriority(): int
-    {
-        return 70; // Exécuté en dernier, après tous les autres processors
-    }
-
     /**
      * Nettoie tous les caractères Unicode problématiques
      */
     private function cleanUnicodeCharacters(string $markdown): string
     {
-        // Supprimer les caractères de contrôle invisibles (zero-width spaces, etc.)
         $markdown = preg_replace('/[\x{200B}-\x{200D}\x{FEFF}]/u', '', $markdown);
 
-        // Remplacer tous les caractères de puces Unicode par des tirets standards
         $markdown = preg_replace('/[•●○◦▪▫■□▸►▹‣⁃⁌⁍◘◙◉◎⦾⦿⚫⚪🔘🔲🔳➢➣➤➥➔→⇒➡]/u', '-', $markdown);
 
-        // Normaliser les espaces
-        $markdown = preg_replace('/\h+/', ' ', $markdown);
-
-        return $markdown;
+        return preg_replace('/\h+/', ' ', $markdown);
     }
 
     /**
@@ -71,9 +61,8 @@ final class MarkdownEnhancementProcessor implements ContentProcessorInterface
         foreach ($lines as $line) {
             $trimmed = mb_trim($line);
 
-            // Gérer les blocs de code
             if (preg_match('/^```/', $trimmed)) {
-                $inCodeBlock = ! $inCodeBlock;
+                $inCodeBlock = !$inCodeBlock;
                 $rebuilt[] = $line;
 
                 continue;
@@ -85,17 +74,14 @@ final class MarkdownEnhancementProcessor implements ContentProcessorInterface
                 continue;
             }
 
-            // Ignorer les lignes vides
             if (empty($trimmed)) {
                 $rebuilt[] = '';
 
                 continue;
             }
 
-            // Détecter et traiter les différents types de lignes
             if ($this->isHeading($trimmed)) {
-                // Ajouter un espace avant les titres (sauf le premier)
-                if (! empty($rebuilt) && mb_trim(end($rebuilt)) !== '') {
+                if (!empty($rebuilt) && mb_trim(end($rebuilt)) !== '') {
                     $rebuilt[] = '';
                 }
                 $rebuilt[] = $this->normalizeHeading($trimmed);
@@ -105,7 +91,6 @@ final class MarkdownEnhancementProcessor implements ContentProcessorInterface
             } elseif ($this->isCheckboxItem($trimmed)) {
                 $rebuilt[] = $this->normalizeCheckbox($trimmed);
             } else {
-                // Paragraphe normal
                 $rebuilt[] = $trimmed;
             }
         }
@@ -118,7 +103,7 @@ final class MarkdownEnhancementProcessor implements ContentProcessorInterface
      */
     private function isHeading(string $line): bool
     {
-        return (bool) preg_match('/^#{1,6}\s+/', $line);
+        return (bool)preg_match('/^#{1,6}\s+/', $line);
     }
 
     /**
@@ -126,9 +111,8 @@ final class MarkdownEnhancementProcessor implements ContentProcessorInterface
      */
     private function normalizeHeading(string $line): string
     {
-        // S'assurer qu'il y a un espace après les #
         if (preg_match('/^(#{1,6})([^\s])/', $line, $matches)) {
-            return $matches[1].' '.mb_substr($line, mb_strlen($matches[1]));
+            return $matches[1] . ' ' . mb_substr($line, mb_strlen($matches[1]));
         }
 
         return $line;
@@ -139,8 +123,8 @@ final class MarkdownEnhancementProcessor implements ContentProcessorInterface
      */
     private function isListItem(string $line): bool
     {
-        return (bool) preg_match('/^[\-\*\+]\s+/', $line) ||
-               (bool) preg_match('/^\d+\.\s+/', $line);
+        return (bool)preg_match('/^[\-\*\+]\s+/', $line) ||
+            (bool)preg_match('/^\d+\.\s+/', $line);
     }
 
     /**
@@ -148,26 +132,22 @@ final class MarkdownEnhancementProcessor implements ContentProcessorInterface
      */
     private function normalizeListItem(string $line): string
     {
-        // Détecter le niveau d'indentation
         $level = 0;
         $cleanLine = $line;
 
-        // Compter les espaces/tabs au début
         if (preg_match('/^(\s*)(.+)$/', $line, $matches)) {
             $indent = $matches[1];
-            $level = (int) (mb_strlen($indent) / 2); // 2 espaces = 1 niveau
+            $level = (int)(mb_strlen($indent) / 2); // 2 espaces = 1 niveau
             $cleanLine = $matches[2];
         }
 
-        // Nettoyer la ligne
         $cleanLine = preg_replace('/^[\-\*\+]\s*/', '', $cleanLine);
         $cleanLine = preg_replace('/^\d+\.\s*/', '', $cleanLine);
         $cleanLine = mb_trim($cleanLine);
 
-        // Reconstruire avec indentation correcte
         $indent = str_repeat('  ', $level);
 
-        return $indent.'- '.$cleanLine;
+        return $indent . '- ' . $cleanLine;
     }
 
     /**
@@ -175,7 +155,7 @@ final class MarkdownEnhancementProcessor implements ContentProcessorInterface
      */
     private function isCheckboxItem(string $line): bool
     {
-        return (bool) preg_match('/^\-\s*\[\s*[x\s]\s*\]/', $line);
+        return (bool)preg_match('/^\-\s*\[\s*[x\s]\s*\]/', $line);
     }
 
     /**
@@ -183,11 +163,11 @@ final class MarkdownEnhancementProcessor implements ContentProcessorInterface
      */
     private function normalizeCheckbox(string $line): string
     {
-        $checked = (bool) preg_match('/^\-\s*\[\s*x\s*\]/i', $line);
+        $checked = (bool)preg_match('/^\-\s*\[\s*x\s*\]/i', $line);
         $text = preg_replace('/^\-\s*\[\s*[x\s]\s*\]\s*/', '', $line);
         $text = mb_trim($text);
 
-        return '- ['.($checked ? 'x' : ' ').'] '.$text;
+        return '- [' . ($checked ? 'x' : ' ') . '] ' . $text;
     }
 
     /**
@@ -204,7 +184,6 @@ final class MarkdownEnhancementProcessor implements ContentProcessorInterface
             $trimmed = mb_trim($line);
 
             if (empty($trimmed)) {
-                // Ligne vide - fin de liste potentielle
                 if ($inList) {
                     $enhanced[] = '';
                     $inList = false;
@@ -218,8 +197,7 @@ final class MarkdownEnhancementProcessor implements ContentProcessorInterface
             $isListItem = $this->isListItem($trimmed) || $this->isCheckboxItem($trimmed);
 
             if ($isListItem) {
-                if (! $inList && $lastWasList) {
-                    // Nouvelle liste après une ligne vide
+                if (!$inList && $lastWasList) {
                     $enhanced[] = '';
                 }
                 $inList = true;
@@ -259,7 +237,6 @@ final class MarkdownEnhancementProcessor implements ContentProcessorInterface
 
             $currentType = $this->getLineType($trimmed);
 
-            // Ajouter un espace avant un changement de type
             if ($previousType && $previousType !== 'empty' && $currentType !== $previousType) {
                 if (end($improved) !== '') {
                     $improved[] = '';
@@ -299,15 +276,14 @@ final class MarkdownEnhancementProcessor implements ContentProcessorInterface
      */
     private function cleanupWhitespace(string $markdown): string
     {
-        // Supprimer les espaces en fin de ligne
         $markdown = preg_replace('/[ \t]+$/m', '', $markdown);
-
-        // Limiter à maximum 2 lignes vides consécutives
         $markdown = preg_replace('/\n{4,}/', "\n\n\n", $markdown);
 
-        // S'assurer qu'il y a une ligne vide à la fin
-        $markdown = mb_rtrim($markdown)."\n";
+        return mb_rtrim($markdown) . "\n";
+    }
 
-        return $markdown;
+    public function getPriority(): int
+    {
+        return 70; // Exécuté en dernier, après tous les autres processors
     }
 }

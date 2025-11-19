@@ -266,8 +266,22 @@ final class ChapterResource extends Resource
                             ->required(fn (Get $get) => $get('content_type') === 'pdf')
                             ->live()
                             ->afterStateUpdated(function ($state, Forms\Set $set) {
-                                if ($state) {
+                                if (! $state) {
+                                    return;
+                                }
+
+                                try {
                                     app(ChapterPdfExtractionService::class)->extractAndSetFormData($state, $set);
+                                } catch (Exception $e) {
+                                    \Illuminate\Support\Facades\Log::error('PDF extraction failed in ChapterResource', [
+                                        'error' => $e->getMessage(),
+                                    ]);
+
+                                    Notification::make()
+                                        ->title('Erreur')
+                                        ->body('Impossible d\'extraire le PDF : '.$e->getMessage())
+                                        ->danger()
+                                        ->send();
                                 }
                             })
                             ->afterStateHydrated(function ($component, $state) {

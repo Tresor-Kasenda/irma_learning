@@ -63,6 +63,8 @@ final class PdfExtractor implements DocumentExtractorInterface
 
             $rawText = $this->extractTextFromPages($document, $options);
 
+            $rawText = $this->ensureUtf8Encoding($rawText);
+
             $cleanedText = $this->cleanText($rawText, $options);
 
             $options['filePath'] = $filePath;
@@ -88,13 +90,8 @@ final class PdfExtractor implements DocumentExtractorInterface
                 'error' => $e->getMessage(),
             ]);
 
-            throw new Exception('Erreur lors de l\'extraction du PDF: '.$e->getMessage());
+            throw new Exception('Erreur lors de l\'extraction du PDF: ' . $e->getMessage());
         }
-    }
-
-    public function getSupportedMimeTypes(): array
-    {
-        return self::SUPPORTED_MIMES;
     }
 
     /**
@@ -131,7 +128,7 @@ final class PdfExtractor implements DocumentExtractorInterface
             }
 
             $pageText = $page->getText();
-            if (! empty(mb_trim($pageText))) {
+            if (!empty(mb_trim($pageText))) {
                 $textParts[] = $pageText;
             }
         }
@@ -140,10 +137,70 @@ final class PdfExtractor implements DocumentExtractorInterface
     }
 
     /**
+     * Assure que le texte est en UTF-8 valide
+     */
+    private function ensureUtf8Encoding(string $text): string
+    {
+        $encoding = mb_detect_encoding($text, ['UTF-8', 'ISO-8859-1', 'Windows-1252', 'ASCII'], true);
+
+        if ($encoding && $encoding !== 'UTF-8') {
+            $text = mb_convert_encoding($text, 'UTF-8', $encoding);
+        }
+
+        $text = mb_convert_encoding($text, 'UTF-8', 'UTF-8');
+
+        return $this->fixEncodingIssues($text);
+    }
+
+    /**
+     * Corrige les problèmes d'encodage courants dans les PDFs
+     */
+    private function fixEncodingIssues(string $text): string
+    {
+        $replacements = [
+            "\xEF\xAC\x81" => 'fi',  // ligature fi
+            "\xEF\xAC\x82" => 'fl',  // ligature fl
+            "\xEF\xAC\x80" => 'ff',  // ligature ff
+            "\xEF\xAC\x83" => 'ffi', // ligature ffi
+            "\xEF\xAC\x84" => 'ffl', // ligature ffl
+            "\xEF\xAC\x85" => 'ft',  // ligature ft
+            "\xEF\xAC\x86" => 'st',  // ligature st
+
+            'ﬁ' => 'fi',
+            'ﬂ' => 'fl',
+            'ﬀ' => 'ff',
+            'ﬃ' => 'ffi',
+            'ﬄ' => 'ffl',
+            'ﬅ' => 'ft',
+            'ﬆ' => 'st',
+
+            "\xE2\x80\x98" => "'",  // '
+            "\xE2\x80\x99" => "'",  // '
+            "\xE2\x80\x9C" => '"',  // "
+            "\xE2\x80\x9D" => '"',  // "
+            "\xC2\xAB" => '"',      // «
+            "\xC2\xBB" => '"',      // »
+
+            "\xE2\x80\x93" => '-',  // –
+            "\xE2\x80\x94" => '-',  // —
+            "\xE2\x88\x92" => '-',  // −
+
+            "\xC2\xA0" => ' ',      // Espace insécable
+            "\xE2\x80\xAF" => ' ',  // Espace fine insécable
+
+            "\xEF\xBF\xBD" => '',   // �
+        ];
+
+        return str_replace(array_keys($replacements), array_values($replacements), $text);
+    }
+
+    /**
      * Nettoie le texte extrait
      */
     private function cleanText(string $text, array $options): string
     {
+        $text = $this->fixEncodingIssues($text);
+
         $lines = explode("\n", $text);
         $cleanedLines = [];
 
@@ -154,7 +211,7 @@ final class PdfExtractor implements DocumentExtractorInterface
                 continue;
             }
 
-            if (mb_strlen($line) < 3 && ! $this->isImportantShortLine($line)) {
+            if (mb_strlen($line) < 3 && !$this->isImportantShortLine($line)) {
                 continue;
             }
 
@@ -173,8 +230,7 @@ final class PdfExtractor implements DocumentExtractorInterface
      */
     private function isImportantShortLine(string $line): bool
     {
-        // Lignes avec lettres majuscules et chiffres
-        return preg_match('/^[A-Z0-9\s\-\.]{1,3}$/', $line) && ! preg_match('/^\d+$/', $line);
+        return preg_match('/^[A-Z0-9\s\-\.]{1,3}$/', $line) && !preg_match('/^\d+$/', $line);
     }
 
     /**
@@ -205,5 +261,10 @@ final class PdfExtractor implements DocumentExtractorInterface
         return preg_match('/^(Page\s+)?\d+(\s+of\s+\d+)?$/i', $line) ||
             preg_match('/^-\s*\d+\s*-$/', $line) ||
             (is_numeric($line) && mb_strlen($line) <= 3);
+    }
+
+    public function getSupportedMimeTypes(): array
+    {
+        return self::SUPPORTED_MIMES;
     }
 }

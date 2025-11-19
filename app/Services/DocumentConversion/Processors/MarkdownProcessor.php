@@ -22,11 +22,6 @@ final class MarkdownProcessor implements ContentProcessorInterface
         return $content;
     }
 
-    public function getPriority(): int
-    {
-        return 50;
-    }
-
     /**
      * Convertit le contenu en Markdown
      */
@@ -72,7 +67,7 @@ final class MarkdownProcessor implements ContentProcessorInterface
             $trimmedLine = mb_trim($line);
 
             if (empty($trimmedLine)) {
-                if (! empty($currentParagraph)) {
+                if (!empty($currentParagraph)) {
                     $formattedLines[] = implode(' ', $currentParagraph);
                     $currentParagraph = [];
                 }
@@ -81,9 +76,8 @@ final class MarkdownProcessor implements ContentProcessorInterface
                 continue;
             }
 
-            // Vérifier si c'est une case à cocher
             if ($this->isCheckbox($trimmedLine)) {
-                if (! empty($currentParagraph)) {
+                if (!empty($currentParagraph)) {
                     $formattedLines[] = implode(' ', $currentParagraph);
                     $currentParagraph = [];
                 }
@@ -93,19 +87,18 @@ final class MarkdownProcessor implements ContentProcessorInterface
             }
 
             if ($this->isBulletPoint($trimmedLine)) {
-                if (! empty($currentParagraph)) {
+                if (!empty($currentParagraph)) {
                     $formattedLines[] = implode(' ', $currentParagraph);
                     $currentParagraph = [];
                 }
-                // Nettoyer tous les caractères de puces Unicode et normaliser en tiret standard
                 $cleaned = preg_replace('/^[•●○◦▪▫■□▸►▹‣⁃⁌⁍◘◙◉◎⦾⦿⚫⚪🔘🔲🔳➢➣➤➥➔→⇒➡\-\*\+−–—o]\s*/u', '', $trimmedLine);
-                $formattedLines[] = '- '.mb_trim($cleaned);
+                $formattedLines[] = '- ' . mb_trim($cleaned);
 
                 continue;
             }
 
             if ($this->isNumberedList($trimmedLine)) {
-                if (! empty($currentParagraph)) {
+                if (!empty($currentParagraph)) {
                     $formattedLines[] = implode(' ', $currentParagraph);
                     $currentParagraph = [];
                 }
@@ -114,26 +107,21 @@ final class MarkdownProcessor implements ContentProcessorInterface
                 continue;
             }
 
-            // Détection améliorée des titres
             if ($this->isLikelyTitle($trimmedLine)) {
-                // Si on a un paragraphe en cours, on le ferme
-                if (! empty($currentParagraph)) {
+                if (!empty($currentParagraph)) {
                     $formattedLines[] = implode(' ', $currentParagraph);
                     $currentParagraph = [];
                     $formattedLines[] = '';
                 }
-                
-                // On ajoute le titre tel quel (il sera structuré par ContentStructureProcessor)
+
                 $formattedLines[] = $trimmedLine;
-                $formattedLines[] = ''; // Saut de ligne après un titre
-                
+                $formattedLines[] = '';
+
                 continue;
             }
 
-            // Ajouter la ligne au paragraphe
             $currentParagraph[] = $trimmedLine;
 
-            // Si la ligne se termine par une ponctuation forte, terminer le paragraphe
             if ($this->endsWithStrongPunctuation($trimmedLine)) {
                 $formattedLines[] = implode(' ', $currentParagraph);
                 $currentParagraph = [];
@@ -141,11 +129,56 @@ final class MarkdownProcessor implements ContentProcessorInterface
             }
         }
 
-        if (! empty($currentParagraph)) {
+        if (!empty($currentParagraph)) {
             $formattedLines[] = implode(' ', $currentParagraph);
         }
 
-        return implode("\n", $formattedLines)."\n\n";
+        return implode("\n", $formattedLines) . "\n\n";
+    }
+
+    /**
+     * Vérifie si une ligne est une case à cocher
+     */
+    private function isCheckbox(string $line): bool
+    {
+        return (bool)preg_match('/^[□☐☑☒✓✔✅]\s+/u', $line);
+    }
+
+    /**
+     * Formate une case à cocher en syntaxe Markdown task list
+     */
+    private function formatCheckbox(string $line): string
+    {
+        if (preg_match('/^[□☐]\s+/u', $line)) {
+            $cleaned = preg_replace('/^[□☐]\s*/u', '', $line);
+
+            return '- [ ] ' . mb_trim($cleaned);
+        }
+
+        if (preg_match('/^[☑☒✓✔✅]\s+/u', $line)) {
+            $cleaned = preg_replace('/^[☑☒✓✔✅]\s*/u', '', $line);
+
+            return '- [x] ' . mb_trim($cleaned);
+        }
+
+        return $line;
+    }
+
+    /**
+     * Vérifie si une ligne est une liste à puces
+     * Inclut tous les caractères Unicode de puces courants
+     */
+    private function isBulletPoint(string $line): bool
+    {
+        return (bool)preg_match('/^[•●○◦▪▫■□▸►▹‣⁃⁌⁍◘◙◉◎⦾⦿⚫⚪🔘🔲🔳➢➣➤➥➔→⇒➡\-\*\+−–—o]\s+/u', $line);
+    }
+
+    /**
+     * Vérifie si une ligne est une liste numérotée
+     */
+    private function isNumberedList(string $line): bool
+    {
+        return (bool)preg_match('/^\d+\.\s+/', $line);
     }
 
     /**
@@ -153,36 +186,29 @@ final class MarkdownProcessor implements ContentProcessorInterface
      */
     private function isLikelyTitle(string $line): bool
     {
-        // Déjà un titre Markdown
         if (preg_match('/^#{1,6}\s+/', $line)) {
             return true;
         }
 
-        // Trop long pour être un titre (sauf si très spécifique)
         if (mb_strlen($line) > 150) {
             return false;
         }
 
-        // Patterns de titres communs
         if (preg_match('/^(chapitre|chapter|partie|part|section|module)\s+(\d+|[ivxlcdm]+)/i', $line)) {
             return true;
         }
 
-        // Titres numérotés (1. Introduction)
         if (preg_match('/^\d+(\.\d+)*\.?\s+[A-Z]/', $line)) {
             return true;
         }
 
-        // Titres en MAJUSCULES (au moins 5 caractères)
         if (mb_strlen($line) > 5 && $line === mb_strtoupper($line) && !preg_match('/^\d+$/', $line)) {
             return true;
         }
 
-        // Lignes courtes sans ponctuation finale, commençant par une majuscule
-        // et ne contenant pas de séparateurs de phrase majeurs au milieu (comme un point suivi d'espace)
         if (
-            mb_strlen($line) < 80 && 
-            preg_match('/^[A-ZÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖØÙÚÛÜÝÞ]/u', $line) && 
+            mb_strlen($line) < 80 &&
+            preg_match('/^[A-ZÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖØÙÚÛÜÝÞ]/u', $line) &&
             !preg_match('/[.!,;:]\s*$/', $line) &&
             !preg_match('/[.!?]\s+[A-Z]/', $line) // Pas de fin de phrase au milieu
         ) {
@@ -197,57 +223,7 @@ final class MarkdownProcessor implements ContentProcessorInterface
      */
     private function endsWithStrongPunctuation(string $line): bool
     {
-        return (bool) preg_match('/[.!?]\s*$/', $line);
-    }
-
-    /**
-     * Vérifie si une ligne est une liste à puces
-     * Inclut tous les caractères Unicode de puces courants
-     */
-    private function isBulletPoint(string $line): bool
-    {
-        // Liste complète des caractères de puces Unicode
-        return (bool) preg_match('/^[•●○◦▪▫■□▸►▹‣⁃⁌⁍◘◙◉◎⦾⦿⚫⚪🔘🔲🔳➢➣➤➥➔→⇒➡\-\*\+−–—o]\s+/u', $line);
-    }
-
-    /**
-     * Vérifie si une ligne est une liste numérotée
-     */
-    private function isNumberedList(string $line): bool
-    {
-        return (bool) preg_match('/^\d+\.\s+/', $line);
-    }
-
-    /**
-     * Vérifie si une ligne est une case à cocher
-     */
-    private function isCheckbox(string $line): bool
-    {
-        // Cases à cocher vides : □ ☐
-        // Cases à cocher cochées : ☑ ☒ ✓ ✔ ✅
-        return (bool) preg_match('/^[□☐☑☒✓✔✅]\s+/u', $line);
-    }
-
-    /**
-     * Formate une case à cocher en syntaxe Markdown task list
-     */
-    private function formatCheckbox(string $line): string
-    {
-        // Cases vides
-        if (preg_match('/^[□☐]\s+/u', $line)) {
-            $cleaned = preg_replace('/^[□☐]\s*/u', '', $line);
-
-            return '- [ ] '.mb_trim($cleaned);
-        }
-
-        // Cases cochées
-        if (preg_match('/^[☑☒✓✔✅]\s+/u', $line)) {
-            $cleaned = preg_replace('/^[☑☒✓✔✅]\s*/u', '', $line);
-
-            return '- [x] '.mb_trim($cleaned);
-        }
-
-        return $line;
+        return (bool)preg_match('/[.!?]\s*$/', $line);
     }
 
     /**
@@ -279,7 +255,7 @@ final class MarkdownProcessor implements ContentProcessorInterface
             $markdown .= "\n*{$caption}*";
         }
 
-        return $markdown."\n\n";
+        return $markdown . "\n\n";
     }
 
     /**
@@ -296,16 +272,16 @@ final class MarkdownProcessor implements ContentProcessorInterface
 
         $markdown = [];
 
-        $markdown[] = '| '.implode(' | ', $headers).' |';
+        $markdown[] = '| ' . implode(' | ', $headers) . ' |';
 
-        $markdown[] = '| '.implode(' | ', array_fill(0, count($headers), '---')).' |';
+        $markdown[] = '| ' . implode(' | ', array_fill(0, count($headers), '---')) . ' |';
 
         foreach ($rows as $row) {
             $row = array_pad($row, count($headers), '');
-            $markdown[] = '| '.implode(' | ', $row).' |';
+            $markdown[] = '| ' . implode(' | ', $row) . ' |';
         }
 
-        return implode("\n", $markdown)."\n\n";
+        return implode("\n", $markdown) . "\n\n";
     }
 
     /**
@@ -330,5 +306,10 @@ final class MarkdownProcessor implements ContentProcessorInterface
         $language = $element->getAttribute('language', '');
 
         return "```{$language}\n{$element->content}\n```\n\n";
+    }
+
+    public function getPriority(): int
+    {
+        return 50;
     }
 }

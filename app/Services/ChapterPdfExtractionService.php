@@ -5,25 +5,26 @@ declare(strict_types=1);
 namespace App\Services;
 
 use Exception;
-use Filament\Forms\Set;
 use Filament\Notifications\Notification;
 use Illuminate\Support\Facades\Log;
 use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
 
-final class ChapterPdfExtractionService
+final readonly class ChapterPdfExtractionService
 {
     public function __construct(
-        private readonly DocumentConversionService $conversionService,
-        private readonly ReadingDurationCalculatorService $durationService
-    ) {}
+        private DocumentConversionService        $conversionService,
+        private ReadingDurationCalculatorService $durationService
+    )
+    {
+    }
 
     /**
      * Extract PDF content and update form fields
      *
-     * @param  mixed  $pdfFile  The PDF file to extract (TemporaryUploadedFile or path)
-     * @param  Set|callable  $set  Filament Set object or callable function(string $key, mixed $value)
+     * @param mixed $pdfFile The PDF file to extract (TemporaryUploadedFile or path)
+     * @param callable $set Filament Set callable function(string $key, mixed $value)
      */
-    public function extractAndSetFormData(mixed $pdfFile, Set|callable $set): void
+    public function extractAndSetFormData(mixed $pdfFile, callable $set): void
     {
         try {
             $this->validatePdfFile($pdfFile);
@@ -49,7 +50,7 @@ final class ChapterPdfExtractionService
      */
     private function validatePdfFile($pdfFile): void
     {
-        if (! $pdfFile) {
+        if (!$pdfFile) {
             throw new Exception('Aucun fichier PDF fourni.');
         }
     }
@@ -67,7 +68,7 @@ final class ChapterPdfExtractionService
             $filePath = $pdfFile->getRealPath();
         }
 
-        if (! $filePath || ! file_exists($filePath)) {
+        if (!$filePath || !file_exists($filePath)) {
             throw new Exception('Impossible de trouver le fichier PDF.');
         }
 
@@ -117,29 +118,57 @@ final class ChapterPdfExtractionService
             'average'
         );
 
-        return (int) ($readingAnalysis['total_minutes'] ?? 15);
+        return (int)($readingAnalysis['total_minutes'] ?? 15);
     }
 
     /**
      * Set form fields with extracted data
+     * @throws Exception
      */
-    private function setFormFields(Set|callable $set, array $result, int $duration, ?string $originalFileName): void
+    private function setFormFields(callable $set, array $result, int $duration, ?string $originalFileName): void
     {
-        $setter = $set instanceof Set ? $set : function ($key, $value) use ($set) {
-            $set($key, $value);
-        };
+        try {
+            Log::debug('Setting form fields', [
+                'title' => $result['title'] ?? $originalFileName ?? 'Document PDF',
+                'content_length' => mb_strlen($result['content'] ?? ''),
+                'duration' => $duration,
+                'has_thumbnail' => !empty($result['thumbnail_path']),
+                'has_markdown' => !empty($result['markdown_file']),
+            ]);
 
-        $setter('title', $result['title'] ?? $originalFileName ?? 'Document PDF');
-        $setter('content', $result['content']);
-        $setter('duration_minutes', $duration);
-        $setter('content_type', 'pdf');
+            // Set fields one by one with error handling
+            $set('title', $result['title'] ?? $originalFileName ?? 'Document PDF');
 
-        if (! empty($result['thumbnail_path'])) {
-            $setter('cover_image', $result['thumbnail_path']);
-        }
+            // Truncate content if too large for better performance
+            $content = $result['content'] ?? '';
+            if (mb_strlen($content) > 100000) {
+                Log::warning('Content too large, truncating', ['original_length' => mb_strlen($content)]);
+                $content = mb_substr($content, 0, 100000) . '...[truncated]';
+            }
+            $set('content', $content);
 
-        if (! empty($result['markdown_file'])) {
-            $setter('markdown_file', $result['markdown_file']);
+            $set('duration_minutes', $duration);
+            $set('content_type', 'pdf');
+
+            // Only set optional fields if they exist and are valid strings
+            if (isset($result['thumbnail_path']) && is_string($result['thumbnail_path']) && $result['thumbnail_path'] !== '') {
+                Log::debug('Setting cover_image', ['path' => $result['thumbnail_path']]);
+                $set('cover_image', $result['thumbnail_path']);
+            }
+
+            if (isset($result['markdown_file']) && is_string($result['markdown_file']) && $result['markdown_file'] !== '') {
+                Log::debug('Setting markdown_file', ['path' => $result['markdown_file']]);
+                $set('markdown_file', $result['markdown_file']);
+            }
+
+            Log::debug('Form fields set successfully');
+        } catch (Exception $e) {
+            Log::error('Error setting form fields', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            throw $e;
         }
     }
 
@@ -170,7 +199,7 @@ final class ChapterPdfExtractionService
 
         Notification::make()
             ->title('Erreur d\'extraction PDF')
-            ->body('Erreur lors de l\'extraction: '.$e->getMessage())
+            ->body('Erreur lors de l\'extraction: ' . $e->getMessage())
             ->danger()
             ->persistent()
             ->send();

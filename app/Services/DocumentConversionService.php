@@ -13,7 +13,6 @@ use App\Services\DocumentConversion\Processors\MarkdownEnhancementProcessor;
 use App\Services\DocumentConversion\Processors\MarkdownLineBreakProcessor;
 use App\Services\DocumentConversion\Processors\MarkdownProcessor;
 use App\Services\DocumentConversion\Processors\PdfFormulaProcessor;
-use App\Services\DocumentConversion\Processors\PdfImageProcessor;
 use App\Services\DocumentConversion\Processors\PdfTableProcessor;
 use Exception;
 use Illuminate\Support\Facades\Log;
@@ -41,15 +40,43 @@ final class DocumentConversionService
     public function __construct(
         private readonly PdfThumbnailService $thumbnailService,
         private readonly MarkdownFileService $markdownFileService
-    ) {
+    )
+    {
         $this->registerDefaultExtractors();
         $this->registerDefaultProcessors();
     }
 
     /**
+     * Enregistre les extracteurs par défaut
+     */
+    private function registerDefaultExtractors(): void
+    {
+        $this->extractors = [
+            new PdfExtractor,
+        ];
+    }
+
+    /**
+     * Enregistre les processors par défaut
+     */
+    private function registerDefaultProcessors(): void
+    {
+        $this->processors = [
+            new PdfTableProcessor,            // Priorité 30 - Détecte les tableaux
+            new PdfFormulaProcessor,          // Priorité 40 - Détecte les formules
+            new MarkdownProcessor,            // Priorité 50 - Convertit en Markdown
+            new MarkdownLineBreakProcessor,   // Priorité 55 - Assure les sauts de ligne corrects
+            new ContentStructureProcessor,    // Priorité 60 - Structure le contenu
+            new MarkdownEnhancementProcessor, // Priorité 70 - Améliore la qualité finale du Markdown
+        ];
+
+        usort($this->processors, fn($a, $b) => $a->getPriority() <=> $b->getPriority());
+    }
+
+    /**
      * Convertit un document en Markdown structuré
      *
-     * @param  array  $options  Options de conversion:
+     * @param array $options Options de conversion:
      *                          - generateThumbnail: bool (défaut: true)
      *                          - ignorePageNumbers: bool (défaut: true)
      *                          - skipFirstPage: bool (défaut: true)
@@ -69,7 +96,7 @@ final class DocumentConversionService
                 'customProcessors' => [],
             ], $options);
 
-            if (! file_exists($filePath)) {
+            if (!file_exists($filePath)) {
                 throw new Exception("Fichier non trouvé: {$filePath}");
             }
 
@@ -80,7 +107,7 @@ final class DocumentConversionService
 
             $content = $this->extractDocument($filePath, $options);
 
-            if (! empty($options['customTitle'])) {
+            if (!empty($options['customTitle'])) {
                 $content->metadata->title = $options['customTitle'];
             }
 
@@ -102,46 +129,6 @@ final class DocumentConversionService
 
             throw new Exception("Échec de la conversion du document: {$e->getMessage()}");
         }
-    }
-
-    /**
-     * Enregistre un processeur de contenu personnalisé
-     */
-    public function registerProcessor(ContentProcessorInterface $processor): self
-    {
-        $this->processors[] = $processor;
-
-        usort($this->processors, fn ($a, $b) => $a->getPriority() <=> $b->getPriority());
-
-        return $this;
-    }
-
-    /**
-     * Enregistre les extracteurs par défaut
-     */
-    private function registerDefaultExtractors(): void
-    {
-        $this->extractors = [
-            new PdfExtractor,
-        ];
-    }
-
-    /**
-     * Enregistre les processors par défaut
-     */
-    private function registerDefaultProcessors(): void
-    {
-        $this->processors = [
-            new PdfImageProcessor,            // Priorité 20 - Extrait les images en premier
-            new PdfTableProcessor,            // Priorité 30 - Détecte les tableaux
-            new PdfFormulaProcessor,          // Priorité 40 - Détecte les formules
-            new MarkdownProcessor,            // Priorité 50 - Convertit en Markdown
-            new MarkdownLineBreakProcessor,   // Priorité 55 - Assure les sauts de ligne corrects
-            new ContentStructureProcessor,    // Priorité 60 - Structure le contenu
-            new MarkdownEnhancementProcessor, // Priorité 70 - Améliore la qualité finale du Markdown
-        ];
-
-        usort($this->processors, fn ($a, $b) => $a->getPriority() <=> $b->getPriority());
     }
 
     /**
@@ -190,6 +177,18 @@ final class DocumentConversionService
     }
 
     /**
+     * Enregistre un processeur de contenu personnalisé
+     */
+    public function registerProcessor(ContentProcessorInterface $processor): self
+    {
+        $this->processors[] = $processor;
+
+        usort($this->processors, fn($a, $b) => $a->getPriority() <=> $b->getPriority());
+
+        return $this;
+    }
+
+    /**
      * Formate le résultat final
      */
     private function formatResult(DocumentContent $content, ?string $thumbnailPath = null, ?string $markdownFilePath = null): array
@@ -215,6 +214,6 @@ final class DocumentConversionService
     {
         $wordCount = str_word_count(strip_tags($content->markdown));
 
-        return max(5, (int) ceil($wordCount / 200));
+        return max(5, (int)ceil($wordCount / 200));
     }
 }

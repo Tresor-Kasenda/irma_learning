@@ -112,9 +112,27 @@ final class ContentStructureProcessor implements ContentProcessorInterface
                 continue;
             }
 
-            // Vérifier si c'est déjà un titre Markdown
+            // Vérifier si c'est déjà un titre Markdown - le nettoyer et le re-détecter
             if (preg_match('/^#{1,6}\s+/', $trimmedLine)) {
-                $structuredLines[] = $this->normalizeTitle($line);
+                // Supprimer les # existants et re-détecter pour avoir un niveau cohérent
+                $cleanedLine = preg_replace('/^#{1,6}\s*/', '', $trimmedLine);
+                $titleInfo = $this->detectTitle($cleanedLine);
+                
+                if ($titleInfo) {
+                    $level = $this->determineTitleLevel($titleInfo, $titleHierarchy);
+                    $titleText = $this->extractTitleText($cleanedLine, $titleInfo);
+                    
+                    if (!empty($structuredLines) && mb_trim(end($structuredLines)) !== '') {
+                        $structuredLines[] = '';
+                    }
+                    
+                    $structuredLines[] = str_repeat('#', $level) . ' ' . $titleText;
+                    $structuredLines[] = '';
+                    $titleHierarchy[$level] = $titleText;
+                } else {
+                    // Si re-détection échoue, garder le titre nettoyé avec niveau par défaut
+                    $structuredLines[] = $this->normalizeTitle($line);
+                }
 
                 continue;
             }
@@ -225,6 +243,9 @@ final class ContentStructureProcessor implements ContentProcessorInterface
             'h3_colon' => mb_trim($matches[1] ?? $line),
             default => mb_trim($line),
         };
+
+        // Supprimer les # markdown préexistants (évite les doublons comme "# # 1. Titre")
+        $text = preg_replace('/^#{1,6}\s*/', '', $text);
 
         // Nettoyer les espaces multiples
         return preg_replace('/\s+/', ' ', $text);

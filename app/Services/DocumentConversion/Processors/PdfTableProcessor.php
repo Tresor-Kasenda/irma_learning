@@ -91,7 +91,6 @@ final class PdfTableProcessor implements ContentProcessorInterface
                 if (empty($currentTable['headers']) && !$this->isSeparatorLine($line)) {
                     $currentTable['headers'] = $columns;
                 } elseif (!$this->isSeparatorLine($line) && count($columns) > 0) {
-                    // Vérifier la cohérence du nombre de colonnes
                     if (empty($currentTable['headers']) || abs(count($currentTable['headers']) - count($columns)) <= 1) {
                         $currentTable['rows'][] = $columns;
                     }
@@ -158,7 +157,6 @@ final class PdfTableProcessor implements ContentProcessorInterface
         } elseif (str_contains($trimmed, "\t")) {
             $columns = explode("\t", $trimmed);
         } else {
-            // Séparation par 2 espaces ou plus
             $columns = preg_split('/\s{2,}/', $trimmed);
         }
 

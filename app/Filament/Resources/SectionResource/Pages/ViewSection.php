@@ -7,6 +7,7 @@ namespace App\Filament\Resources\SectionResource\Pages;
 use App\Filament\Resources\SectionResource;
 use App\Models\Section;
 use App\Services\ChapterPdfExtractionService;
+use Exception;
 use Filament\Actions;
 use Filament\Forms;
 use Filament\Forms\Components\FileUpload;
@@ -131,8 +132,22 @@ final class ViewSection extends ViewRecord
                         ->required(fn (Get $get) => $get('content_type') === 'pdf')
                         ->live()
                         ->afterStateUpdated(function ($state, Set $set) {
-                            if ($state) {
+                            if (! $state) {
+                                return;
+                            }
+
+                            try {
                                 app(ChapterPdfExtractionService::class)->extractAndSetFormData($state, $set);
+                            } catch (Exception $e) {
+                                \Illuminate\Support\Facades\Log::error('PDF extraction failed in ViewSection', [
+                                    'error' => $e->getMessage(),
+                                ]);
+
+                                Notification::make()
+                                    ->title('Erreur')
+                                    ->body('Impossible d\'extraire le PDF : '.$e->getMessage())
+                                    ->danger()
+                                    ->send();
                             }
                         })
                         ->afterStateHydrated(function ($component, $state) {

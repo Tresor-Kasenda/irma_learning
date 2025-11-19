@@ -6,7 +6,10 @@ namespace App\Services\DocumentConversion\Processors;
 
 use App\Contracts\ContentProcessorInterface;
 use App\DTOs\DocumentContent;
+use App\DTOs\DocumentElement;
+use Exception;
 use Illuminate\Support\Facades\Log;
+use Spatie\PdfToImage\Pdf;
 
 /**
  * Processeur pour extraire les images depuis des PDFs
@@ -27,24 +30,22 @@ final class PdfImageProcessor implements ContentProcessorInterface
     {
         $filePath = $content->options['filePath'] ?? null;
 
-        if (! $filePath || ! file_exists($filePath)) {
+        if (!$filePath || !file_exists($filePath)) {
             return $content;
         }
 
         try {
-            // Vérifier si la classe Spatie\PdfToImage\Pdf existe
-            if (! class_exists(\Spatie\PdfToImage\Pdf::class)) {
+            if (!class_exists(Pdf::class)) {
                 Log::warning('Spatie\PdfToImage\Pdf class not found. Skipping image extraction.');
                 return $content;
             }
 
-            $pdf = new \Spatie\PdfToImage\Pdf($filePath);
+            $pdf = new Pdf($filePath);
             $totalPages = $pdf->pageCount();
             $textLength = mb_strlen($content->rawText);
 
-            // Créer le dossier de destination s'il n'existe pas
             $outputDir = storage_path('app/public/extracts/images');
-            if (! file_exists($outputDir)) {
+            if (!file_exists($outputDir)) {
                 mkdir($outputDir, 0755, true);
             }
 
@@ -63,10 +64,10 @@ final class PdfImageProcessor implements ContentProcessorInterface
                 $pdf->save($fullPath);
 
                 // Ajouter l'élément image au contenu
-                // Note: Sans information de position précise dans le texte, 
+                // Note: Sans information de position précise dans le texte,
                 // on ajoute les images à la fin du document pour l'instant.
                 // Une amélioration future serait de corréler avec le texte de la page.
-                $content->addElement(new \App\DTOs\DocumentElement(
+                $content->addElement(new DocumentElement(
                     type: 'image',
                     content: $publicPath,
                     position: $textLength, // À la fin du document
@@ -83,7 +84,7 @@ final class PdfImageProcessor implements ContentProcessorInterface
                 'count' => $totalPages,
             ]);
 
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             Log::error('Error extracting images from PDF', [
                 'file' => $filePath,
                 'error' => $e->getMessage(),

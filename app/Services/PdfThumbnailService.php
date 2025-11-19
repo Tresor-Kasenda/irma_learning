@@ -148,41 +148,4 @@ final class PdfThumbnailService
             ]);
         }
     }
-
-    /**
-     * Supprime une miniature du stockage
-     */
-    public function deleteThumbnail(?string $thumbnailPath): bool
-    {
-        if (!$thumbnailPath) {
-            return false;
-        }
-
-        try {
-            if (Storage::disk('public')->exists($thumbnailPath)) {
-                return Storage::disk('public')->delete($thumbnailPath);
-            }
-
-            return true;
-        } catch (Exception $e) {
-            Log::error('Erreur lors de la suppression de la miniature', [
-                'path' => $thumbnailPath,
-                'error' => $e->getMessage(),
-            ]);
-
-            return false;
-        }
-    }
-
-    /**
-     * Vérifie si une miniature existe
-     */
-    public function thumbnailExists(?string $thumbnailPath): bool
-    {
-        if (!$thumbnailPath) {
-            return false;
-        }
-
-        return Storage::disk('public')->exists($thumbnailPath);
-    }
 }

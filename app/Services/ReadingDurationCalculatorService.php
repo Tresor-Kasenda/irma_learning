@@ -20,20 +20,6 @@ class ReadingDurationCalculatorService
     ];
 
     /**
-     * Obtient une estimation pour différents niveaux
-     */
-    public function getMultiLevelEstimation(string $content, array $metadata = []): array
-    {
-        $estimations = [];
-
-        foreach (self::READING_SPEEDS as $level => $speed) {
-            $estimations[$level] = $this->calculateReadingDuration($content, $level);
-        }
-
-        return $estimations;
-    }
-
-    /**
      * Calcule la durée de lecture d'un contenu
      */
     public function calculateReadingDuration(
