@@ -16,10 +16,10 @@ enum ExamAttemptEnum: string
     public function getLabel(): string
     {
         return match ($this) {
-            self::IN_PROGRESS => 'In Progress',
-            self::COMPLETED => 'Completed',
-            self::FAILED => 'Failed',
-            self::CANCELLED => 'Cancelled',
+            self::IN_PROGRESS => "En cours",
+            self::COMPLETED => "Terminé",
+            self::FAILED => "Échoué",
+            self::CANCELLED => "Annulé",
         };
     }
 }

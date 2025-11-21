@@ -35,10 +35,10 @@ class ViewEnrollment extends ViewRecord
                             ->badge()
                             ->formatStateUsing(fn($state) => $state->getLabel())
                             ->color(fn(EnrollmentStatusEnum $state): string => match ($state) {
-                                EnrollmentStatusEnum::Suspended => 'warning',
-                                EnrollmentStatusEnum::Active => 'primary',
-                                EnrollmentStatusEnum::Completed => 'success',
-                                EnrollmentStatusEnum::Cancelled => 'danger',
+                                EnrollmentStatusEnum::SUSPENDED => 'warning',
+                                EnrollmentStatusEnum::ACTIVE => 'primary',
+                                EnrollmentStatusEnum::COMPLETED => 'success',
+                                EnrollmentStatusEnum::CANCELLED => 'danger',
                                 default => 'gray',
                             }),
                         TextEntry::make('payment_status')

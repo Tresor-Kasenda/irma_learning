@@ -96,7 +96,7 @@ class VerificationCode extends Model
                 ->create([
                     'user_id' => $this->user_id,
                     'formation_id' => $this->formation_id,
-                    'status' => EnrollmentStatusEnum::Active,
+                    'status' => EnrollmentStatusEnum::ACTIVE,
                     'payment_status' => EnrollmentPaymentEnum::PAID,
                     'enrollment_date' => now(),
                     'progress_percentage' => 0,

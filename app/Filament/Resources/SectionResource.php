@@ -129,22 +129,10 @@ final class SectionResource extends Resource
                         Forms\Components\Select::make('formation_id')
                             ->label('Formation')
                             ->relationship('formation', 'title')
-                            ->searchable()
-                            ->live()
                             ->getOptionLabelFromRecordUsing(fn($record) => mb_strlen($record->title) > 50
                                 ? mb_substr($record->title, 0, 50) . '...'
                                 : $record->title
                             )
-                            ->extraAttributes(function ($get) {
-                                $formationId = $get('formation_id');
-                                if ($formationId) {
-                                    $formation = Formation::find($formationId);
-
-                                    return $formation ? ['title' => $formation->title] : [];
-                                }
-
-                                return [];
-                            })
                             ->required(),
 
                         Forms\Components\TextInput::make('title')
@@ -200,6 +188,7 @@ final class SectionResource extends Resource
 
                         Forms\Components\Toggle::make('is_active')
                             ->label('Section active')
+                            ->columnSpanFull()
                             ->inline(false)
                             ->default(true),
                     ])

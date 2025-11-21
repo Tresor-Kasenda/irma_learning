@@ -14,9 +14,9 @@ enum UserProgressEnum: string
     public function getLabel(): string
     {
         return match ($this) {
-            self::COMPLETED => 'Completed',
-            self::IN_PROGRESS => 'In Progress',
-            self::NOT_STARTED => 'Not Started',
+            self::COMPLETED => 'Completé',
+            self::IN_PROGRESS => 'En attente',
+            self::NOT_STARTED => 'Non commencé',
         };
     }
 }

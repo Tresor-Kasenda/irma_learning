@@ -19,11 +19,11 @@ enum EnrollmentPaymentEnum: string
     public function getLabel(): string
     {
         return match ($this) {
-            self::PENDING => 'Pending',
-            self::PAID => 'Paid',
-            self::FREE => 'Free',
-            self::FAILED => 'Failed',
-            self::REFUNDED => 'Refunded',
+            self::PENDING => 'En attente',
+            self::PAID => 'Payé',
+            self::FREE => 'Gratuit',
+            self::FAILED => 'Échoué',
+            self::REFUNDED => 'Remboursé',
         };
     }
 }

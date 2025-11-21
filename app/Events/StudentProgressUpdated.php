@@ -15,17 +15,19 @@ class StudentProgressUpdated implements ShouldBroadcast
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
     public function __construct(
-        public User $user,
+        public User      $user,
         public Formation $formation,
-        public array $progress
-    ) {}
+        public array     $progress
+    )
+    {
+    }
 
-    public function broadcastOn()
+    public function broadcastOn(): PrivateChannel
     {
         return new PrivateChannel('student.' . $this->user->id);
     }
 
-    public function broadcastWith()
+    public function broadcastWith(): array
     {
         return [
             'formation_id' => $this->formation->id,

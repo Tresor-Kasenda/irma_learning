@@ -29,6 +29,41 @@ final class MarkdownService
     }
 
     /**
+     * Créer le convertisseur avec les extensions
+     */
+    private function createConverter(): MarkdownConverter
+    {
+        $config = config('markdown');
+
+        $environment = new Environment($config);
+
+        if ($config['extensions']['table'] ?? false) {
+            $environment->addExtension(new TableExtension());
+        }
+
+        if ($config['extensions']['strikethrough'] ?? false) {
+            $environment->addExtension(new StrikethroughExtension());
+        }
+
+        if ($config['extensions']['autolink'] ?? false) {
+            $environment->addExtension(new AutolinkExtension());
+        }
+
+        if ($config['extensions']['task_list'] ?? false) {
+            $environment->addExtension(new TaskListExtension());
+        }
+
+        if ($config['extensions']['smart_punctuation'] ?? false) {
+            $environment->addExtension(new SmartPunctExtension());
+        }
+
+        $environment->addExtension(new AttributesExtension());
+        $environment->addExtension(new FrontMatterExtension());
+
+        return new MarkdownConverter($environment);
+    }
+
+    /**
      * Convertir avec cache
      */
     public function toHtmlCached(string $markdown, ?string $cacheKey = null): string
@@ -37,7 +72,7 @@ final class MarkdownService
             return '';
         }
 
-        $key = $cacheKey ?? 'markdown.'.md5($markdown);
+        $key = $cacheKey ?? 'markdown.' . md5($markdown);
 
         return Cache::remember($key, 3600, function () use ($markdown) {
             return $this->toHtml($markdown);
@@ -68,6 +103,20 @@ final class MarkdownService
         $html = $this->toHtml($markdown);
 
         return $this->sanitizeHtml($html);
+    }
+
+    /**
+     * Nettoyer le HTML de balises dangereuses
+     */
+    private function sanitizeHtml(string $html): string
+    {
+        $config = HTMLPurifier_Config::createDefault();
+        $config->set('HTML.Allowed', 'p,b,strong,i,em,u,a[href|title],ul,ol,li,br,span,code,pre,blockquote,h1,h2,h3,h4,h5,h6,img[src|alt],table,thead,tbody,tr,th,td');
+        $config->set('AutoFormat.RemoveEmpty', true);
+
+        $purifier = new HTMLPurifier($config);
+
+        return $purifier->purify($html);
     }
 
     /**
@@ -103,7 +152,7 @@ final class MarkdownService
     {
         $wordCount = $this->wordCount($markdown);
 
-        return (int) ceil($wordCount / $wordsPerMinute);
+        return (int)ceil($wordCount / $wordsPerMinute);
     }
 
     /**
@@ -129,15 +178,15 @@ final class MarkdownService
             return '';
         }
 
-        $toc = '<nav class="table-of-contents">'."\n";
-        $toc .= '<ul>'."\n";
+        $toc = '<nav class="table-of-contents">' . "\n";
+        $toc .= '<ul>' . "\n";
 
         foreach ($headings as $heading) {
             $indent = str_repeat('  ', $heading['level'] - 1);
-            $toc .= $indent.'<li><a href="#'.$heading['slug'].'">'.htmlspecialchars($heading['text']).'</a></li>'."\n";
+            $toc .= $indent . '<li><a href="#' . $heading['slug'] . '">' . htmlspecialchars($heading['text']) . '</a></li>' . "\n";
         }
 
-        $toc .= '</ul>'."\n";
+        $toc .= '</ul>' . "\n";
         $toc .= '</nav>';
 
         return $toc;
@@ -160,58 +209,5 @@ final class MarkdownService
         }
 
         return $headings;
-    }
-
-    /**
-     * Créer le convertisseur avec les extensions
-     */
-    private function createConverter(): MarkdownConverter
-    {
-        $config = config('markdown');
-
-        // Créer l'environnement
-        $environment = new Environment($config);
-
-        // Ajouter les extensions selon la config
-        if ($config['extensions']['table'] ?? false) {
-            $environment->addExtension(new TableExtension());
-        }
-
-        if ($config['extensions']['strikethrough'] ?? false) {
-            $environment->addExtension(new StrikethroughExtension());
-        }
-
-        if ($config['extensions']['autolink'] ?? false) {
-            $environment->addExtension(new AutolinkExtension());
-        }
-
-        if ($config['extensions']['task_list'] ?? false) {
-            $environment->addExtension(new TaskListExtension());
-        }
-
-        if ($config['extensions']['smart_punctuation'] ?? false) {
-            $environment->addExtension(new SmartPunctExtension());
-        }
-
-        // Ajouter d'autres extensions utiles
-        $environment->addExtension(new AttributesExtension());
-        $environment->addExtension(new FrontMatterExtension());
-
-        return new MarkdownConverter($environment);
-    }
-
-    /**
-     * Nettoyer le HTML de balises dangereuses
-     */
-    private function sanitizeHtml(string $html): string
-    {
-        // Utiliser HTMLPurifier pour nettoyer le HTML
-        $config = HTMLPurifier_Config::createDefault();
-        $config->set('HTML.Allowed', 'p,b,strong,i,em,u,a[href|title],ul,ol,li,br,span,code,pre,blockquote,h1,h2,h3,h4,h5,h6,img[src|alt],table,thead,tbody,tr,th,td');
-        $config->set('AutoFormat.RemoveEmpty', true);
-
-        $purifier = new HTMLPurifier($config);
-
-        return $purifier->purify($html);
     }
 }

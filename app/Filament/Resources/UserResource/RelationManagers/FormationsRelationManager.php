@@ -5,20 +5,18 @@ namespace App\Filament\Resources\UserResource\RelationManagers;
 use App\Enums\EnrollmentPaymentEnum;
 use App\Enums\EnrollmentStatusEnum;
 use App\Enums\FormationLevelEnum;
-use App\Models\Formation;
-use Filament\Forms;
-use Filament\Forms\Form;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Tables;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
-use Illuminate\Support\Str;
 
 class FormationsRelationManager extends RelationManager
 {
     protected static string $relationship = 'formations';
 
     protected static ?string $recordTitleAttribute = 'title';
+
+    protected static ?string $title = 'Formations';
 
     public function table(Table $table): Table
     {
@@ -100,27 +98,6 @@ class FormationsRelationManager extends RelationManager
                     ->options(EnrollmentPaymentEnum::class)
                     ->multiple(),
             ])
-            ->headerActions([
-                Tables\Actions\AttachAction::make()
-                    ->preloadRecordSelect()
-                    ->slideOver()
-                    ->label('S\'inscrire')
-                    ->icon('heroicon-o-plus')
-                    ->color('success')
-                    ->form(fn(Tables\Actions\AttachAction $action): array => [
-                        $action->getRecordSelect(),
-                        Forms\Components\Select::make('status')
-                            ->label('Statut')
-                            ->options(EnrollmentStatusEnum::class)
-                            ->default('active')
-                            ->required(),
-                        Forms\Components\Select::make('payment_status')
-                            ->label('Statut de paiement')
-                            ->options(EnrollmentPaymentEnum::class)
-                            ->default('pending')
-                            ->required(),
-                    ]),
-            ])
             ->actions([
                 Tables\Actions\ActionGroup::make([
                     Tables\Actions\DetachAction::make()
@@ -152,122 +129,5 @@ class FormationsRelationManager extends RelationManager
                 ]),
             ])
             ->defaultSort('pivot.enrollment_date', 'desc');
-    }
-
-    public function form(Form $form): Form
-    {
-        return $form
-            ->schema([
-                Forms\Components\Section::make('Informations générales')
-                    ->schema([
-                        Forms\Components\TextInput::make('title')
-                            ->label('Titre')
-                            ->required()
-                            ->maxLength(255)
-                            ->live(onBlur: true)
-                            ->helperText('Le titre principal qui apparaîtra aux étudiants')
-                            ->afterStateUpdated(
-                                fn(string $context, $state, Forms\Set $set) => $context === 'create' ? $set('slug', Str::slug($state)) : null
-                            ),
-
-                        Forms\Components\TextInput::make('slug')
-                            ->label('Slug')
-                            ->required()
-                            ->readOnly()
-                            ->maxLength(255)
-                            ->rules(['alpha_dash'])
-                            ->helperText('URL conviviale (générée automatiquement)')
-                            ->unique(Formation::class, 'slug', ignoreRecord: true),
-
-                        Forms\Components\Textarea::make('short_description')
-                            ->label('Description courte')
-                            ->columnSpanFull(),
-
-
-                        Forms\Components\RichEditor::make('description')
-                            ->label('Description complète')
-                            ->columnSpanFull()
-                            ->required(),
-                    ])
-                    ->columns(2),
-
-                Forms\Components\Section::make('Configuration')
-                    ->schema([
-                        Forms\Components\Select::make('difficulty_level')
-                            ->label('Niveau de difficulté')
-                            ->options(FormationLevelEnum::class)
-                            ->required(),
-
-                        Forms\Components\TextInput::make('price')
-                            ->label('Prix')
-                            ->numeric()
-                            ->prefix('€')
-                            ->step(0.01),
-
-                        Forms\Components\TextInput::make('certification_threshold')
-                            ->label('Seuil de certification (%)')
-                            ->numeric()
-                            ->minValue(0)
-                            ->maxValue(100)
-                            ->default(80),
-
-                        Forms\Components\Select::make('created_by')
-                            ->label('Créé par')
-                            ->relationship('creator', 'name')
-                            ->searchable()
-                            ->preload()
-                            ->default(auth()->id())
-                            ->required(),
-
-                        Forms\Components\TextInput::make('duration_hours')
-                            ->label('Durée (heures)')
-                            ->numeric()
-                            ->minValue(0)
-                            ->default(0),
-
-                        Forms\Components\Select::make('language')
-                            ->label('Langue')
-                            ->options([
-                                'fr' => 'Français',
-                                'en' => 'Anglais',
-                                'es' => 'Espagnol',
-                                'de' => 'Allemand',
-                                'it' => 'Italien',
-                                'pt' => 'Portugais',
-                                'ru' => 'Russe',
-                            ])
-                    ])
-                    ->columns(2),
-
-                Forms\Components\Section::make('Statuts et options')
-                    ->schema([
-                        Forms\Components\Toggle::make('is_active')
-                            ->label('Actif')
-                            ->inline(false)
-                            ->default(true),
-
-                        Forms\Components\Toggle::make('is_featured')
-                            ->inline(false)
-                            ->label('En vedette'),
-
-                        Forms\Components\TagsInput::make('tags')
-                            ->label('Tags')
-                            ->separator(','),
-                    ])
-                    ->columns(3),
-
-                Forms\Components\Section::make('Image')
-                    ->schema([
-                        Forms\Components\FileUpload::make('image')
-                            ->label('Image')
-                            ->image()
-                            ->directory('formations')
-                            ->imageEditor()
-                            ->imageResizeMode('cover')
-                            ->imageResizeTargetWidth(1200)
-                            ->imageResizeTargetHeight(630)
-                            ->columnSpanFull(),
-                    ]),
-            ]);
     }
 }

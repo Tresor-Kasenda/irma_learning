@@ -84,36 +84,27 @@ class StudentsRelationManager extends RelationManager
                     ->query(fn(Builder $query) => $query->wherePivot('progress_percentage', '>=', 100))
                     ->toggle(),
             ])
-            ->headerActions([
-                Tables\Actions\AttachAction::make()
-                    ->preloadRecordSelect()
-                    ->slideOver()
-                    ->form(fn(Tables\Actions\AttachAction $action): array => [
-                        $action->getRecordSelect(),
-                        Forms\Components\Select::make('status')
-                            ->label('Statut')
-                            ->options(EnrollmentStatusEnum::class)
-                            ->default('active')
-                            ->required(),
-                        Forms\Components\Select::make('payment_status')
-                            ->label('Statut de paiement')
-                            ->options(EnrollmentPaymentEnum::class)
-                            ->default('pending')
-                            ->required(),
-                    ]),
-            ])
             ->actions([
-                Tables\Actions\DetachAction::make(),
-                Tables\Actions\Action::make('view_progress')
-                    ->label('Voir progression')
-                    ->icon('heroicon-o-chart-bar')
-                    ->color('info')
-                    ->url(fn($record) => route('filament.admin.resources.users.view', $record))
-                    ->openUrlInNewTab(),
+                Tables\Actions\ActionGroup::make([
+                    Tables\Actions\DetachAction::make()
+                        ->label('Se désinscrire')
+                        ->icon('heroicon-o-minus')
+                        ->color('danger')
+                        ->requiresConfirmation(),
+                    Tables\Actions\Action::make('view_progress')
+                        ->label('Voir progression')
+                        ->icon('heroicon-o-chart-bar')
+                        ->color('info')
+                        ->url(fn($record) => route('filament.admin.resources.users.view', $record))
+                        ->openUrlInNewTab(),
+                ])
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DetachBulkAction::make(),
+                    Tables\Actions\DetachBulkAction::make()
+                        ->label('Se désinscrire')
+                        ->icon('heroicon-o-minus')
+                        ->requiresConfirmation(),
                 ]),
             ])
             ->defaultSort('pivot.enrollment_date', 'desc');
@@ -128,7 +119,7 @@ class StudentsRelationManager extends RelationManager
                         Forms\Components\Select::make('user_id')
                             ->label('Étudiant')
                             ->relationship('students', 'name', function ($query) {
-                                $query->where('role', UserRoleEnum::STUDENT);
+                                $query->where('role', UserRoleEnum::STUDENT->value);
                             })
                             ->searchable()
                             ->preload()
@@ -136,13 +127,21 @@ class StudentsRelationManager extends RelationManager
 
                         Forms\Components\Select::make('status')
                             ->label('Statut')
-                            ->options(EnrollmentStatusEnum::class)
+                            ->options(
+                                collect(EnrollmentStatusEnum::cases())
+                                    ->take(7)
+                                    ->mapWithKeys(fn($role) => [$role->value => $role->getLabel()])
+                            )
                             ->required()
                             ->default('active'),
 
                         Forms\Components\Select::make('payment_status')
                             ->label('Statut de paiement')
-                            ->options(EnrollmentPaymentEnum::class)
+                            ->options(
+                                collect(EnrollmentPaymentEnum::cases())
+                                    ->take(7)
+                                    ->mapWithKeys(fn($role) => [$role->value => $role->getLabel()])
+                            )
                             ->required()
                             ->default('pending'),
 

@@ -27,17 +27,20 @@ final class ViewFormation extends ViewRecord
 {
     protected static string $resource = FormationResource::class;
 
+    protected static ?string $title = 'Voir une formation';
+
     public function infolist(Infolist $infolist): Infolist
     {
         return $infolist
             ->schema([
                 Section::make('Informations générales')
                     ->schema([
+                        ImageEntry::make('image')
+                            ->label('Photo de profil')
+                            ->circular()
+                            ->defaultImageUrl(fn($record) => 'https://ui-avatars.com/api/?name=' . urlencode($record->title) . '&color=7F9CF5&background=EBF4FF'),
                         TextEntry::make('title')
                             ->label('Titre'),
-                        ImageEntry::make('image')
-                            ->size('xl')
-                            ->label('Image'),
                         TextEntry::make('short_description')
                             ->label('Description courte')
                             ->columnSpanFull(),

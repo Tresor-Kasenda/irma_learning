@@ -10,6 +10,8 @@ class ListSections extends ListRecords
 {
     protected static string $resource = SectionResource::class;
 
+    protected static ?string $title = 'Liste des sections';
+
     protected function getHeaderActions(): array
     {
         return [

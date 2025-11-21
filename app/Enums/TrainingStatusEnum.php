@@ -10,7 +10,7 @@ enum TrainingStatusEnum: string
     case DRAFT = 'draft';
     case ARCHIVED = 'archived';
 
-    public function label(): string
+    public function getLabel(): string
     {
         return match ($this) {
             self::PUBLISHED => 'Publier',

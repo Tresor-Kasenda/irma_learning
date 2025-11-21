@@ -15,24 +15,26 @@ class FormationStatsChart extends ChartWidget
 
     protected function getData(): array
     {
-        // Get formations by difficulty level
-        $formationsByLevel = Formation::select('difficulty_level', DB::raw('count(*) as total'))
+        $formations = Formation::query();
+        $formationsByLevel = $formations
+            ->select('difficulty_level', DB::raw('count(*) as total'))
             ->groupBy('difficulty_level')
             ->pluck('total', 'difficulty_level')
             ->toArray();
 
-        // Get active vs inactive formations
-        $activeFormations = Formation::query()->where('is_active', '=', true)->count();
-        $inactiveFormations = Formation::query()->where('is_active', '=', false)->count();
+        $activeFormations = $formations
+            ->where('is_active', '=', true)
+            ->count();
+        $inactiveFormations = $formations
+            ->where('is_active', '=', false)
+            ->count();
+        $featuredFormations = $formations
+            ->where('is_featured', '=', true)
+            ->count();
 
-        // Get featured formations
-        $featuredFormations = Formation::query()->where('is_featured', '=', true)->count();
-
-        // Prepare data for the chart
         $labels = [];
         $data = [];
 
-        // Format difficulty levels
         foreach (FormationLevelEnum::cases() as $level) {
             $labels[] = $level->name;
             $data[] = $formationsByLevel[$level->value] ?? 0;

@@ -4,18 +4,18 @@ namespace App\Enums;
 
 enum EnrollmentStatusEnum: string
 {
-    case Active = 'active';
-    case Completed = 'completed';
-    case Suspended = 'suspended';
-    case Cancelled = 'cancelled';
+    case ACTIVE = 'active';
+    case COMPLETED = 'completed';
+    case SUSPENDED = 'suspended';
+    case CANCELLED = 'cancelled';
 
     public function getLabel(): string
     {
         return match ($this) {
-            self::Active => 'Active',
-            self::Completed => 'Completed',
-            self::Suspended => 'Suspended',
-            self::Cancelled => 'Cancelled',
+            self::ACTIVE => "Actif",
+            self::COMPLETED => "Terminé",
+            self::SUSPENDED => "Suspendu",
+            self::CANCELLED => "Annulé",
         };
     }
 }

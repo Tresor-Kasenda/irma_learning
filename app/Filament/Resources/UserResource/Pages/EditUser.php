@@ -1,8 +1,9 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Filament\Resources\UserResource\Pages;
 
-use App\Filament\Resources\ModuleResource;
 use App\Filament\Resources\UserResource;
 use Filament\Actions;
 use Filament\Notifications\Notification;
@@ -12,17 +13,15 @@ class EditUser extends EditRecord
 {
     protected static string $resource = UserResource::class;
 
+    protected static ?string $title = 'Modifier un utilisateur';
+
     protected function getHeaderActions(): array
     {
         return [
             Actions\Action::make('back')
                 ->label('Retour')
-                ->url(ModuleResource::getUrl('index'))
+                ->url(UserResource::getUrl('index'))
                 ->icon('heroicon-o-arrow-left'),
-            Actions\ViewAction::make()
-                ->label('Voir')
-                ->icon('heroicon-o-eye')
-                ->url(ModuleResource::getUrl('view', ['record' => $this->record])),
         ];
     }
 

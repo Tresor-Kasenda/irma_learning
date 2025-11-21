@@ -42,10 +42,10 @@ class EnrollmentResource extends Resource
                     ->label('Statut Inscription')
                     ->formatStateUsing(fn($state) => $state->getLabel())
                     ->color(fn(EnrollmentStatusEnum $state): string => match ($state) {
-                        EnrollmentStatusEnum::Suspended => 'warning',
-                        EnrollmentStatusEnum::Active => 'primary',
-                        EnrollmentStatusEnum::Completed => 'success',
-                        EnrollmentStatusEnum::Cancelled => 'danger',
+                        EnrollmentStatusEnum::SUSPENDED => 'warning',
+                        EnrollmentStatusEnum::ACTIVE => 'primary',
+                        EnrollmentStatusEnum::COMPLETED => 'success',
+                        EnrollmentStatusEnum::CANCELLED => 'danger',
                         default => 'gray',
                     }),
 
@@ -126,7 +126,7 @@ class EnrollmentResource extends Resource
                             $record->update([
                                 'payment_status' => EnrollmentPaymentEnum::PAID,
                                 'payment_processed_at' => now(),
-                                'status' => EnrollmentStatusEnum::Active,
+                                'status' => EnrollmentStatusEnum::ACTIVE,
                             ]);
 
                             Notification::make()
@@ -160,7 +160,7 @@ class EnrollmentResource extends Resource
                         ->action(function (Enrollment $record, array $data) {
                             $record->update([
                                 'payment_status' => EnrollmentPaymentEnum::REFUNDED,
-                                'status' => EnrollmentStatusEnum::Suspended,
+                                'status' => EnrollmentStatusEnum::SUSPENDED,
                                 'payment_notes' => ($record->payment_notes ? $record->payment_notes . "\n\n" : '') .
                                     'REMBOURSEMENT: ' . $data['refund_reason'] . ' (' . now()->format('d/m/Y H:i') . ')',
                             ]);
@@ -188,7 +188,7 @@ class EnrollmentResource extends Resource
                                 $record->update([
                                     'payment_status' => EnrollmentPaymentEnum::PAID,
                                     'payment_processed_at' => now(),
-                                    'status' => EnrollmentStatusEnum::Active,
+                                    'status' => EnrollmentStatusEnum::ACTIVE,
                                 ]);
                             }
 
@@ -247,7 +247,7 @@ class EnrollmentResource extends Resource
 
                         Forms\Components\Select::make('status')
                             ->options(EnrollmentStatusEnum::class)
-                            ->default(EnrollmentStatusEnum::Active)
+                            ->default(EnrollmentStatusEnum::ACTIVE)
                             ->required(),
                     ])
                     ->columns(2),

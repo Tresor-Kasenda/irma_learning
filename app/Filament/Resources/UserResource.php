@@ -8,12 +8,13 @@ use App\Filament\Resources\UserResource\Pages;
 use App\Filament\Resources\UserResource\RelationManagers;
 use App\Models\User;
 use Filament\Forms;
+use Filament\Forms\Components\TextInput;
 use Filament\Forms\Form;
+use Filament\Forms\Get;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Support\Facades\Hash;
 
 class UserResource extends Resource
 {
@@ -55,33 +56,31 @@ class UserResource extends Resource
                             ->label('Téléphone')
                             ->tel()
                             ->maxLength(20),
-
-                        Forms\Components\FileUpload::make('avatar')
-                            ->label('Photo de profil')
-                            ->image()
-                            ->directory('avatars')
-                            ->visibility('public'),
                     ])
                     ->columns(2),
 
                 Forms\Components\Section::make('Compte et sécurité')
                     ->schema([
-                        Forms\Components\TextInput::make('password')
-                            ->label('Mot de passe')
+                        TextInput::make('password')
                             ->password()
-                            ->dehydrateStateUsing(fn($state) => Hash::make($state))
-                            ->dehydrated(fn($state) => filled($state))
-                            ->required(fn(string $context): bool => $context === 'create')
-                            ->minLength(8),
+                            ->maxLength(255)
+                            ->revealable()
+                            ->live()
+                            ->dehydrated(fn(?string $state): bool => filled($state))
+                            ->required(fn(string $operation, Get $get): bool => $operation === 'create')
+                            ->label('Mot de passe'),
 
-                        Forms\Components\TextInput::make('password_confirmation')
-                            ->label('Confirmer le mot de passe')
+                        TextInput::make('password_confirmation')
                             ->password()
+                            ->required(fn(string $operation): bool => $operation === 'create')
+                            ->maxLength(255)
                             ->same('password')
-                            ->required(fn(string $context): bool => $context === 'create')
-                            ->dehydrated(false),
+                            ->dehydrated(false)
+                            ->visible(fn(Get $get) => $get('password'))
+                            ->label('Confirmer le mot de passe'),
 
                         Forms\Components\Toggle::make('must_change_password')
+                            ->columnSpanFull()
                             ->label('Forcer le changement de mot de passe')
                             ->helperText('L\'utilisateur devra changer son mot de passe à la prochaine connexion'),
                     ])
@@ -91,13 +90,21 @@ class UserResource extends Resource
                     ->schema([
                         Forms\Components\Select::make('role')
                             ->label('Rôle')
-                            ->options(UserRoleEnum::class)
+                            ->options(
+                                collect(UserRoleEnum::cases())
+                                    ->take(7)
+                                    ->mapWithKeys(fn($role) => [$role->value => $role->getLabel()])
+                            )
                             ->required()
                             ->native(false),
 
                         Forms\Components\Select::make('status')
                             ->label('Statut')
-                            ->options(UserStatusEnum::class)
+                            ->options(
+                                collect(UserStatusEnum::cases())
+                                    ->take(7)
+                                    ->mapWithKeys(fn($role) => [$role->value => $role->getLabel()])
+                            )
                             ->required()
                             ->native(false),
                     ])
@@ -133,28 +140,22 @@ class UserResource extends Resource
                 Tables\Columns\TextColumn::make('role')
                     ->label('Rôle')
                     ->badge()
+                    ->formatStateUsing(fn(UserRoleEnum $state) => $state->getLabel())
                     ->color(fn(UserRoleEnum $state): string => match ($state) {
                         UserRoleEnum::ADMIN => 'danger',
                         UserRoleEnum::INSTRUCTOR => 'warning',
                         UserRoleEnum::STUDENT => 'success',
-                        default => 'gray',
                     }),
 
                 Tables\Columns\TextColumn::make('status')
                     ->label('Statut')
                     ->badge()
+                    ->formatStateUsing(fn(UserStatusEnum $state) => $state->getLabel())
                     ->color(fn(UserStatusEnum $state): string => match ($state) {
                         UserStatusEnum::ACTIVE => 'success',
                         UserStatusEnum::INACTIVE => 'warning',
                         UserStatusEnum::BANNED => 'danger',
-                        default => 'gray',
                     }),
-
-                Tables\Columns\TextColumn::make('formations_count')
-                    ->label('Formations')
-                    ->counts('formations')
-                    ->sortable()
-                    ->toggleable(),
             ])
             ->filters([
                 Tables\Filters\SelectFilter::make('role')
@@ -187,6 +188,7 @@ class UserResource extends Resource
                     Tables\Actions\DeleteAction::make()
                         ->label('Supprimer')
                         ->icon('heroicon-o-trash')
+                        ->visible(fn(User $record) => $record->role->value !== UserRoleEnum::ADMIN->value)
                         ->color('danger')
                         ->requiresConfirmation(),
                 ])
@@ -213,7 +215,6 @@ class UserResource extends Resource
     {
         return [
             RelationManagers\FormationsRelationManager::class,
-            RelationManagers\CreatedFormationsRelationManager::class,
             RelationManagers\ExamAttemptsRelationManager::class,
         ];
     }

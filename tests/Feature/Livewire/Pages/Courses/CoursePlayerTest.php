@@ -36,7 +36,7 @@ beforeEach(function () {
 
     // Create enrollment
     $this->enrollment = Enrollment::factory()->for($this->user)->for($this->formation)->create([
-        'status' => EnrollmentStatusEnum::Active,
+        'status' => EnrollmentStatusEnum::ACTIVE,
         'payment_status' => EnrollmentPaymentEnum::FREE,
         'progress_percentage' => 0,
     ]);
@@ -130,7 +130,7 @@ test('it updates enrollment progress when chapter completed', function () {
 
     $this->enrollment->refresh();
 
-    expect((float) $this->enrollment->progress_percentage)->toBe(50.0); // 1 of 2 chapters
+    expect((float)$this->enrollment->progress_percentage)->toBe(50.0); // 1 of 2 chapters
 });
 
 test('it marks enrollment as completed when all chapters done', function () {
@@ -140,7 +140,7 @@ test('it marks enrollment as completed when all chapters done', function () {
 
     $this->enrollment->refresh();
 
-    expect((float) $this->enrollment->progress_percentage)->toBe(100.0)
+    expect((float)$this->enrollment->progress_percentage)->toBe(100.0)
         ->and($this->enrollment->status->value)->toBe('completed')
         ->and($this->enrollment->completion_date)->not->toBeNull();
 });

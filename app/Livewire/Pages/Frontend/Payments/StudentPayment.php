@@ -46,14 +46,14 @@ final class StudentPayment extends Component
 
         if (
             $payment &&
-            ! $user->enrollments()
+            !$user->enrollments()
                 ->where('formation_id', $this->formation->id)
                 ->exists()
         ) {
             $user->enrollments()->create([
                 'formation_id' => $this->formation->id,
                 'enrollment_date' => Carbon::now(),
-                'status' => EnrollmentStatusEnum::Active,
+                'status' => EnrollmentStatusEnum::ACTIVE,
                 'payment_status' => EnrollmentPaymentEnum::PAID,
                 'progress_percentage' => 0,
             ]);

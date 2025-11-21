@@ -11,4 +11,13 @@ enum ExamResultEnum: string
     case FAILED = 'failed';
 
     case PENDING = 'pending';
+
+    public function getLabel(): string
+    {
+        return match ($this) {
+            self::PASSED => 'Passé',
+            self::FAILED => 'Échoué',
+            self::PENDING => 'En attente',
+        };
+    }
 }

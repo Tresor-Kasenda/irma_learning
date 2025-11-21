@@ -14,7 +14,7 @@ use Illuminate\Support\Str;
 
 class CreatedFormationsRelationManager extends RelationManager
 {
-    protected static string $relationship = 'createdFormations';
+    protected static string $relationship = 'formations';
 
     protected static ?string $recordTitleAttribute = 'title';
 

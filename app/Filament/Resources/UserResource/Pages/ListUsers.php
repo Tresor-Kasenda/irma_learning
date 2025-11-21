@@ -10,12 +10,14 @@ class ListUsers extends ListRecords
 {
     protected static string $resource = UserResource::class;
 
+    protected static ?string $title = 'Liste des utilisateurs';
+
     protected function getHeaderActions(): array
     {
         return [
             Actions\CreateAction::make()
                 ->label('Ajouter un utilisateur')
-                ->icon('heroicon-o-plus'),
+                ->icon('heroicon-o-plus-circle'),
         ];
     }
 }

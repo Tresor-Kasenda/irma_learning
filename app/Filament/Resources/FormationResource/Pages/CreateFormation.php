@@ -10,6 +10,8 @@ class CreateFormation extends CreateRecord
 {
     protected static string $resource = FormationResource::class;
 
+    protected static ?string $title = 'Ajouter une formation';
+
     protected function getRedirectUrl(): string
     {
         return $this->previousUrl ?? $this->getResource()::getUrl('index');

@@ -11,6 +11,8 @@ class EditSection extends EditRecord
 {
     protected static string $resource = SectionResource::class;
 
+    protected static ?string $title = 'Modifier une section';
+
     protected function getHeaderActions(): array
     {
         return [

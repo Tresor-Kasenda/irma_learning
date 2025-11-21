@@ -14,12 +14,10 @@ class UserActivityChart extends ChartWidget
 
     protected function getData(): array
     {
-        // Get data for the last 7 days
         $range = [Carbon::now()->subDays(6)->startOfDay(), Carbon::now()->endOfDay()];
 
         $user = User::query();
 
-        // New user registrations
         $newUsers = $user
             ->where('role', '=', UserRoleEnum::STUDENT->value)
             ->whereBetween('created_at', $range)
@@ -29,7 +27,6 @@ class UserActivityChart extends ChartWidget
             ->pluck('count', 'date')
             ->toArray();
 
-        // Progress entries
         $progressEntries = $user
             ->where('role', '=', UserRoleEnum::STUDENT->value)
             ->whereBetween('created_at', $range)
@@ -39,7 +36,6 @@ class UserActivityChart extends ChartWidget
             ->pluck('count', 'date')
             ->toArray();
 
-        // Exam attempts
         $examAttempts = $user
             ->where('role', '=', UserRoleEnum::STUDENT->value)
             ->whereBetween('created_at', $range)
@@ -49,7 +45,6 @@ class UserActivityChart extends ChartWidget
             ->pluck('count', 'date')
             ->toArray();
 
-        // Generate labels for the last 7 days
         $labels = [];
         $userData = [];
         $progressData = [];

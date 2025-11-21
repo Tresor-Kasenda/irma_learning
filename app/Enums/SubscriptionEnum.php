@@ -6,10 +6,18 @@ namespace App\Enums;
 
 enum SubscriptionEnum: string
 {
-    // 'active', 'completed', 'expired'
     case ACTIVE = 'active';
 
     case COMPLETED = 'completed';
 
     case EXPIRED = 'expired';
+
+    public function getLabel(): string
+    {
+        return match ($this) {
+            self::ACTIVE => 'Actif',
+            self::COMPLETED => 'Terminé',
+            self::EXPIRED => 'Expiré',
+        };
+    }
 }

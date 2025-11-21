@@ -17,6 +17,8 @@ class EditFormation extends EditRecord
 {
     protected static string $resource = FormationResource::class;
 
+    protected static ?string $title = "Modifier une formation";
+
     protected function getHeaderActions(): array
     {
         return [

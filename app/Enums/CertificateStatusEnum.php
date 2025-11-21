@@ -13,9 +13,9 @@ enum CertificateStatusEnum: string
     public function getLabel(): string
     {
         return match ($this) {
-            self::ACTIVE => 'Active',
-            self::REVOKED => 'Revoked',
-            self::EXPIRED => 'Expired',
+            self::ACTIVE => 'Actif',
+            self::REVOKED => 'Révoqué',
+            self::EXPIRED => 'Périmé',
         };
     }
 }

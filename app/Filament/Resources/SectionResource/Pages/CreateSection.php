@@ -11,6 +11,8 @@ class CreateSection extends CreateRecord
 {
     protected static string $resource = SectionResource::class;
 
+    protected static ?string $title = 'Ajouter une section';
+
     protected function getHeaderActions(): array
     {
         return [

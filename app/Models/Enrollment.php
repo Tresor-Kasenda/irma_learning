@@ -60,7 +60,7 @@ class Enrollment extends Model
 
     public function scopeActive($query)
     {
-        return $query->where('status', EnrollmentStatusEnum::Active);
+        return $query->where('status', EnrollmentStatusEnum::ACTIVE);
     }
 
     public function scopePaid($query)
@@ -70,7 +70,7 @@ class Enrollment extends Model
 
     public function scopeCompleted($query)
     {
-        return $query->where('status', EnrollmentStatusEnum::Completed);
+        return $query->where('status', EnrollmentStatusEnum::COMPLETED);
     }
 
     public function getActivitylogOptions(): LogOptions
@@ -83,7 +83,7 @@ class Enrollment extends Model
         $this->update([
             'payment_status' => EnrollmentPaymentEnum::PAID,
             'payment_processed_at' => now(),
-            'status' => EnrollmentStatusEnum::Active,
+            'status' => EnrollmentStatusEnum::ACTIVE,
             'payment_transaction_id' => $paymentData['transaction_id'] ?? null,
             'payment_method' => $paymentData['method'] ?? null,
             'payment_gateway' => $paymentData['gateway'] ?? null,
@@ -96,7 +96,7 @@ class Enrollment extends Model
     {
         $this->update([
             'payment_status' => EnrollmentPaymentEnum::REFUNDED,
-            'status' => EnrollmentStatusEnum::Suspended,
+            'status' => EnrollmentStatusEnum::SUSPENDED,
             'payment_notes' => ($this->payment_notes ? $this->payment_notes . "\n\n" : '') .
                 'REMBOURSEMENT: ' . $reason . ' (' . now()->format('d/m/Y H:i') . ')',
         ]);

@@ -17,6 +17,9 @@ class StatsOverview extends BaseWidget
     protected function getStats(): array
     {
         $user = User::query()->where('role', '=', UserRoleEnum::STUDENT->value);
+        $formations = Formation::query();
+        $enrollents = Enrollment::query();
+        $certificates = Certificate::query();
         return [
             Stat::make(
                 'Total Users',
@@ -36,11 +39,11 @@ class StatsOverview extends BaseWidget
                 )
                 ->color('success'),
 
-            Stat::make('Total Formations', Formation::count())
+            Stat::make('Total Formations', $formations->count())
                 ->description('Available courses')
                 ->descriptionIcon('heroicon-m-academic-cap')
                 ->chart(
-                    Formation::query()
+                    $formations
                         ->selectRaw('COUNT(*) as count')
                         ->selectRaw('DATE(created_at) as date')
                         ->groupBy('date')
@@ -51,11 +54,11 @@ class StatsOverview extends BaseWidget
                 )
                 ->color('primary'),
 
-            Stat::make('Total Enrollments', Enrollment::count())
+            Stat::make('Total Enrollments', $enrollents->count())
                 ->description('Course enrollments')
                 ->descriptionIcon('heroicon-m-book-open')
                 ->chart(
-                    Enrollment::query()
+                    $enrollents
                         ->selectRaw('COUNT(*) as count')
                         ->selectRaw('DATE(created_at) as date')
                         ->groupBy('date')
@@ -66,11 +69,11 @@ class StatsOverview extends BaseWidget
                 )
                 ->color('warning'),
 
-            Stat::make('Certificates Issued', Certificate::count())
+            Stat::make('Certificates Issued', $certificates->count())
                 ->description('Completed courses')
                 ->descriptionIcon('heroicon-m-document-check')
                 ->chart(
-                    Certificate::query()
+                    $certificates
                         ->selectRaw('COUNT(*) as count')
                         ->selectRaw('DATE(created_at) as date')
                         ->groupBy('date')

@@ -18,11 +18,11 @@ enum PaymentStatusEnum: string
     public function getLabel(): string
     {
         return match ($this) {
-            self::PENDING => 'Pending',
-            self::SUCCESS => 'Success',
-            self::FAILED => 'Failed',
-            self::CANCELLED => 'Cancelled',
-            self::REFUNDED => 'Refunded',
+            self::PENDING => "En attente",
+            self::SUCCESS => "Réussi",
+            self::FAILED => "Échoué",
+            self::CANCELLED => "Annulé",
+            self::REFUNDED => "Remboursé",
         };
     }
 }

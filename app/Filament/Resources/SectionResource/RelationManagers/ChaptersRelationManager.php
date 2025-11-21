@@ -10,12 +10,20 @@ use App\Models\Chapter;
 use App\Services\ChapterPdfExtractionService;
 use Exception;
 use Filament\Forms;
+use Filament\Forms\Components\FileUpload;
+use Filament\Forms\Components\RichEditor;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Toggle;
 use Filament\Forms\Form;
+use Filament\Forms\Get;
+use Filament\Forms\Set;
 use Filament\Notifications\Notification;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 
 final class ChaptersRelationManager extends RelationManager
@@ -30,12 +38,12 @@ final class ChaptersRelationManager extends RelationManager
             ->schema([
                 Forms\Components\Section::make('Informations du chapitre')
                     ->schema([
-                        Forms\Components\TextInput::make('title')
-                            ->label('Titre')
+                        TextInput::make('title')
+                            ->label('Titre du chapitre')
                             ->required()
                             ->maxLength(255),
 
-                        Forms\Components\Select::make('content_type')
+                        Select::make('content_type')
                             ->label('Type de contenu')
                             ->options([
                                 'text' => 'Texte',
@@ -45,12 +53,22 @@ final class ChaptersRelationManager extends RelationManager
                             ->required()
                             ->default('text')
                             ->live()
-                            ->afterStateUpdated(function ($state, Forms\Set $set) {
+                            ->afterStateUpdated(function ($state, Set $set) {
                                 $set('media_url', null);
                             }),
 
-                        Forms\Components\FileUpload::make('media_url')
-                            ->label('Fichier PDF')
+                        FileUpload::make('video_url')
+                            ->label('Vidéo')
+                            ->disk('public')
+                            ->directory('chapters')
+                            ->visibility('public')
+                            ->preserveFilenames()
+                            ->acceptedFileTypes(['video/*'])
+                            ->visible(fn(Get $get) => $get('content_type') === 'video')
+                            ->required(fn(Get $get) => $get('content_type') === 'video'),
+
+                        FileUpload::make('media_url')
+                            ->label('Fichier de contenu')
                             ->disk('public')
                             ->directory('chapters')
                             ->visibility('public')
@@ -60,11 +78,29 @@ final class ChaptersRelationManager extends RelationManager
                                 'application/pdf',
                             ])
                             ->maxSize(50 * 1024)
-                            ->helperText('Uploadez un PDF. Le contenu sera extrait lors de la sauvegarde.')
-                            ->visible(fn(Forms\Get $get) => $get('content_type') === 'pdf')
-                            ->required(fn(Forms\Get $get) => $get('content_type') === 'pdf')
-                            ->downloadable()
-                            ->openable()
+                            ->helperText('Uploadez un PDF pour extraction automatique du contenu.')
+                            ->visible(fn(Get $get) => $get('content_type') === 'pdf')
+                            ->required(fn(Get $get) => $get('content_type') === 'pdf')
+                            ->live()
+                            ->afterStateUpdated(function ($state, Set $set) {
+                                if (!$state) {
+                                    return;
+                                }
+
+                                try {
+                                    app(ChapterPdfExtractionService::class)->extractAndSetFormData($state, $set);
+                                } catch (Exception $e) {
+                                    Log::error('PDF extraction failed in ViewSection', [
+                                        'error' => $e->getMessage(),
+                                    ]);
+
+                                    Notification::make()
+                                        ->title('Erreur')
+                                        ->body('Impossible d\'extraire le PDF : ' . $e->getMessage())
+                                        ->danger()
+                                        ->send();
+                                }
+                            })
                             ->afterStateHydrated(function ($component, $state) {
                                 if ($state && $component->getContainer()->getOperation() === 'edit') {
                                     if (!Storage::disk('public')->exists($state[0])) {
@@ -77,95 +113,37 @@ final class ChaptersRelationManager extends RelationManager
                                 }
                             }),
 
-                        Forms\Components\FileUpload::make('video_url')
-                            ->label('Vidéo')
-                            ->disk('public')
-                            ->directory('chapters')
-                            ->visibility('public')
-                            ->preserveFilenames()
+                        RichEditor::make('content')
+                            ->label('Contenu principal')
                             ->columnSpanFull()
-                            ->acceptedFileTypes(['video/*'])
-                            ->visible(
-                                fn(Forms\Get $get) => $get('content_type') === 'video'
-                            )
-                            ->required(
-                                fn(Forms\Get $get) => $get('content_type') === 'video'
-                            ),
+                            ->helperText('Le contenu sera automatiquement rempli lors de l\'import PDF'),
 
                         Forms\Components\Hidden::make('cover_image'),
 
                         Forms\Components\Hidden::make('markdown_file'),
 
-                        Forms\Components\Grid::make(2)
-                            ->schema([
-                                Forms\Components\TextInput::make('order_position')
-                                    ->label('Position')
-                                    ->numeric()
-                                    ->disabled()
-                                    ->dehydrated(false)
-                                    ->default(fn($livewire) => (Chapter::where('section_id', $livewire->getOwnerRecord()->id)
-                                            ->max('order_position') ?? 0) + 1
-                                    )
-                                    ->helperText('Position automatique (prochaine disponible)'),
+                        TextInput::make('order_position')
+                            ->label('Position du chapitre')
+                            ->numeric()
+                            ->required()
+                            ->minValue(1),
 
-                                Forms\Components\TextInput::make('duration_minutes')
-                                    ->label('Durée (minutes)')
-                                    ->numeric()
-                                    ->suffix('min'),
-                            ]),
+                        TextInput::make('duration_minutes')
+                            ->label('Durée estimée (minutes)')
+                            ->numeric()
+                            ->suffix('minutes')
+                            ->helperText('Durée calculée automatiquement (PDF) ou selon la section'),
 
-                        Forms\Components\Textarea::make('description')
-                            ->label('Description du contenu')
-                            ->maxLength(65535)
-                            ->columnSpanFull()
-                            ->rows(4)
-                            ->placeholder('Description de ce chapitre...'),
-                    ]),
+                        Toggle::make('is_free')
+                            ->label('Gratuit (aperçu)')
+                            ->inline(false)
+                            ->helperText('Ce chapitre sera accessible sans inscription'),
 
-                Forms\Components\Section::make('Contenu')
-                    ->schema([
-                        Forms\Components\RichEditor::make('content')
-                            ->label('Contenu principal')
-                            ->columnSpanFull()
-                            ->helperText('Le contenu sera automatiquement rempli lors de l\'import PDF')
-                            ->toolbarButtons([
-                                'blockquote',
-                                'bold',
-                                'bulletList',
-                                'codeBlock',
-                                'h2',
-                                'h3',
-                                'italic',
-                                'link',
-                                'orderedList',
-                                'redo',
-                                'strike',
-                                'underline',
-                                'undo',
-                            ]),
-
-                        Forms\Components\KeyValue::make('metadata')
-                            ->label('Métadonnées')
-                            ->keyLabel('Clé')
-                            ->valueLabel('Valeur')
-                            ->addActionLabel('Ajouter métadonnée')
-                            ->columnSpanFull(),
-                    ]),
-
-                Forms\Components\Section::make('Configuration')
-                    ->schema([
-                        Forms\Components\Grid::make(2)
-                            ->schema([
-                                Forms\Components\Toggle::make('is_free')
-                                    ->label('Gratuit')
-                                    ->default(false)
-                                    ->helperText('Accessible sans inscription payante'),
-
-                                Forms\Components\Toggle::make('is_active')
-                                    ->label('Actif')
-                                    ->default(true)
-                                    ->helperText('Chapitre visible pour les étudiants'),
-                            ]),
+                        Toggle::make('is_active')
+                            ->label('Chapitre actif')
+                            ->inline(false)
+                            ->helperText('Ce chapitre sera visible dans la formation')
+                            ->default(true),
                     ]),
             ]);
     }

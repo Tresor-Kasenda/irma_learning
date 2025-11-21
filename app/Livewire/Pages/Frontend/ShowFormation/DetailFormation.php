@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Livewire\Pages\Frontend\ShowFormation;
 
+use App\Enums\EnrollmentPaymentEnum;
+use App\Enums\EnrollmentStatusEnum;
 use App\Models\Formation;
 use Illuminate\Contracts\View\View;
 use Livewire\Attributes\Layout;
@@ -52,14 +54,14 @@ final class DetailFormation extends Component
 
     public function enroll(): void
     {
-        if (! auth()->check()) {
+        if (!auth()->check()) {
             session()->put('url.intended', route('formation.show', $this->formation));
             $this->redirect(route('login'), navigate: true);
 
             return;
         }
 
-        if (! auth()->user()->hasStudent()) {
+        if (!auth()->user()->hasStudent()) {
             $this->dispatch(
                 'notify',
                 message: 'Seuls les étudiants peuvent s\'inscrire aux formations.',
@@ -102,8 +104,8 @@ final class DetailFormation extends Component
         $user->enrollments()->create([
             'formation_id' => $this->formation->id,
             'enrollment_date' => now(),
-            'status' => \App\Enums\EnrollmentStatusEnum::Active,
-            'payment_status' => \App\Enums\EnrollmentPaymentEnum::FREE,
+            'status' => EnrollmentStatusEnum::ACTIVE,
+            'payment_status' => EnrollmentPaymentEnum::FREE,
             'amount_paid' => 0,
             'progress_percentage' => 0,
         ]);
