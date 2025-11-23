@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Filament\Resources;
 
 use App\Enums\UserProgressEnum;
@@ -14,7 +16,7 @@ use Filament\Tables\Table;
 use IbrahimBougaoua\FilaProgress\Tables\Columns\ProgressBar;
 use Illuminate\Database\Eloquent\Builder;
 
-class UserProgressResource extends Resource
+final class UserProgressResource extends Resource
 {
     protected static ?string $model = UserProgress::class;
 
@@ -115,6 +117,7 @@ class UserProgressResource extends Resource
                         if ($record->trackable instanceof Section) {
                             return $record->trackable->module->formation->title ?? 'N/A';
                         }
+
                         return 'N/A';
                     })
                     ->searchable()
@@ -209,9 +212,11 @@ class UserProgressResource extends Resource
         ];
     }
 
-    public static function getNavigationBadge(): ?string
+    public static function getEloquentQuery(): Builder
     {
-        return static::getModel()::where('status', 'completed')->count();
+        return parent::getEloquentQuery()
+            ->withoutGlobalScopes()
+            ->with(['user', 'trackable']);
     }
 
     public static function getGlobalSearchEloquentQuery(): Builder

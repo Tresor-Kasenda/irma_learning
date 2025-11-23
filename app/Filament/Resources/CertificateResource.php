@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Filament\Resources;
 
 use App\Enums\CertificateStatusEnum;
@@ -13,7 +15,7 @@ use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 
-class CertificateResource extends Resource
+final class CertificateResource extends Resource
 {
     protected static ?string $model = Certificate::class;
 
@@ -186,7 +188,7 @@ class CertificateResource extends Resource
                     Tables\Actions\EditAction::make()
                         ->label('Modifier')
                         ->icon('heroicon-o-pencil'),
-                ])
+                ]),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
@@ -222,6 +224,13 @@ class CertificateResource extends Resource
 
     public static function getNavigationBadge(): ?string
     {
-        return static::getModel()::where('status', 'active')->count();
+        return (string)self::getModel()::count();
+    }
+
+    public static function getEloquentQuery(): Builder
+    {
+        return parent::getEloquentQuery()
+            ->withoutGlobalScopes()
+            ->with(['user', 'formation']);
     }
 }

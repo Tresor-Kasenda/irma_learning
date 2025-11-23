@@ -21,6 +21,7 @@ use Filament\Infolists\Infolist;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ViewRecord;
 use Filament\Support\Colors\Color;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 
 final class ViewFormation extends ViewRecord
@@ -98,6 +99,12 @@ final class ViewFormation extends ViewRecord
                     ])
                     ->columns(3),
             ]);
+    }
+
+    protected function resolveRecord($key): Model
+    {
+        return parent::resolveRecord($key)
+            ->load(['sections', 'exams']);
     }
 
     protected function getHeaderActions(): array

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Filament\Resources\FormationResource\Pages;
 
 use App\Filament\Resources\FormationResource;
@@ -12,12 +14,19 @@ use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\EditRecord;
+use Illuminate\Database\Eloquent\Model;
 
-class EditFormation extends EditRecord
+final class EditFormation extends EditRecord
 {
     protected static string $resource = FormationResource::class;
 
-    protected static ?string $title = "Modifier une formation";
+    protected static ?string $title = 'Modifier une formation';
+
+    protected function resolveRecord($key): Model
+    {
+        return parent::resolveRecord($key)
+            ->load(['sections', 'exams']);
+    }
 
     protected function getHeaderActions(): array
     {

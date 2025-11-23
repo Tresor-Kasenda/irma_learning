@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Filament\Resources;
 
 use App\Enums\EnrollmentPaymentEnum;
@@ -15,12 +17,16 @@ use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 
-class EnrollmentResource extends Resource
+final class EnrollmentResource extends Resource
 {
     protected static ?string $model = Enrollment::class;
+
     protected static ?string $navigationIcon = 'heroicon-o-user-plus';
+
     protected static ?string $navigationGroup = 'Formation';
+
     protected static ?string $navigationLabel = 'Inscriptions & Paiements';
+
     protected static ?int $navigationSort = 2;
 
     public static function table(Table $table): Table
@@ -172,7 +178,7 @@ class EnrollmentResource extends Resource
                                 ->send();
                         })
                         ->visible(fn(Enrollment $record): bool => $record->payment_status === EnrollmentPaymentEnum::PAID),
-                ])
+                ]),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
@@ -347,12 +353,19 @@ class EnrollmentResource extends Resource
 
     public static function getNavigationBadge(): ?string
     {
-        return static::getModel()::where('status', 'pending')->count();
+        return (string)self::getModel()::count();
     }
 
     public static function getNavigationBadgeColor(): ?string
     {
         return 'warning';
+    }
+
+    public static function getEloquentQuery(): Builder
+    {
+        return parent::getEloquentQuery()
+            ->withoutGlobalScopes()
+            ->with(['user', 'formation']);
     }
 
     public static function getGlobalSearchEloquentQuery(): Builder

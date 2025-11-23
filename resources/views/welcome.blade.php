@@ -11,7 +11,14 @@
     <link href="https://fonts.googleapis.com/css2?family=Onest:wght@100..900&display=swap" rel="stylesheet">
     <link rel="icon" type="image/svg+xml" href="{{ asset("images/irma-logo-base.svg") }}">
     <!-- Styles -->
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
+    <style>
+        [x-cloak] {
+            display: none !important;
+        }
+    </style>
+
+    @filamentStyles
+    @vite('resources/css/app.css')
 </head>
 <body class="overflow-hidden overflow-y-auto bg-bg min-h-screen">
 <x-frontend.header :white-header="isset($whiteHeader)"/>
@@ -19,8 +26,11 @@
     <span class="flex w-60 h-36 bg-gradient-to-tr from-primary rounded-full blur-2xl opacity-65"></span>
 </div>
 <main>
-    <x-notification-popup/>
     {{ $slot }}
+    @livewire('notifications')
+
+    @filamentScripts
+    @vite('resources/js/app.js')
 </main>
 <x-frontend.footer/>
 </body>

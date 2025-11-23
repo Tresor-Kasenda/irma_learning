@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Livewire\Pages\Courses;
+namespace App\Livewire\Pages;
 
 use App\Models\Formation;
 use Illuminate\Contracts\View\View;
@@ -28,21 +28,14 @@ final class Certifications extends Component
 
     public function render(): View
     {
-        $query = Formation::query()
-            ->where('is_active', '=', true)
-            ->orderBy('created_at', 'desc');
+        $query = Formation::query();
 
         if ($this->search) {
             $query->whereLike(['title', 'description'], sprintf('%%%s%%', $this->search));
         }
-
-        $formationTotalCount = cache()->remember('formation_total_count', 60 * 10, function () {
-            return Formation::count();
-        });
-
-        return view('livewire.pages.courses.certifications', [
-            'formations' => $query->paginate(10),
-            'formationCount' => $formationTotalCount,
+        
+        return view('livewire.pages.certifications', [
+            'formations' => $query->active()->orderByDesc('created_at')->paginate(10),
         ]);
     }
 }

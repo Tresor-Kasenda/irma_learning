@@ -31,7 +31,7 @@ class extends Component {
     }
 }; ?>
 
-<div class="w-full flex justify-center">
+<div class="w-full flex flex-col items-center  justify-center">
     <x-auth-session-status class="mb-4" :status="session('status')"/>
 
     <form wire:submit="login"

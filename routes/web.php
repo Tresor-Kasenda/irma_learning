@@ -2,19 +2,16 @@
 
 declare(strict_types=1);
 
-use App\Http\Controllers\AccountController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\EnrollmentController;
-use App\Livewire\ConvertPdf;
-use App\Livewire\Pages\Courses\Certifications;
+use App\Livewire\Pages\Certifications;
 use App\Livewire\Pages\Courses\CoursePlayer;
-use App\Livewire\Pages\Courses\FormationsLists;
 use App\Livewire\Pages\Courses\LearningCourse;
+use App\Livewire\Pages\DetailFormation;
 use App\Livewire\Pages\Exams\ExamResults;
 use App\Livewire\Pages\Exams\TakeExam;
-use App\Livewire\Pages\Frontend\Formations;
 use App\Livewire\Pages\Frontend\Payments\StudentPayment;
-use App\Livewire\Pages\Frontend\ShowFormation\DetailFormation;
+use App\Livewire\Pages\HomePage;
 use App\Livewire\Pages\Profile;
 use App\Livewire\Pages\Students\DashboardStudent;
 use Illuminate\Support\Facades\Route;
@@ -23,14 +20,9 @@ use Livewire\Volt\Volt;
 /**
  * Formations d'informations
  */
-Route::get('/', Formations::class)->name('home-page');
-Route::get('/{formation}/show', DetailFormation::class)
-    ->name('formation.show');
-
-Route::get('/convert', ConvertPdf::class);
-
+Route::get('/', HomePage::class)->name('home-page');
+Route::get('/{formation}/show', DetailFormation::class)->name('formation.show');
 Route::get('/certifications', Certifications::class)->name('certifications');
-Route::get('/formations-continue', FormationsLists::class)->name('formations-lists');
 Volt::route('/nos-tarifs', 'pages.pricings')->name('pages.pricings');
 
 Route::middleware('auth')->group(function () {
@@ -67,4 +59,4 @@ Route::middleware('auth')->group(function () {
     });
 });
 
-require __DIR__.'/auth.php';
+require __DIR__ . '/auth.php';

@@ -2,11 +2,12 @@
 
 declare(strict_types=1);
 
-namespace App\Livewire\Pages\Frontend\ShowFormation;
+namespace App\Livewire\Pages;
 
 use App\Enums\EnrollmentPaymentEnum;
 use App\Enums\EnrollmentStatusEnum;
 use App\Models\Formation;
+use Filament\Notifications\Notification;
 use Illuminate\Contracts\View\View;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Locked;
@@ -24,8 +25,6 @@ final class DetailFormation extends Component
 
     public $enrollmentStatus = null;
 
-    public int $moduleCount = 0;
-
     public int $chapterCount = 0;
 
     protected $listeners = [
@@ -35,16 +34,14 @@ final class DetailFormation extends Component
     public function mount(Formation $formation): void
     {
         $this->formation = $formation->load([
-            'modules.sections.chapters',
-            'creator',
+            'sections.chapters',
         ]);
 
-        $this->moduleCount = $this->formation->modules->count();
-        $this->chapterCount = $this->formation->modules->flatMap->sections->flatMap->chapters->count();
+        $this->chapterCount = $this->formation->sections->flatMap->chapters->count();
 
         if (auth()->check() && auth()->user()->hasStudent()) {
             $enrollment = auth()->user()->enrollments()
-                ->where('formation_id', $formation->id)
+                ->whereBelongsTo($this->formation)
                 ->first();
 
             $this->isEnrolled = $enrollment !== null;
@@ -52,7 +49,7 @@ final class DetailFormation extends Component
         }
     }
 
-    public function enroll(): void
+    public function enroll(Formation $formation): void
     {
         if (!auth()->check()) {
             session()->put('url.intended', route('formation.show', $this->formation));
@@ -62,11 +59,10 @@ final class DetailFormation extends Component
         }
 
         if (!auth()->user()->hasStudent()) {
-            $this->dispatch(
-                'notify',
-                message: 'Seuls les étudiants peuvent s\'inscrire aux formations.',
-                type: 'error'
-            );
+            Notification::make()
+                ->title('Seuls les étudiants peuvent s\'inscrire aux formations.')
+                ->body('Veuillez vous connecter avec un compte étudiant pour continuer.')
+                ->danger();
 
             return;
         }
@@ -93,7 +89,6 @@ final class DetailFormation extends Component
     {
         $user = auth()->user();
 
-        // Vérifier si déjà inscrit
         if ($user->enrollments()->where('formation_id', $this->formation->id)->exists()) {
             $this->dispatch('notify', message: 'Vous êtes déjà inscrit à cette formation.', type: 'info');
 
@@ -104,7 +99,7 @@ final class DetailFormation extends Component
         $user->enrollments()->create([
             'formation_id' => $this->formation->id,
             'enrollment_date' => now(),
-            'status' => EnrollmentStatusEnum::ACTIVE,
+            'status' => EnrollmentStatusEnum::ACTIVE->value,
             'payment_status' => EnrollmentPaymentEnum::FREE,
             'amount_paid' => 0,
             'progress_percentage' => 0,
@@ -112,10 +107,12 @@ final class DetailFormation extends Component
 
         $this->isEnrolled = true;
         $this->enrollmentStatus = 'active';
+        
+        Notification::make()
+            ->title('Inscription réussie !')
+            ->body('Vous êtes maintenant inscrit à la formation.')
+            ->success();
 
-        $this->dispatch('notify', message: 'Inscription réussie ! Vous pouvez maintenant commencer la formation.', type: 'success');
-
-        // Rediriger vers la page de cours
         $this->redirect(route('course.player', ['formation' => $this->formation->id]), navigate: true);
     }
 

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\FormationAccessCodeResource\Pages;
@@ -9,9 +11,10 @@ use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Str;
 
-class FormationAccessCodeResource extends Resource
+final class FormationAccessCodeResource extends Resource
 {
     protected static ?string $model = FormationAccessCode::class;
 
@@ -33,7 +36,7 @@ class FormationAccessCodeResource extends Resource
                     ->searchable(),
 
                 Forms\Components\TextInput::make('code')
-                    ->default(fn() => Str::random(8))
+                    ->default(fn () => Str::random(8))
                     ->required()
                     ->unique(ignoreRecord: true),
 
@@ -105,5 +108,12 @@ class FormationAccessCodeResource extends Resource
             'create' => Pages\CreateFormationAccessCode::route('/create'),
             'edit' => Pages\EditFormationAccessCode::route('/{record}/edit'),
         ];
+    }
+
+    public static function getEloquentQuery(): Builder
+    {
+        return parent::getEloquentQuery()
+            ->withoutGlobalScopes()
+            ->with(['formation', 'user']);
     }
 }

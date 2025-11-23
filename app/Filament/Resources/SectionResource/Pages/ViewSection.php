@@ -6,7 +6,8 @@ namespace App\Filament\Resources\SectionResource\Pages;
 
 use App\Filament\Resources\SectionResource;
 use App\Models\Section;
-use App\Services\ChapterPdfExtractionService;
+use App\Services\DocumentConversionService;
+use App\Services\ReadingDurationCalculatorService;
 use Exception;
 use Filament\Actions;
 use Filament\Forms;
@@ -23,8 +24,8 @@ use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ViewRecord;
 use Filament\Support\Colors\Color;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
+use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
 
 final class ViewSection extends ViewRecord
 {
@@ -110,8 +111,12 @@ final class ViewSection extends ViewRecord
                         ->visibility('public')
                         ->preserveFilenames()
                         ->acceptedFileTypes(['video/*'])
-                        ->visible(fn(Get $get) => $get('content_type') === 'video')
-                        ->required(fn(Get $get) => $get('content_type') === 'video'),
+                        ->visible(
+                            fn(Get $get) => $get('content_type') === 'video'
+                        )
+                        ->required(
+                            fn(Get $get) => $get('content_type') === 'video'
+                        ),
 
                     FileUpload::make('media_url')
                         ->label('Fichier de contenu')
@@ -120,36 +125,20 @@ final class ViewSection extends ViewRecord
                         ->visibility('public')
                         ->preserveFilenames()
                         ->columnSpanFull()
-                        ->acceptedFileTypes([
-                            'application/pdf',
-                        ])
+                        ->acceptedFileTypes(['application/pdf'])
                         ->maxSize(50 * 1024)
                         ->helperText('Uploadez un PDF pour extraction automatique du contenu.')
                         ->visible(fn(Get $get) => $get('content_type') === 'pdf')
                         ->required(fn(Get $get) => $get('content_type') === 'pdf')
                         ->live()
-                        ->afterStateUpdated(function ($state, Set $set) {
-                            if (!$state) {
-                                return;
-                            }
-
-                            try {
-                                app(ChapterPdfExtractionService::class)->extractAndSetFormData($state, $set);
-                            } catch (Exception $e) {
-                                Log::error('PDF extraction failed in ViewSection', [
-                                    'error' => $e->getMessage(),
-                                ]);
-
-                                Notification::make()
-                                    ->title('Erreur')
-                                    ->body('Impossible d\'extraire le PDF : ' . $e->getMessage())
-                                    ->danger()
-                                    ->send();
+                        ->afterStateUpdated(function ($state, Set $set, Get $get) {
+                            if ($state) {
+                                static::extractPdfContent($state, $set, $get);
                             }
                         })
                         ->afterStateHydrated(function ($component, $state) {
                             if ($state && $component->getContainer()->getOperation() === 'edit') {
-                                if (!Storage::disk('public')->exists($state[0])) {
+                                if (!Storage::disk('public')->exists($state)) {
                                     Notification::make()
                                         ->title('Fichier manquant')
                                         ->body('Le fichier PDF original est introuvable.')
@@ -165,8 +154,6 @@ final class ViewSection extends ViewRecord
                         ->helperText('Le contenu sera automatiquement rempli lors de l\'import PDF'),
 
                     Forms\Components\Hidden::make('cover_image'),
-
-                    Forms\Components\Hidden::make('markdown_file'),
 
                     TextInput::make('order_position')
                         ->label('Position du chapitre')
@@ -208,7 +195,6 @@ final class ViewSection extends ViewRecord
                             'media_url' => $data['media_url'] ?? null,
                             'video_url' => $data['video_url'] ?? null,
                             'cover_image' => $data['cover_image'] ?? null,
-                            'markdown_file' => $data['markdown_file'] ?? null,
                             'content' => $data['content'] ?? null,
                             'order_position' => $position,
                             'duration_minutes' => $duration,
@@ -230,6 +216,81 @@ final class ViewSection extends ViewRecord
                     $this->dispatch('refresh');
                 }),
         ];
+    }
+
+    /**
+     * Extrait le contenu du PDF et met à jour les champs du formulaire
+     */
+    protected static function extractPdfContent($pdfFile, Set $set, Get $get): void
+    {
+        try {
+            if (!$pdfFile) {
+                return;
+            }
+
+            $filePath = '';
+            $originalFileName = null;
+
+            if ($pdfFile instanceof TemporaryUploadedFile) {
+                $filePath = $pdfFile->getRealPath();
+                $pdfFile->store('chapters', 'public');
+
+                $originalFileName = pathinfo($pdfFile->getClientOriginalName(), PATHINFO_FILENAME);
+
+                $pdfFile = $filePath;
+            }
+
+            if (!$filePath || !file_exists($filePath)) {
+                throw new Exception('Impossible de trouver le fichier PDF.');
+            }
+
+            $extractionService = app(DocumentConversionService::class);
+            $result = $extractionService->convert($filePath, [
+                'generateThumbnail' => true,
+                'ignorePageNumbers' => true,
+                'customTitle' => $originalFileName,
+            ]);
+
+            $extractedData = [
+                'title' => $result['title'],
+                'description' => $result['description'],
+                'content' => $result['content'],
+                'estimated_duration' => $result['estimated_duration'],
+                'thumbnail_path' => $result['thumbnail_path'] ?? null,
+            ];
+
+            $durationService = app(ReadingDurationCalculatorService::class);
+            $readingAnalysis = $durationService->calculateReadingDuration(
+                $extractedData['content'],
+                'average' // Niveau par défaut
+            );
+
+            $set('title', $extractedData['title']);
+            $set('content', $extractedData['content']);
+            $set('duration_minutes', $readingAnalysis['total_minutes']);
+            $set('content_type', 'pdf');
+
+            if (!empty($extractedData['thumbnail_path'])) {
+                $set('cover_image', $extractedData['thumbnail_path']);
+            }
+
+            if (!empty($extractedData['markdown_file'])) {
+                $set('markdown_file', $extractedData['markdown_file']);
+            }
+
+            Notification::make()
+                ->title('Extraction PDF réussie')
+                ->body("Le contenu a été extrait avec succès. Durée estimée: {$extractedData['estimated_duration']} minutes.")
+                ->success()
+                ->send();
+
+        } catch (Exception $e) {
+            Notification::make()
+                ->title('Erreur d\'extraction PDF')
+                ->body('Erreur lors de l\'extraction: ' . $e->getMessage())
+                ->danger()
+                ->send();
+        }
     }
 
     protected function calculateChapterDuration(): int

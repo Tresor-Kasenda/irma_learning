@@ -64,6 +64,11 @@ final class Formation extends Model
         return $this->morphMany(UserProgress::class, 'trackable');
     }
 
+    public function scopeActive($query)
+    {
+        return $query->where('is_active', true);
+    }
+
     public function getEstimatedDuration(): int
     {
         return $this->sections()->sum('duration');

@@ -4,7 +4,8 @@ use Illuminate\Support\Facades\Password;
 use Livewire\Attributes\Layout;
 use Livewire\Volt\Component;
 
-new #[Layout('layouts.guest')] class extends Component {
+new #[Layout('layouts.guest')]
+class extends Component {
     public string $email = '';
 
     /**
@@ -35,7 +36,7 @@ new #[Layout('layouts.guest')] class extends Component {
     }
 }; ?>
 
-<div class="w-full flex justify-center">
+<div class="w-full flex flex-col items-center justify-center">
 
     <!-- Session Status -->
     <x-auth-session-status class="mb-4" :status="session('status')"/>
