@@ -29,7 +29,7 @@ final class Certifications extends Component
     public function render(): View
     {
         $query = Formation::query()
-            ->active()
+            ->where('is_active', '=', true)
             ->orderBy('created_at', 'desc');
 
         if ($this->search) {
