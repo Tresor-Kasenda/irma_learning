@@ -27,7 +27,7 @@ final class DashboardStudent extends Component
         // Mes formations en cours avec progression
         $myEnrollments = Enrollment::query()
             ->with(['formation' => function ($query) {
-                $query->with(['modules.sections.chapters']);
+                $query->with(['sections.chapters']);
             }])
             ->where('user_id', $user->id)
             ->where('status', 'active')
@@ -38,7 +38,7 @@ final class DashboardStudent extends Component
         // Dernière formation consultée (celle avec l'activité la plus récente)
         $continueWatching = UserProgress::query()
             ->with(['trackable' => function ($query) {
-                $query->with(['section.module.formation']);
+                $query->with(['section.formation']);
             }])
             ->where('user_id', $user->id)
             ->where('trackable_type', 'App\Models\Chapter')

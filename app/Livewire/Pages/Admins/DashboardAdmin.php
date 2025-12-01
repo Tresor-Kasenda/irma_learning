@@ -26,7 +26,7 @@ final class DashboardAdmin extends Component
             ->enrollments()
             ->with([
                 'formation:id,title,slug,difficulty_level,price',
-                'formation.modules:id,formation_id,title',
+                'formation.sections:id,formation_id,title',
             ])
             ->paid()
             ->latest()

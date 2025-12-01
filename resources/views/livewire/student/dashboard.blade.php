@@ -112,13 +112,7 @@
                                     </div>
                                 </div>
 
-                                <dl class="mt-4 grid grid-cols-2 gap-4">
-                                    <div>
-                                        <dt class="text-sm font-medium text-gray-500">Modules complétés</dt>
-                                        <dd class="mt-1 text-sm text-gray-900">
-                                            {{ $formation->getCompletedModulesCount(auth()->user()) }}/{{ $formation->modules->count() }}
-                                        </dd>
-                                    </div>
+                                <dl class="mt-4 grid grid-cols-1 gap-4">
                                     <div>
                                         <dt class="text-sm font-medium text-gray-500">Sections complétées</dt>
                                         <dd class="mt-1 text-sm text-gray-900">

@@ -36,7 +36,7 @@ final class CoursePlayer extends Component
     public function mount(Formation $formation, ?int $chapterId = null): void
     {
         $this->formation = $formation->load([
-            'modules.sections.chapters' => function ($query) {
+            'sections.chapters' => function ($query) {
                 $query->where('is_active', true)
                     ->orderBy('order_position');
             },
@@ -50,7 +50,7 @@ final class CoursePlayer extends Component
             ->where('status', EnrollmentStatusEnum::ACTIVE)
             ->first();
 
-        if (!$this->enrollment) {
+        if (! $this->enrollment) {
             $this->dispatch('notify', message: 'Vous devez être inscrit à cette formation pour y accéder.', type: 'error');
             $this->redirect(route('formation.show', $formation->slug), navigate: true);
 
@@ -58,16 +58,15 @@ final class CoursePlayer extends Component
         }
 
         // Récupérer tous les chapitres dans l'ordre
-        $this->allChapters = $this->formation->modules
-            ->flatMap(fn($module) => $module->sections)
-            ->flatMap(fn($section) => $section->chapters)
+        $this->allChapters = $this->formation->sections
+            ->flatMap(fn ($section) => $section->chapters)
             ->values()
             ->toArray();
 
         // Définir le chapitre actuel
         if ($chapterId) {
             $this->currentChapter = Chapter::find($chapterId);
-            $this->currentChapterIndex = collect($this->allChapters)->search(fn($ch) => $ch['id'] === $chapterId);
+            $this->currentChapterIndex = collect($this->allChapters)->search(fn ($ch) => $ch['id'] === $chapterId);
         } else {
             // Charger le dernier chapitre en cours ou le premier
             $lastProgress = UserProgress::where('user_id', auth()->id())
@@ -79,7 +78,7 @@ final class CoursePlayer extends Component
 
             if ($lastProgress) {
                 $this->currentChapter = Chapter::find($lastProgress->trackable_id);
-                $this->currentChapterIndex = collect($this->allChapters)->search(fn($ch) => $ch['id'] === $lastProgress->trackable_id);
+                $this->currentChapterIndex = collect($this->allChapters)->search(fn ($ch) => $ch['id'] === $lastProgress->trackable_id);
             } else {
                 $this->currentChapter = Chapter::find($this->allChapters[0]['id']);
                 $this->currentChapterIndex = 0;
@@ -90,32 +89,9 @@ final class CoursePlayer extends Component
         $this->markChapterAsInProgress();
     }
 
-    private function markChapterAsInProgress(): void
-    {
-        if (!$this->currentChapter) {
-            return;
-        }
-
-        $progress = UserProgress::where([
-            'user_id' => auth()->id(),
-            'trackable_type' => Chapter::class,
-            'trackable_id' => $this->currentChapter->id,
-        ])->first();
-
-        if (!$progress) {
-            UserProgress::create([
-                'user_id' => auth()->id(),
-                'trackable_type' => Chapter::class,
-                'trackable_id' => $this->currentChapter->id,
-                'status' => UserProgressEnum::IN_PROGRESS,
-                'started_at' => now(),
-            ]);
-        }
-    }
-
     public function getChapterExamProperty(): ?Exam
     {
-        if (!$this->currentChapter) {
+        if (! $this->currentChapter) {
             return null;
         }
 
@@ -124,7 +100,7 @@ final class CoursePlayer extends Component
 
     public function takeExam(): void
     {
-        if (!$this->chapterExam) {
+        if (! $this->chapterExam) {
             return;
         }
 
@@ -133,13 +109,14 @@ final class CoursePlayer extends Component
 
     public function markChapterAsCompleted(): void
     {
-        if (!$this->currentChapter) {
+        if (! $this->currentChapter) {
             return;
         }
 
         // Vérifier si un examen est requis et non passé
-        if ($this->chapterExam && !$this->hasPassedExam()) {
+        if ($this->chapterExam && ! $this->hasPassedExam()) {
             $this->dispatch('notify', message: 'Vous devez réussir l\'examen pour valider ce chapitre.', type: 'warning');
+
             return;
         }
 
@@ -181,7 +158,7 @@ final class CoursePlayer extends Component
     {
         $exam = $this->chapterExam;
 
-        if (!$exam) {
+        if (! $exam) {
             return true;
         }
 
@@ -189,28 +166,6 @@ final class CoursePlayer extends Component
             ->where('user_id', auth()->id())
             ->where('score', '>=', $exam->passing_score ?? 70) // Fallback to 70 if null, though model has default
             ->exists();
-    }
-
-    private function updateEnrollmentProgress(): void
-    {
-        if (!$this->enrollment) {
-            return;
-        }
-
-        $totalChapters = count($this->allChapters);
-        $completedChapters = UserProgress::where('user_id', auth()->id())
-            ->where('trackable_type', Chapter::class)
-            ->whereIn('trackable_id', collect($this->allChapters)->pluck('id'))
-            ->where('status', UserProgressEnum::COMPLETED)
-            ->count();
-
-        $progressPercentage = $totalChapters > 0 ? ($completedChapters / $totalChapters) * 100 : 0;
-
-        $this->enrollment->update([
-            'progress_percentage' => round($progressPercentage, 2),
-            'status' => $progressPercentage >= 100 ? EnrollmentStatusEnum::COMPLETED : EnrollmentStatusEnum::ACTIVE,
-            'completion_date' => $progressPercentage >= 100 ? now() : null,
-        ]);
     }
 
     public function nextChapter(): void
@@ -227,7 +182,7 @@ final class CoursePlayer extends Component
     public function selectChapter(int $chapterId): void
     {
         $this->currentChapter = Chapter::find($chapterId);
-        $this->currentChapterIndex = collect($this->allChapters)->search(fn($ch) => $ch['id'] === $chapterId);
+        $this->currentChapterIndex = collect($this->allChapters)->search(fn ($ch) => $ch['id'] === $chapterId);
         $this->markChapterAsInProgress();
     }
 
@@ -258,5 +213,50 @@ final class CoursePlayer extends Component
             ->where('status', UserProgressEnum::COMPLETED)
             ->pluck('trackable_id')
             ->toArray();
+    }
+
+    private function markChapterAsInProgress(): void
+    {
+        if (! $this->currentChapter) {
+            return;
+        }
+
+        $progress = UserProgress::where([
+            'user_id' => auth()->id(),
+            'trackable_type' => Chapter::class,
+            'trackable_id' => $this->currentChapter->id,
+        ])->first();
+
+        if (! $progress) {
+            UserProgress::create([
+                'user_id' => auth()->id(),
+                'trackable_type' => Chapter::class,
+                'trackable_id' => $this->currentChapter->id,
+                'status' => UserProgressEnum::IN_PROGRESS,
+                'started_at' => now(),
+            ]);
+        }
+    }
+
+    private function updateEnrollmentProgress(): void
+    {
+        if (! $this->enrollment) {
+            return;
+        }
+
+        $totalChapters = count($this->allChapters);
+        $completedChapters = UserProgress::where('user_id', auth()->id())
+            ->where('trackable_type', Chapter::class)
+            ->whereIn('trackable_id', collect($this->allChapters)->pluck('id'))
+            ->where('status', UserProgressEnum::COMPLETED)
+            ->count();
+
+        $progressPercentage = $totalChapters > 0 ? ($completedChapters / $totalChapters) * 100 : 0;
+
+        $this->enrollment->update([
+            'progress_percentage' => round($progressPercentage, 2),
+            'status' => $progressPercentage >= 100 ? EnrollmentStatusEnum::COMPLETED : EnrollmentStatusEnum::ACTIVE,
+            'completion_date' => $progressPercentage >= 100 ? now() : null,
+        ]);
     }
 }

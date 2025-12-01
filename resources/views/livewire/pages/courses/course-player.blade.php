@@ -149,51 +149,45 @@
             </div>
 
             <div class="p-4">
-                @foreach($formation->modules as $module)
+                @foreach($formation->sections as $section)
                 <div class="mb-4">
                     <h4 class="text-white font-semibold mb-2 flex items-center gap-2">
                         <svg class="w-5 h-5 text-primary-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/>
                         </svg>
-                        {{ $module->title }}
+                        {{ $section->title }}
                     </h4>
 
-                    @foreach($module->sections as $section)
-                    <div class="ml-4 mb-3">
-                        <h5 class="text-gray-300 text-sm font-medium mb-2">{{ $section->title }}</h5>
+                    <div class="space-y-1">
+                        @foreach($section->chapters as $chapter)
+                        <button
+                            wire:click="selectChapter({{ $chapter->id }})"
+                            class="w-full text-left px-3 py-2 rounded-lg transition-colors flex items-center gap-3 group
+                                {{ $currentChapter?->id === $chapter->id ? 'bg-primary-600 text-white' : 'text-gray-400 hover:bg-gray-800 hover:text-white' }}">
+                            {{-- Icône de statut --}}
+                            @if(in_array($chapter->id, $completedChapters))
+                                <svg class="w-5 h-5 flex-shrink-0 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                                </svg>
+                            @elseif($currentChapter?->id === $chapter->id)
+                                <svg class="w-5 h-5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd"/>
+                                </svg>
+                            @else
+                                <svg class="w-5 h-5 flex-shrink-0 text-gray-600" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"/>
+                                </svg>
+                            @endif
 
-                        <div class="space-y-1">
-                            @foreach($section->chapters as $chapter)
-                            <button
-                                wire:click="selectChapter({{ $chapter->id }})"
-                                class="w-full text-left px-3 py-2 rounded-lg transition-colors flex items-center gap-3 group
-                                    {{ $currentChapter?->id === $chapter->id ? 'bg-primary-600 text-white' : 'text-gray-400 hover:bg-gray-800 hover:text-white' }}">
-                                {{-- Icône de statut --}}
-                                @if(in_array($chapter->id, $completedChapters))
-                                    <svg class="w-5 h-5 flex-shrink-0 text-green-500" fill="currentColor" viewBox="0 0 20 20">
-                                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
-                                    </svg>
-                                @elseif($currentChapter?->id === $chapter->id)
-                                    <svg class="w-5 h-5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd"/>
-                                    </svg>
-                                @else
-                                    <svg class="w-5 h-5 flex-shrink-0 text-gray-600" fill="currentColor" viewBox="0 0 20 20">
-                                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"/>
-                                    </svg>
+                            <div class="flex-1 min-w-0">
+                                <p class="text-sm truncate">{{ $chapter->title }}</p>
+                                @if($chapter->duration_minutes)
+                                <p class="text-xs text-gray-500 mt-0.5">{{ $chapter->duration_minutes }} min</p>
                                 @endif
-
-                                <div class="flex-1 min-w-0">
-                                    <p class="text-sm truncate">{{ $chapter->title }}</p>
-                                    @if($chapter->duration_minutes)
-                                    <p class="text-xs text-gray-500 mt-0.5">{{ $chapter->duration_minutes }} min</p>
-                                    @endif
-                                </div>
-                            </button>
-                            @endforeach
-                        </div>
+                            </div>
+                        </button>
+                        @endforeach
                     </div>
-                    @endforeach
                 </div>
                 @endforeach
             </div>
