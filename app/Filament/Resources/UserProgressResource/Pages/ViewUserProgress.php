@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Filament\Resources\UserProgressResource\Pages;
 
 use App\Filament\Resources\UserProgressResource;
@@ -11,7 +13,7 @@ use Filament\Infolists\Components\TextEntry;
 use Filament\Infolists\Infolist;
 use Filament\Resources\Pages\ViewRecord;
 
-class ViewUserProgress extends ViewRecord
+final class ViewUserProgress extends ViewRecord
 {
     protected static string $resource = UserProgressResource::class;
 
@@ -27,7 +29,7 @@ class ViewUserProgress extends ViewRecord
                             ->label('Email'),
                         TextEntry::make('trackable_type')
                             ->label('Type d\'élément')
-                            ->formatStateUsing(fn(string $state): string => match ($state) {
+                            ->formatStateUsing(fn (string $state): string => match ($state) {
                                 'App\\Models\\Chapter' => 'Chapitre',
                                 'App\\Models\\Section' => 'Section',
                                 default => $state,
@@ -42,12 +44,12 @@ class ViewUserProgress extends ViewRecord
                         TextEntry::make('status')
                             ->label('Statut')
                             ->badge()
-                            ->color(fn(string $state): string => match ($state) {
+                            ->color(fn (string $state): string => match ($state) {
                                 'not_started' => 'secondary',
                                 'in_progress' => 'warning',
                                 'completed' => 'success',
                             })
-                            ->formatStateUsing(fn(string $state): string => match ($state) {
+                            ->formatStateUsing(fn (string $state): string => match ($state) {
                                 'not_started' => 'Non commencé',
                                 'in_progress' => 'En cours',
                                 'completed' => 'Complété',
@@ -87,35 +89,29 @@ class ViewUserProgress extends ViewRecord
                             ->label('Formation')
                             ->getStateUsing(function ($record) {
                                 if ($record->trackable instanceof Chapter) {
-                                    $formation = $record->trackable->section->module->formation ?? null;
+                                    $formation = $record->trackable->section->formation ?? null;
+
                                     return $formation ? $formation->title : 'N/A';
                                 }
                                 if ($record->trackable instanceof Section) {
-                                    $formation = $record->trackable->module->formation ?? null;
+                                    $formation = $record->trackable->formation ?? null;
+
                                     return $formation ? $formation->title : 'N/A';
                                 }
+
                                 return 'N/A';
                             }),
-                        TextEntry::make('module_info')
-                            ->label('Module')
-                            ->getStateUsing(function ($record) {
-                                if ($record->trackable instanceof Chapter) {
-                                    return $record->trackable->section->module->title ?? 'N/A';
-                                }
-                                if ($record->trackable instanceof Section) {
-                                    return $record->trackable->module->title ?? 'N/A';
-                                }
-                                return 'N/A';
-                            }),
+
                         TextEntry::make('section_info')
                             ->label('Section')
                             ->getStateUsing(function ($record) {
                                 if ($record->trackable instanceof Chapter) {
                                     return $record->trackable->section->title ?? 'N/A';
                                 }
+
                                 return 'N/A';
                             })
-                            ->visible(fn($record) => $record->trackable instanceof Chapter),
+                            ->visible(fn ($record) => $record->trackable instanceof Chapter),
                     ])
                     ->columns(2),
             ]);
@@ -127,5 +123,4 @@ class ViewUserProgress extends ViewRecord
             Actions\EditAction::make(),
         ];
     }
-
 }

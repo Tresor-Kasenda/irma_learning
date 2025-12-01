@@ -43,13 +43,13 @@ final class UserProgressResource extends Resource
 
                 Tables\Columns\TextColumn::make('trackable_type')
                     ->label('Type')
-                    ->formatStateUsing(fn(string $state): string => match ($state) {
+                    ->formatStateUsing(fn (string $state): string => match ($state) {
                         'App\\Models\\Chapter' => 'Chapitre',
                         'App\\Models\\Section' => 'Section',
                         default => $state,
                     })
                     ->badge()
-                    ->color(fn(string $state): string => match ($state) {
+                    ->color(fn (string $state): string => match ($state) {
                         'App\\Models\\Chapter' => 'primary',
                         'App\\Models\\Section' => 'warning',
                         default => 'secondary',
@@ -67,7 +67,7 @@ final class UserProgressResource extends Resource
                         'warning' => 'in_progress',
                         'success' => 'completed',
                     ])
-                    ->formatStateUsing(fn(string $state): string => match ($state) {
+                    ->formatStateUsing(fn (string $state): string => match ($state) {
                         'not_started' => 'Non commencé',
                         'in_progress' => 'En cours',
                         'completed' => 'Complété',
@@ -112,10 +112,10 @@ final class UserProgressResource extends Resource
                     ->label('Formation')
                     ->getStateUsing(function ($record) {
                         if ($record->trackable instanceof Chapter) {
-                            return $record->trackable->section->module->formation->title ?? 'N/A';
+                            return $record->trackable->section->formation->title ?? 'N/A';
                         }
                         if ($record->trackable instanceof Section) {
-                            return $record->trackable->module->formation->title ?? 'N/A';
+                            return $record->trackable->formation->title ?? 'N/A';
                         }
 
                         return 'N/A';
@@ -138,35 +138,35 @@ final class UserProgressResource extends Resource
 
                 Tables\Filters\Filter::make('completed')
                     ->label('Éléments complétés')
-                    ->query(fn(Builder $query): Builder => $query->where('status', 'completed')),
+                    ->query(fn (Builder $query): Builder => $query->where('status', 'completed')),
 
                 Tables\Filters\Filter::make('in_progress')
                     ->label('En cours')
-                    ->query(fn(Builder $query): Builder => $query->where('status', 'in_progress')),
+                    ->query(fn (Builder $query): Builder => $query->where('status', 'in_progress')),
 
                 Tables\Filters\Filter::make('not_started')
                     ->label('Non commencés')
-                    ->query(fn(Builder $query): Builder => $query->where('status', 'not_started')),
+                    ->query(fn (Builder $query): Builder => $query->where('status', 'not_started')),
 
                 Tables\Filters\Filter::make('high_progress')
                     ->label('Progression élevée (≥75%)')
-                    ->query(fn(Builder $query): Builder => $query->where('progress_percentage', '>=', 75)),
+                    ->query(fn (Builder $query): Builder => $query->where('progress_percentage', '>=', 75)),
             ])
             ->actions([
                 Tables\Actions\Action::make('markAsStarted')
                     ->label('Commencer')
                     ->icon('heroicon-o-play')
                     ->color('primary')
-                    ->action(fn(UserProgress $record) => $record->markAsStarted())
-                    ->visible(fn(UserProgress $record) => $record->status === UserProgressEnum::IN_PROGRESS),
+                    ->action(fn (UserProgress $record) => $record->markAsStarted())
+                    ->visible(fn (UserProgress $record) => $record->status === UserProgressEnum::IN_PROGRESS),
 
                 Tables\Actions\Action::make('markAsCompleted')
                     ->label('Compléter')
                     ->icon('heroicon-o-check-circle')
                     ->color('success')
                     ->requiresConfirmation()
-                    ->action(fn(UserProgress $record) => $record->markAsCompleted())
-                    ->visible(fn(UserProgress $record) => $record->status !== UserProgressEnum::COMPLETED),
+                    ->action(fn (UserProgress $record) => $record->markAsCompleted())
+                    ->visible(fn (UserProgress $record) => $record->status !== UserProgressEnum::COMPLETED),
 
                 Tables\Actions\ViewAction::make(),
                 Tables\Actions\EditAction::make(),
@@ -180,13 +180,13 @@ final class UserProgressResource extends Resource
                         ->icon('heroicon-o-check-circle')
                         ->color('success')
                         ->requiresConfirmation()
-                        ->action(fn($records) => $records->each->markAsCompleted()),
+                        ->action(fn ($records) => $records->each->markAsCompleted()),
 
                     Tables\Actions\BulkAction::make('bulk_mark_started')
                         ->label('Marquer comme commencés')
                         ->icon('heroicon-o-play')
                         ->color('primary')
-                        ->action(fn($records) => $records->each->markAsStarted()),
+                        ->action(fn ($records) => $records->each->markAsStarted()),
                 ]),
             ])
             ->defaultSort('created_at', 'desc')

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Models;
 
 use App\Enums\ExamAttemptEnum;
@@ -10,11 +12,10 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-class ExamAttempt extends Model
+final class ExamAttempt extends Model
 {
     /** @use HasFactory<ExamAttemptFactory> */
     use HasFactory;
-
 
     protected $fillable = [
         'user_id',
@@ -59,7 +60,7 @@ class ExamAttempt extends Model
         $this->update([
             'status' => $status,
             'completed_at' => now(),
-            'time_taken' => now()->diffInSeconds($this->started_at)
+            'time_taken' => now()->diffInSeconds($this->started_at),
         ]);
 
         if ($this->isPassed() && $this->exam->examable_type === Section::class) {
@@ -75,7 +76,7 @@ class ExamAttempt extends Model
         $this->update([
             'score' => $totalScore,
             'max_score' => $maxScore,
-            'percentage' => $maxScore > 0 ? ($totalScore / $maxScore) * 100 : 0
+            'percentage' => $maxScore > 0 ? ($totalScore / $maxScore) * 100 : 0,
         ]);
     }
 
@@ -87,6 +88,21 @@ class ExamAttempt extends Model
     public function isPassed(): bool
     {
         return $this->percentage >= $this->exam->passing_score;
+    }
+
+    protected function casts(): array
+    {
+        return [
+            'answers' => 'array',
+            'started_at' => 'datetime',
+            'completed_at' => 'datetime',
+            'percentage' => 'decimal:2',
+            'attempt_number' => 'integer',
+            'status' => ExamAttemptEnum::class,
+            'score' => 'integer',
+            'max_score' => 'integer',
+            'time_taken' => 'integer',
+        ];
     }
 
     private function markSectionAsCompleted(): void
@@ -103,26 +119,11 @@ class ExamAttempt extends Model
             'completed_at' => now(),
         ]);
 
-        $formation = $section->module->formation;
+        $formation = $section->formation;
         $enrollment = Enrollment::where('user_id', $this->user_id)
             ->where('formation_id', $formation->id)
             ->first();
 
         $enrollment?->updateProgress();
-    }
-
-    protected function casts(): array
-    {
-        return [
-            'answers' => 'array',
-            'started_at' => 'datetime',
-            'completed_at' => 'datetime',
-            'percentage' => 'decimal:2',
-            'attempt_number' => 'integer',
-            'status' => ExamAttemptEnum::class,
-            'score' => 'integer',
-            'max_score' => 'integer',
-            'time_taken' => 'integer'
-        ];
     }
 }

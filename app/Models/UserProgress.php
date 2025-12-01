@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Models;
 
 use App\Enums\UserProgressEnum;
@@ -9,7 +11,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 
-class UserProgress extends Model
+final class UserProgress extends Model
 {
     /** @use HasFactory<UserProgressFactory> */
     use HasFactory;
@@ -41,7 +43,7 @@ class UserProgress extends Model
         if ($this->status === 'not_started') {
             $this->update([
                 'status' => 'in_progress',
-                'started_at' => now()
+                'started_at' => now(),
             ]);
         }
     }
@@ -51,11 +53,11 @@ class UserProgress extends Model
         $this->update([
             'status' => 'completed',
             'progress_percentage' => 100,
-            'completed_at' => now()
+            'completed_at' => now(),
         ]);
 
         if ($this->trackable instanceof Chapter) {
-            $formation = $this->trackable->section->module->formation;
+            $formation = $this->trackable->section->formation;
             $enrollment = Enrollment::query()
                 ->where('user_id', '=', $this->user_id)
                 ->where('formation_id', '=', $formation->id)

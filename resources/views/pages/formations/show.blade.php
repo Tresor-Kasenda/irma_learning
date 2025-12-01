@@ -25,17 +25,17 @@
                                 {!! $formation->description !!}
                             </div>
 
-                            {{-- Aperçu des modules --}}
+                            {{-- Aperçu des sections --}}
                             <div class="mt-8">
                                 <h2 class="text-2xl font-semibold mb-4">Contenu de la formation</h2>
                                 <div class="space-y-4">
-                                    @foreach($formation->modules as $module)
+                                    @foreach($formation->sections as $section)
                                         <div class="border rounded-lg p-4">
-                                            <h3 class="text-lg font-medium">{{ $module->title }}</h3>
-                                            <p class="text-gray-600 mt-2">{{ $module->description }}</p>
+                                            <h3 class="text-lg font-medium">{{ $section->title }}</h3>
+                                            <p class="text-gray-600 mt-2">{{ $section->description }}</p>
                                             <div class="mt-2 text-sm text-gray-500">
-                                                {{ $module->estimated_duration }} minutes • 
-                                                {{ $module->sections_count }} sections
+                                                {{ $section->duration }} minutes • 
+                                                {{ $section->chapters_count }} chapitres
                                             </div>
                                         </div>
                                     @endforeach
