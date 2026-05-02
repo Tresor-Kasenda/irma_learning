@@ -6,7 +6,7 @@ namespace App\Filament\Resources\SectionResource\Pages;
 
 use App\Filament\Resources\SectionResource;
 use App\Models\Section;
-use App\Services\DocumentConversionService;
+use App\Services\ChapterContentService;
 use App\Services\ReadingDurationCalculatorService;
 use Exception;
 use Filament\Actions;
@@ -133,7 +133,36 @@ final class ViewSection extends ViewRecord
                         ->live()
                         ->afterStateUpdated(function ($state, Set $set, Get $get) {
                             if ($state) {
-                                static::extractPdfContent($state, $set, $get);
+                                try {
+                                    $service = app(ChapterContentService::class);
+                                    $dto = $service->extractFromPdf($state);
+
+                                    $set('title', $dto->title);
+                                    $set('content', $dto->content);
+                                    $set('duration_minutes', $dto->durationMinutes);
+                                    $set('content_type', 'pdf');
+
+                                    if ($dto->coverImage) {
+                                        $set('cover_image', $dto->coverImage);
+                                    }
+
+                                    if ($dto->markdownFile) {
+                                        $set('markdown_file', $dto->markdownFile);
+                                    }
+
+                                    Notification::make()
+                                        ->title('Extraction PDF réussie')
+                                        ->body("Le contenu a été extrait avec succès. Durée estimée: {$dto->durationMinutes} minutes.")
+                                        ->success()
+                                        ->send();
+
+                                } catch (Exception $e) {
+                                    Notification::make()
+                                        ->title('Erreur d\'extraction PDF')
+                                        ->body('Erreur lors de l\'extraction: ' . $e->getMessage())
+                                        ->danger()
+                                        ->send();
+                                }
                             }
                         })
                         ->afterStateHydrated(function ($component, $state) {
@@ -218,80 +247,7 @@ final class ViewSection extends ViewRecord
         ];
     }
 
-    /**
-     * Extrait le contenu du PDF et met à jour les champs du formulaire
-     */
-    protected static function extractPdfContent($pdfFile, Set $set, Get $get): void
-    {
-        try {
-            if (!$pdfFile) {
-                return;
-            }
 
-            $filePath = '';
-            $originalFileName = null;
-
-            if ($pdfFile instanceof TemporaryUploadedFile) {
-                $filePath = $pdfFile->getRealPath();
-                $pdfFile->store('chapters', 'public');
-
-                $originalFileName = pathinfo($pdfFile->getClientOriginalName(), PATHINFO_FILENAME);
-
-                $pdfFile = $filePath;
-            }
-
-            if (!$filePath || !file_exists($filePath)) {
-                throw new Exception('Impossible de trouver le fichier PDF.');
-            }
-
-            $extractionService = app(DocumentConversionService::class);
-            $result = $extractionService->convert($filePath, [
-                'generateThumbnail' => true,
-                'ignorePageNumbers' => true,
-                'customTitle' => $originalFileName,
-            ]);
-
-            $extractedData = [
-                'title' => $result['title'],
-                'description' => $result['description'],
-                'content' => $result['content'],
-                'estimated_duration' => $result['estimated_duration'],
-                'thumbnail_path' => $result['thumbnail_path'] ?? null,
-            ];
-
-            $durationService = app(ReadingDurationCalculatorService::class);
-            $readingAnalysis = $durationService->calculateReadingDuration(
-                $extractedData['content'],
-                'average' // Niveau par défaut
-            );
-
-            $set('title', $extractedData['title']);
-            $set('content', $extractedData['content']);
-            $set('duration_minutes', $readingAnalysis['total_minutes']);
-            $set('content_type', 'pdf');
-
-            if (!empty($extractedData['thumbnail_path'])) {
-                $set('cover_image', $extractedData['thumbnail_path']);
-            }
-
-            if (!empty($extractedData['markdown_file'])) {
-                $set('markdown_file', $extractedData['markdown_file']);
-            }
-
-            Notification::make()
-                ->title('Extraction PDF réussie')
-                ->body("Le contenu a été extrait avec succès. Durée estimée: {$extractedData['estimated_duration']} minutes.")
-                ->success()
-                ->send();
-
-        } catch (Exception $e) {
-            Notification::make()
-                ->title('Erreur d\'extraction PDF')
-                ->body('Erreur lors de l\'extraction: ' . $e->getMessage())
-                ->danger()
-                ->send();
-        }
-    }
 
     protected function calculateChapterDuration(): int
     {

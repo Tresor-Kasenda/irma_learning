@@ -122,11 +122,7 @@ final class MarkdownProcessor implements ContentProcessorInterface
 
             $currentParagraph[] = $trimmedLine;
 
-            if ($this->endsWithStrongPunctuation($trimmedLine)) {
-                $formattedLines[] = implode(' ', $currentParagraph);
-                $currentParagraph = [];
-                $formattedLines[] = '';
-            }
+
         }
 
         if (!empty($currentParagraph)) {
@@ -206,14 +202,7 @@ final class MarkdownProcessor implements ContentProcessorInterface
             return true;
         }
 
-        if (
-            mb_strlen($line) < 80 &&
-            preg_match('/^[A-ZÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖØÙÚÛÜÝÞ]/u', $line) &&
-            !preg_match('/[.!,;:]\s*$/', $line) &&
-            !preg_match('/[.!?]\s+[A-Z]/', $line) // Pas de fin de phrase au milieu
-        ) {
-            return true;
-        }
+
 
         return false;
     }

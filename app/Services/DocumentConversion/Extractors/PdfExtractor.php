@@ -203,13 +203,20 @@ final class PdfExtractor implements DocumentExtractorInterface
 
         $lines = explode("\n", $text);
         $cleanedLines = [];
+        $consecutiveEmptyLines = 0;
 
         foreach ($lines as $line) {
             $line = mb_trim($line);
 
             if (empty($line)) {
+                $consecutiveEmptyLines++;
+                if ($consecutiveEmptyLines <= 1) {
+                    $cleanedLines[] = '';
+                }
                 continue;
             }
+
+            $consecutiveEmptyLines = 0;
 
             if (mb_strlen($line) < 3 && !$this->isImportantShortLine($line)) {
                 continue;
