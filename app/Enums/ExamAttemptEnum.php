@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Enums;
 
 enum ExamAttemptEnum: string
@@ -12,14 +14,13 @@ enum ExamAttemptEnum: string
 
     case CANCELLED = 'cancelled';
 
-
     public function getLabel(): string
     {
         return match ($this) {
-            self::IN_PROGRESS => "En cours",
-            self::COMPLETED => "Terminé",
-            self::FAILED => "Échoué",
-            self::CANCELLED => "Annulé",
+            self::IN_PROGRESS => 'En cours',
+            self::COMPLETED => 'Terminé',
+            self::FAILED => 'Échoué',
+            self::CANCELLED => 'Annulé',
         };
     }
 }

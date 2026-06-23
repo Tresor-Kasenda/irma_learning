@@ -1,17 +1,19 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 
-class EnsureAllChaptersCompleted
+final class EnsureAllChaptersCompleted
 {
     /**
      * Handle an incoming request.
      *
-     * @param Closure(Request): (Response) $next
+     * @param  Closure(Request): (Response)  $next
      */
     public function handle(Request $request, Closure $next): Response
     {
@@ -24,9 +26,9 @@ class EnsureAllChaptersCompleted
             })
             ->doesntExist();
 
-        if (!$allChaptersCompleted) {
-            return redirect()->route('student.course.learning', [
-                'masterClass' => $masterClass
+        if (! $allChaptersCompleted) {
+            return redirect()->route('master-class', [
+                'masterClass' => $masterClass,
             ])->with('error', 'Vous devez compléter tous les chapitres avant de passer l\'examen final.');
         }
 

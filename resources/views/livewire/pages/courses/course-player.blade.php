@@ -55,43 +55,61 @@
                 </div>
 
                 {{-- Contenu du chapitre --}}
-                @if($currentChapter->content_type === 'video' && $currentChapter->media_url)
+                @if($currentChapter->content_type?->value === 'video' && $currentChapter->video_url)
                     {{-- Lecteur vidéo --}}
                     <div class="mb-8 rounded-lg overflow-hidden bg-black aspect-video">
                         <video
                             controls
                             class="w-full h-full"
-                            poster="{{ $currentChapter->thumbnail ?? '' }}"
                             controlsList="nodownload"
                         >
-                            <source src="{{ Storage::url($currentChapter->media_url) }}" type="video/mp4">
+                            <source src="{{ Storage::url($currentChapter->video_url) }}" type="video/mp4">
                             Votre navigateur ne supporte pas la lecture de vidéos.
                         </video>
                     </div>
-                @elseif($currentChapter->content_type === 'text' || $currentChapter->content)
-                    {{-- Contenu texte converti en HTML --}}
+                @elseif($currentChapter->content_type?->value === 'audio' && $currentChapter->audio_url)
+                    {{-- Lecteur audio --}}
+                    <div class="mb-8">
+                        <div class="bg-gray-800 rounded-xl p-6">
+                            <div class="flex items-center gap-4 mb-4">
+                                <div class="w-16 h-16 bg-primary-600 rounded-full flex items-center justify-center flex-shrink-0">
+                                    <svg class="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 24 24">
+                                        <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <h3 class="text-white font-semibold text-lg">{{ $currentChapter->title }}</h3>
+                                    @if($currentChapter->duration_minutes)
+                                    <p class="text-gray-400 text-sm">Durée : {{ $currentChapter->duration_minutes }} min</p>
+                                    @endif
+                                </div>
+                            </div>
+                            <audio
+                                controls
+                                class="w-full"
+                                controlsList="nodownload"
+                                style="filter: invert(1) hue-rotate(180deg);"
+                            >
+                                <source src="{{ Storage::url($currentChapter->audio_url) }}">
+                                Votre navigateur ne supporte pas la lecture audio.
+                            </audio>
+                        </div>
+                    </div>
+                @endif
+
+                {{-- Contenu texte (affiché en complément pour audio/pdf/text) --}}
+                @if($currentChapter->content && $currentChapter->content_type?->value !== 'video')
                     <div class="mb-8">
                         <div class="bg-gray-800 rounded-lg p-6">
                             {!! $htmlContent !!}
                         </div>
                     </div>
-                @endif
-
-                {{-- Documents/Ressources additionnelles --}}
-                @if($currentChapter->media_url && $currentChapter->content_type === 'document')
-                <div class="mb-8">
-                    <h3 class="text-xl font-semibold text-white mb-4">Ressources</h3>
-                    <div class="bg-gray-800 rounded-lg p-4">
-                        <a href="{{ Storage::url($currentChapter->media_url) }}"
-                           target="_blank"
-                           class="flex items-center gap-3 text-primary-400 hover:text-primary-300 transition-colors">
-                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-                            </svg>
-                            <span>Télécharger le document</span>
-                        </a>
+                @elseif($currentChapter->content_type?->value === 'text')
+                    <div class="mb-8">
+                        <div class="bg-gray-800 rounded-lg p-6">
+                            {!! $htmlContent !!}
+                        </div>
                     </div>
-                </div>
                 @endif
 
                 {{-- Boutons de navigation --}}

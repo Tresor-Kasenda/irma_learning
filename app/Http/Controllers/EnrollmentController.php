@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers;
 
 use App\Models\Enrollment;
@@ -8,7 +10,7 @@ use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
-class EnrollmentController extends Controller
+final class EnrollmentController extends Controller
 {
     /**
      * Generate and download enrollment invoice
@@ -17,7 +19,7 @@ class EnrollmentController extends Controller
     {
         $enrollment->load(['user', 'formation']);
 
-        if (!$enrollment->payment_processed_at) {
+        if (! $enrollment->payment_processed_at) {
             abort(404, 'Cette facture n\'est pas encore disponible');
         }
 
@@ -34,7 +36,7 @@ class EnrollmentController extends Controller
 
         $filename = sprintf(
             'facture-%s-%s.pdf',
-            str_pad($enrollment->id, 6, '0', STR_PAD_LEFT),
+            mb_str_pad($enrollment->id, 6, '0', STR_PAD_LEFT),
             $enrollment->payment_processed_at->format('Y-m-d')
         );
 
@@ -52,7 +54,7 @@ class EnrollmentController extends Controller
     {
         $request->validate([
             'email' => 'required|email',
-            'message' => 'nullable|string|max:1000'
+            'message' => 'nullable|string|max:1000',
         ]);
 
         try {
@@ -68,13 +70,13 @@ class EnrollmentController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'Facture envoyée par email avec succès'
+                'message' => 'Facture envoyée par email avec succès',
             ]);
 
         } catch (Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Erreur lors de l\'envoi de la facture'
+                'message' => 'Erreur lors de l\'envoi de la facture',
             ], 500);
         }
     }
@@ -93,13 +95,13 @@ class EnrollmentController extends Controller
 
         $filename = sprintf(
             'invoices/facture-%s-%s.pdf',
-            str_pad($enrollment->id, 6, '0', STR_PAD_LEFT),
+            mb_str_pad($enrollment->id, 6, '0', STR_PAD_LEFT),
             $enrollment->payment_processed_at->format('Y-m-d')
         );
 
         Storage::disk('local')->put($filename, $pdf->output());
 
-        return storage_path('app/' . $filename);
+        return storage_path('app/'.$filename);
     }
 
     /**
@@ -107,13 +109,13 @@ class EnrollmentController extends Controller
      */
     public function refund(Enrollment $enrollment, Request $request)
     {
-        if (!auth()->user()->isAdmin() && !auth()->user()->isSuperAdmin()) {
+        if (! auth()->user()->isAdmin() && ! auth()->user()->isSuperAdmin()) {
             abort(403, 'Unauthorized action.');
         }
 
         $request->validate([
             'reason' => 'required|string|max:500',
-            'refund_amount' => 'nullable|numeric|min:0|max:' . $enrollment->amount_paid,
+            'refund_amount' => 'nullable|numeric|min:0|max:'.$enrollment->amount_paid,
         ]);
 
         if ($enrollment->refunded_at) {
@@ -133,7 +135,7 @@ class EnrollmentController extends Controller
             return back()->with('success', 'Remboursement effectué avec succès');
 
         } catch (Exception $e) {
-            return back()->withErrors(['error' => 'Erreur lors du remboursement: ' . $e->getMessage()]);
+            return back()->withErrors(['error' => 'Erreur lors du remboursement: '.$e->getMessage()]);
         }
     }
 }

@@ -5,7 +5,7 @@ namespace App\Filament\Resources\ExamResource\RelationManagers;
 use App\Enums\ExamAttemptEnum;
 use App\Models\ExamAttempt;
 use Filament\Forms;
-use Filament\Forms\Form;
+use Filament\Schemas\Schema;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Tables;
 use Filament\Tables\Table;
@@ -18,11 +18,11 @@ class AttemptsRelationManager extends RelationManager
 
     protected static ?string $recordTitleAttribute = 'id';
 
-    public function form(Form $form): Form
+    public function form(Schema $schema): Schema
     {
-        return $form
+        return $schema
             ->schema([
-                Forms\Components\Section::make('Informations de la tentative')
+                \Filament\Schemas\Components\Section::make('Informations de la tentative')
                     ->schema([
                         Forms\Components\Select::make('user_id')
                             ->label('Utilisateur')
@@ -37,7 +37,7 @@ class AttemptsRelationManager extends RelationManager
                             ->required()
                             ->default('in_progress'),
 
-                        Forms\Components\Grid::make(3)
+                        \Filament\Schemas\Components\Grid::make(3)
                             ->schema([
                                 Forms\Components\TextInput::make('attempt_number')
                                     ->label('Numéro de tentative')
@@ -63,7 +63,7 @@ class AttemptsRelationManager extends RelationManager
                             ->minValue(0)
                             ->maxValue(100),
 
-                        Forms\Components\Grid::make(2)
+                        \Filament\Schemas\Components\Grid::make(2)
                             ->schema([
                                 Forms\Components\DateTimePicker::make('started_at')
                                     ->label('Commencé le')
@@ -192,27 +192,27 @@ class AttemptsRelationManager extends RelationManager
                     ->toggle(),
             ])
             ->headerActions([
-                Tables\Actions\CreateAction::make()
+                \Filament\Actions\CreateAction::make()
                     ->label('Nouvelle tentative')
                     ->icon('heroicon-o-plus')
                     ->slideOver(),
             ])
             ->actions([
-                Tables\Actions\ActionGroup::make([
-                    Tables\Actions\ViewAction::make()
+                \Filament\Actions\ActionGroup::make([
+                    \Filament\Actions\ViewAction::make()
                         ->label('Voir')
                         ->slideOver()
                         ->icon('heroicon-o-eye'),
-                    Tables\Actions\EditAction::make()
+                    \Filament\Actions\EditAction::make()
                         ->label('Modifier')
                         ->slideOver()
                         ->icon('heroicon-o-pencil'),
-                    Tables\Actions\DeleteAction::make()
+                    \Filament\Actions\DeleteAction::make()
                         ->label('Supprimer')
                         ->icon('heroicon-o-trash')
                         ->requiresConfirmation(),
 
-                    Tables\Actions\Action::make('view_answers')
+                    \Filament\Actions\Action::make('view_answers')
                         ->label('Voir réponses')
                         ->icon('heroicon-o-document-text')
                         ->color('info')
@@ -220,7 +220,7 @@ class AttemptsRelationManager extends RelationManager
                         ->url(fn(ExamAttempt $record) => route('filament.admin.resources.exam-attempts.view', $record))
                         ->openUrlInNewTab(),
 
-                    Tables\Actions\Action::make('complete_attempt')
+                    \Filament\Actions\Action::make('complete_attempt')
                         ->label('Terminer tentative')
                         ->icon('heroicon-o-check-circle')
                         ->color('success')
@@ -232,7 +232,7 @@ class AttemptsRelationManager extends RelationManager
                         })
                         ->successNotificationTitle('Tentative terminée'),
 
-                    Tables\Actions\Action::make('reset_attempt')
+                    \Filament\Actions\Action::make('reset_attempt')
                         ->label('Réinitialiser')
                         ->icon('heroicon-o-arrow-path')
                         ->color('warning')
@@ -253,10 +253,10 @@ class AttemptsRelationManager extends RelationManager
                 ])
             ])
             ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
+                \Filament\Actions\BulkActionGroup::make([
+                    \Filament\Actions\DeleteBulkAction::make(),
 
-                    Tables\Actions\BulkAction::make('complete_attempts')
+                    \Filament\Actions\BulkAction::make('complete_attempts')
                         ->label('Terminer les tentatives')
                         ->icon('heroicon-o-check-circle')
                         ->color('success')
@@ -267,7 +267,7 @@ class AttemptsRelationManager extends RelationManager
                         })
                         ->deselectRecordsAfterCompletion(),
 
-                    Tables\Actions\BulkAction::make('export_results')
+                    \Filament\Actions\BulkAction::make('export_results')
                         ->label('Exporter résultats')
                         ->icon('heroicon-o-document-arrow-down')
                         ->color('info')

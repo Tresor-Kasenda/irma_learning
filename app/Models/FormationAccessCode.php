@@ -1,12 +1,14 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class FormationAccessCode extends Model
+final class FormationAccessCode extends Model
 {
     use HasFactory;
 
@@ -16,13 +18,13 @@ class FormationAccessCode extends Model
         'user_id',
         'is_used',
         'used_at',
-        'expires_at'
+        'expires_at',
     ];
 
     protected $casts = [
         'is_used' => 'boolean',
         'used_at' => 'datetime',
-        'expires_at' => 'datetime'
+        'expires_at' => 'datetime',
     ];
 
     public function formation(): BelongsTo

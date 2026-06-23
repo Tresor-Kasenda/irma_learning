@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Models;
 
 use App\Enums\EnrollmentPaymentEnum;
@@ -13,33 +15,12 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Str;
 
-class VerificationCode extends Model
+final class VerificationCode extends Model
 {
     /** @use HasFactory<VerificationCodeFactory> */
     use HasFactory;
 
     protected $guarded = [];
-
-    protected static function boot(): void
-    {
-        parent::boot();
-
-        static::creating(function (VerificationCode $code) {
-            $code->code = $code->generateUniqueCode();
-            $code->expires_at = now()->addHours(24);
-        });
-    }
-
-    private function generateUniqueCode(): string
-    {
-        do {
-            $code = strtoupper(Str::random(8));
-        } while (self::where('code', $code)
-            ->where('expires_at', '>', now())
-            ->exists());
-
-        return $code;
-    }
 
     public function user(): BelongsTo
     {
@@ -73,7 +54,7 @@ class VerificationCode extends Model
             $this->expires_at > now();
     }
 
-    public function markAsUsed(string $ipAddress = null, string $userAgent = null): void
+    public function markAsUsed(?string $ipAddress = null, ?string $userAgent = null): void
     {
         $this->update([
             'status' => VerificationCodeStatusEnum::Used,
@@ -83,25 +64,6 @@ class VerificationCode extends Model
         ]);
 
         $this->createEnrollmentAfterValidation();
-    }
-
-    private function createEnrollmentAfterValidation(): void
-    {
-        $existingEnrollment = Enrollment::where('user_id', $this->user_id)
-            ->where('formation_id', $this->formation_id)
-            ->first();
-
-        if (!$existingEnrollment) {
-            Enrollment::query()
-                ->create([
-                    'user_id' => $this->user_id,
-                    'formation_id' => $this->formation_id,
-                    'status' => EnrollmentStatusEnum::ACTIVE,
-                    'payment_status' => EnrollmentPaymentEnum::PAID,
-                    'enrollment_date' => now(),
-                    'progress_percentage' => 0,
-                ]);
-        }
     }
 
     public function markAsExpired(): void
@@ -120,6 +82,16 @@ class VerificationCode extends Model
         return $this->expires_at->diffForHumans();
     }
 
+    protected static function boot(): void
+    {
+        parent::boot();
+
+        self::creating(function (VerificationCode $code) {
+            $code->code = $code->generateUniqueCode();
+            $code->expires_at = now()->addHours(24);
+        });
+    }
+
     protected function casts(): array
     {
         return [
@@ -128,5 +100,35 @@ class VerificationCode extends Model
             'status' => VerificationCodeStatusEnum::class,
             'type' => VerificationCodeTypeEnum::class,
         ];
+    }
+
+    private function generateUniqueCode(): string
+    {
+        do {
+            $code = mb_strtoupper(Str::random(8));
+        } while (self::where('code', $code)
+            ->where('expires_at', '>', now())
+            ->exists());
+
+        return $code;
+    }
+
+    private function createEnrollmentAfterValidation(): void
+    {
+        $existingEnrollment = Enrollment::where('user_id', $this->user_id)
+            ->where('formation_id', $this->formation_id)
+            ->first();
+
+        if (! $existingEnrollment) {
+            Enrollment::query()
+                ->create([
+                    'user_id' => $this->user_id,
+                    'formation_id' => $this->formation_id,
+                    'status' => EnrollmentStatusEnum::ACTIVE,
+                    'payment_status' => EnrollmentPaymentEnum::PAID,
+                    'enrollment_date' => now(),
+                    'progress_percentage' => 0,
+                ]);
+        }
     }
 }

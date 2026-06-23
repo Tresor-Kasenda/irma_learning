@@ -15,7 +15,7 @@ use Filament\Forms\Components\RichEditor;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
-use Filament\Forms\Form;
+use Filament\Schemas\Schema;
 use Filament\Forms\Get;
 use Filament\Forms\Set;
 use Filament\Notifications\Notification;
@@ -32,11 +32,11 @@ final class ChaptersRelationManager extends RelationManager
 
     protected static ?string $recordTitleAttribute = 'title';
 
-    public function form(Form $form): Form
+    public function form(Schema $schema): Schema
     {
-        return $form
+        return $schema
             ->schema([
-                Forms\Components\Section::make('Informations du chapitre')
+                \Filament\Schemas\Components\Section::make('Informations du chapitre')
                     ->schema([
                         TextInput::make('title')
                             ->label('Titre du chapitre')
@@ -220,7 +220,7 @@ final class ChaptersRelationManager extends RelationManager
                     ->native(false),
             ])
             ->headerActions([
-                Tables\Actions\CreateAction::make()
+                \Filament\Actions\CreateAction::make()
                     ->label('Ajouter un chapitre')
                     ->icon('heroicon-o-plus-circle')
                     ->modalWidth('xl')
@@ -261,19 +261,19 @@ final class ChaptersRelationManager extends RelationManager
                     }),
             ])
             ->actions([
-                Tables\Actions\ActionGroup::make([
-                    Tables\Actions\ViewAction::make()
+                \Filament\Actions\ActionGroup::make([
+                    \Filament\Actions\ViewAction::make()
                         ->url(fn(Chapter $record): string => ChapterResource::getUrl('view', ['record' => $record]))
                         ->label('Voir')
                         ->icon('heroicon-o-eye'),
-                    Tables\Actions\EditAction::make()
+                    \Filament\Actions\EditAction::make()
                         ->label('Modifier')
                         ->slideOver(),
-                    Tables\Actions\DeleteAction::make()
+                    \Filament\Actions\DeleteAction::make()
                         ->label('Supprimer')
                         ->requiresConfirmation(),
 
-                    Tables\Actions\Action::make('preview')
+                    \Filament\Actions\Action::make('preview')
                         ->label('Aperçu')
                         ->icon('heroicon-o-eye')
                         ->color('info')
@@ -281,7 +281,7 @@ final class ChaptersRelationManager extends RelationManager
                         ->modalContent(fn(Chapter $record) => view('filament.resources.chapter.preview', ['chapter' => $record]))
                         ->modalWidth('xl'),
 
-                    Tables\Actions\Action::make('duplicate')
+                    \Filament\Actions\Action::make('duplicate')
                         ->label('Dupliquer')
                         ->icon('heroicon-o-document-duplicate')
                         ->color('warning')
@@ -297,24 +297,24 @@ final class ChaptersRelationManager extends RelationManager
                 ]),
             ])
             ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
-                    Tables\Actions\BulkAction::make('activate')
+                \Filament\Actions\BulkActionGroup::make([
+                    \Filament\Actions\DeleteBulkAction::make(),
+                    \Filament\Actions\BulkAction::make('activate')
                         ->label('Activer')
                         ->icon('heroicon-o-check-circle')
                         ->color('success')
                         ->action(fn(Collection $records) => $records->each->update(['is_active' => true])),
-                    Tables\Actions\BulkAction::make('deactivate')
+                    \Filament\Actions\BulkAction::make('deactivate')
                         ->label('Désactiver')
                         ->icon('heroicon-o-x-circle')
                         ->color('danger')
                         ->action(fn(Collection $records) => $records->each->update(['is_active' => false])),
-                    Tables\Actions\BulkAction::make('make_free')
+                    \Filament\Actions\BulkAction::make('make_free')
                         ->label('Rendre gratuit')
                         ->icon('heroicon-o-gift')
                         ->color('success')
                         ->action(fn(Collection $records) => $records->each->update(['is_free' => true])),
-                    Tables\Actions\BulkAction::make('make_paid')
+                    \Filament\Actions\BulkAction::make('make_paid')
                         ->label('Rendre payant')
                         ->icon('heroicon-o-lock-closed')
                         ->color('warning')

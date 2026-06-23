@@ -122,7 +122,7 @@
                                 </dl>
 
                                 <div class="mt-4">
-                                    <a href="{{ route('student.learning', $formation) }}"
+                                    <a href="{{ route('course.player', $formation) }}"
                                        class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700">
                                         Continuer
                                     </a>

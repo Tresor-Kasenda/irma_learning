@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Livewire\Pages;
 
 use App\Models\Formation;
@@ -10,7 +12,7 @@ use Livewire\Component;
 
 #[Layout('welcome')]
 #[Title("Page d'accueil")]
-class HomePage extends Component
+final class HomePage extends Component
 {
     public function render(): View
     {

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Models;
 
 use Database\Factories\QuestionOptionFactory;
@@ -8,7 +10,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-class QuestionOption extends Model
+final class QuestionOption extends Model
 {
     /** @use HasFactory<QuestionOptionFactory> */
     use HasFactory;

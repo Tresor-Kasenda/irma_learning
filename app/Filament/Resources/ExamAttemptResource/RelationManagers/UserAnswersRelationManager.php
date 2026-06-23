@@ -4,7 +4,7 @@ namespace App\Filament\Resources\ExamAttemptResource\RelationManagers;
 
 use App\Models\UserAnswer;
 use Filament\Forms;
-use Filament\Forms\Form;
+use Filament\Schemas\Schema;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Tables;
 use Filament\Tables\Table;
@@ -106,14 +106,14 @@ class UserAnswersRelationManager extends RelationManager
                     ->toggle(),
             ])
             ->headerActions([
-                Tables\Actions\CreateAction::make(),
+                \Filament\Actions\CreateAction::make(),
             ])
             ->actions([
-                Tables\Actions\ViewAction::make(),
-                Tables\Actions\EditAction::make(),
-                Tables\Actions\DeleteAction::make(),
+                \Filament\Actions\ViewAction::make(),
+                \Filament\Actions\EditAction::make(),
+                \Filament\Actions\DeleteAction::make(),
 
-                Tables\Actions\Action::make('add_feedback')
+                \Filament\Actions\Action::make('add_feedback')
                     ->label('Ajouter feedback')
                     ->icon('heroicon-o-chat-bubble-left-ellipsis')
                     ->color('info')
@@ -128,7 +128,7 @@ class UserAnswersRelationManager extends RelationManager
                     })
                     ->successNotificationTitle('Feedback ajouté'),
 
-                Tables\Actions\Action::make('recalculate_points')
+                \Filament\Actions\Action::make('recalculate_points')
                     ->label('Recalculer points')
                     ->icon('heroicon-o-calculator')
                     ->color('warning')
@@ -138,7 +138,7 @@ class UserAnswersRelationManager extends RelationManager
                     })
                     ->successNotificationTitle('Points recalculés'),
 
-                Tables\Actions\Action::make('view_question')
+                \Filament\Actions\Action::make('view_question')
                     ->label('Voir question')
                     ->icon('heroicon-o-eye')
                     ->color('info')
@@ -151,10 +151,10 @@ class UserAnswersRelationManager extends RelationManager
                     ->modalWidth('4xl'),
             ])
             ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
+                \Filament\Actions\BulkActionGroup::make([
+                    \Filament\Actions\DeleteBulkAction::make(),
 
-                    Tables\Actions\BulkAction::make('add_bulk_feedback')
+                    \Filament\Actions\BulkAction::make('add_bulk_feedback')
                         ->label('Ajouter feedback')
                         ->icon('heroicon-o-chat-bubble-left-ellipsis')
                         ->color('info')
@@ -169,7 +169,7 @@ class UserAnswersRelationManager extends RelationManager
                         })
                         ->deselectRecordsAfterCompletion(),
 
-                    Tables\Actions\BulkAction::make('recalculate_all_points')
+                    \Filament\Actions\BulkAction::make('recalculate_all_points')
                         ->label('Recalculer tous les points')
                         ->icon('heroicon-o-calculator')
                         ->color('warning')
@@ -179,7 +179,7 @@ class UserAnswersRelationManager extends RelationManager
                         })
                         ->deselectRecordsAfterCompletion(),
 
-                    Tables\Actions\BulkAction::make('export_answers')
+                    \Filament\Actions\BulkAction::make('export_answers')
                         ->label('Exporter réponses')
                         ->icon('heroicon-o-document-arrow-down')
                         ->color('info')
@@ -206,11 +206,11 @@ class UserAnswersRelationManager extends RelationManager
             ->defaultSort('created_at', 'desc');
     }
 
-    public function form(Form $form): Form
+    public function form(Schema $schema): Schema
     {
-        return $form
+        return $schema
             ->schema([
-                Forms\Components\Section::make('Réponse de l\'utilisateur')
+                \Filament\Schemas\Components\Section::make('Réponse de l\'utilisateur')
                     ->schema([
                         Forms\Components\Select::make('question_id')
                             ->label('Question')
@@ -231,7 +231,7 @@ class UserAnswersRelationManager extends RelationManager
                             ->rows(3)
                             ->columnSpanFull(),
 
-                        Forms\Components\Grid::make(2)
+                        \Filament\Schemas\Components\Grid::make(2)
                             ->schema([
                                 Forms\Components\Toggle::make('is_correct')
                                     ->label('Réponse correcte')

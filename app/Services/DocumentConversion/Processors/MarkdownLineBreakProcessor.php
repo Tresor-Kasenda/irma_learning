@@ -29,6 +29,11 @@ final class MarkdownLineBreakProcessor implements ContentProcessorInterface
         return $content;
     }
 
+    public function getPriority(): int
+    {
+        return 55; // Entre MarkdownProcessor (50) et ContentStructureProcessor (60)
+    }
+
     /**
      * Assure que chaque élément Markdown est correctement séparé sur sa propre ligne
      */
@@ -68,10 +73,5 @@ final class MarkdownLineBreakProcessor implements ContentProcessorInterface
         $markdown = preg_replace('/(\d+\.\s+.+)\n([^\d\n#\|>-])/', "$1\n\n$2", $markdown);
 
         return mb_trim($markdown);
-    }
-
-    public function getPriority(): int
-    {
-        return 55; // Entre MarkdownProcessor (50) et ContentStructureProcessor (60)
     }
 }

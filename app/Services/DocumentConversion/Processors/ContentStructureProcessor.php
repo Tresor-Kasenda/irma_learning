@@ -18,19 +18,20 @@ final class ContentStructureProcessor implements ContentProcessorInterface
     private const array TITLE_PATTERNS = [
         // Titres avec ## déjà présents
         '/^#{1,6}\s+(.+)$/' => 'markdown',
-        
+
         // H1: Chapitres, Parties, Sections majeures
         '/^(chapitre|chapter|partie|part|section|module)\s+(\d+|[ivxlcdm]+)[\s\:\-]*(.*)$/i' => 'h1_chapter',
-        
+
         // H2: Titres numérotés (1. Titre, I. Titre)
         '/^(\d+|[IVXLCDM]+)\.\s+([A-ZÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖØÙÚÛÜÝÞ].+)$/' => 'h2_numbered',
-        
+
         // H3: Sous-sections (1.1 Titre, 1.1. Titre, A. Titre)
         '/^(\d+\.\d+\.?|[A-Z]\.)\s+([A-ZÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖØÙÚÛÜÝÞ].+)$/' => 'h3_subsection',
-        
+
         // Titres en MAJUSCULES (H2 par défaut, H1 si très court et pas de chiffres)
-        '/^([A-ZÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖØÙÚÛÜÝÞ\s\-\'\",]{5,})$/' => 'uppercase',
-        
+        // La virgule est exclue : "FRANCE, L'EUROPE ET..." n'est pas un titre
+        '/^([A-ZÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖØÙÚÛÜÝÞ\s\-\']{5,80})$/' => 'uppercase',
+
         // Titres courts terminés par deux points (H3)
         '/^([A-ZÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖØÙÚÛÜÝÞ][^:\n]{3,50}):$/' => 'h3_colon',
     ];
@@ -40,8 +41,8 @@ final class ContentStructureProcessor implements ContentProcessorInterface
         '/^([A-Z])\)\s+([A-ZÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖØÙÚÛÜÝÞ].+)$/' => 'subsection',
         // Sous-sections avec lettres minuscules après un titre (a), b), c))
         '/^([a-z])\)\s+([A-ZÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖØÙÚÛÜÝÞ].+)$/' => 'subsection',
-        // Listes à puces (tous les caractères Unicode de puces)
-        '/^[•●○◦▪▫■□▸►▹‣⁃⁌⁍◘◙◉◎⦾⦿⚫⚪🔘🔲🔳➢➣➤➥➔→⇒➡\-\*\+−–—o]\s+(.+)$/u' => 'bullet',
+        // Listes à puces — "o" et "—" retirés (voir MarkdownProcessor::isBulletPoint)
+        '/^[•●○◦▪▫■□▸►▹‣⁃⁌⁍◘◙◉◎⦾⦿⚫⚪🔘🔲🔳➢➣➤➥➔→⇒➡\-\*\+−–]\s+(.+)$/u' => 'bullet',
         // Listes numérotées avec point
         '/^(\d+)\.\s+(.+)$/' => 'numbered',
         // Listes avec parenthèses (chiffres uniquement)
@@ -117,16 +118,16 @@ final class ContentStructureProcessor implements ContentProcessorInterface
                 // Supprimer les # existants et re-détecter pour avoir un niveau cohérent
                 $cleanedLine = preg_replace('/^#{1,6}\s*/', '', $trimmedLine);
                 $titleInfo = $this->detectTitle($cleanedLine);
-                
+
                 if ($titleInfo) {
                     $level = $this->determineTitleLevel($titleInfo, $titleHierarchy);
                     $titleText = $this->extractTitleText($cleanedLine, $titleInfo);
-                    
-                    if (!empty($structuredLines) && mb_trim(end($structuredLines)) !== '') {
+
+                    if (! empty($structuredLines) && mb_trim(end($structuredLines)) !== '') {
                         $structuredLines[] = '';
                     }
-                    
-                    $structuredLines[] = str_repeat('#', $level) . ' ' . $titleText;
+
+                    $structuredLines[] = str_repeat('#', $level).' '.$titleText;
                     $structuredLines[] = '';
                     $titleHierarchy[$level] = $titleText;
                 } else {
@@ -208,10 +209,10 @@ final class ContentStructureProcessor implements ContentProcessorInterface
     private function determineUppercaseLevel(string $line): int
     {
         // Si très court (< 30 chars) et pas de chiffres -> H1 potentiel
-        if (mb_strlen($line) < 30 && !preg_match('/\d/', $line)) {
+        if (mb_strlen($line) < 30 && ! preg_match('/\d/', $line)) {
             return 1;
         }
-        
+
         return 2;
     }
 
@@ -341,10 +342,11 @@ final class ContentStructureProcessor implements ContentProcessorInterface
 
     /**
      * Vérifie si une ligne est spéciale (titre, liste, tableau, etc.)
+     * Le tiret cadratin "—" a été retiré : il introduit le dialogue, pas une liste.
      */
     private function isSpecialLine(string $line): bool
     {
-        return (bool) preg_match('/^(#{1,6}\s|[•●○◦▪▫■□▸►▹‣⁃⁌⁍◘◙◉◎⦾⦿⚫⚪🔘🔲🔳➢➣➤➥➔→⇒➡\-\*\+−–—]\s|\d+\.\s|[a-z]\)\s|\|.*\||```|>|\$\$)/iu', $line);
+        return (bool) preg_match('/^(#{1,6}\s|[•●○◦▪▫■□▸►▹‣⁃⁌⁍◘◙◉◎⦾⦿⚫⚪🔘🔲🔳➢➣➤➥➔→⇒➡\-\*\+−–]\s|\d+\.\s|[a-z]\)\s|\|.*\||```|>|\$\$)/iu', $line);
     }
 
     /**
@@ -481,8 +483,8 @@ final class ContentStructureProcessor implements ContentProcessorInterface
      */
     private function cleanupSpacing(string $markdown): string
     {
-        // Remplacer 3+ lignes vides par 2
-        $markdown = preg_replace('/\n{4,}/', "\n\n\n", $markdown);
+        // Maximum one blank line between blocks
+        $markdown = preg_replace('/\n{3,}/', "\n\n", $markdown);
 
         // Supprimer les espaces en fin de ligne
         $markdown = preg_replace('/[ \t]+$/m', '', $markdown);

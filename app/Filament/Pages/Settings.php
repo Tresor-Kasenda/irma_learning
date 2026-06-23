@@ -3,20 +3,21 @@
 namespace App\Filament\Pages;
 
 use App\Models\Setting;
+use BackedEnum;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
+use UnitEnum;
 
 class Settings extends Page
 {
-    protected static ?string $navigationIcon = 'heroicon-o-cog-6-tooth';
-    protected static string $view = 'filament.pages.settings';
-    protected static ?string $navigationGroup = 'Administration';
+    protected static BackedEnum|string|null $navigationIcon = 'heroicon-o-cog-6-tooth';
+    protected static string|UnitEnum|null $navigationGroup = 'Administration';
     protected static ?string $navigationLabel = 'Paramètres';
     protected static ?int $navigationSort = 5;
-
     public ?array $data = [];
+    protected string $view = 'filament.pages.settings';
 
     public function mount(): void
     {

@@ -14,6 +14,7 @@ use App\Livewire\Pages\Frontend\Payments\StudentPayment;
 use App\Livewire\Pages\HomePage;
 use App\Livewire\Pages\Profile;
 use App\Livewire\Pages\Students\DashboardStudent;
+use App\Livewire\ValidateFormationAccess;
 use Illuminate\Support\Facades\Route;
 use Livewire\Volt\Volt;
 
@@ -28,6 +29,11 @@ Volt::route('/nos-tarifs', 'pages.pricings')->name('pages.pricings');
 Route::middleware('auth')->group(function () {
     // Redirection vers la liste des formations après connexion
     Route::get('/dashboard', DashboardStudent::class)->name('dashboard');
+    Route::get('/formations', DashboardStudent::class)->name('formations-lists');
+
+    // Validation code d'accès formation après paiement
+    Route::get('/formation/{formation}/validate', ValidateFormationAccess::class)
+        ->name('student.formations.validate-code');
 
     // Page profil utilisateur avec statistiques
     Route::get('/profile', Profile::class)->name('profile');
@@ -59,4 +65,4 @@ Route::middleware('auth')->group(function () {
     });
 });
 
-require __DIR__ . '/auth.php';
+require __DIR__.'/auth.php';

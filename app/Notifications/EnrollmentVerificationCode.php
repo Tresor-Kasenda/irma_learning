@@ -17,10 +17,8 @@ final class EnrollmentVerificationCode extends Notification implements ShouldQue
 
     public function __construct(
         private readonly VerificationCode $verificationCode,
-        private readonly Formation        $formation
-    )
-    {
-    }
+        private readonly Formation $formation
+    ) {}
 
     public function via(object $notifiable): array
     {
@@ -31,12 +29,12 @@ final class EnrollmentVerificationCode extends Notification implements ShouldQue
     {
         return (new MailMessage)
             ->subject('Code de vérification pour votre inscription')
-            ->greeting('Bonjour ' . $notifiable->name . ',')
-            ->line('Vous avez demandé à vous inscrire à la formation : **' . $this->formation->title . '**')
+            ->greeting('Bonjour '.$notifiable->name.',')
+            ->line('Vous avez demandé à vous inscrire à la formation : **'.$this->formation->title.'**')
             ->line('Voici votre code de vérification :')
-            ->line('**' . $this->verificationCode->code . '**')
+            ->line('**'.$this->verificationCode->code.'**')
             ->line('Ce code est valide pendant 24 heures et ne peut être utilisé qu\'une seule fois.')
-            ->action('Continuer l\'inscription', url('/formations/' . $this->formation->slug . '/enroll'))
+            ->action('Continuer l\'inscription', url('/formations/'.$this->formation->slug.'/enroll'))
             ->line('Si vous n\'avez pas demandé cette inscription, ignorez cet email.')
             ->salutation('Cordialement, L\'équipe de formation');
     }

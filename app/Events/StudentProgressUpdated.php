@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Events;
 
 use App\Models\Formation;
@@ -10,28 +12,26 @@ use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 
-class StudentProgressUpdated implements ShouldBroadcast
+final class StudentProgressUpdated implements ShouldBroadcast
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
     public function __construct(
-        public User      $user,
+        public User $user,
         public Formation $formation,
-        public array     $progress
-    )
-    {
-    }
+        public array $progress
+    ) {}
 
     public function broadcastOn(): PrivateChannel
     {
-        return new PrivateChannel('student.' . $this->user->id);
+        return new PrivateChannel('student.'.$this->user->id);
     }
 
     public function broadcastWith(): array
     {
         return [
             'formation_id' => $this->formation->id,
-            'progress' => $this->progress
+            'progress' => $this->progress,
         ];
     }
 }

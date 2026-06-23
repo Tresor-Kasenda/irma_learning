@@ -5,31 +5,40 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\QuestionOptionResource\Pages;
 use App\Models\Question;
 use App\Models\QuestionOption;
+use BackedEnum;
+use Filament\Actions\ActionGroup;
+use Filament\Actions\BulkActionGroup;
+use Filament\Actions\DeleteAction;
+use Filament\Actions\DeleteBulkAction;
+use Filament\Actions\EditAction;
 use Filament\Forms;
-use Filament\Forms\Form;
 use Filament\Resources\Resource;
+use Filament\Schemas\Components\Section;
+use Filament\Schemas\Components\Utilities\Get;
+use Filament\Schemas\Schema;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Str;
+use UnitEnum;
 
 class QuestionOptionResource extends Resource
 {
     protected static ?string $model = QuestionOption::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-list-bullet';
+    protected static BackedEnum|string|null $navigationIcon = 'heroicon-o-list-bullet';
 
     protected static ?string $navigationLabel = 'Options de question';
 
-    protected static ?string $navigationGroup = 'Évaluations';
+    protected static string|UnitEnum|null $navigationGroup = 'Évaluations';
 
     protected static ?int $navigationSort = 3;
 
-    public static function form(Form $form): Form
+    public static function form(Schema $schema): Schema
     {
-        return $form
+        return $schema
             ->schema([
-                Forms\Components\Section::make('Option de réponse')
+                Section::make('Option de réponse')
                     ->schema([
                         Forms\Components\Select::make('question_id')
                             ->label('Question')
@@ -53,7 +62,7 @@ class QuestionOptionResource extends Resource
                     ])
                     ->columns(2),
 
-                Forms\Components\Section::make('Configuration')
+                Section::make('Configuration')
                     ->schema([
                         Forms\Components\Toggle::make('is_correct')
                             ->label('Réponse correcte')
@@ -62,7 +71,7 @@ class QuestionOptionResource extends Resource
                         Forms\Components\TextInput::make('order_position')
                             ->label('Position')
                             ->numeric()
-                            ->default(function (Forms\Get $get) {
+                            ->default(function (Get $get) {
                                 $questionId = $get('question_id');
                                 if (!$questionId) return 1;
 
@@ -126,20 +135,20 @@ class QuestionOptionResource extends Resource
                     ->trueLabel('Correctes uniquement')
                     ->falseLabel('Incorrectes uniquement'),
             ])
-            ->actions([
-                Tables\Actions\ActionGroup::make([
-                    Tables\Actions\EditAction::make()
+            ->recordActions([
+                ActionGroup::make([
+                    EditAction::make()
                         ->label('Modifier')
                         ->icon('heroicon-o-pencil'),
-                    Tables\Actions\DeleteAction::make()
+                    DeleteAction::make()
                         ->label('Supprimer')
                         ->icon('heroicon-o-trash')
                         ->requiresConfirmation(),
                 ])
             ])
-            ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make()
+            ->toolbarActions([
+                BulkActionGroup::make([
+                    DeleteBulkAction::make()
                         ->label('Supprimer')
                         ->icon('heroicon-o-trash')
                         ->requiresConfirmation(),

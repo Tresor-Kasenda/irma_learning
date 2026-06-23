@@ -9,9 +9,9 @@ use Illuminate\Support\Facades\DB;
 
 class FormationStatsChart extends ChartWidget
 {
-    protected static ?string $heading = 'Formations Statistics';
     protected static ?int $sort = 2;
-    protected static ?string $maxHeight = '300px';
+    protected ?string $heading = 'Formations Statistics';
+    protected ?string $maxHeight = '300px';
 
     protected function getData(): array
     {

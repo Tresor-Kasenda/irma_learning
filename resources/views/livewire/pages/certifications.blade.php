@@ -81,7 +81,7 @@
                                                     {{ $formation->duration_hours }} H
                                                 </div>
                                                 <div class="flex items-center gap-1 font-medium text-primary-600">
-                                                    {{ Number::currency($formation->price) }}
+                                                    {{ filled($formation->price) && (float) $formation->price > 0 ? Number::currency((float) $formation->price) : 'Gratuit' }}
                                                 </div>
                                             </div>
 
@@ -374,7 +374,7 @@
                                         {{ $formation->duration_hours }} H
                                     </div>
                                     <div class="flex items-center gap-1 font-semibold text-fg-subtitle text-xl">
-                                        {{ Number::currency($formation->price) }}
+                                        {{ filled($formation->price) && (float) $formation->price > 0 ? Number::currency((float) $formation->price) : 'Gratuit' }}
                                     </div>
                                 </div>
 

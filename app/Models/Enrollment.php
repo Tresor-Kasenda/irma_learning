@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Models;
 
 use App\Enums\EnrollmentPaymentEnum;
@@ -11,10 +13,11 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Spatie\Activitylog\LogOptions;
 use Spatie\Activitylog\Traits\LogsActivity;
 
-class Enrollment extends Model
+final class Enrollment extends Model
 {
     /** @use HasFactory<EnrollmentFactory> */
     use HasFactory;
+
     use LogsActivity;
 
     protected $fillable = [
@@ -37,16 +40,9 @@ class Enrollment extends Model
         'refund_reason',
         'refund_transaction_id',
         'payment_notes',
+        'payment_processed_at',
+        'currency',
     ];
-
-    protected static function booted(): void
-    {
-        static::creating(function (self $enrollment): void {
-            if (empty($enrollment->payment_transaction_id)) {
-                $enrollment->payment_transaction_id = 'pi_' . bin2hex(random_bytes(8));
-            }
-        });
-    }
 
     public function user(): BelongsTo
     {
@@ -91,15 +87,23 @@ class Enrollment extends Model
         ]);
     }
 
-
     public function refund(string $reason = ''): void
     {
         $this->update([
             'payment_status' => EnrollmentPaymentEnum::REFUNDED,
             'status' => EnrollmentStatusEnum::SUSPENDED,
-            'payment_notes' => ($this->payment_notes ? $this->payment_notes . "\n\n" : '') .
-                'REMBOURSEMENT: ' . $reason . ' (' . now()->format('d/m/Y H:i') . ')',
+            'payment_notes' => ($this->payment_notes ? $this->payment_notes."\n\n" : '').
+                'REMBOURSEMENT: '.$reason.' ('.now()->format('d/m/Y H:i').')',
         ]);
+    }
+
+    protected static function booted(): void
+    {
+        self::creating(function (self $enrollment): void {
+            if (empty($enrollment->payment_transaction_id)) {
+                $enrollment->payment_transaction_id = 'pi_'.bin2hex(random_bytes(8));
+            }
+        });
     }
 
     protected function casts(): array

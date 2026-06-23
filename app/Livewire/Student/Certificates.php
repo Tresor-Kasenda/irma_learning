@@ -1,11 +1,13 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Livewire\Student;
 
 use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 
-class Certificates extends Component
+final class Certificates extends Component
 {
     public function render()
     {
@@ -16,7 +18,7 @@ class Certificates extends Component
             ->get();
 
         return view('livewire.student.certificates', [
-            'certificates' => $certificates
+            'certificates' => $certificates,
         ]);
     }
 

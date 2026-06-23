@@ -1,11 +1,13 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Livewire\Student;
 
 use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 
-class RecentExams extends Component
+final class RecentExams extends Component
 {
     public function render()
     {
@@ -17,7 +19,7 @@ class RecentExams extends Component
             ->get();
 
         return view('livewire.student.recent-exams', [
-            'attempts' => $attempts
+            'attempts' => $attempts,
         ]);
     }
 }

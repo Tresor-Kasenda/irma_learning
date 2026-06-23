@@ -9,21 +9,18 @@ use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 
-class CheckUserStatus
+final class CheckUserStatus
 {
     /**
      * Handle an incoming request.
      *
-     * @param Request $request
-     * @param Closure $next
-     * @param string|null $status Optional specific status to check
-     * @return Response
+     * @param  string|null  $status  Optional specific status to check
      */
     public function handle(Request $request, Closure $next, ?string $status = null): Response
     {
         $user = $request->user();
 
-        if (!$user) {
+        if (! $user) {
             return redirect()->route('login');
         }
 

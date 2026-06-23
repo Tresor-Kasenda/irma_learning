@@ -1,28 +1,42 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Filament\Resources;
 
 use App\Enums\QuestionTypeEnum;
 use App\Filament\Resources\QuestionResource\Pages;
 use App\Filament\Resources\QuestionResource\RelationManagers;
 use App\Models\Question;
+use BackedEnum;
+use Filament\Actions\ActionGroup;
+use Filament\Actions\BulkActionGroup;
+use Filament\Actions\DeleteAction;
+use Filament\Actions\DeleteBulkAction;
+use Filament\Actions\EditAction;
+use Filament\Actions\ViewAction;
 use Filament\Forms;
-use Filament\Forms\Form;
 use Filament\Resources\Resource;
+use Filament\Schemas\Components\Grid;
+use Filament\Schemas\Components\Section;
+use Filament\Schemas\Components\Utilities\Get;
+use Filament\Schemas\Components\Utilities\Set;
+use Filament\Schemas\Schema;
 use Filament\Tables;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use UnitEnum;
 
 class QuestionResource extends Resource
 {
     protected static ?string $model = Question::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-chat-bubble-left-ellipsis';
+    protected static BackedEnum|string|null $navigationIcon = 'heroicon-o-chat-bubble-left-ellipsis';
 
     protected static ?string $navigationLabel = 'Questions';
 
-    protected static ?string $navigationGroup = 'Évaluations';
+    protected static string|UnitEnum|null $navigationGroup = 'Évaluations';
 
     protected static ?int $navigationSort = 1;
 
@@ -89,23 +103,23 @@ class QuestionResource extends Resource
                     ->label('Type de question')
                     ->options(QuestionTypeEnum::class),
             ])
-            ->actions([
-                Tables\Actions\ActionGroup::make([
-                    Tables\Actions\ViewAction::make()
+            ->recordActions([
+                ActionGroup::make([
+                    ViewAction::make()
                         ->label('Voir')
                         ->icon('heroicon-o-eye'),
-                    Tables\Actions\EditAction::make()
+                    EditAction::make()
                         ->label('Modifier')
                         ->icon('heroicon-o-pencil'),
-                    Tables\Actions\DeleteAction::make()
+                    DeleteAction::make()
                         ->label('Supprimer')
                         ->icon('heroicon-o-trash')
                         ->requiresConfirmation(),
                 ])
             ])
-            ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
+            ->toolbarActions([
+                BulkActionGroup::make([
+                    DeleteBulkAction::make(),
                 ]),
             ])
             ->defaultSort('order_position', 'asc');
@@ -135,17 +149,17 @@ class QuestionResource extends Resource
             ->with(['exam', 'options']);
     }
 
-    public static function form(Form $form): Form
+    public static function form(Schema $schema): Schema
     {
-        return $form
+        return $schema
             ->schema([
-                Forms\Components\Section::make('Question')
+                Section::make('Question')
                     ->schema([
                         Forms\Components\Select::make('exam_id')
                             ->label('Examen')
                             ->relationship('exam', 'title')
                             ->live()
-                            ->afterStateUpdated(function (Forms\Set $set, $state) {
+                            ->afterStateUpdated(function (Set $set, $state) {
                                 if (!$state) {
                                     $set('order_position', 1);
                                     return;
@@ -170,7 +184,7 @@ class QuestionResource extends Resource
                             ->native(false)
                             ->live(),
 
-                        Forms\Components\Grid::make(2)
+                        Grid::make(2)
                             ->schema([
                                 Forms\Components\TextInput::make('points')
                                     ->label('Points')
@@ -200,7 +214,7 @@ class QuestionResource extends Resource
                             ->columnSpanFull(),
                     ]),
 
-                Forms\Components\Section::make('Options de réponse')
+                Section::make('Options de réponse')
                     ->schema([
                         Forms\Components\Repeater::make('options')
                             ->label('Options')
@@ -210,12 +224,12 @@ class QuestionResource extends Resource
                                     ->label('Texte de l\'option')
                                     ->required(),
 
-                                Forms\Components\Grid::make(2)
+                                Grid::make(2)
                                     ->schema([
                                         Forms\Components\TextInput::make('order_position')
                                             ->label('Position')
                                             ->numeric()
-                                            ->default(function (Forms\Get $get) {
+                                            ->default(function (Get $get) {
                                                 $options = collect($get('../../options') ?? []);
                                                 return $options->count() > 0 ? $options->max('order_position') + 1 : 1;
                                             })
@@ -224,7 +238,7 @@ class QuestionResource extends Resource
                                         Forms\Components\Toggle::make('is_correct')
                                             ->label('Réponse correcte')
                                             ->inline(false)
-                                            ->afterStateUpdated(function ($state, Forms\Set $set, Forms\Get $get) {
+                                            ->afterStateUpdated(function ($state, Set $set, Get $get) {
                                                 if ($get('../../question_type') === QuestionTypeEnum::SINGLE_CHOICE->value && $state) {
                                                     $options = collect($get('../../options') ?? []);
 
@@ -235,7 +249,7 @@ class QuestionResource extends Resource
                                                     });
                                                 }
                                             })
-                                            ->visible(fn(Forms\Get $get) => in_array($get('../../question_type'), [
+                                            ->visible(fn(Get $get) => in_array($get('../../question_type'), [
                                                 QuestionTypeEnum::SINGLE_CHOICE->value,
                                                 QuestionTypeEnum::MULTIPLE_CHOICE->value
                                             ]))
@@ -250,12 +264,12 @@ class QuestionResource extends Resource
                             ->cloneable()
                             ->reorderable()
                             ->columnSpanFull()
-                            ->visible(fn(Forms\Get $get) => in_array($get('question_type'), [
+                            ->visible(fn(Get $get) => in_array($get('question_type'), [
                                 QuestionTypeEnum::SINGLE_CHOICE->value,
                                 QuestionTypeEnum::MULTIPLE_CHOICE->value,
                             ])),
                     ])
-                    ->visible(fn(Forms\Get $get) => in_array($get('question_type'), ['single_choice', 'multiple_choice'])),
+                    ->visible(fn(Get $get) => in_array($get('question_type'), ['single_choice', 'multiple_choice'])),
             ]);
     }
 }

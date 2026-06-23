@@ -25,8 +25,9 @@ final class User extends Authenticatable implements FilamentUser
 {
     /** @use HasFactory<UserFactory> */
     use HasFactory;
-    use Notifiable;
+
     use LogsActivity;
+    use Notifiable;
 
     /**
      * The attributes that are mass assignable.
@@ -41,7 +42,7 @@ final class User extends Authenticatable implements FilamentUser
         'phone',
         'avatar',
         'status',
-        'must_change_password'
+        'must_change_password',
     ];
 
     /**
@@ -133,14 +134,12 @@ final class User extends Authenticatable implements FilamentUser
         return LogOptions::defaults()->logFillable();
     }
 
-    /**
-     * @return bool
-     */
     public function hasStudent(): bool
     {
         if ($this->isStudent()) {
             return true;
         }
+
         return false;
     }
 
@@ -161,7 +160,7 @@ final class User extends Authenticatable implements FilamentUser
             'password' => 'hashed',
             'must_change_password' => 'boolean',
             'role' => UserRoleEnum::class,
-            'status' => UserStatusEnum::class
+            'status' => UserStatusEnum::class,
         ];
     }
 }

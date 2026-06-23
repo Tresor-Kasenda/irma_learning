@@ -8,28 +8,38 @@ use App\Enums\CertificateStatusEnum;
 use App\Enums\UserRoleEnum;
 use App\Filament\Resources\CertificateResource\Pages;
 use App\Models\Certificate;
+use BackedEnum;
+use Filament\Actions\Action;
+use Filament\Actions\ActionGroup;
+use Filament\Actions\BulkAction;
+use Filament\Actions\BulkActionGroup;
+use Filament\Actions\DeleteBulkAction;
+use Filament\Actions\EditAction;
+use Filament\Actions\ViewAction;
 use Filament\Forms;
-use Filament\Forms\Form;
 use Filament\Resources\Resource;
+use Filament\Schemas\Components\Section;
+use Filament\Schemas\Schema;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use UnitEnum;
 
 final class CertificateResource extends Resource
 {
     protected static ?string $model = Certificate::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-academic-cap';
+    protected static BackedEnum|string|null $navigationIcon = 'heroicon-o-academic-cap';
 
-    protected static ?string $navigationGroup = 'Certifications';
+    protected static string|UnitEnum|null $navigationGroup = 'Certifications';
 
     protected static ?int $navigationSort = 4;
 
-    public static function form(Form $form): Form
+    public static function form(Schema $schema): Schema
     {
-        return $form
+        return $schema
             ->schema([
-                Forms\Components\Section::make('Informations du Certificat')
+                Section::make('Informations du Certificat')
                     ->schema([
                         Forms\Components\Select::make('user_id')
                             ->relationship('user', 'name', modifyQueryUsing: function ($query) {
@@ -63,7 +73,7 @@ final class CertificateResource extends Resource
                     ])
                     ->columns(2),
 
-                Forms\Components\Section::make('Détails de Performance')
+                Section::make('Détails de Performance')
                     ->schema([
                         Forms\Components\TextInput::make('final_score')
                             ->label('Score final')
@@ -87,7 +97,7 @@ final class CertificateResource extends Resource
                     ])
                     ->columns(2),
 
-                Forms\Components\Section::make('Métadonnées')
+                Section::make('Métadonnées')
                     ->schema([
                         Forms\Components\KeyValue::make('metadata')
                             ->label('Métadonnées additionnelles')
@@ -158,23 +168,23 @@ final class CertificateResource extends Resource
                     ->label('Score élevé (≥80%)')
                     ->query(fn(Builder $query): Builder => $query->where('final_score', '>=', 80)),
             ])
-            ->actions([
-                Tables\Actions\ActionGroup::make([
-                    Tables\Actions\Action::make('download')
+            ->recordActions([
+                ActionGroup::make([
+                    Action::make('download')
                         ->label('Télécharger')
                         ->icon('heroicon-o-arrow-down-tray')
                         ->color('primary')
                         ->url(fn(Certificate $record) => $record->download_url)
                         ->openUrlInNewTab(),
 
-                    Tables\Actions\Action::make('verify')
+                    Action::make('verify')
                         ->label('Vérifier')
                         ->icon('heroicon-o-shield-check')
                         ->color('success')
                         ->url(fn(Certificate $record) => $record->verification_url)
                         ->openUrlInNewTab(),
 
-                    Tables\Actions\Action::make('revoke')
+                    Action::make('revoke')
                         ->label('Révoquer')
                         ->icon('heroicon-o-x-circle')
                         ->color('danger')
@@ -182,19 +192,19 @@ final class CertificateResource extends Resource
                         ->action(fn(Certificate $record) => $record->update(['status' => CertificateStatusEnum::REVOKED]))
                         ->visible(fn(Certificate $record) => $record->status === CertificateStatusEnum::ACTIVE),
 
-                    Tables\Actions\ViewAction::make()
+                    ViewAction::make()
                         ->label('Voir')
                         ->icon('heroicon-o-eye'),
-                    Tables\Actions\EditAction::make()
+                    EditAction::make()
                         ->label('Modifier')
                         ->icon('heroicon-o-pencil'),
                 ]),
             ])
-            ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
+            ->toolbarActions([
+                BulkActionGroup::make([
+                    DeleteBulkAction::make(),
 
-                    Tables\Actions\BulkAction::make('bulk_revoke')
+                    BulkAction::make('bulk_revoke')
                         ->label('Révoquer sélectionnés')
                         ->icon('heroicon-o-x-circle')
                         ->color('danger')

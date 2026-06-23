@@ -14,7 +14,6 @@ enum UserRoleEnum: string
 
     case INSTRUCTOR = 'instructor';
 
-
     public function getLabel(): string
     {
         return match ($this) {

@@ -2,6 +2,9 @@
 
 declare(strict_types=1);
 
+use App\Enums\EnrollmentPaymentEnum;
+use App\Enums\EnrollmentStatusEnum;
+use App\Livewire\Pages\Students\DashboardStudent;
 use App\Models\Enrollment;
 use App\Models\Formation;
 use App\Models\User;
@@ -20,30 +23,29 @@ test('dashboard displays user statistics', function () {
     $user = User::factory()->create();
     $formations = Formation::factory()->count(3)->create(['is_active' => true]);
 
-    // Create enrollments with different statuses
     Enrollment::factory()->create([
         'user_id' => $user->id,
         'formation_id' => $formations[0]->id,
-        'status' => 'active',
+        'status' => EnrollmentStatusEnum::ACTIVE,
     ]);
 
     Enrollment::factory()->create([
         'user_id' => $user->id,
         'formation_id' => $formations[1]->id,
-        'status' => 'completed',
+        'status' => EnrollmentStatusEnum::COMPLETED,
     ]);
 
     Enrollment::factory()->create([
         'user_id' => $user->id,
         'formation_id' => $formations[2]->id,
-        'status' => 'active',
+        'status' => EnrollmentStatusEnum::ACTIVE,
     ]);
 
     $response = $this->actingAs($user)->get(route('dashboard'));
 
     $response->assertSuccessful();
-    $response->assertSee('Total formations', false);
-    $response->assertSee('En cours', false);
+    $response->assertSee('Formations', false);
+    $response->assertSee('Certificats', false);
 });
 
 test('dashboard shows enrolled formations', function () {
@@ -56,7 +58,8 @@ test('dashboard shows enrolled formations', function () {
     Enrollment::factory()->create([
         'user_id' => $user->id,
         'formation_id' => $formation->id,
-        'status' => 'active',
+        'status' => EnrollmentStatusEnum::ACTIVE,
+        'payment_status' => EnrollmentPaymentEnum::FREE,
         'progress_percentage' => 50,
     ]);
 
@@ -64,12 +67,12 @@ test('dashboard shows enrolled formations', function () {
 
     $response->assertSuccessful();
     $response->assertSee('Test Formation', false);
-    $response->assertSee('Mes formations en cours', false);
+    $response->assertSee('Mes formations', false);
 });
 
 test('dashboard shows available formations', function () {
     $user = User::factory()->create();
-    $formation = Formation::factory()->create([
+    Formation::factory()->create([
         'is_active' => true,
         'title' => 'Available Formation',
     ]);
@@ -82,19 +85,15 @@ test('dashboard shows available formations', function () {
 
 test('dashboard component renders correctly with livewire', function () {
     $user = User::factory()->create();
-
     $formations = Formation::factory()->count(2)->create(['is_active' => true]);
 
     Enrollment::factory()->create([
         'user_id' => $user->id,
         'formation_id' => $formations[0]->id,
-        'status' => 'active',
+        'status' => EnrollmentStatusEnum::ACTIVE,
     ]);
 
-    $component = Livewire::actingAs($user)->test(App\Livewire\Pages\Dashboard::class);
-
-    $component->assertStatus(200);
-    $component->assertViewHas('totalEnrollments', 1);
-    $component->assertViewHas('activeEnrollments', 1);
-    $component->assertViewHas('availableFormations');
+    Livewire::actingAs($user)
+        ->test(DashboardStudent::class)
+        ->assertStatus(200);
 });

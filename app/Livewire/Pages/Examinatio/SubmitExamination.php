@@ -32,7 +32,7 @@ final class SubmitExamination extends Component implements HasForms
     public function mount(MasterClass $masterClass): void
     {
         if (! $this->canAccessFinalExam()) {
-            $this->redirect(route('student.course.learning', $masterClass));
+            $this->redirect(route('master-class', $masterClass));
         }
 
         if ($this->hasSubmittedFinalExam()) {
@@ -90,7 +90,7 @@ final class SubmitExamination extends Component implements HasForms
             type: 'success'
         );
 
-        $this->redirect(route('student.course.learning', [
+        $this->redirect(route('master-class', [
             'masterClass' => $this->masterClass,
         ]));
     }

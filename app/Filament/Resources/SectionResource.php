@@ -8,23 +8,33 @@ use App\Filament\Resources\SectionResource\Pages;
 use App\Filament\Resources\SectionResource\RelationManagers;
 use App\Models\Formation;
 use App\Models\Section;
+use BackedEnum;
+use Filament\Actions\ActionGroup;
+use Filament\Actions\BulkAction;
+use Filament\Actions\BulkActionGroup;
+use Filament\Actions\DeleteAction;
+use Filament\Actions\DeleteBulkAction;
+use Filament\Actions\EditAction;
+use Filament\Actions\ViewAction;
 use Filament\Forms;
-use Filament\Forms\Form;
 use Filament\Resources\Resource;
+use Filament\Schemas\Components\Utilities\Get;
+use Filament\Schemas\Schema;
 use Filament\Tables;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use UnitEnum;
 
 final class SectionResource extends Resource
 {
     protected static ?string $model = Section::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-folder-open';
+    protected static BackedEnum|string|null $navigationIcon = 'heroicon-o-folder-open';
 
     protected static ?string $navigationLabel = 'Sections';
 
-    protected static ?string $navigationGroup = 'Gestion des formations';
+    protected static string|UnitEnum|null $navigationGroup = 'Gestion des formations';
 
     protected static ?int $navigationSort = 3;
 
@@ -87,27 +97,27 @@ final class SectionResource extends Resource
                     ->trueLabel('Active uniquement')
                     ->falseLabel('Inactive uniquement'),
             ])
-            ->actions([
-                Tables\Actions\ActionGroup::make([
-                    Tables\Actions\ViewAction::make()
+            ->recordActions([
+                ActionGroup::make([
+                    ViewAction::make()
                         ->label('Voir')
                         ->icon('heroicon-o-eye'),
-                    Tables\Actions\EditAction::make()
+                    EditAction::make()
                         ->label('Modifier')
                         ->icon('heroicon-o-pencil'),
-                    Tables\Actions\DeleteAction::make()
+                    DeleteAction::make()
                         ->label('Supprimer')
                         ->icon('heroicon-o-trash')
                         ->requiresConfirmation(),
                 ]),
             ])
-            ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make()
+            ->toolbarActions([
+                BulkActionGroup::make([
+                    DeleteBulkAction::make()
                         ->label('Supprimer')
                         ->icon('heroicon-o-trash')
                         ->requiresConfirmation(),
-                    Tables\Actions\BulkAction::make('toggle_active')
+                    BulkAction::make('toggle_active')
                         ->label('Activer/Désactiver')
                         ->icon('heroicon-o-power')
                         ->action(function ($records) {
@@ -120,11 +130,11 @@ final class SectionResource extends Resource
             ->defaultSort('order_position', 'asc');
     }
 
-    public static function form(Form $form): Form
+    public static function form(Schema $schema): Schema
     {
-        return $form
+        return $schema
             ->schema([
-                Forms\Components\Section::make('Informations de la section')
+                \Filament\Schemas\Components\Section::make('Informations de la section')
                     ->schema([
                         Forms\Components\Select::make('formation_id')
                             ->label('Formation')
@@ -145,14 +155,14 @@ final class SectionResource extends Resource
                     ])
                     ->columns(2),
 
-                Forms\Components\Section::make('Configuration')
+                \Filament\Schemas\Components\Section::make('Configuration')
                     ->schema([
                         Forms\Components\TextInput::make('order_position')
                             ->label('Position dans la formation')
                             ->numeric()
                             ->disabled()
                             ->dehydrated(false)
-                            ->default(function (Forms\Get $get) {
+                            ->default(function (Get $get) {
                                 $formationId = $get('formation_id');
                                 if ($formationId) {
                                     return (Section::query()->whereBelongsTo($formationId)->max('order_position') ?? 0) + 1;
@@ -164,7 +174,7 @@ final class SectionResource extends Resource
                         Forms\Components\TextInput::make('duration')
                             ->label('Durée estimée (minutes)')
                             ->numeric()
-                            ->default(function (Forms\Get $get) {
+                            ->default(function (Get $get) {
                                 $formationId = $get('formation_id');
                                 if (!$formationId) {
                                     return null;

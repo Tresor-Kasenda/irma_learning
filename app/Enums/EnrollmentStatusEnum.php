@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Enums;
 
 enum EnrollmentStatusEnum: string
@@ -12,10 +14,10 @@ enum EnrollmentStatusEnum: string
     public function getLabel(): string
     {
         return match ($this) {
-            self::ACTIVE => "Actif",
-            self::COMPLETED => "Terminé",
-            self::SUSPENDED => "Suspendu",
-            self::CANCELLED => "Annulé",
+            self::ACTIVE => 'Actif',
+            self::COMPLETED => 'Terminé',
+            self::SUSPENDED => 'Suspendu',
+            self::CANCELLED => 'Annulé',
         };
     }
 }

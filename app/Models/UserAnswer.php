@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Models;
 
 use Database\Factories\UserAnswerFactory;
@@ -7,7 +9,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class UserAnswer extends Model
+final class UserAnswer extends Model
 {
     /** @use HasFactory<UserAnswerFactory> */
     use HasFactory;
@@ -36,28 +38,36 @@ class UserAnswer extends Model
 
         switch ($this->question->question_type->value) {
             case 'single_choice':
+            case 'true_false':
                 $isCorrect = $this->selectedOption?->is_correct ?? false;
                 $pointsEarned = $isCorrect ? $this->question->points : 0;
                 break;
 
             case 'multiple_choice':
                 $correctOptions = $this->question->options()->where('is_correct', true)->get();
-                $selectedOptions = json_decode($this->selected_options ?? '[]', true);
+                $selectedOptions = is_array($this->selected_options) ? $this->selected_options : [];
 
-                $correctSelected = collect($selectedOptions)->filter(function ($optionId) use ($correctOptions) {
-                    return $correctOptions->contains('id', $optionId);
-                });
+                $correctSelected = collect($selectedOptions)->filter(
+                    fn ($optionId) => $correctOptions->contains('id', $optionId)
+                );
 
-                $incorrectSelected = collect($selectedOptions)->filter(function ($optionId) use ($correctOptions) {
-                    return !$correctOptions->contains('id', $optionId);
-                });
+                $incorrectSelected = collect($selectedOptions)->filter(
+                    fn ($optionId) => ! $correctOptions->contains('id', $optionId)
+                );
 
                 if ($correctSelected->count() > 0 && $incorrectSelected->count() === 0) {
                     $percentage = $correctSelected->count() / $correctOptions->count();
-                    $pointsEarned = (int)($this->question->points * $percentage);
+                    $pointsEarned = (int) ($this->question->points * $percentage);
                     $isCorrect = $percentage === 1.0;
                 }
                 break;
+
+            case 'text':
+            case 'essay':
+                // Manual grading required — keep is_correct null and points_earned 0
+                $this->update(['is_correct' => null, 'points_earned' => 0]);
+
+                return;
         }
 
         $this->update([
@@ -69,7 +79,8 @@ class UserAnswer extends Model
     protected function casts(): array
     {
         return [
-            'is_correct' => 'boolean'
+            'is_correct' => 'boolean',
+            'selected_options' => 'array',
         ];
     }
 }

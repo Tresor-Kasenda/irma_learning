@@ -51,7 +51,7 @@
         @if($continueWatching && $continueWatching->trackable)
             @php
                 $chapter = $continueWatching->trackable;
-                $formation = $chapter->section->module->formation ?? null;
+                $formation = $chapter->section->formation ?? null;
             @endphp
             @if($formation)
             <section class="mb-8">

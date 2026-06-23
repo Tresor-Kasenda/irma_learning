@@ -23,17 +23,18 @@ final class Chapter extends Model
     protected $fillable = [
         'section_id',
         'title',
-        'slug',
         'description',
         'content',
+        'content_type',
+        'media_url',
         'video_url',
-        'video_duration',
+        'audio_url',
+        'cover_image',
+        'markdown_file',
+        'duration_minutes',
+        'order_position',
         'is_free',
         'is_active',
-        'order_position',
-        'metadata',
-        'content_type',
-        'excerpt',
     ];
 
     public function section(): BelongsTo

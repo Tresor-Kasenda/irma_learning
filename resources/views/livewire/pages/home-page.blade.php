@@ -86,7 +86,7 @@
                                     <div class="flex items-center justify-between">
                                         <div class="flex items-center gap-3 text-fg-subtext">
                                             <span class="text-base font-bold">
-                                                {{ Number::currency($formation->price) }}
+                                                {{ filled($formation->price) && (float) $formation->price > 0 ? Number::currency((float) $formation->price) : 'Gratuit' }}
                                             </span>
                                         </div>
                                         <div class="flex items-center gap-3 text-fg-subtext">

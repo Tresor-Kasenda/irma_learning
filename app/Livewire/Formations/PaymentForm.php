@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Livewire\Formations;
 
 use App\Models\Formation;
@@ -10,11 +12,14 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 use Livewire\Component;
 
-class PaymentForm extends Component
+final class PaymentForm extends Component
 {
     public Formation $formation;
+
     public $cardNumber;
+
     public $expiryDate;
+
     public $cvv;
 
     protected $rules = [

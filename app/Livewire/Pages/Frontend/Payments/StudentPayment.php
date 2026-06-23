@@ -46,7 +46,7 @@ final class StudentPayment extends Component
 
         if (
             $payment &&
-            !$user->enrollments()
+            ! $user->enrollments()
                 ->where('formation_id', $this->formation->id)
                 ->exists()
         ) {

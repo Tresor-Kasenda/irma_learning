@@ -5,7 +5,7 @@ namespace App\Filament\Resources\QuestionResource\RelationManagers;
 use App\Enums\QuestionTypeEnum;
 use App\Models\QuestionOption;
 use Filament\Forms;
-use Filament\Forms\Form;
+use Filament\Schemas\Schema;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Tables;
 use Filament\Tables\Table;
@@ -94,28 +94,28 @@ class OptionsRelationManager extends RelationManager
                     ->toggle(),
             ])
             ->headerActions([
-                Tables\Actions\CreateAction::make()
+                \Filament\Actions\CreateAction::make()
                     ->label('Ajouter une option')
                     ->icon('heroicon-o-plus')
                     ->slideOver(),
             ])
             ->actions([
-                Tables\Actions\ActionGroup::make([
-                    Tables\Actions\ViewAction::make()
+                \Filament\Actions\ActionGroup::make([
+                    \Filament\Actions\ViewAction::make()
                         ->slideOver()
                         ->modalWidth('2xl')
                         ->label('Voir')
                         ->icon('heroicon-o-eye'),
-                    Tables\Actions\EditAction::make()
+                    \Filament\Actions\EditAction::make()
                         ->label('Modifier')
                         ->slideOver()
                         ->modalWidth('2xl')
                         ->icon('heroicon-o-pencil'),
-                    Tables\Actions\DeleteAction::make()
+                    \Filament\Actions\DeleteAction::make()
                         ->icon('heroicon-o-trash')
                         ->requiresConfirmation(),
 
-                    Tables\Actions\Action::make('toggle_correct')
+                    \Filament\Actions\Action::make('toggle_correct')
                         ->label(fn(QuestionOption $record): string => $record->is_correct ? 'Marquer incorrect' : 'Marquer correct')
                         ->icon(fn(QuestionOption $record): string => $record->is_correct ? 'heroicon-o-x-circle' : 'heroicon-o-check-circle')
                         ->color(fn(QuestionOption $record): string => $record->is_correct ? 'danger' : 'success')
@@ -130,7 +130,7 @@ class OptionsRelationManager extends RelationManager
                         })
                         ->successNotificationTitle('Statut mis à jour'),
 
-                    Tables\Actions\Action::make('view_answers')
+                    \Filament\Actions\Action::make('view_answers')
                         ->label('Voir réponses')
                         ->icon('heroicon-o-document-text')
                         ->color('info')
@@ -151,24 +151,24 @@ class OptionsRelationManager extends RelationManager
                 ])
             ])
             ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
+                \Filament\Actions\BulkActionGroup::make([
+                    \Filament\Actions\DeleteBulkAction::make(),
 
-                    Tables\Actions\BulkAction::make('mark_correct')
+                    \Filament\Actions\BulkAction::make('mark_correct')
                         ->label('Marquer comme correct')
                         ->icon('heroicon-o-check-circle')
                         ->color('success')
                         ->action(fn(Collection $records) => $records->each->update(['is_correct' => true]))
                         ->deselectRecordsAfterCompletion(),
 
-                    Tables\Actions\BulkAction::make('mark_incorrect')
+                    \Filament\Actions\BulkAction::make('mark_incorrect')
                         ->label('Marquer comme incorrect')
                         ->icon('heroicon-o-x-circle')
                         ->color('danger')
                         ->action(fn(Collection $records) => $records->each->update(['is_correct' => false]))
                         ->deselectRecordsAfterCompletion(),
 
-                    Tables\Actions\BulkAction::make('add_explanation')
+                    \Filament\Actions\BulkAction::make('add_explanation')
                         ->label('Ajouter explication')
                         ->icon('heroicon-o-light-bulb')
                         ->color('info')
@@ -188,11 +188,11 @@ class OptionsRelationManager extends RelationManager
             ->reorderable('order_position');
     }
 
-    public function form(Form $form): Form
+    public function form(Schema $schema): Schema
     {
-        return $form
+        return $schema
             ->schema([
-                Forms\Components\Section::make('Option de réponse')
+                \Filament\Schemas\Components\Section::make('Option de réponse')
                     ->schema([
                         Forms\Components\TextInput::make('option_text')
                             ->label('Texte de l\'option')
@@ -204,7 +204,7 @@ class OptionsRelationManager extends RelationManager
                             ->directory('question-options')
                             ->columnSpanFull(),
 
-                        Forms\Components\Section::make('Configuration')
+                        \Filament\Schemas\Components\Section::make('Configuration')
                             ->schema([
                                 Forms\Components\Toggle::make('is_correct')
                                     ->inline(false)

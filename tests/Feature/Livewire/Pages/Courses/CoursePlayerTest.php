@@ -9,7 +9,6 @@ use App\Livewire\Pages\Courses\CoursePlayer;
 use App\Models\Chapter;
 use App\Models\Enrollment;
 use App\Models\Formation;
-use App\Models\Module;
 use App\Models\Section;
 use App\Models\User;
 use App\Models\UserProgress;
@@ -19,10 +18,8 @@ beforeEach(function () {
     $this->user = User::factory()->create();
     $this->actingAs($this->user);
 
-    // Create formation with structure
     $this->formation = Formation::factory()->create();
-    $this->module = Module::factory()->for($this->formation)->create();
-    $this->section = Section::factory()->for($this->module)->create();
+    $this->section = Section::factory()->for($this->formation)->create();
     $this->chapter1 = Chapter::factory()->for($this->section)->create([
         'title' => 'Chapter 1',
         'order_position' => 1,
@@ -34,7 +31,6 @@ beforeEach(function () {
         'is_active' => true,
     ]);
 
-    // Create enrollment
     $this->enrollment = Enrollment::factory()->for($this->user)->for($this->formation)->create([
         'status' => EnrollmentStatusEnum::ACTIVE,
         'payment_status' => EnrollmentPaymentEnum::FREE,
@@ -78,7 +74,6 @@ test('it loads specified chapter when chapterId provided', function () {
 });
 
 test('it loads last in progress chapter when available', function () {
-    // Mark chapter2 as in progress
     UserProgress::create([
         'user_id' => $this->user->id,
         'trackable_type' => Chapter::class,
@@ -130,17 +125,17 @@ test('it updates enrollment progress when chapter completed', function () {
 
     $this->enrollment->refresh();
 
-    expect((float)$this->enrollment->progress_percentage)->toBe(50.0); // 1 of 2 chapters
+    expect((float) $this->enrollment->progress_percentage)->toBe(50.0);
 });
 
 test('it marks enrollment as completed when all chapters done', function () {
     Livewire::test(CoursePlayer::class, ['formation' => $this->formation])
         ->call('markChapterAsCompleted')
-        ->call('markChapterAsCompleted'); // Complete second chapter
+        ->call('markChapterAsCompleted');
 
     $this->enrollment->refresh();
 
-    expect((float)$this->enrollment->progress_percentage)->toBe(100.0)
+    expect((float) $this->enrollment->progress_percentage)->toBe(100.0)
         ->and($this->enrollment->status->value)->toBe('completed')
         ->and($this->enrollment->completion_date)->not->toBeNull();
 });
@@ -182,7 +177,6 @@ test('it cannot go to next chapter from last chapter', function () {
 });
 
 test('it shows completed chapters correctly', function () {
-    // Mark chapter1 as completed
     UserProgress::create([
         'user_id' => $this->user->id,
         'trackable_type' => Chapter::class,

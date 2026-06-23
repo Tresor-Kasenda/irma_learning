@@ -7,7 +7,7 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\FormationAccessCodeResource\Pages;
 use App\Models\FormationAccessCode;
 use Filament\Forms;
-use Filament\Forms\Form;
+use Filament\Schemas\Schema;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
@@ -18,17 +18,17 @@ final class FormationAccessCodeResource extends Resource
 {
     protected static ?string $model = FormationAccessCode::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-key';
+    protected static \BackedEnum|string|null $navigationIcon = 'heroicon-o-key';
 
     protected static ?string $navigationLabel = 'Codes d\'accès';
 
-    protected static ?string $navigationGroup = 'Formations';
+    protected static string|\UnitEnum|null $navigationGroup = 'Formations';
 
     protected static ?int $navigationSort = 8;
 
-    public static function form(Form $form): Form
+    public static function form(Schema $schema): Schema
     {
-        return $form
+        return $schema
             ->schema([
                 Forms\Components\Select::make('formation_id')
                     ->relationship('formation', 'title')
@@ -91,12 +91,12 @@ final class FormationAccessCodeResource extends Resource
                     ->label('Statut d\'utilisation'),
             ])
             ->actions([
-                Tables\Actions\EditAction::make(),
-                Tables\Actions\DeleteAction::make(),
+                \Filament\Actions\EditAction::make(),
+                \Filament\Actions\DeleteAction::make(),
             ])
             ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
+                \Filament\Actions\BulkActionGroup::make([
+                    \Filament\Actions\DeleteBulkAction::make(),
                 ]),
             ]);
     }

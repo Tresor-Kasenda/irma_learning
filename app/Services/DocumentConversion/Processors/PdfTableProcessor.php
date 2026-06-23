@@ -63,6 +63,11 @@ final class PdfTableProcessor implements ContentProcessorInterface
         return $content;
     }
 
+    public function getPriority(): int
+    {
+        return 30;
+    }
+
     /**
      * Détecte les tableaux dans le texte brut
      */
@@ -88,9 +93,9 @@ final class PdfTableProcessor implements ContentProcessorInterface
 
                 $columns = $this->parseTableLine($line);
 
-                if (empty($currentTable['headers']) && !$this->isSeparatorLine($line)) {
+                if (empty($currentTable['headers']) && ! $this->isSeparatorLine($line)) {
                     $currentTable['headers'] = $columns;
-                } elseif (!$this->isSeparatorLine($line) && count($columns) > 0) {
+                } elseif (! $this->isSeparatorLine($line) && count($columns) > 0) {
                     if (empty($currentTable['headers']) || abs(count($currentTable['headers']) - count($columns)) <= 1) {
                         $currentTable['rows'][] = $columns;
                     }
@@ -160,7 +165,7 @@ final class PdfTableProcessor implements ContentProcessorInterface
             $columns = preg_split('/\s{2,}/', $trimmed);
         }
 
-        return array_values(array_map(fn($col) => mb_trim($col), array_filter($columns, fn($col) => !empty(mb_trim($col)))));
+        return array_values(array_map(fn ($col) => mb_trim($col), array_filter($columns, fn ($col) => ! empty(mb_trim($col)))));
     }
 
     /**
@@ -180,10 +185,5 @@ final class PdfTableProcessor implements ContentProcessorInterface
     {
         return count($table['headers']) >= self::MIN_COLUMNS &&
             count($table['rows']) >= self::MIN_ROWS;
-    }
-
-    public function getPriority(): int
-    {
-        return 30;
     }
 }

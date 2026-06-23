@@ -33,7 +33,7 @@ final class Certifications extends Component
         if ($this->search) {
             $query->whereLike(['title', 'description'], sprintf('%%%s%%', $this->search));
         }
-        
+
         return view('livewire.pages.certifications', [
             'formations' => $query->active()->orderByDesc('created_at')->paginate(10),
         ]);

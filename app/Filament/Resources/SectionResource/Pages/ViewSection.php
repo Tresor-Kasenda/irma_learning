@@ -19,7 +19,7 @@ use Filament\Forms\Components\Toggle;
 use Filament\Forms\Get;
 use Filament\Forms\Set;
 use Filament\Infolists;
-use Filament\Infolists\Infolist;
+use Filament\Schemas\Schema;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ViewRecord;
 use Filament\Support\Colors\Color;
@@ -33,11 +33,11 @@ final class ViewSection extends ViewRecord
 
     protected static ?string $title = 'Détails de la section';
 
-    public function infolist(Infolist $infolist): Infolist
+    public function infolist(Schema $schema): Schema
     {
-        return $infolist
+        return $schema
             ->schema([
-                Infolists\Components\Section::make('Informations de la section')
+                \Filament\Schemas\Components\Section::make('Informations de la section')
                     ->schema([
                         Infolists\Components\TextEntry::make('formation.title')
                             ->label('Formation'),
@@ -53,7 +53,7 @@ final class ViewSection extends ViewRecord
                     ])
                     ->columns(2),
 
-                Infolists\Components\Section::make('Statut')
+                \Filament\Schemas\Components\Section::make('Statut')
                     ->schema([
                         Infolists\Components\TextEntry::make('is_active')
                             ->label('Active')

@@ -14,7 +14,7 @@ final class RestrictStudentMasterClassAccess
 {
     /**
      * Handle an incoming request.
-     * 
+     *
      * Restreint l'accès des étudiants authentifiés aux master classes:
      * - Ils ne peuvent voir que les master classes auxquelles ils sont souscrits
      * - Ils peuvent voir les autres mais doivent payer pour y accéder
@@ -23,14 +23,14 @@ final class RestrictStudentMasterClassAccess
     public function handle(Request $request, Closure $next): Response
     {
         $user = Auth::user();
-        
-        if (!$user || !$user->isStudent()) {
+
+        if (! $user || ! $user->isStudent()) {
             return $next($request);
         }
 
         $masterClass = $request->route('masterClass');
-        
-        if (!$masterClass instanceof MasterClass) {
+
+        if (! $masterClass instanceof MasterClass) {
             return $next($request);
         }
 
@@ -40,7 +40,7 @@ final class RestrictStudentMasterClassAccess
             ->exists();
 
         // Si l'étudiant n'est pas souscrit et que la master class n'est pas gratuite
-        if (!$hasSubscription && !$masterClass->isFree()) {
+        if (! $hasSubscription && ! $masterClass->isFree()) {
             // Rediriger vers la page des formations de l'étudiant avec un message
             return redirect()
                 ->route('student.my-master-classes', ['activeTab' => 'available'])

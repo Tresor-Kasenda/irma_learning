@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 return [
     /*
      * Enable or disable the query detection.
@@ -21,10 +23,10 @@ return [
      * the "posts" attribute and the "Post::class", since the relation can get resolved in multiple ways.
      */
     'except' => [
-        //Author::class => [
+        // Author::class => [
         //    Post::class,
         //    'posts',
-        //]
+        // ]
     ],
 
     /*
@@ -63,7 +65,7 @@ return [
      * \BeyondCode\QueryDetector\Outputs\Log::class
      */
     'output' => [
-        \BeyondCode\QueryDetector\Outputs\Alert::class,
-        \BeyondCode\QueryDetector\Outputs\Log::class,
-    ]
+        BeyondCode\QueryDetector\Outputs\Alert::class,
+        BeyondCode\QueryDetector\Outputs\Log::class,
+    ],
 ];

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Models;
 
 use Database\Factories\ExamFactory;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -36,7 +37,7 @@ final class Exam extends Model
         return $this->morphTo();
     }
 
-    public function scopeActive($query): Model
+    public function scopeActive(Builder $query): Builder
     {
         return $query->where('is_active', true);
     }

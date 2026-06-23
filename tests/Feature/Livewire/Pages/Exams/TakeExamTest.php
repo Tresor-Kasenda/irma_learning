@@ -32,7 +32,7 @@ test('user cannot access inactive exam', function () {
 
     Livewire::test(TakeExam::class, ['exam' => $exam])
         ->assertForbidden();
-})->throws(Symfony\Component\HttpKernel\Exception\HttpException::class);
+});
 
 test('exam creates attempt when user starts exam', function () {
     $user = User::factory()->create();
@@ -116,10 +116,12 @@ test('user can answer multiple choice question', function () {
         ->call('nextQuestion')
         ->assertOk();
 
-    $this->assertDatabaseHas('user_answers', [
-        'question_id' => $question->id,
-        'selected_options' => json_encode($selectedOptionIds),
-    ]);
+    $answer = App\Models\UserAnswer::where('question_id', $question->id)->first();
+    expect($answer)->not->toBeNull();
+    $storedOptions = is_array($answer->selected_options)
+        ? $answer->selected_options
+        : json_decode($answer->selected_options, true);
+    expect($storedOptions)->toEqual($selectedOptionIds);
 });
 
 test('user can submit exam and get score', function () {
@@ -173,7 +175,7 @@ test('user can submit exam and get score', function () {
     $attempt = ExamAttempt::first();
     expect($attempt->status)->toBe(ExamAttemptEnum::COMPLETED);
     expect($attempt->score)->toBe(10);
-    expect($attempt->percentage)->toBe(50.0);
+    expect((float) $attempt->percentage)->toBe(50.0);
 });
 
 test('timer initializes correctly with duration', function () {
@@ -240,4 +242,4 @@ test('user cannot exceed max attempts', function () {
 
     Livewire::test(TakeExam::class, ['exam' => $exam])
         ->assertForbidden();
-})->throws(Symfony\Component\HttpKernel\Exception\HttpException::class);
+});

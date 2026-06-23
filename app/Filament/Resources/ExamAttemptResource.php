@@ -6,7 +6,7 @@ use App\Enums\ExamAttemptEnum;
 use App\Filament\Resources\ExamAttemptResource\Pages;
 use App\Filament\Resources\ExamAttemptResource\RelationManagers;
 use App\Models\ExamAttempt;
-use Filament\Forms\Form;
+use Filament\Schemas\Schema;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
@@ -16,17 +16,17 @@ class ExamAttemptResource extends Resource
 {
     protected static ?string $model = ExamAttempt::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-clock';
+    protected static \BackedEnum|string|null $navigationIcon = 'heroicon-o-clock';
 
     protected static ?string $navigationLabel = 'Tentatives d\'examen';
 
-    protected static ?string $navigationGroup = 'Évaluations';
+    protected static string|\UnitEnum|null $navigationGroup = 'Évaluations';
 
     protected static ?int $navigationSort = 4;
 
-    public static function form(Form $form): Form
+    public static function form(Schema $schema): Schema
     {
-        return $form
+        return $schema
             ->schema([]);
     }
 
@@ -126,20 +126,20 @@ class ExamAttemptResource extends Resource
                     ),
             ])
             ->actions([
-                Tables\Actions\ViewAction::make(),
-                Tables\Actions\EditAction::make(),
-                Tables\Actions\Action::make('complete')
+                \Filament\Actions\ViewAction::make(),
+                \Filament\Actions\EditAction::make(),
+                \Filament\Actions\Action::make('complete')
                     ->label('Marquer comme terminé')
                     ->icon('heroicon-o-check-circle')
                     ->color('success')
                     ->requiresConfirmation()
                     ->action(fn(ExamAttempt $record) => $record->complete())
                     ->visible(fn(ExamAttempt $record): bool => $record->status === 'in_progress'),
-                Tables\Actions\DeleteAction::make(),
+                \Filament\Actions\DeleteAction::make(),
             ])
             ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
+                \Filament\Actions\BulkActionGroup::make([
+                    \Filament\Actions\DeleteBulkAction::make(),
                 ]),
             ])
             ->defaultSort('created_at', 'desc');

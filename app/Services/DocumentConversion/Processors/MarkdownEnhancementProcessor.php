@@ -37,16 +37,56 @@ final class MarkdownEnhancementProcessor implements ContentProcessorInterface
         return $content;
     }
 
+    public function getPriority(): int
+    {
+        return 70; // Exécuté en dernier, après tous les autres processors
+    }
+
     /**
-     * Nettoie tous les caractères Unicode problématiques
+     * Nettoie les caractères Unicode problématiques en préservant les blocs de code.
+     *
+     * Les blocs ```…``` sont traités ligne par ligne sans modification pour ne pas
+     * détruire l'indentation du code source (tabulations, espaces multiples).
+     * En dehors des blocs de code, les espaces horizontaux multiples sont réduits
+     * à un seul (sauf en début de ligne, pour ne pas casser les listes imbriquées).
      */
     private function cleanUnicodeCharacters(string $markdown): string
     {
+        // Supprimer les caractères de largeur zéro
         $markdown = preg_replace('/[\x{200B}-\x{200D}\x{FEFF}]/u', '', $markdown);
 
-        $markdown = preg_replace('/[•●○◦▪▫■□▸►▹‣⁃⁌⁍◘◙◉◎⦾⦿⚫⚪🔘🔲🔳➢➣➤➥➔→⇒➡]/u', '-', $markdown);
+        $lines = explode("\n", $markdown);
+        $inCodeBlock = false;
+        $result = [];
 
-        return preg_replace('/\h+/', ' ', $markdown);
+        foreach ($lines as $line) {
+            $trimmed = mb_trim($line);
+
+            if (preg_match('/^```/', $trimmed)) {
+                $inCodeBlock = ! $inCodeBlock;
+                $result[] = $line;
+
+                continue;
+            }
+
+            if ($inCodeBlock) {
+                $result[] = $line;
+
+                continue;
+            }
+
+            // Normaliser les caractères de puces Unicode → tiret simple
+            $line = preg_replace('/[•●○◦▪▫■□▸►▹‣⁃⁌⁍◘◙◉◎⦾⦿⚫⚪🔘🔲🔳➢➣➤➥➔→⇒➡]/u', '-', $line);
+
+            // Réduire les espaces horizontaux multiples à 1 (hors début de ligne)
+            $line = preg_replace_callback('/^(\s*)(.*)$/u', function (array $m) {
+                return $m[1].preg_replace('/\h{2,}/', ' ', $m[2]);
+            }, $line);
+
+            $result[] = $line;
+        }
+
+        return implode("\n", $result);
     }
 
     /**
@@ -62,7 +102,7 @@ final class MarkdownEnhancementProcessor implements ContentProcessorInterface
             $trimmed = mb_trim($line);
 
             if (preg_match('/^```/', $trimmed)) {
-                $inCodeBlock = !$inCodeBlock;
+                $inCodeBlock = ! $inCodeBlock;
                 $rebuilt[] = $line;
 
                 continue;
@@ -81,7 +121,7 @@ final class MarkdownEnhancementProcessor implements ContentProcessorInterface
             }
 
             if ($this->isHeading($trimmed)) {
-                if (!empty($rebuilt) && mb_trim(end($rebuilt)) !== '') {
+                if (! empty($rebuilt) && mb_trim(end($rebuilt)) !== '') {
                     $rebuilt[] = '';
                 }
                 $rebuilt[] = $this->normalizeHeading($trimmed);
@@ -103,7 +143,7 @@ final class MarkdownEnhancementProcessor implements ContentProcessorInterface
      */
     private function isHeading(string $line): bool
     {
-        return (bool)preg_match('/^#{1,6}\s+/', $line);
+        return (bool) preg_match('/^#{1,6}\s+/', $line);
     }
 
     /**
@@ -111,8 +151,11 @@ final class MarkdownEnhancementProcessor implements ContentProcessorInterface
      */
     private function normalizeHeading(string $line): string
     {
+        // Collapse "# # Title" → "## Title" (two separate hash groups separated by a space)
+        $line = preg_replace('/^(#{1,6})\s+(#{1,6})\s+/', '$1$2 ', $line);
+
         if (preg_match('/^(#{1,6})([^\s])/', $line, $matches)) {
-            return $matches[1] . ' ' . mb_substr($line, mb_strlen($matches[1]));
+            return $matches[1].' '.mb_substr($line, mb_strlen($matches[1]));
         }
 
         return $line;
@@ -123,12 +166,15 @@ final class MarkdownEnhancementProcessor implements ContentProcessorInterface
      */
     private function isListItem(string $line): bool
     {
-        return (bool)preg_match('/^[\-\*\+]\s+/', $line) ||
-            (bool)preg_match('/^\d+\.\s+/', $line);
+        return (bool) preg_match('/^[\-\*\+]\s+/', $line) ||
+            (bool) preg_match('/^\d+\.\s+/', $line);
     }
 
     /**
-     * Normalise un élément de liste
+     * Normalise un élément de liste en préservant la numérotation.
+     *
+     * Les listes numérotées ("1. texte") conservent leur numéro.
+     * Les puces (-, *, +) sont toutes uniformisées en "- ".
      */
     private function normalizeListItem(string $line): string
     {
@@ -137,17 +183,22 @@ final class MarkdownEnhancementProcessor implements ContentProcessorInterface
 
         if (preg_match('/^(\s*)(.+)$/', $line, $matches)) {
             $indent = $matches[1];
-            $level = (int)(mb_strlen($indent) / 2); // 2 espaces = 1 niveau
+            $level = (int) (mb_strlen($indent) / 2); // 2 espaces = 1 niveau d'indentation
             $cleanLine = $matches[2];
         }
 
-        $cleanLine = preg_replace('/^[\-\*\+]\s*/', '', $cleanLine);
-        $cleanLine = preg_replace('/^\d+\.\s*/', '', $cleanLine);
-        $cleanLine = mb_trim($cleanLine);
-
         $indent = str_repeat('  ', $level);
 
-        return $indent . '- ' . $cleanLine;
+        // Conserver les listes numérotées avec leur numéro d'origine
+        if (preg_match('/^(\d+)\.\s+(.+)$/', $cleanLine, $m)) {
+            return $indent.$m[1].'. '.mb_trim($m[2]);
+        }
+
+        // Uniformiser les puces (-, *, +, •, etc.) en "- "
+        $cleanLine = preg_replace('/^[\-\*\+]\s+/', '', $cleanLine);
+        $cleanLine = mb_trim($cleanLine);
+
+        return $indent.'- '.$cleanLine;
     }
 
     /**
@@ -155,7 +206,7 @@ final class MarkdownEnhancementProcessor implements ContentProcessorInterface
      */
     private function isCheckboxItem(string $line): bool
     {
-        return (bool)preg_match('/^\-\s*\[\s*[x\s]\s*\]/', $line);
+        return (bool) preg_match('/^\-\s*\[\s*[x\s]\s*\]/', $line);
     }
 
     /**
@@ -163,11 +214,11 @@ final class MarkdownEnhancementProcessor implements ContentProcessorInterface
      */
     private function normalizeCheckbox(string $line): string
     {
-        $checked = (bool)preg_match('/^\-\s*\[\s*x\s*\]/i', $line);
+        $checked = (bool) preg_match('/^\-\s*\[\s*x\s*\]/i', $line);
         $text = preg_replace('/^\-\s*\[\s*[x\s]\s*\]\s*/', '', $line);
         $text = mb_trim($text);
 
-        return '- [' . ($checked ? 'x' : ' ') . '] ' . $text;
+        return '- ['.($checked ? 'x' : ' ').'] '.$text;
     }
 
     /**
@@ -197,7 +248,7 @@ final class MarkdownEnhancementProcessor implements ContentProcessorInterface
             $isListItem = $this->isListItem($trimmed) || $this->isCheckboxItem($trimmed);
 
             if ($isListItem) {
-                if (!$inList && $lastWasList) {
+                if (! $inList && $lastWasList) {
                     $enhanced[] = '';
                 }
                 $inList = true;
@@ -277,13 +328,8 @@ final class MarkdownEnhancementProcessor implements ContentProcessorInterface
     private function cleanupWhitespace(string $markdown): string
     {
         $markdown = preg_replace('/[ \t]+$/m', '', $markdown);
-        $markdown = preg_replace('/\n{4,}/', "\n\n\n", $markdown);
+        $markdown = preg_replace('/\n{3,}/', "\n\n", $markdown);
 
-        return mb_rtrim($markdown) . "\n";
-    }
-
-    public function getPriority(): int
-    {
-        return 70; // Exécuté en dernier, après tous les autres processors
+        return mb_rtrim($markdown)."\n";
     }
 }

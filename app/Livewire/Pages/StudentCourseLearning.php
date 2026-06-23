@@ -96,7 +96,7 @@ final class StudentCourseLearning extends Component implements HasForms
         }
 
         $this->activeChapter = $chapter->load(['examination', 'progress']);
-        $this->dispatch('urlChanged', url: route('student.course.learning', [
+        $this->dispatch('urlChanged', url: route('master-class', [
             'masterClass' => $this->masterClass->id,
             'chapter' => Str::slug($chapter->title),
         ]));
@@ -304,7 +304,7 @@ final class StudentCourseLearning extends Component implements HasForms
                 type: 'success'
             );
 
-            $this->redirect(route('student.course.final-exam', ['masterClass' => $this->masterClass]), navigate: true);
+            $this->redirect(route('master-class', ['masterClass' => $this->masterClass]), navigate: true);
         }
 
         $chapters = $this->masterClass->chapters;

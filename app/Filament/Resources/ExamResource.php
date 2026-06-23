@@ -10,31 +10,35 @@ use App\Models\Chapter;
 use App\Models\Exam;
 use App\Models\Formation;
 use App\Models\Section;
+use BackedEnum;
 use Filament\Forms;
-use Filament\Forms\Form;
 use Filament\Resources\Resource;
+use Filament\Schemas\Components\Utilities\Get;
+use Filament\Schemas\Components\Utilities\Set;
+use Filament\Schemas\Schema;
 use Filament\Tables;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use UnitEnum;
 
 final class ExamResource extends Resource
 {
     protected static ?string $model = Exam::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-clipboard-document-check';
+    protected static BackedEnum|string|null $navigationIcon = 'heroicon-o-clipboard-document-check';
 
     protected static ?string $navigationLabel = 'Examens';
 
-    protected static ?string $navigationGroup = 'Évaluations';
+    protected static string|UnitEnum|null $navigationGroup = 'Évaluations';
 
     protected static ?int $navigationSort = 2;
 
-    public static function form(Form $form): Form
+    public static function form(Schema $schema): Schema
     {
-        return $form
+        return $schema
             ->schema([
-                Forms\Components\Section::make('Association')
+                \Filament\Schemas\Components\Section::make('Association')
                     ->schema([
                         Forms\Components\Select::make('examable_type')
                             ->label('Type d\'élément')
@@ -45,7 +49,7 @@ final class ExamResource extends Resource
                             ])
                             ->required()
                             ->live()
-                            ->afterStateUpdated(fn(Forms\Set $set) => $set('examable_id', null)),
+                            ->afterStateUpdated(fn(Set $set) => $set('examable_id', null)),
 
                         Forms\Components\Select::make('formation_id')
                             ->label('Formation')
@@ -54,15 +58,15 @@ final class ExamResource extends Resource
                             ->preload()
                             ->required()
                             ->live()
-                            ->visible(fn(Forms\Get $get) => !empty($get('examable_type')))
-                            ->afterStateUpdated(function (Forms\Set $set) {
+                            ->visible(fn(Get $get) => !empty($get('examable_type')))
+                            ->afterStateUpdated(function (Set $set) {
                                 $set('section_id', null);
                                 $set('examable_id', null);
                             }),
 
                         Forms\Components\Select::make('section_id')
                             ->label('Section')
-                            ->options(function (Forms\Get $get) {
+                            ->options(function (Get $get) {
                                 $formationId = $get('formation_id');
                                 if (!$formationId) {
                                     return [];
@@ -75,21 +79,21 @@ final class ExamResource extends Resource
                             ->searchable()
                             ->preload()
                             ->live()
-                            ->required(fn(Forms\Get $get) => $get('examable_type') === Chapter::class)
-                            ->visible(fn(Forms\Get $get) => $get('examable_type') === Chapter::class &&
+                            ->required(fn(Get $get) => $get('examable_type') === Chapter::class)
+                            ->visible(fn(Get $get) => $get('examable_type') === Chapter::class &&
                                 !empty($get('formation_id')))
-                            ->afterStateUpdated(function (Forms\Set $set) {
+                            ->afterStateUpdated(function (Set $set) {
                                 $set('examable_id', null);
                             }),
 
                         Forms\Components\Select::make('examable_id')
-                            ->label(fn(Forms\Get $get) => match ($get('examable_type')) {
+                            ->label(fn(Get $get) => match ($get('examable_type')) {
                                 Formation::class => 'Formation',
                                 Section::class => 'Section',
                                 Chapter::class => 'Chapitre',
                                 default => 'Élément',
                             })
-                            ->options(function (Forms\Get $get) {
+                            ->options(function (Get $get) {
                                 $type = $get('examable_type');
 
                                 if (!$type) {
@@ -110,14 +114,14 @@ final class ExamResource extends Resource
                             ->searchable()
                             ->preload()
                             ->required()
-                            ->hidden(fn(Forms\Get $get) => ($get('examable_type') === Formation::class && empty($get('formation_id'))) ||
+                            ->hidden(fn(Get $get) => ($get('examable_type') === Formation::class && empty($get('formation_id'))) ||
                                 ($get('examable_type') === Section::class && empty($get('formation_id'))) ||
                                 ($get('examable_type') === Chapter::class && empty($get('section_id'))) ||
                                 empty($get('examable_type'))),
                     ])
                     ->columns(2),
 
-                Forms\Components\Section::make('Informations générales')
+                \Filament\Schemas\Components\Section::make('Informations générales')
                     ->schema([
                         Forms\Components\TextInput::make('title')
                             ->label('Titre de l\'examen')
@@ -134,7 +138,7 @@ final class ExamResource extends Resource
                             ->columnSpanFull(),
                     ]),
 
-                Forms\Components\Section::make('Configuration de l\'examen')
+                \Filament\Schemas\Components\Section::make('Configuration de l\'examen')
                     ->schema([
                         Forms\Components\TextInput::make('duration_minutes')
                             ->label('Durée en minutes')
@@ -172,7 +176,7 @@ final class ExamResource extends Resource
                     ])
                     ->columns(2),
 
-                Forms\Components\Section::make('Options avancées')
+                \Filament\Schemas\Components\Section::make('Options avancées')
                     ->schema([
                         Forms\Components\Toggle::make('randomize_questions')
                             ->label('Mélanger les questions')
@@ -294,34 +298,34 @@ final class ExamResource extends Resource
                     ->label('Résultats immédiats'),
             ])
             ->actions([
-                Tables\Actions\ActionGroup::make([
-                    Tables\Actions\ViewAction::make()
+                \Filament\Actions\ActionGroup::make([
+                    \Filament\Actions\ViewAction::make()
                         ->label('Voir')
                         ->icon('heroicon-o-eye'),
-                    Tables\Actions\EditAction::make()
+                    \Filament\Actions\EditAction::make()
                         ->label('Modifier')
                         ->icon('heroicon-o-pencil'),
-                    Tables\Actions\DeleteAction::make()
+                    \Filament\Actions\DeleteAction::make()
                         ->label('Supprimer')
                         ->icon('heroicon-o-trash')
                         ->requiresConfirmation(),
                 ]),
             ])
             ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make()
+                \Filament\Actions\BulkActionGroup::make([
+                    \Filament\Actions\DeleteBulkAction::make()
                         ->label('Supprimer')
                         ->icon('heroicon-o-trash')
                         ->requiresConfirmation(),
-                    Tables\Actions\BulkAction::make('activate')
+                    \Filament\Actions\BulkAction::make('activate')
                         ->label('Activer')
                         ->icon('heroicon-o-check-circle')
                         ->action(fn(Builder $query) => $query->update(['is_active' => true])),
-                    Tables\Actions\BulkAction::make('deactivate')
+                    \Filament\Actions\BulkAction::make('deactivate')
                         ->label('Désactiver')
                         ->icon('heroicon-o-x-circle')
                         ->action(fn(Builder $query) => $query->update(['is_active' => false])),
-                    Tables\Actions\BulkAction::make('duplicate')
+                    \Filament\Actions\BulkAction::make('duplicate')
                         ->label('Dupliquer')
                         ->icon('heroicon-o-document-duplicate')
                         ->action(function (array $records): void {

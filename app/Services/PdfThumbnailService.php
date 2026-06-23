@@ -29,8 +29,8 @@ final class PdfThumbnailService
     /**
      * Génère une miniature de la première page du PDF
      *
-     * @param string $pdfPath Chemin absolu vers le fichier PDF
-     * @param array $options Options de configuration:
+     * @param  string  $pdfPath  Chemin absolu vers le fichier PDF
+     * @param  array  $options  Options de configuration:
      *                          - width: int (largeur en pixels)
      *                          - height: int (hauteur en pixels)
      *                          - format: string (jpg, png)
@@ -42,11 +42,11 @@ final class PdfThumbnailService
     public function generateThumbnail(string $pdfPath, array $options = []): ?string
     {
         try {
-            if (!file_exists($pdfPath)) {
+            if (! file_exists($pdfPath)) {
                 throw new Exception("Fichier PDF introuvable: {$pdfPath}");
             }
 
-            if (!extension_loaded('imagick')) {
+            if (! extension_loaded('imagick')) {
                 Log::warning('Extension Imagick non disponible, impossible de générer la miniature');
 
                 return null;
@@ -60,10 +60,10 @@ final class PdfThumbnailService
             $pdf = new Pdf($pdfPath);
 
             $filename = $this->generateFilename($format);
-            $tempPath = storage_path('app/temp/' . $filename);
+            $tempPath = storage_path('app/temp/'.$filename);
 
             $tempDir = dirname($tempPath);
-            if (!is_dir($tempDir)) {
+            if (! is_dir($tempDir)) {
                 mkdir($tempDir, 0755, true);
             }
 
@@ -76,7 +76,7 @@ final class PdfThumbnailService
             if (file_exists($tempPath)) {
                 $this->resizeImage($tempPath, $width, $height);
 
-                $storagePath = self::STORAGE_PATH . '/' . $filename;
+                $storagePath = self::STORAGE_PATH.'/'.$filename;
                 Storage::disk('public')->put($storagePath, file_get_contents($tempPath));
 
                 @unlink($tempPath);
@@ -119,7 +119,7 @@ final class PdfThumbnailService
      */
     private function resizeImage(string $imagePath, int $maxWidth, int $maxHeight): void
     {
-        if (!extension_loaded('imagick')) {
+        if (! extension_loaded('imagick')) {
             return;
         }
 
@@ -132,8 +132,8 @@ final class PdfThumbnailService
             $ratio = min($maxWidth / $width, $maxHeight / $height);
 
             if ($ratio < 1) {
-                $newWidth = (int)($width * $ratio);
-                $newHeight = (int)($height * $ratio);
+                $newWidth = (int) ($width * $ratio);
+                $newHeight = (int) ($height * $ratio);
 
                 $imagick->resizeImage($newWidth, $newHeight, Imagick::FILTER_LANCZOS, 1);
                 $imagick->writeImage($imagePath);

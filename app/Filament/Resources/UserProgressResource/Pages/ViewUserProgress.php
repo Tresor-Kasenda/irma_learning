@@ -8,20 +8,19 @@ use App\Filament\Resources\UserProgressResource;
 use App\Models\Chapter;
 use App\Models\Section;
 use Filament\Actions;
-use Filament\Infolists\Components\Section as InfoSection;
 use Filament\Infolists\Components\TextEntry;
-use Filament\Infolists\Infolist;
 use Filament\Resources\Pages\ViewRecord;
+use Filament\Schemas\Schema;
 
 final class ViewUserProgress extends ViewRecord
 {
     protected static string $resource = UserProgressResource::class;
 
-    public function infolist(Infolist $infolist): Infolist
+    public function infolist(Schema $schema): Schema
     {
-        return $infolist
+        return $schema
             ->schema([
-                InfoSection::make('Informations Générales')
+                \Filament\Schemas\Components\Section::make('Informations Générales')
                     ->schema([
                         TextEntry::make('user.name')
                             ->label('Utilisateur'),
@@ -29,7 +28,7 @@ final class ViewUserProgress extends ViewRecord
                             ->label('Email'),
                         TextEntry::make('trackable_type')
                             ->label('Type d\'élément')
-                            ->formatStateUsing(fn (string $state): string => match ($state) {
+                            ->formatStateUsing(fn(string $state): string => match ($state) {
                                 'App\\Models\\Chapter' => 'Chapitre',
                                 'App\\Models\\Section' => 'Section',
                                 default => $state,
@@ -39,17 +38,17 @@ final class ViewUserProgress extends ViewRecord
                     ])
                     ->columns(2),
 
-                InfoSection::make('Statut et Progression')
+                \Filament\Schemas\Components\Section::make('Statut et Progression')
                     ->schema([
                         TextEntry::make('status')
                             ->label('Statut')
                             ->badge()
-                            ->color(fn (string $state): string => match ($state) {
+                            ->color(fn(string $state): string => match ($state) {
                                 'not_started' => 'secondary',
                                 'in_progress' => 'warning',
                                 'completed' => 'success',
                             })
-                            ->formatStateUsing(fn (string $state): string => match ($state) {
+                            ->formatStateUsing(fn(string $state): string => match ($state) {
                                 'not_started' => 'Non commencé',
                                 'in_progress' => 'En cours',
                                 'completed' => 'Complété',
@@ -64,7 +63,7 @@ final class ViewUserProgress extends ViewRecord
                     ])
                     ->columns(2),
 
-                InfoSection::make('Suivi Temporel')
+                \Filament\Schemas\Components\Section::make('Suivi Temporel')
                     ->schema([
                         TextEntry::make('started_at')
                             ->label('Commencé le')
@@ -83,7 +82,7 @@ final class ViewUserProgress extends ViewRecord
                     ])
                     ->columns(2),
 
-                InfoSection::make('Contexte de Formation')
+                \Filament\Schemas\Components\Section::make('Contexte de Formation')
                     ->schema([
                         TextEntry::make('formation_info')
                             ->label('Formation')
@@ -111,7 +110,7 @@ final class ViewUserProgress extends ViewRecord
 
                                 return 'N/A';
                             })
-                            ->visible(fn ($record) => $record->trackable instanceof Chapter),
+                            ->visible(fn($record) => $record->trackable instanceof Chapter),
                     ])
                     ->columns(2),
             ]);

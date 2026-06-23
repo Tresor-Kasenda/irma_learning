@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Enums;
 
 enum QuestionTypeEnum: string
@@ -13,7 +15,6 @@ enum QuestionTypeEnum: string
     case TEXT = 'text';
 
     case ESSAY = 'essay';
-
 
     public function getLabel(): string
     {

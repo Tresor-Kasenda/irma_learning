@@ -30,13 +30,14 @@ final class PdfImageProcessor implements ContentProcessorInterface
     {
         $filePath = $content->options['filePath'] ?? null;
 
-        if (!$filePath || !file_exists($filePath)) {
+        if (! $filePath || ! file_exists($filePath)) {
             return $content;
         }
 
         try {
-            if (!class_exists(Pdf::class)) {
+            if (! class_exists(Pdf::class)) {
                 Log::warning('Spatie\PdfToImage\Pdf class not found. Skipping image extraction.');
+
                 return $content;
             }
 
@@ -45,7 +46,7 @@ final class PdfImageProcessor implements ContentProcessorInterface
             $textLength = mb_strlen($content->rawText);
 
             $outputDir = storage_path('app/public/extracts/images');
-            if (!file_exists($outputDir)) {
+            if (! file_exists($outputDir)) {
                 mkdir($outputDir, 0755, true);
             }
 
@@ -55,9 +56,9 @@ final class PdfImageProcessor implements ContentProcessorInterface
                     continue;
                 }
 
-                $imageName = uniqid() . '_page_' . $pageNumber . '.jpg';
-                $fullPath = $outputDir . '/' . $imageName;
-                $publicPath = 'extracts/images/' . $imageName;
+                $imageName = uniqid().'_page_'.$pageNumber.'.jpg';
+                $fullPath = $outputDir.'/'.$imageName;
+                $publicPath = 'extracts/images/'.$imageName;
 
                 // Extraire la page en image
                 $pdf->selectPage($pageNumber);

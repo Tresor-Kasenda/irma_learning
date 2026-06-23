@@ -61,11 +61,18 @@ final class TakeExam extends Component
             ]
         );
 
+        // Initialiser l'ordre des questions si randomisation activée
+        if ($exam->randomize_questions && ! $this->attempt->question_order) {
+            $order = $exam->questions()->pluck('id')->shuffle()->values()->toArray();
+            $this->attempt->update(['question_order' => $order]);
+            $this->attempt->refresh();
+        }
+
         // Initialiser le timer si défini
         if ($exam->duration_minutes) {
             $elapsed = now()->diffInSeconds($this->attempt->started_at);
             $totalSeconds = $exam->duration_minutes * 60;
-            $this->timeRemaining = max(0, $totalSeconds - $elapsed);
+            $this->timeRemaining = (int) max(0, $totalSeconds - $elapsed);
         }
 
         // Charger les réponses existantes
@@ -76,11 +83,6 @@ final class TakeExam extends Component
     public function questions()
     {
         $questions = $this->exam->questions()->with('options')->get();
-
-        if ($this->exam->randomize_questions && ! $this->attempt->question_order) {
-            $order = $questions->pluck('id')->shuffle()->values()->toArray();
-            $this->attempt->update(['question_order' => $order]);
-        }
 
         if ($this->attempt->question_order) {
             $questions = $questions->sortBy(function ($question) {
@@ -213,7 +215,7 @@ final class TakeExam extends Component
             // Si l'examen est lié à un chapitre et réussi, marquer le chapitre comme terminé
             if ($this->exam->examable_type === 'App\Models\Chapter' && $percentage >= ($this->exam->passing_score ?? 70)) {
                 $chapter = $this->exam->examable;
-                
+
                 // Mettre à jour ou créer la progression du chapitre
                 \App\Models\UserProgress::updateOrCreate(
                     [
@@ -245,6 +247,7 @@ final class TakeExam extends Component
             $chapter->load('section.formation');
             if ($chapter->section && $chapter->section->formation) {
                 $this->redirect(route('course.player', ['formation' => $chapter->section->formation->slug, 'chapterId' => $chapter->id]), navigate: true);
+
                 return;
             }
         }

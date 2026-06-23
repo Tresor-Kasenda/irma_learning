@@ -51,14 +51,14 @@ final class DetailFormation extends Component
 
     public function enroll(Formation $formation): void
     {
-        if (!auth()->check()) {
+        if (! auth()->check()) {
             session()->put('url.intended', route('formation.show', $this->formation));
             $this->redirect(route('login'), navigate: true);
 
             return;
         }
 
-        if (!auth()->user()->hasStudent()) {
+        if (! auth()->user()->hasStudent()) {
             Notification::make()
                 ->title('Seuls les étudiants peuvent s\'inscrire aux formations.')
                 ->body('Veuillez vous connecter avec un compte étudiant pour continuer.')
@@ -107,7 +107,7 @@ final class DetailFormation extends Component
 
         $this->isEnrolled = true;
         $this->enrollmentStatus = 'active';
-        
+
         Notification::make()
             ->title('Inscription réussie !')
             ->body('Vous êtes maintenant inscrit à la formation.')

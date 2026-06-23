@@ -5,6 +5,7 @@ namespace App\Filament\Resources\UserResource\RelationManagers;
 use App\Enums\EnrollmentPaymentEnum;
 use App\Enums\EnrollmentStatusEnum;
 use App\Enums\FormationLevelEnum;
+use BackedEnum;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Tables;
 use Filament\Tables\Columns\TextColumn;
@@ -17,6 +18,8 @@ class FormationsRelationManager extends RelationManager
     protected static ?string $recordTitleAttribute = 'title';
 
     protected static ?string $title = 'Formations';
+
+    protected static string|BackedEnum|null $icon = null;
 
     public function table(Table $table): Table
     {
@@ -99,12 +102,12 @@ class FormationsRelationManager extends RelationManager
                     ->multiple(),
             ])
             ->actions([
-                Tables\Actions\ActionGroup::make([
-                    Tables\Actions\DetachAction::make()
+                \Filament\Actions\ActionGroup::make([
+                    \Filament\Actions\DetachAction::make()
                         ->label('Se désinscrire')
                         ->icon('heroicon-o-minus')
                         ->color('danger'),
-                    Tables\Actions\Action::make('view_formation')
+                    \Filament\Actions\Action::make('view_formation')
                         ->label('Voir formation')
                         ->icon('heroicon-o-eye')
                         ->color('info')
@@ -113,12 +116,12 @@ class FormationsRelationManager extends RelationManager
                 ])
             ])
             ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DetachBulkAction::make()
+                \Filament\Actions\BulkActionGroup::make([
+                    \Filament\Actions\DetachBulkAction::make()
                         ->label('Se désinscrire')
                         ->icon('heroicon-o-minus')
                         ->color('danger'),
-                    Tables\Actions\BulkAction::make('toggle_active')
+                    \Filament\Actions\BulkAction::make('toggle_active')
                         ->label('Activer/Désactiver')
                         ->icon('heroicon-o-power')
                         ->action(function ($records) {

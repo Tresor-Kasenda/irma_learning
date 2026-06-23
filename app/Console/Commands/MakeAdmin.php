@@ -7,7 +7,9 @@ namespace App\Console\Commands;
 use App\Models\User;
 use Filament\Commands\MakeUserCommand;
 use Illuminate\Contracts\Auth\Authenticatable;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Hash;
+
 use function Laravel\Prompts\password;
 use function Laravel\Prompts\select;
 use function Laravel\Prompts\text;
@@ -28,10 +30,19 @@ final class MakeAdmin extends MakeUserCommand
         return self::SUCCESS;
     }
 
+    public function roles(): array
+    {
+        return [
+            'ADMIN',
+            'INSTRUCTOR',
+            'ROOT',
+        ];
+    }
+
     /**
      * Create admin user and assign admin role
      */
-    protected function createUser(): Authenticatable
+    protected function createUser(): Model&Authenticatable
     {
         return $this->getUserModel()::create($this->getUserData());
     }
@@ -40,41 +51,32 @@ final class MakeAdmin extends MakeUserCommand
     {
         return [
             'name' => $this->options['name'] ?? text(
-                    label: 'Name',
-                    required: true,
-                ),
+                label: 'Name',
+                required: true,
+            ),
             'username' => $this->options['username'] ?? text(
-                    label: 'Username',
-                    required: true,
+                label: 'Username',
+                required: true,
             ),
             'email' => $this->options['email'] ?? text(
-                    label: 'Email address',
-                    required: true,
-                    validate: fn(string $email): ?string => match (true) {
-                        !filter_var($email, FILTER_VALIDATE_EMAIL) => 'The email address must be valid.',
-                        User::where('email', $email)->exists() => 'A user with this email address already exists',
-                        default => null,
-                    },
-                ),
+                label: 'Email address',
+                required: true,
+                validate: fn (string $email): ?string => match (true) {
+                    ! filter_var($email, FILTER_VALIDATE_EMAIL) => 'The email address must be valid.',
+                    User::where('email', $email)->exists() => 'A user with this email address already exists',
+                    default => null,
+                },
+            ),
             'role' => $this->options['role'] ?? select(
-                    label: 'Role',
-                    options: $this->roles(),
-                    hint: 'Select role of user',
-                    required: true
-                ),
+                label: 'Role',
+                options: $this->roles(),
+                hint: 'Select role of user',
+                required: true
+            ),
             'password' => Hash::make($this->options['password'] ?? password(
                 label: 'Password',
                 required: true,
             )),
-        ];
-    }
-
-    public function roles(): array
-    {
-        return [
-            'ADMIN',
-            'INSTRUCTOR',
-            'ROOT',
         ];
     }
 }

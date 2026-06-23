@@ -6,18 +6,18 @@ use App\Filament\Resources\QuestionResource;
 use App\Models\Question;
 use Filament\Actions;
 use Filament\Infolists;
-use Filament\Infolists\Infolist;
+use Filament\Schemas\Schema;
 use Filament\Resources\Pages\ViewRecord;
 
 class ViewQuestion extends ViewRecord
 {
     protected static string $resource = QuestionResource::class;
 
-    public function infolist(Infolist $infolist): Infolist
+    public function infolist(Schema $schema): Schema
     {
-        return $infolist
+        return $schema
             ->schema([
-                Infolists\Components\Section::make('Informations de la question')
+                \Filament\Schemas\Components\Section::make('Informations de la question')
                     ->schema([
                         Infolists\Components\TextEntry::make('exam.title')
                             ->label('Examen'),
@@ -35,7 +35,7 @@ class ViewQuestion extends ViewRecord
                     ])
                     ->columns(3),
 
-                Infolists\Components\Section::make('Contenu')
+                \Filament\Schemas\Components\Section::make('Contenu')
                     ->schema([
                         Infolists\Components\TextEntry::make('question_text')
                             ->label('Question')
@@ -48,7 +48,7 @@ class ViewQuestion extends ViewRecord
                             ->placeholder('Aucune explication fournie'),
                     ]),
 
-                Infolists\Components\Section::make('Options de réponse')
+                \Filament\Schemas\Components\Section::make('Options de réponse')
                     ->schema([
                         Infolists\Components\RepeatableEntry::make('options')
                             ->schema([
@@ -65,7 +65,7 @@ class ViewQuestion extends ViewRecord
                     ])
                     ->visible(fn($record): bool => $record->options()->count() > 0),
 
-                Infolists\Components\Section::make('Statistiques')
+                \Filament\Schemas\Components\Section::make('Statistiques')
                     ->schema([
                         Infolists\Components\TextEntry::make('answers_count')
                             ->label('Nombre de réponses')

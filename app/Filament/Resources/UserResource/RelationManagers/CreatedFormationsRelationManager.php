@@ -4,9 +4,11 @@ namespace App\Filament\Resources\UserResource\RelationManagers;
 
 use App\Enums\FormationLevelEnum;
 use App\Models\Formation;
+use BackedEnum;
 use Filament\Forms;
-use Filament\Forms\Form;
 use Filament\Resources\RelationManagers\RelationManager;
+use Filament\Schemas\Components\Section;
+use Filament\Schemas\Schema;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Collection;
@@ -18,15 +20,15 @@ class CreatedFormationsRelationManager extends RelationManager
 
     protected static ?string $recordTitleAttribute = 'title';
 
-    protected static ?string $icon = 'heroicon-o-academic-cap';
+    protected static string|null|BackedEnum $icon = 'heroicon-o-academic-cap';
 
     protected static ?string $title = 'Formations créées';
 
-    public function form(Form $form): Form
+    public function form(Schema $schema): Schema
     {
-        return $form
+        return $schema
             ->schema([
-                Forms\Components\Section::make('Informations générales')
+                Section::make('Informations générales')
                     ->schema([
                         Forms\Components\TextInput::make('title')
                             ->label('Titre')
@@ -59,7 +61,7 @@ class CreatedFormationsRelationManager extends RelationManager
                     ])
                     ->columns(2),
 
-                Forms\Components\Section::make('Configuration')
+                Section::make('Configuration')
                     ->schema([
                         Forms\Components\Select::make('difficulty_level')
                             ->label('Niveau de difficulté')
@@ -107,7 +109,7 @@ class CreatedFormationsRelationManager extends RelationManager
                     ])
                     ->columns(2),
 
-                Forms\Components\Section::make('Statuts et options')
+                Section::make('Statuts et options')
                     ->schema([
                         Forms\Components\Toggle::make('is_active')
                             ->label('Actif')
@@ -124,7 +126,7 @@ class CreatedFormationsRelationManager extends RelationManager
                     ])
                     ->columns(3),
 
-                Forms\Components\Section::make('Image')
+                Section::make('Image')
                     ->schema([
                         Forms\Components\FileUpload::make('image')
                             ->label('Image')
@@ -217,32 +219,32 @@ class CreatedFormationsRelationManager extends RelationManager
                     ->native(false),
             ])
             ->headerActions([
-                Tables\Actions\CreateAction::make()
+                \Filament\Actions\CreateAction::make()
                     ->label('Créer une formation')
                     ->icon('heroicon-o-plus')
                     ->slideOver()
                     ->color('success'),
             ])
             ->actions([
-                Tables\Actions\ActionGroup::make([
-                    Tables\Actions\EditAction::make()
+                \Filament\Actions\ActionGroup::make([
+                    \Filament\Actions\EditAction::make()
                         ->label('Modifier')
                         ->icon('heroicon-o-pencil')
                         ->color('info')
                         ->slideOver(),
-                    Tables\Actions\DeleteAction::make()
+                    \Filament\Actions\DeleteAction::make()
                         ->label('Supprimer')
                         ->icon('heroicon-o-trash')
                         ->color('danger')
                         ->requiresConfirmation(),
-                    Tables\Actions\Action::make('view_formation')
+                    \Filament\Actions\Action::make('view_formation')
                         ->label('Voir')
                         ->icon('heroicon-o-eye')
                         ->color('info')
                         //->url(fn(Formation $record) => route('filament.admin.resources.formations.view', $record))
                         ->openUrlInNewTab(),
 
-                    Tables\Actions\Action::make('duplicate')
+                    \Filament\Actions\Action::make('duplicate')
                         ->label('Dupliquer')
                         ->icon('heroicon-o-document-duplicate')
                         ->color('warning')
@@ -258,18 +260,18 @@ class CreatedFormationsRelationManager extends RelationManager
                 ])
             ])
             ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make()
+                \Filament\Actions\BulkActionGroup::make([
+                    \Filament\Actions\DeleteBulkAction::make()
                         ->label('Supprimer')
                         ->icon('heroicon-o-trash')
                         ->color('danger')
                         ->requiresConfirmation(),
-                    Tables\Actions\BulkAction::make('activate')
+                    \Filament\Actions\BulkAction::make('activate')
                         ->label('Activer')
                         ->icon('heroicon-o-check-circle')
                         ->color('success')
                         ->action(fn(Collection $records) => $records->each->update(['is_active' => true])),
-                    Tables\Actions\BulkAction::make('deactivate')
+                    \Filament\Actions\BulkAction::make('deactivate')
                         ->label('Désactiver')
                         ->icon('heroicon-o-x-circle')
                         ->color('danger')

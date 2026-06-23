@@ -9,32 +9,40 @@ use App\Filament\Resources\ChapterResource\Pages;
 use App\Models\Chapter;
 use App\Models\Section;
 use App\Services\ChapterContentService;
-use App\Services\ReadingDurationCalculatorService;
+use BackedEnum;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Exception;
+use Filament\Actions\Action;
+use Filament\Actions\ActionGroup;
+use Filament\Actions\BulkAction;
+use Filament\Actions\BulkActionGroup;
+use Filament\Actions\DeleteAction;
+use Filament\Actions\DeleteBulkAction;
+use Filament\Actions\EditAction;
+use Filament\Actions\ViewAction;
 use Filament\Forms;
 use Filament\Forms\Components\FileUpload;
-use Filament\Forms\Form;
-use Filament\Forms\Get;
-use Filament\Notifications\Actions\Action;
 use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
+use Filament\Schemas\Components\Utilities\Get;
+use Filament\Schemas\Components\Utilities\Set;
+use Filament\Schemas\Schema;
 use Filament\Tables;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Storage;
-use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
+use UnitEnum;
 
 final class ChapterResource extends Resource
 {
     protected static ?string $model = Chapter::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-document-text';
+    protected static BackedEnum|string|null $navigationIcon = 'heroicon-o-document-text';
 
     protected static ?string $navigationLabel = 'Chapitres';
 
-    protected static ?string $navigationGroup = 'Gestion des formations';
+    protected static string|UnitEnum|null $navigationGroup = 'Gestion des formations';
 
     protected static ?int $navigationSort = 4;
 
@@ -147,17 +155,17 @@ final class ChapterResource extends Resource
                         false: fn(Builder $query) => $query->whereNull('metadata->pdf_info'),
                     ),
             ])
-            ->actions([
-                Tables\Actions\ActionGroup::make([
-                    Tables\Actions\ViewAction::make()
+            ->recordActions([
+                ActionGroup::make([
+                    ViewAction::make()
                         ->label('Voir')
                         ->icon('heroicon-o-eye'),
 
-                    Tables\Actions\EditAction::make()
+                    EditAction::make()
                         ->label('Modifier')
                         ->icon('heroicon-o-pencil'),
 
-                    Tables\Actions\Action::make('export_pdf')
+                    Action::make('export_pdf')
                         ->label('Exporter en PDF')
                         ->icon('heroicon-o-document-arrow-down')
                         ->visible(fn($record) => !empty($record->media_url ?? []))
@@ -165,19 +173,19 @@ final class ChapterResource extends Resource
                             ChapterResource::exportToPdf($record);
                         })
                         ->tooltip('Exporter le chapitre vers un nouveau PDF'),
-                    Tables\Actions\DeleteAction::make()
+                    DeleteAction::make()
                         ->label('Supprimer')
                         ->icon('heroicon-o-trash')
                         ->requiresConfirmation(),
                 ]),
             ])
-            ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make()
+            ->toolbarActions([
+                BulkActionGroup::make([
+                    DeleteBulkAction::make()
                         ->label('Supprimer')
                         ->icon('heroicon-o-trash'),
 
-                    Tables\Actions\BulkAction::make('toggle_active')
+                    BulkAction::make('toggle_active')
                         ->label('Activer/Désactiver')
                         ->icon('heroicon-o-power')
                         ->action(function ($records) {
@@ -186,7 +194,7 @@ final class ChapterResource extends Resource
                             }
                         }),
 
-                    Tables\Actions\BulkAction::make('toggle_free')
+                    BulkAction::make('toggle_free')
                         ->label('Gratuit/Payant')
                         ->icon('heroicon-o-currency-dollar')
                         ->action(function ($records) {
@@ -268,11 +276,11 @@ final class ChapterResource extends Resource
         return $css . $html;
     }
 
-    public static function form(Form $form): Form
+    public static function form(Schema $schema): Schema
     {
-        return $form
+        return $schema
             ->schema([
-                Forms\Components\Section::make('Source du chapitre')
+                \Filament\Schemas\Components\Section::make('Source du chapitre')
                     ->schema([
                         Forms\Components\Select::make('section_id')
                             ->label('Section')
@@ -309,7 +317,7 @@ final class ChapterResource extends Resource
                             ->required()
                             ->default('text')
                             ->live()
-                            ->afterStateUpdated(function ($state, Forms\Set $set) {
+                            ->afterStateUpdated(function ($state, Set $set) {
                                 $set('media_url', null);
                             }),
 
@@ -326,7 +334,7 @@ final class ChapterResource extends Resource
                             ->visible(fn(Get $get) => $get('content_type') === 'pdf')
                             ->required(fn(Get $get) => $get('content_type') === 'pdf')
                             ->live()
-                            ->afterStateUpdated(function ($state, Forms\Set $set, Get $get) {
+                            ->afterStateUpdated(function ($state, Set $set, Get $get) {
                                 if ($state) {
                                     try {
                                         $service = app(ChapterContentService::class);
@@ -393,7 +401,7 @@ final class ChapterResource extends Resource
                     ])
                     ->columns(2),
 
-                Forms\Components\Section::make('Configuration du contenu')
+                \Filament\Schemas\Components\Section::make('Configuration du contenu')
                     ->schema([
                         Forms\Components\RichEditor::make('content')
                             ->label('Contenu principal')
@@ -402,7 +410,7 @@ final class ChapterResource extends Resource
                     ])
                     ->columns(2),
 
-                Forms\Components\Section::make('Paramètres')
+                \Filament\Schemas\Components\Section::make('Paramètres')
                     ->schema([
                         Forms\Components\TextInput::make('order_position')
                             ->label('Position du chapitre')
@@ -440,7 +448,6 @@ final class ChapterResource extends Resource
                     ->columns(2),
             ]);
     }
-
 
 
     public static function getRelations(): array

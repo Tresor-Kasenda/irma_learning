@@ -6,7 +6,7 @@ use App\Enums\EnrollmentPaymentEnum;
 use App\Enums\EnrollmentStatusEnum;
 use App\Enums\UserRoleEnum;
 use Filament\Forms;
-use Filament\Forms\Form;
+use Filament\Schemas\Schema;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Tables;
 use Filament\Tables\Table;
@@ -85,13 +85,13 @@ class StudentsRelationManager extends RelationManager
                     ->toggle(),
             ])
             ->actions([
-                Tables\Actions\ActionGroup::make([
-                    Tables\Actions\DetachAction::make()
+                \Filament\Actions\ActionGroup::make([
+                    \Filament\Actions\DetachAction::make()
                         ->label('Se désinscrire')
                         ->icon('heroicon-o-minus')
                         ->color('danger')
                         ->requiresConfirmation(),
-                    Tables\Actions\Action::make('view_progress')
+                    \Filament\Actions\Action::make('view_progress')
                         ->label('Voir progression')
                         ->icon('heroicon-o-chart-bar')
                         ->color('info')
@@ -100,8 +100,8 @@ class StudentsRelationManager extends RelationManager
                 ])
             ])
             ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DetachBulkAction::make()
+                \Filament\Actions\BulkActionGroup::make([
+                    \Filament\Actions\DetachBulkAction::make()
                         ->label('Se désinscrire')
                         ->icon('heroicon-o-minus')
                         ->requiresConfirmation(),
@@ -110,11 +110,11 @@ class StudentsRelationManager extends RelationManager
             ->defaultSort('pivot.enrollment_date', 'desc');
     }
 
-    public function form(Form $form): Form
+    public function form(Schema $schema): Schema
     {
-        return $form
+        return $schema
             ->schema([
-                Forms\Components\Section::make('Informations de l\'inscription')
+                \Filament\Schemas\Components\Section::make('Informations de l\'inscription')
                     ->schema([
                         Forms\Components\Select::make('user_id')
                             ->label('Étudiant')

@@ -1,10 +1,13 @@
 <?php
 
+declare(strict_types=1);
+
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration {
+return new class extends Migration
+{
     /**
      * Run the migrations.
      */
@@ -19,7 +22,7 @@ return new class extends Migration {
             $table->string('payment_status')->default('pending');
             $table->decimal('amount_paid', 10, 2)->default(0);
             $table->decimal('progress_percentage', 5, 2)->default(0);
-            
+
             $table->timestamp('enrollment_date')->useCurrent();
             $table->timestamp('completion_date')->nullable();
             $table->timestamp('last_accessed_at')->nullable();

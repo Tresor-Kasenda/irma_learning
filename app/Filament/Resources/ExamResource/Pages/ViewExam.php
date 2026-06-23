@@ -7,23 +7,22 @@ use App\Filament\Resources\ExamResource;
 use App\Models\Chapter;
 use App\Models\Exam;
 use App\Models\Formation;
-use App\Models\Module;
 use App\Models\Section;
 use Filament\Actions;
 use Filament\Infolists\Components\IconEntry;
 use Filament\Infolists\Components\TextEntry;
-use Filament\Infolists\Infolist;
 use Filament\Resources\Pages\ViewRecord;
+use Filament\Schemas\Schema;
 
 class ViewExam extends ViewRecord
 {
     protected static string $resource = ExamResource::class;
 
-    public function infolist(Infolist $infolist): Infolist
+    public function infolist(Schema $schema): Schema
     {
-        return $infolist
+        return $schema
             ->schema([
-                \Filament\Infolists\Components\Section::make('Informations générales')
+                \Filament\Schemas\Components\Section::make('Informations générales')
                     ->schema([
                         TextEntry::make('title')
                             ->label('Titre'),
@@ -32,7 +31,6 @@ class ViewExam extends ViewRecord
                             ->label('Type d\'élément')
                             ->formatStateUsing(fn(string $state): string => match ($state) {
                                 Formation::class => 'Formation',
-                                Module::class => 'Module',
                                 Section::class => 'Section',
                                 Chapter::class => 'Chapitre',
                                 default => 'Inconnu',
@@ -40,7 +38,6 @@ class ViewExam extends ViewRecord
                             ->badge()
                             ->color(fn($state): string => match ($state) {
                                 Formation::class => 'success',
-                                Module::class => 'info',
                                 Section::class => 'warning',
                                 Chapter::class => 'danger',
                                 default => 'gray',
@@ -60,7 +57,7 @@ class ViewExam extends ViewRecord
                     ])
                     ->columns(3),
 
-                \Filament\Infolists\Components\Section::make('Configuration de l\'examen')
+                \Filament\Schemas\Components\Section::make('Configuration de l\'examen')
                     ->schema([
                         TextEntry::make('duration_minutes')
                             ->label('Durée (minutes)')
@@ -85,7 +82,7 @@ class ViewExam extends ViewRecord
                     ])
                     ->columns(3),
 
-                \Filament\Infolists\Components\Section::make('Options')
+                \Filament\Schemas\Components\Section::make('Options')
                     ->schema([
                         IconEntry::make('randomize_questions')
                             ->label('Questions mélangées')
@@ -101,7 +98,7 @@ class ViewExam extends ViewRecord
                     ])
                     ->columns(3),
 
-                \Filament\Infolists\Components\Section::make('Statistiques')
+                \Filament\Schemas\Components\Section::make('Statistiques')
                     ->schema([
                         TextEntry::make('questions_count')
                             ->label('Nombre de questions')

@@ -9,8 +9,8 @@ use Filament\Widgets\ChartWidget;
 
 class UserActivityChart extends ChartWidget
 {
-    protected static ?string $heading = 'User Activity Analytics';
     protected static ?int $sort = 3;
+    protected ?string $heading = 'User Activity Analytics';
 
     protected function getData(): array
     {

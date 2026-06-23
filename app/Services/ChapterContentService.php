@@ -7,6 +7,7 @@ namespace App\Services;
 use App\DTOs\ChapterContentDTO;
 use Exception;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
 
 final class ChapterContentService
@@ -17,36 +18,32 @@ final class ChapterContentService
     ) {}
 
     /**
-     * Extracts content from a PDF file and returns a DTO.
+     * Extrait le contenu d'un fichier PDF et retourne un DTO.
      *
-     * @param string|TemporaryUploadedFile $file
-     * @return ChapterContentDTO
-     * @throws Exception
+     * @param  string|TemporaryUploadedFile  $file  Fichier uploadé ou chemin vers le PDF
      */
     public function extractFromPdf(mixed $file): ChapterContentDTO
     {
         try {
             $filePath = $this->resolveFilePath($file);
-            $originalFileName = $this->resolveOriginalFileName($file);
+            $fallbackTitle = $this->resolveOriginalFileName($file);
 
-            if (!file_exists($filePath)) {
-                throw new Exception('Le fichier PDF est introuvable.');
+            if (! file_exists($filePath)) {
+                throw new Exception("Le fichier PDF est introuvable : {$filePath}");
             }
 
-            // 1. Convert PDF to Markdown/Text
             $result = $this->conversionService->convert($filePath, [
                 'generateThumbnail' => true,
                 'ignorePageNumbers' => true,
-                'customTitle' => $originalFileName,
+                'skipFirstPage' => false,
+                'fallbackTitle' => $fallbackTitle,
             ]);
 
-            // 2. Calculate Reading Duration
             $readingAnalysis = $this->durationService->calculateReadingDuration(
                 $result['content'],
                 'average'
             );
 
-            // 3. Construct DTO
             return new ChapterContentDTO(
                 title: $result['title'],
                 content: $result['content'],
@@ -66,7 +63,12 @@ final class ChapterContentService
     }
 
     /**
-     * Resolves the real file path from the input.
+     * Résout le chemin absolu du fichier depuis différentes sources possibles.
+     *
+     * Gère trois cas :
+     * 1. Objet TemporaryUploadedFile Livewire  → getRealPath()
+     * 2. Chemin absolu déjà valide             → utilisé tel quel
+     * 3. Chemin relatif au disque "public"     → converti en chemin absolu via Storage
      */
     private function resolveFilePath(mixed $file): string
     {
@@ -75,19 +77,29 @@ final class ChapterContentService
         }
 
         if (is_string($file)) {
+            if (file_exists($file)) {
+                return $file;
+            }
+
+            $absolutePath = Storage::disk('public')->path($file);
+            if (file_exists($absolutePath)) {
+                return $absolutePath;
+            }
+
             return $file;
         }
 
         throw new Exception('Format de fichier non supporté.');
     }
 
-    /**
-     * Resolves the original file name if possible.
-     */
     private function resolveOriginalFileName(mixed $file): ?string
     {
         if ($file instanceof TemporaryUploadedFile) {
             return pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
+        }
+
+        if (is_string($file)) {
+            return pathinfo($file, PATHINFO_FILENAME);
         }
 
         return null;

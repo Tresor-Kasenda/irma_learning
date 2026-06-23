@@ -8,12 +8,12 @@ use App\Filament\Resources\FormationResource;
 use Exception;
 use Filament\Actions;
 use Filament\Forms\Components\DateTimePicker;
-use Filament\Forms\Components\Grid;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\EditRecord;
+use Filament\Schemas\Components\Grid;
 use Illuminate\Database\Eloquent\Model;
 
 final class EditFormation extends EditRecord

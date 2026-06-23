@@ -6,33 +6,44 @@ use App\Enums\FormationLevelEnum;
 use App\Filament\Resources\FormationResource\Pages;
 use App\Filament\Resources\FormationResource\RelationManagers;
 use App\Models\Formation;
+use BackedEnum;
+use Filament\Actions\ActionGroup;
+use Filament\Actions\BulkAction;
+use Filament\Actions\BulkActionGroup;
+use Filament\Actions\DeleteAction;
+use Filament\Actions\DeleteBulkAction;
+use Filament\Actions\EditAction;
+use Filament\Actions\ViewAction;
 use Filament\Forms;
-use Filament\Forms\Form;
 use Filament\Resources\Resource;
+use Filament\Schemas\Components\Section;
+use Filament\Schemas\Components\Utilities\Set;
+use Filament\Schemas\Schema;
 use Filament\Tables;
 use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Str;
+use UnitEnum;
 
 class FormationResource extends Resource
 {
     protected static ?string $model = Formation::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-academic-cap';
+    protected static BackedEnum|string|null $navigationIcon = 'heroicon-o-academic-cap';
 
     protected static ?string $navigationLabel = 'Formations';
 
-    protected static ?string $navigationGroup = 'Gestion des formations';
+    protected static string|UnitEnum|null $navigationGroup = 'Gestion des formations';
 
     protected static ?int $navigationSort = 1;
 
-    public static function form(Form $form): Form
+    public static function form(Schema $schema): Schema
     {
-        return $form
+        return $schema
             ->schema([
-                Forms\Components\Section::make('Informations générales')
+                Section::make('Informations générales')
                     ->schema([
                         Forms\Components\TextInput::make('title')
                             ->label('Titre')
@@ -41,7 +52,7 @@ class FormationResource extends Resource
                             ->live(onBlur: true)
                             ->helperText('Le titre principal qui apparaîtra aux étudiants')
                             ->afterStateUpdated(
-                                fn(string $context, $state, Forms\Set $set) => $context === 'create' ? $set('slug', Str::slug($state)) : null
+                                fn(string $context, $state, Set $set) => $context === 'create' ? $set('slug', Str::slug($state)) : null
                             ),
 
                         Forms\Components\TextInput::make('slug')
@@ -70,7 +81,7 @@ class FormationResource extends Resource
                     ])
                     ->columns(2),
 
-                Forms\Components\Section::make('Configuration')
+                Section::make('Configuration')
                     ->schema([
                         Forms\Components\Select::make('difficulty_level')
                             ->label('Niveau de difficulté')
@@ -93,7 +104,7 @@ class FormationResource extends Resource
                     ])
                     ->columns(2),
 
-                Forms\Components\Section::make('Statuts et options')
+                Section::make('Statuts et options')
                     ->schema([
                         Forms\Components\Toggle::make('is_active')
                             ->label('Actif')
@@ -110,7 +121,7 @@ class FormationResource extends Resource
                     ])
                     ->columns(3),
 
-                Forms\Components\Section::make('Image')
+                Section::make('Image')
                     ->schema([
                         Forms\Components\FileUpload::make('image')
                             ->label('Image')
@@ -181,27 +192,27 @@ class FormationResource extends Resource
                     ->label('Niveau de difficulté')
                     ->options(FormationLevelEnum::class),
             ])
-            ->actions([
-                Tables\Actions\ActionGroup::make([
-                    Tables\Actions\ViewAction::make()
+            ->recordActions([
+                ActionGroup::make([
+                    ViewAction::make()
                         ->label('Voir')
                         ->icon('heroicon-o-eye'),
-                    Tables\Actions\EditAction::make()
+                    EditAction::make()
                         ->label('Modifier')
                         ->icon('heroicon-o-pencil'),
-                    Tables\Actions\DeleteAction::make()
+                    DeleteAction::make()
                         ->label('Supprimer')
                         ->icon('heroicon-o-trash')
                         ->requiresConfirmation(),
                 ])
             ])
-            ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make()
+            ->toolbarActions([
+                BulkActionGroup::make([
+                    DeleteBulkAction::make()
                         ->label('Supprimer')
                         ->icon('heroicon-o-trash')
                         ->requiresConfirmation(),
-                    Tables\Actions\BulkAction::make('toggle_active')
+                    BulkAction::make('toggle_active')
                         ->label('Activer/Désactiver')
                         ->icon('heroicon-o-power')
                         ->action(function ($records) {

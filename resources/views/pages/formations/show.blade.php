@@ -57,7 +57,7 @@
                                 <div class="mt-6">
                                     @auth
                                         @if(auth()->user()->isEnrolledIn($formation))
-                                            <a href="{{ route('student.learning', $formation) }}"
+                                            <a href="{{ route('course.player', $formation) }}"
                                                class="w-full inline-flex justify-center items-center px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700">
                                                 Continuer l'apprentissage
                                             </a>

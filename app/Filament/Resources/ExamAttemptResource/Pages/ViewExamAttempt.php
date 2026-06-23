@@ -6,18 +6,18 @@ use App\Filament\Resources\ExamAttemptResource;
 use App\Models\ExamAttempt;
 use Filament\Actions;
 use Filament\Infolists;
-use Filament\Infolists\Infolist;
+use Filament\Schemas\Schema;
 use Filament\Resources\Pages\ViewRecord;
 
 class ViewExamAttempt extends ViewRecord
 {
     protected static string $resource = ExamAttemptResource::class;
 
-    public function infolist(Infolist $infolist): Infolist
+    public function infolist(Schema $schema): Schema
     {
-        return $infolist
+        return $schema
             ->schema([
-                Infolists\Components\Section::make('Informations générales')
+                \Filament\Schemas\Components\Section::make('Informations générales')
                     ->schema([
                         Infolists\Components\TextEntry::make('user.name')
                             ->label('Étudiant'),
@@ -31,7 +31,7 @@ class ViewExamAttempt extends ViewRecord
                     ])
                     ->columns(2),
 
-                Infolists\Components\Section::make('Résultats')
+                \Filament\Schemas\Components\Section::make('Résultats')
                     ->schema([
                         Infolists\Components\TextEntry::make('score')
                             ->label('Score obtenu'),
@@ -54,7 +54,7 @@ class ViewExamAttempt extends ViewRecord
                     ])
                     ->columns(3),
 
-                Infolists\Components\Section::make('Chronologie')
+                \Filament\Schemas\Components\Section::make('Chronologie')
                     ->schema([
                         Infolists\Components\TextEntry::make('started_at')
                             ->label('Commencé le')

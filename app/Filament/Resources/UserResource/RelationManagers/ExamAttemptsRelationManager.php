@@ -4,8 +4,9 @@ namespace App\Filament\Resources\UserResource\RelationManagers;
 
 use App\Enums\ExamAttemptEnum;
 use App\Models\ExamAttempt;
-use Filament\Forms\Form;
+use BackedEnum;
 use Filament\Resources\RelationManagers\RelationManager;
+use Filament\Schemas\Schema;
 use Filament\Tables;
 use Filament\Tables\Table;
 
@@ -15,13 +16,13 @@ class ExamAttemptsRelationManager extends RelationManager
 
     protected static ?string $recordTitleAttribute = 'id';
 
-    protected static ?string $icon = 'heroicon-o-clipboard-document-list';
+    protected static string|null|BackedEnum $icon = 'heroicon-o-clipboard-document-list';
 
     protected static ?string $title = 'Tentatives d\'examens';
 
-    public function form(Form $form): Form
+    public function form(Schema $schema): Schema
     {
-        return $form
+        return $schema
             ->schema([
 
             ]);
@@ -119,21 +120,21 @@ class ExamAttemptsRelationManager extends RelationManager
                     ->toggle(),
             ])
             ->headerActions([
-                Tables\Actions\CreateAction::make(),
+                \Filament\Actions\CreateAction::make(),
             ])
             ->actions([
-                Tables\Actions\ActionGroup::make([
-                    Tables\Actions\ViewAction::make()
+                \Filament\Actions\ActionGroup::make([
+                    \Filament\Actions\ViewAction::make()
                         ->label('Voir')
                         ->icon('heroicon-o-eye')
                         ->color('info'),
-                    Tables\Actions\DeleteAction::make()
+                    \Filament\Actions\DeleteAction::make()
                         ->label('Supprimer')
                         ->icon('heroicon-o-trash')
                         ->color('danger')
                         ->requiresConfirmation(),
 
-                    Tables\Actions\Action::make('view_answers')
+                    \Filament\Actions\Action::make('view_answers')
                         ->label('Voir réponses')
                         ->icon('heroicon-o-document-text')
                         ->color('info')
@@ -141,7 +142,7 @@ class ExamAttemptsRelationManager extends RelationManager
                         //->url(fn(ExamAttempt $record) => route('filament.admin.resources.exam-attempts.view', $record))
                         ->openUrlInNewTab(),
 
-                    Tables\Actions\Action::make('reset_attempt')
+                    \Filament\Actions\Action::make('reset_attempt')
                         ->label('Réinitialiser')
                         ->icon('heroicon-o-arrow-path')
                         ->color('warning')
@@ -161,8 +162,8 @@ class ExamAttemptsRelationManager extends RelationManager
                 ])
             ])
             ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make()
+                \Filament\Actions\BulkActionGroup::make([
+                    \Filament\Actions\DeleteBulkAction::make()
                         ->label('Supprimer')
                         ->icon('heroicon-o-trash')
                         ->color('danger')

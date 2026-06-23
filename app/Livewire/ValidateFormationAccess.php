@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Livewire;
 
 use App\Models\Formation;
@@ -8,10 +10,12 @@ use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 
-class ValidateFormationAccess extends Component
+final class ValidateFormationAccess extends Component
 {
     public Formation $formation;
+
     public string $accessCode = '';
+
     public string $error = '';
 
     public function mount(Formation $formation): void
@@ -22,7 +26,7 @@ class ValidateFormationAccess extends Component
     public function validateCode(): void
     {
         $this->validate([
-            'accessCode' => 'required|string|min:6'
+            'accessCode' => 'required|string|min:6',
         ]);
 
         $code = FormationAccessCode::query()
@@ -31,8 +35,9 @@ class ValidateFormationAccess extends Component
             ->where('is_used', false)
             ->first();
 
-        if (!$code || !$code->isValid()) {
+        if (! $code || ! $code->isValid()) {
             $this->error = 'Code d\'accès invalide ou déjà utilisé';
+
             return;
         }
 
@@ -40,7 +45,7 @@ class ValidateFormationAccess extends Component
         $code->update([
             'is_used' => true,
             'user_id' => Auth::id(),
-            'used_at' => now()
+            'used_at' => now(),
         ]);
 
         // Créer l'inscription
@@ -48,10 +53,10 @@ class ValidateFormationAccess extends Component
             'user_id' => Auth::id(),
             'status' => 'active',
             'payment_status' => 'paid',
-            'enrollment_date' => now()
+            'enrollment_date' => now(),
         ]);
 
-        $this->redirect(route('student.formation.show', $this->formation));
+        $this->redirect(route('formation.show', $this->formation));
     }
 
     public function render(): View

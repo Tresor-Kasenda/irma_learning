@@ -9,21 +9,27 @@ use App\Enums\EnrollmentStatusEnum;
 use App\Enums\UserRoleEnum;
 use App\Filament\Resources\EnrollmentResource\Pages;
 use App\Models\Enrollment;
+use BackedEnum;
 use Filament\Forms;
-use Filament\Forms\Form;
 use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
+use Filament\Schemas\Components\Fieldset;
+use Filament\Schemas\Components\Grid;
+use Filament\Schemas\Components\Section;
+use Filament\Schemas\Components\Utilities\Set;
+use Filament\Schemas\Schema;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use UnitEnum;
 
 final class EnrollmentResource extends Resource
 {
     protected static ?string $model = Enrollment::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-user-plus';
+    protected static BackedEnum|string|null $navigationIcon = 'heroicon-o-user-plus';
 
-    protected static ?string $navigationGroup = 'Formation';
+    protected static string|UnitEnum|null $navigationGroup = 'Formation';
 
     protected static ?string $navigationLabel = 'Inscriptions & Paiements';
 
@@ -113,16 +119,16 @@ final class EnrollmentResource extends Resource
                     ->query(fn(Builder $query): Builder => $query->where('payment_status', 'pending')),
             ])
             ->actions([
-                Tables\Actions\ActionGroup::make([
-                    Tables\Actions\ViewAction::make()
+                \Filament\Actions\ActionGroup::make([
+                    \Filament\Actions\ViewAction::make()
                         ->label('Voir')
                         ->icon('heroicon-o-eye'),
 
-                    Tables\Actions\EditAction::make()
+                    \Filament\Actions\EditAction::make()
                         ->label('Modifier')
                         ->icon('heroicon-o-pencil'),
 
-                    Tables\Actions\Action::make('markPaid')
+                    \Filament\Actions\Action::make('markPaid')
                         ->label('Marquer payé')
                         ->icon('heroicon-o-banknotes')
                         ->color('success')
@@ -143,7 +149,7 @@ final class EnrollmentResource extends Resource
                         })
                         ->visible(fn(Enrollment $record) => $record->payment_status !== EnrollmentPaymentEnum::PAID),
 
-                    Tables\Actions\Action::make('generateInvoice')
+                    \Filament\Actions\Action::make('generateInvoice')
                         ->label('Générer facture')
                         ->icon('heroicon-o-document-text')
                         ->color('info')
@@ -151,7 +157,7 @@ final class EnrollmentResource extends Resource
                         ->openUrlInNewTab()
                         ->visible(fn(Enrollment $record): bool => $record->payment_status === EnrollmentPaymentEnum::PAID),
 
-                    Tables\Actions\Action::make('refund')
+                    \Filament\Actions\Action::make('refund')
                         ->label('Rembourser')
                         ->icon('heroicon-o-arrow-uturn-left')
                         ->color('warning')
@@ -181,10 +187,10 @@ final class EnrollmentResource extends Resource
                 ]),
             ])
             ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
+                \Filament\Actions\BulkActionGroup::make([
+                    \Filament\Actions\DeleteBulkAction::make(),
 
-                    Tables\Actions\BulkAction::make('bulk_mark_paid')
+                    \Filament\Actions\BulkAction::make('bulk_mark_paid')
                         ->label('Marquer comme payés')
                         ->icon('heroicon-o-banknotes')
                         ->color('success')
@@ -205,7 +211,7 @@ final class EnrollmentResource extends Resource
                                 ->send();
                         }),
 
-                    Tables\Actions\BulkAction::make('bulk_update_progress')
+                    \Filament\Actions\BulkAction::make('bulk_update_progress')
                         ->label('Mettre à jour la progression')
                         ->icon('heroicon-o-arrow-path')
                         ->color('primary')
@@ -216,11 +222,11 @@ final class EnrollmentResource extends Resource
             ->defaultSort('enrollment_date', 'desc');
     }
 
-    public static function form(Form $form): Form
+    public static function form(Schema $schema): Schema
     {
-        return $form
+        return $schema
             ->schema([
-                Forms\Components\Section::make('Informations d\'Inscription')
+                Section::make('Informations d\'Inscription')
                     ->schema([
                         Forms\Components\Select::make('user_id')
                             ->relationship('user', 'name', function ($query) {
@@ -258,9 +264,9 @@ final class EnrollmentResource extends Resource
                     ])
                     ->columns(2),
 
-                Forms\Components\Section::make('Gestion Complète du Paiement')
+                Section::make('Gestion Complète du Paiement')
                     ->schema([
-                        Forms\Components\Grid::make(2)
+                        Grid::make(2)
                             ->schema([
                                 Forms\Components\Select::make('payment_status')
                                     ->label('Statut de paiement')
@@ -268,7 +274,7 @@ final class EnrollmentResource extends Resource
                                     ->default(EnrollmentPaymentEnum::PENDING)
                                     ->required()
                                     ->live()
-                                    ->afterStateUpdated(function ($state, Forms\Set $set) {
+                                    ->afterStateUpdated(function ($state, Set $set) {
                                         if ($state === EnrollmentPaymentEnum::PAID) {
                                             $set('payment_processed_at', now());
                                         }
@@ -282,7 +288,7 @@ final class EnrollmentResource extends Resource
                                     ->required(),
                             ]),
 
-                        Forms\Components\Fieldset::make('Détails de Transaction')
+                        Fieldset::make('Détails de Transaction')
                             ->schema([
                                 Forms\Components\TextInput::make('payment_transaction_id')
                                     ->label('ID de transaction')

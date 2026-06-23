@@ -1,8 +1,10 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Services;
 
-class ReadingDurationCalculatorService
+final class ReadingDurationCalculatorService
 {
     private const array READING_SPEEDS = [
         'beginner' => 150,
@@ -25,8 +27,7 @@ class ReadingDurationCalculatorService
     public function calculateReadingDuration(
         string $content,
         string $level = 'average'
-    ): array
-    {
+    ): array {
         $analysis = $this->analyzeContent($content);
         $baseReadingTime = $this->calculateBaseReadingTime($analysis['word_count'], $level);
         $complexityAdjustment = $this->calculateComplexityAdjustment($analysis, $baseReadingTime);
@@ -57,7 +58,7 @@ class ReadingDurationCalculatorService
 
         return [
             'word_count' => $this->countWords($cleanContent),
-            'character_count' => strlen($cleanContent),
+            'character_count' => mb_strlen($cleanContent),
             'paragraph_count' => $this->countParagraphs($content),
             'heading_count' => $this->countHeadings($content),
             'code_blocks' => $this->countCodeBlocks($content),
@@ -84,7 +85,7 @@ class ReadingDurationCalculatorService
 
         $content = preg_replace('/\s+/', ' ', $content);
 
-        return trim($content);
+        return mb_trim($content);
     }
 
     /**
@@ -92,7 +93,7 @@ class ReadingDurationCalculatorService
      */
     private function countWords(string $content): int
     {
-        if (empty(trim($content))) {
+        if (empty(mb_trim($content))) {
             return 0;
         }
 
@@ -104,7 +105,7 @@ class ReadingDurationCalculatorService
      */
     private function countParagraphs(string $content): int
     {
-        return substr_count($content, "\n\n") + 1;
+        return mb_substr_count($content, "\n\n") + 1;
     }
 
     /**
@@ -130,6 +131,7 @@ class ReadingDurationCalculatorService
     {
         $bulletLists = preg_match_all('/^\s*[-*+]\s+/m', $content);
         $numberedLists = preg_match_all('/^\s*\d+\.\s+/m', $content);
+
         return $bulletLists + $numberedLists;
     }
 
@@ -141,7 +143,7 @@ class ReadingDurationCalculatorService
         $score = 0;
 
         $words = preg_split('/\s+/', $content);
-        $longWords = array_filter($words, fn($word) => strlen($word) > 7);
+        $longWords = array_filter($words, fn ($word) => mb_strlen($word) > 7);
         $score += (count($longWords) / count($words)) * 100;
 
         $technicalPatterns = [
@@ -183,7 +185,7 @@ class ReadingDurationCalculatorService
     private function calculateAverageSentenceLength(string $content): float
     {
         $sentences = preg_split('/[.!?]+/', $content);
-        $sentences = array_filter($sentences, fn($s) => trim($s) !== '');
+        $sentences = array_filter($sentences, fn ($s) => mb_trim($s) !== '');
 
         if (empty($sentences)) {
             return 0;
@@ -206,13 +208,16 @@ class ReadingDurationCalculatorService
 
         if ($complexityScore > 70) {
             return 'very_hard';
-        } elseif ($complexityScore > 50) {
-            return 'hard';
-        } elseif ($complexityScore > 30) {
-            return 'medium';
-        } else {
-            return 'easy';
         }
+        if ($complexityScore > 50) {
+            return 'hard';
+        }
+        if ($complexityScore > 30) {
+            return 'medium';
+        }
+
+        return 'easy';
+
     }
 
     /**
@@ -221,6 +226,7 @@ class ReadingDurationCalculatorService
     private function calculateBaseReadingTime(int $wordCount, string $level): float
     {
         $wordsPerMinute = self::READING_SPEEDS[$level] ?? self::READING_SPEEDS['average'];
+
         return $wordCount / $wordsPerMinute;
     }
 
@@ -287,19 +293,19 @@ class ReadingDurationCalculatorService
         }
 
         if ($analysis['reading_difficulty'] === 'very_hard') {
-            $recommendations[] = "📚 Contenu très technique - Prévoir du temps supplémentaire pour la compréhension";
+            $recommendations[] = '📚 Contenu très technique - Prévoir du temps supplémentaire pour la compréhension';
         }
 
         if ($analysis['code_blocks'] > 5) {
-            $recommendations[] = "💻 Nombreux exemples de code - Les étudiants auront besoin de temps pour pratiquer";
+            $recommendations[] = '💻 Nombreux exemples de code - Les étudiants auront besoin de temps pour pratiquer';
         }
 
         if ($analysis['technical_terms'] > 15) {
-            $recommendations[] = "🔧 Vocabulaire technique dense - Inclure un glossaire pourrait être utile";
+            $recommendations[] = '🔧 Vocabulaire technique dense - Inclure un glossaire pourrait être utile';
         }
 
         if ($totalMinutes < 10) {
-            $recommendations[] = "⚡ Chapitre court - Parfait pour une lecture rapide";
+            $recommendations[] = '⚡ Chapitre court - Parfait pour une lecture rapide';
         }
 
         return $recommendations;

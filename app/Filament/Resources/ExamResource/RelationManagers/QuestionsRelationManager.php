@@ -5,7 +5,7 @@ namespace App\Filament\Resources\ExamResource\RelationManagers;
 use App\Enums\QuestionTypeEnum;
 use App\Models\Question;
 use Filament\Forms;
-use Filament\Forms\Form;
+use Filament\Schemas\Schema;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Tables;
 use Filament\Tables\Table;
@@ -22,11 +22,11 @@ class QuestionsRelationManager extends RelationManager
 
     protected static ?string $pluralTitle = 'Questions';
 
-    public function form(Form $form): Form
+    public function form(Schema $schema): Schema
     {
-        return $form
+        return $schema
             ->schema([
-                Forms\Components\Section::make('Question')
+                \Filament\Schemas\Components\Section::make('Question')
                     ->schema([
                         Forms\Components\TextInput::make('question_text')
                             ->label('Texte de la question')
@@ -40,7 +40,7 @@ class QuestionsRelationManager extends RelationManager
                             ->native(false)
                             ->live(),
 
-                        Forms\Components\Grid::make(2)
+                        \Filament\Schemas\Components\Grid::make(2)
                             ->schema([
                                 Forms\Components\TextInput::make('points')
                                     ->label('Points')
@@ -77,7 +77,7 @@ class QuestionsRelationManager extends RelationManager
                             ->columnSpanFull(),
                     ]),
 
-                Forms\Components\Section::make('Options de réponse')
+                \Filament\Schemas\Components\Section::make('Options de réponse')
                     ->schema([
                         Forms\Components\Repeater::make('options')
                             ->label('Options')
@@ -87,7 +87,7 @@ class QuestionsRelationManager extends RelationManager
                                     ->label('Texte de l\'option')
                                     ->required(),
 
-                                Forms\Components\Grid::make(2)
+                                \Filament\Schemas\Components\Grid::make(2)
                                     ->schema([
                                         Forms\Components\TextInput::make('order_position')
                                             ->label('Position')
@@ -193,27 +193,27 @@ class QuestionsRelationManager extends RelationManager
                     ->native(false),
             ])
             ->headerActions([
-                Tables\Actions\CreateAction::make()
+                \Filament\Actions\CreateAction::make()
                     ->label('Ajouter une question')
                     ->icon('heroicon-o-plus')
                     ->slideOver(),
             ])
             ->actions([
-                Tables\Actions\ActionGroup::make([
-                    Tables\Actions\ViewAction::make()
+                \Filament\Actions\ActionGroup::make([
+                    \Filament\Actions\ViewAction::make()
                         ->label('Voir')
                         ->slideOver()
                         ->icon('heroicon-o-eye'),
-                    Tables\Actions\EditAction::make()
+                    \Filament\Actions\EditAction::make()
                         ->label('Modifier')
                         ->slideOver()
                         ->icon('heroicon-o-pencil'),
-                    Tables\Actions\DeleteAction::make()
+                    \Filament\Actions\DeleteAction::make()
                         ->label('Supprimer')
                         ->icon('heroicon-o-trash')
                         ->requiresConfirmation(),
 
-                    Tables\Actions\Action::make('preview')
+                    \Filament\Actions\Action::make('preview')
                         ->label('Aperçu')
                         ->icon('heroicon-o-eye')
                         ->color('info')
@@ -221,7 +221,7 @@ class QuestionsRelationManager extends RelationManager
                         ->modalContent(fn(Question $record) => view('filament.resources.question.preview', ['question' => $record]))
                         ->modalWidth('3xl'),
 
-                    Tables\Actions\Action::make('duplicate')
+                    \Filament\Actions\Action::make('duplicate')
                         ->label('Dupliquer')
                         ->icon('heroicon-o-document-duplicate')
                         ->color('warning')
@@ -245,14 +245,14 @@ class QuestionsRelationManager extends RelationManager
                 ])
             ])
             ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
-                    Tables\Actions\BulkAction::make('make_required')
+                \Filament\Actions\BulkActionGroup::make([
+                    \Filament\Actions\DeleteBulkAction::make(),
+                    \Filament\Actions\BulkAction::make('make_required')
                         ->label('Rendre obligatoire')
                         ->icon('heroicon-o-exclamation-triangle')
                         ->color('warning')
                         ->action(fn(Collection $records) => $records->each->update(['is_required' => true])),
-                    Tables\Actions\BulkAction::make('make_optional')
+                    \Filament\Actions\BulkAction::make('make_optional')
                         ->label('Rendre optionnel')
                         ->icon('heroicon-o-minus-circle')
                         ->color('gray')

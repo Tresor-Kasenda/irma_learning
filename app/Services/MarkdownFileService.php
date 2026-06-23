@@ -19,15 +19,15 @@ final class MarkdownFileService
     /**
      * Sauvegarde le contenu Markdown dans un fichier
      *
-     * @param string $markdownContent Contenu Markdown à sauvegarder
-     * @param string|null $title Titre du chapitre (optionnel, utilisé pour le nom du fichier)
+     * @param  string  $markdownContent  Contenu Markdown à sauvegarder
+     * @param  string|null  $title  Titre du chapitre (optionnel, utilisé pour le nom du fichier)
      * @return string|null Chemin de stockage du fichier Markdown
      */
     public function saveMarkdownFile(string $markdownContent, ?string $title = null): ?string
     {
         try {
             $filename = $this->generateFilename($title);
-            $storagePath = self::STORAGE_PATH . '/' . $filename;
+            $storagePath = self::STORAGE_PATH.'/'.$filename;
 
             Storage::disk('public')->put($storagePath, $markdownContent);
 
