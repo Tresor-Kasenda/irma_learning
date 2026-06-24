@@ -7,7 +7,6 @@ use App\Enums\EnrollmentStatusEnum;
 use App\Enums\UserProgressEnum;
 use App\Http\Controllers\Dashboard\DashboardPageController;
 use App\Http\Controllers\Dashboard\Formations\StudentCertificationController;
-use App\Http\Controllers\Dashboard\Formations\StudentDetailFormationController;
 use App\Http\Controllers\Dashboard\Formations\StudentFormationController;
 use App\Http\Controllers\Dashboard\Formations\StudentLearningController;
 use App\Http\Controllers\Dashboard\Learnings\StudentLearningPlayController;
@@ -43,7 +42,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/formation/{formation:id}/enroll', function (Formation $formation) {
         $user = auth()->user();
 
-        if (!$user->hasStudent()) {
+        if (! $user->hasStudent()) {
             return redirect()->back()->with('error', 'Seuls les étudiants peuvent s\'inscrire aux formations.');
         }
 
@@ -72,6 +71,7 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
+    Route::post('/profile/avatar', [ProfileController::class, 'updateAvatar'])->name('profile.avatar.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
     Route::get('/formation/{formation:id}/payment', StudentPayment::class)
@@ -103,7 +103,7 @@ Route::middleware('auth')->group(function () {
             $hasPassedExam = $chapterExam->hasUserPassed($user);
         }
 
-        if ($chapterExam && !$hasPassedExam) {
+        if ($chapterExam && ! $hasPassedExam) {
             return redirect()->back()->with('error', 'Vous devez réussir l\'examen pour valider ce chapitre.');
         }
 
@@ -125,7 +125,7 @@ Route::middleware('auth')->group(function () {
                 $query->where('is_active', true)->orderBy('order_position');
             }])
             ->get()
-            ->flatMap(fn($section) => $section->chapters)
+            ->flatMap(fn ($section) => $section->chapters)
             ->values();
 
         $totalChapters = $allChapters->count();
@@ -148,7 +148,7 @@ Route::middleware('auth')->group(function () {
             ]);
         }
 
-        $currentChapterIndex = $allChapters->search(fn($ch) => $ch->id === $chapter->id) ?: 0;
+        $currentChapterIndex = $allChapters->search(fn ($ch) => $ch->id === $chapter->id) ?: 0;
 
         if ($currentChapterIndex < $totalChapters - 1) {
             $nextChapter = $allChapters[$currentChapterIndex + 1];
@@ -181,4 +181,4 @@ Route::middleware('auth')->group(function () {
     });
 });
 
-require __DIR__ . '/auth.php';
+require __DIR__.'/auth.php';

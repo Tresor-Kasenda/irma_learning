@@ -11,6 +11,7 @@ use Database\Factories\UserFactory;
 use Exception;
 use Filament\Models\Contracts\FilamentUser;
 use Filament\Panel;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -18,6 +19,7 @@ use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\Storage;
 use Spatie\Activitylog\LogOptions;
 use Spatie\Activitylog\Traits\LogsActivity;
 
@@ -54,6 +56,15 @@ final class User extends Authenticatable implements FilamentUser
     protected $hidden = [
         'password',
         'remember_token',
+    ];
+
+    /**
+     * The accessors to append to the model's array form.
+     *
+     * @var list<string>
+     */
+    protected $appends = [
+        'avatar_url',
     ];
 
     public function profile(): HasOne
@@ -147,6 +158,24 @@ final class User extends Authenticatable implements FilamentUser
     public function isStudent(): bool
     {
         return $this->role->value === UserRoleEnum::STUDENT->value;
+    }
+
+    /**
+     * Resolve the public URL for the user's avatar, falling back to the default image.
+     */
+    protected function avatarUrl(): Attribute
+    {
+        return Attribute::get(function (): string {
+            if ($this->avatar === null) {
+                return asset('images/avatar.webp');
+            }
+
+            if (str_starts_with($this->avatar, 'http://') || str_starts_with($this->avatar, 'https://')) {
+                return $this->avatar;
+            }
+
+            return Storage::disk('public')->url($this->avatar);
+        });
     }
 
     /**

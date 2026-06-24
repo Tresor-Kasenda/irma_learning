@@ -6,6 +6,8 @@ namespace Tests\Feature;
 
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 final class ProfileTest extends TestCase
@@ -61,6 +63,72 @@ final class ProfileTest extends TestCase
             ->assertRedirect('/profile');
 
         $this->assertNotNull($user->refresh()->email_verified_at);
+    }
+
+    public function test_avatar_can_be_uploaded(): void
+    {
+        Storage::fake('public');
+
+        $user = User::factory()->create();
+
+        $response = $this
+            ->actingAs($user)
+            ->post('/profile/avatar', [
+                'avatar' => UploadedFile::fake()->image('avatar.jpg'),
+            ]);
+
+        $response
+            ->assertSessionHasNoErrors()
+            ->assertRedirect('/profile');
+
+        $user->refresh();
+
+        $this->assertNotNull($user->avatar);
+        Storage::disk('public')->assertExists($user->avatar);
+    }
+
+    public function test_uploading_avatar_replaces_the_previous_one(): void
+    {
+        Storage::fake('public');
+
+        $user = User::factory()->create([
+            'avatar' => UploadedFile::fake()->image('old.jpg')->store('avatars', 'public'),
+        ]);
+
+        $previousAvatar = $user->avatar;
+
+        $this
+            ->actingAs($user)
+            ->post('/profile/avatar', [
+                'avatar' => UploadedFile::fake()->image('new.jpg'),
+            ])
+            ->assertSessionHasNoErrors();
+
+        $user->refresh();
+
+        $this->assertNotSame($previousAvatar, $user->avatar);
+        Storage::disk('public')->assertMissing($previousAvatar);
+        Storage::disk('public')->assertExists($user->avatar);
+    }
+
+    public function test_avatar_must_be_an_image(): void
+    {
+        Storage::fake('public');
+
+        $user = User::factory()->create();
+
+        $originalAvatar = $user->avatar;
+
+        $this
+            ->actingAs($user)
+            ->from('/profile')
+            ->post('/profile/avatar', [
+                'avatar' => UploadedFile::fake()->create('document.pdf', 100, 'application/pdf'),
+            ])
+            ->assertSessionHasErrors('avatar')
+            ->assertRedirect('/profile');
+
+        $this->assertSame($originalAvatar, $user->refresh()->avatar);
     }
 
     public function test_user_can_delete_their_account(): void

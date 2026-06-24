@@ -1,4 +1,5 @@
-<script setup lang="ts">
+<script lang="ts" setup>
+
 withDefaults(
     defineProps<{
         name: string;
@@ -11,6 +12,6 @@ withDefaults(
 </script>
 
 <template>
-    <img :src="`/icons/heroicons/${name}.svg`" :alt="alt" />
+    <img :alt="alt" :src="`/icons/heroicons/${name}.svg`"/>
 </template>
 

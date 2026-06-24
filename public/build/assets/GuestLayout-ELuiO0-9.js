@@ -1,0 +1,1 @@
+import{i as r,s as n,o as a}from"./app-DW4M4MPG.js";const f=(e,t)=>{const s=e.__vccOpts||e;for(const[c,o]of t)s[c]=o;return s},l={},_={class:"flex min-h-screen flex-col items-center justify-center bg-irma-surface px-4 py-10"};function i(e,t){return a(),r("div",_,[n(e.$slots,"default")])}const m=f(l,[["render",i]]);export{m as G};

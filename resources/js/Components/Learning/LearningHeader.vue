@@ -132,9 +132,9 @@ const closeMenus = () => {
                 >
                     <img
                         v-if="isAuthenticated"
+                        :src="currentUser?.avatar_url ?? '/images/avatar.webp'"
                         alt=""
                         class="size-8 object-cover object-top"
-                        src="/images/avatar.webp"
                     />
                     <span v-else class="grid size-8 place-items-center bg-white/10">
                         <LearningIcon class="size-5 brightness-0 invert opacity-60" name="user-circle"/>

@@ -42,7 +42,6 @@ const currentActiveItem = computed(() => {
     if (safeCurrent('student.learnings')) return 'formations';
     if (safeCurrent('student.progress')) return 'in-progress';
     if (safeCurrent('certificats')) return 'certified';
-    if (safeCurrent('student.learnings') && filters?.category === 'enterprise') return 'enterprise';
 
     if (safeCurrent('student.learnings') && !filters?.content) return 'formations';
 
@@ -73,12 +72,6 @@ const learningNavigation = computed(() => [
         label: 'Certifiantes',
         href: safeRoute('certificats'),
         icon: 'academic-cap',
-    },
-    {
-        key: 'enterprise',
-        label: 'Entreprise',
-        href: safeRoute('student.learnings', {category: 'enterprise'}),
-        icon: 'users',
     },
 ]);
 
@@ -133,7 +126,7 @@ const closeSidebar = () => {
                 :class="uiStore.sidebarCollapsed ? 'justify-center px-0' : 'justify-between px-5'"
                 class="flex h-16 items-center border-b border-white/10"
             >
-                <Link :href="safeRoute('home-page')" class="flex items-center gap-2" @click="closeSidebar">
+                <Link :href="safeRoute('dashboard')" class="flex items-center gap-2" @click="closeSidebar">
                     <img alt="IRMA" class="h-10 w-auto" src="/images/irma-logo-base.svg"/>
                     <img v-if="!uiStore.sidebarCollapsed" alt="IRMA Learning" class="h-8 w-auto"
                          src="/images/irma-text.svg"/>
@@ -237,9 +230,9 @@ const closeSidebar = () => {
                     <img
                         v-if="isAuthenticated"
                         :class="uiStore.sidebarCollapsed ? 'size-10' : 'size-10'"
+                        :src="currentUser?.avatar_url ?? '/images/avatar.webp'"
                         alt=""
                         class="object-cover object-top"
-                        src="/images/avatar.webp"
                     />
                     <span v-else class="grid size-10 place-items-center bg-white/5">
                         <LearningIcon class="size-6 brightness-0 invert opacity-70" name="user-circle"/>
