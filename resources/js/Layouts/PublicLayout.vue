@@ -67,7 +67,7 @@ function scrollToTop() {
                             <span class="text-sm font-medium text-green-700">{{ $page.props.auth.user.name }}</span>
                         </div>
                         <Link :href="route('dashboard')"
-                              class="px-4 py-2 text-sm bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition flex items-center gap-2">
+                              class="px-4 py-2 text-sm bg-irma-text text-white rounded-lg hover:bg-primary-700 transition flex items-center gap-2">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path
                                     d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"

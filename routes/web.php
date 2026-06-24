@@ -6,10 +6,14 @@ use App\Enums\ChapterTypeEnum;
 use App\Enums\EnrollmentPaymentEnum;
 use App\Enums\EnrollmentStatusEnum;
 use App\Enums\UserProgressEnum;
+use App\Http\Controllers\Dashboard\Formations\StudentCertificationController;
+use App\Http\Controllers\Dashboard\Formations\StudentFormationController;
+use App\Http\Controllers\Dashboard\Formations\StudentLearningController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\EnrollmentController;
 use App\Http\Controllers\ExamController;
 use App\Http\Controllers\Frontends\DetailFormationController;
+use App\Http\Controllers\Frontends\FormationsController;
 use App\Http\Controllers\Frontends\HomePageController;
 use App\Http\Controllers\ProfileController;
 use App\Livewire\Pages\Courses\LearningCourse;
@@ -21,149 +25,13 @@ use App\Models\Formation;
 use App\Models\UserProgress;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
 Route::get('/', HomePageController::class)->name('home-page');
+Route::get('/formations', FormationsController::class)->name('certifications');
 Route::get('/{formation:slug}/show', DetailFormationController::class)->name('formation.show');
-
-Route::get('/formations', function (Request $request) {
-    $search = mb_trim((string)$request->query('q', ''));
-    $category = (string)$request->query('category', 'all');
-    $level = (string)$request->query('level', '');
-    $contentType = (string)$request->query('content', '');
-    $sort = (string)$request->query('sort', 'popular');
-    $user = $request->user();
-
-    $allowedCategories = ['all', 'in-progress', 'certified', 'continuous', 'enterprise'];
-    $allowedLevels = ['beginner', 'intermediate', 'advanced'];
-    $allowedContentTypes = [
-        ChapterTypeEnum::VIDEO->value,
-        ChapterTypeEnum::PDF->value,
-        ChapterTypeEnum::TEXT->value,
-    ];
-    $allowedSorts = ['popular', 'recent', 'duration-asc', 'duration-desc', 'price-asc'];
-
-    if (!in_array($category, $allowedCategories, true)) {
-        $category = 'all';
-    }
-
-    if (!in_array($level, $allowedLevels, true)) {
-        $level = '';
-    }
-
-    if (!in_array($contentType, $allowedContentTypes, true)) {
-        $contentType = '';
-    }
-
-    if (!in_array($sort, $allowedSorts, true)) {
-        $sort = 'popular';
-    }
-
-    $chapterCounts = Formation::catalogCountRelations();
-
-    $query = Formation::query()
-        ->active()
-        ->withCount($chapterCounts);
-
-    if ($user) {
-        $query->with([
-            'enrollments' => fn(HasMany $query): HasMany => $query
-                ->where('user_id', $user->id)
-                ->select(['id', 'formation_id', 'status', 'progress_percentage']),
-        ]);
-    }
-
-    if ($search !== '') {
-        $query->where(function (Builder $query) use ($search): void {
-            $query->where('title', 'like', '%' . $search . '%')
-                ->orWhere('short_description', 'like', '%' . $search . '%')
-                ->orWhere('description', 'like', '%' . $search . '%');
-        });
-    }
-
-    if ($level !== '') {
-        $query->where('difficulty_level', $level);
-    }
-
-    if ($contentType !== '') {
-        $query->whereHas('chapters', fn(Builder $query): Builder => $query
-            ->where('chapters.is_active', true)
-            ->where('content_type', $contentType));
-    }
-
-    match ($category) {
-        'in-progress' => $user
-            ? $query->whereHas('enrollments', fn(Builder $query): Builder => $query
-                ->where('user_id', $user->id)
-                ->where('status', EnrollmentStatusEnum::ACTIVE->value)
-                ->whereBetween('progress_percentage', [1, 99]))
-            : $query->whereRaw('1 = 0'),
-        'certified' => $query->whereHas('exams'),
-        'continuous' => $query->where('tags', 'like', '%continue%'),
-        'enterprise' => $query->where('tags', 'like', '%entreprise%'),
-        default => null,
-    };
-
-    match ($sort) {
-        'recent' => $query->latest(),
-        'duration-asc' => $query->orderBy('duration_hours'),
-        'duration-desc' => $query->orderByDesc('duration_hours'),
-        'price-asc' => $query->orderByRaw('price is not null, price asc'),
-        default => $query
-            ->orderByDesc('is_featured')
-            ->orderByDesc('students_count')
-            ->latest(),
-    };
-
-    $formations = $query->paginate(8)->withQueryString();
-
-    $activeChapters = Chapter::query()
-        ->where('chapters.is_active', true)
-        ->whereHas('section.formation', fn(Builder $query): Builder => $query->active());
-
-    $catalogStats = [
-        'formations' => Formation::query()->active()->count(),
-        'videos' => (clone $activeChapters)->where('content_type', ChapterTypeEnum::VIDEO->value)->count(),
-        'pdfs' => (clone $activeChapters)->where('content_type', ChapterTypeEnum::PDF->value)->count(),
-        'texts' => (clone $activeChapters)->where('content_type', ChapterTypeEnum::TEXT->value)->count(),
-    ];
-
-    $continueLearning = null;
-
-    if ($user) {
-        $continueLearning = Enrollment::query()
-            ->with([
-                'formation' => fn(BelongsTo $query): BelongsTo => $query->withCount($chapterCounts),
-            ])
-            ->where('user_id', $user->id)
-            ->where('status', EnrollmentStatusEnum::ACTIVE->value)
-            ->whereIn('payment_status', [
-                EnrollmentPaymentEnum::PAID->value,
-                EnrollmentPaymentEnum::FREE->value,
-            ])
-            ->whereHas('formation', fn(Builder $query): Builder => $query->active())
-            ->whereBetween('progress_percentage', [1, 99])
-            ->latest('updated_at')
-            ->first();
-    }
-
-    return Inertia::render('Certifications/Index', [
-        'formations' => $formations,
-        'catalogStats' => $catalogStats,
-        'continueLearning' => $continueLearning,
-        'filters' => [
-            'search' => $search,
-            'category' => $category,
-            'level' => $level,
-            'content' => $contentType,
-            'sort' => $sort,
-        ],
-    ]);
-})->name('certifications');
 Route::get('/nos-tarifs', [HomePageController::class, 'pricings'])->name('pages.pricings');
 
 Route::middleware('auth')->group(function () {
@@ -272,6 +140,10 @@ Route::middleware('auth')->group(function () {
             'search' => $search,
         ]);
     })->name('dashboard');
+
+    Route::get('/learnings', StudentFormationController::class)->name('student.learnings');
+    Route::get('/certificats', StudentCertificationController::class)->name('certificats');
+    Route::get('/inprogress', StudentLearningController::class)->name('student.progress');
 
     Route::post('/formation/{formation:id}/enroll', function (Formation $formation) {
         $user = auth()->user();
