@@ -4,7 +4,7 @@ import {computed} from 'vue';
 import LearningIcon from '@/Components/Learning/LearningIcon.vue';
 import type {LearningCatalogStats} from '@/types/learning';
 import {useUiStore} from "@/stores";
-import {safeRoute} from "@/utilities/route";
+import {safeCurrent, safeRoute} from "@/utilities/route";
 
 type ActiveItem = 'dashboard' | 'formations' | 'in-progress' | 'certified' | 'enterprise';
 
@@ -38,13 +38,13 @@ const currentActiveItem = computed(() => {
 
     const filters = (page.props as any).filters;
 
-    if (route().current('dashboard')) return 'dashboard';
-    if (route().current('student.learnings')) return 'formations';
-    if (route().current('student.progress')) return 'in-progress';
-    if (route().current('certificats')) return 'certified';
-    if (route().current('student.learnings') && filters?.category === 'enterprise') return 'enterprise';
+    if (safeCurrent('dashboard')) return 'dashboard';
+    if (safeCurrent('student.learnings')) return 'formations';
+    if (safeCurrent('student.progress')) return 'in-progress';
+    if (safeCurrent('certificats')) return 'certified';
+    if (safeCurrent('student.learnings') && filters?.category === 'enterprise') return 'enterprise';
 
-    if (route().current('student.learnings') && !filters?.content) return 'formations';
+    if (safeCurrent('student.learnings') && !filters?.content) return 'formations';
 
     return props.activeItem;
 });
@@ -104,7 +104,7 @@ const formatNavigation = computed(() => [
 ]);
 
 const isFormatActive = (content: string) => {
-    return route().current('student.learnings') && (page.props as any).filters?.content === content;
+    return safeCurrent('student.learnings') && (page.props as any).filters?.content === content;
 };
 
 const closeSidebar = () => {

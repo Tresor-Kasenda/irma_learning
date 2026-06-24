@@ -26,3 +26,22 @@ export function safeRoute(
         return fallback;
     }
 }
+
+/**
+ * Check whether the current URL matches a named route without ever throwing.
+ *
+ * Mirrors {@link safeRoute}: Ziggy's `route().current(name)` throws when the name
+ * is absent from a stale in-page route list, which crashes the surrounding render
+ * or computed. Returns `false` instead so the UI degrades gracefully.
+ */
+export function safeCurrent(name: string): boolean {
+    try {
+        if (typeof route !== 'function' || !route().has(name)) {
+            return false;
+        }
+
+        return Boolean(route().current(name));
+    } catch {
+        return false;
+    }
+}

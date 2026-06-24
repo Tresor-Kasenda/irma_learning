@@ -7,6 +7,7 @@ import LearningIcon from '@/Components/Learning/LearningIcon.vue';
 import LearningLayout from '@/Layouts/LearningLayout.vue';
 import StatCard from '@/Components/Learning/StatCard.vue';
 import type {LearningCatalogStats, LearningFormation} from '@/types/learning';
+import {safeRoute} from '@/utilities/route';
 
 interface EnrollmentData {
     id: number;
@@ -119,7 +120,7 @@ function onSearchInput(event: Event): void {
 
     debounceTimer = setTimeout(() => {
         router.get(
-            route('dashboard'),
+            safeRoute('dashboard'),
             {q: searchValue.value || undefined},
             {preserveState: true, replace: true},
         );
@@ -176,7 +177,7 @@ function progressValue(enrollment: EnrollmentData): number {
             <ContinueLearningBanner
                 v-if="continueFormation"
                 :formation="continueFormation"
-                :href="route('course.player', continueFormation.id)"
+                :href="safeRoute('course.player', continueFormation.id)"
                 :progress="continueProgress"
                 :subtitle="continueWatching?.trackable?.title"
                 action-label="Continuer"
@@ -186,7 +187,7 @@ function progressValue(enrollment: EnrollmentData): number {
             <ContinueLearningBanner
                 v-else-if="recommendedHighlight"
                 :formation="recommendedHighlight"
-                :href="route('formation.show', recommendedHighlight.slug)"
+                :href="safeRoute('course.player', recommendedHighlight.slug)"
                 action-label="Découvrir"
                 class="mt-6"
                 context-label="Formation recommandée"
@@ -229,7 +230,7 @@ function progressValue(enrollment: EnrollmentData): number {
                             v-for="enrollment in currentEnrollments"
                             :key="enrollment.id"
                             :formation="enrollment.formation"
-                            :href="route('course.player', enrollment.formation.id)"
+                            :href="safeRoute('course.player', enrollment.formation.id)"
                             :progress="progressValue(enrollment)"
                             badge="En cours"
                         />
@@ -267,7 +268,7 @@ function progressValue(enrollment: EnrollmentData): number {
                             v-for="formation in recommendedFormations"
                             :key="formation.id"
                             :formation="formation"
-                            :href="route('formation.show', formation.slug)"
+                            :href="safeRoute('student.learnings.detail', formation.slug)"
                         />
                     </div>
 
@@ -282,7 +283,7 @@ function progressValue(enrollment: EnrollmentData): number {
                                 résultats.</p>
                         </div>
                         <Link
-                            :href="route('certifications')"
+                            :href="safeRoute('student.learnings')"
                             class="inline-flex h-10 shrink-0 items-center bg-[#a72f5d] px-4 text-sm font-semibold text-white hover:bg-[#c43b6d]"
                         >
                             Voir le catalogue

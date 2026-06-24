@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers\Dashboard;
 
 use App\Enums\ChapterTypeEnum;
@@ -16,7 +18,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 
-class DashboardPageController extends Controller
+final class DashboardPageController extends Controller
 {
     public function __invoke()
     {
@@ -61,8 +63,8 @@ class DashboardPageController extends Controller
                     ->from('enrollments')
                     ->where('user_id', $user->id);
             })
-            ->when($search, function ($query) {
-                $query->where(function ($q) {
+            ->when($search, function ($query) use ($search) {
+                $query->where(function ($q) use ($search) {
                     $q->where('title', 'like', '%' . $search . '%')
                         ->orWhere('short_description', 'like', '%' . $search . '%')
                         ->orWhere('description', 'like', '%' . $search . '%');
@@ -114,6 +116,7 @@ class DashboardPageController extends Controller
             'pdfs' => (clone $activeChapters)->where('content_type', ChapterTypeEnum::PDF->value)->count(),
             'texts' => (clone $activeChapters)->where('content_type', ChapterTypeEnum::TEXT->value)->count(),
         ];
+
         return Inertia::render('Dashboard/Index', [
             'myEnrollments' => $myEnrollments,
             'continueWatching' => $continueWatching,

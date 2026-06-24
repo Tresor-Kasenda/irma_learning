@@ -5,6 +5,7 @@ import FormationCard from '@/Components/Learning/FormationCard.vue';
 import LearningIcon from '@/Components/Learning/LearningIcon.vue';
 import LearningLayout from '@/Layouts/LearningLayout.vue';
 import type {LearningCatalogStats, LearningFormation} from '@/types/learning';
+import {safeRoute} from '@/utilities/route';
 
 type TabKey = 'recent' | 'discover' | 'started' | 'completed';
 
@@ -85,7 +86,7 @@ const emptyState = computed(() => {
         };
     }
 
-    const states: Record<TabKey, {title: string; description: string}> = {
+    const states: Record<TabKey, { title: string; description: string }> = {
         recent: {
             title: 'Aucune formation récente',
             description: 'Vos formations accessibles apparaîtront ici dès votre première inscription.',
@@ -123,7 +124,7 @@ function cleanParams(params: Record<string, string>): Record<string, string> {
 
 function navigate(overrides: Partial<CatalogFilters>, preserveScroll = true): void {
     router.get(
-        route('student.learnings'),
+        safeRoute('student.learnings'),
         cleanParams({
             tab: props.filters.tab,
             search: props.filters.search,
@@ -187,15 +188,15 @@ function enrollmentProgress(formation: LearningFormation): number | null {
 
 function formationHref(formation: LearningFormation): string {
     return formation.enrollments?.length
-        ? route('course.player', formation.id)
-        : route('formation.show', formation.slug);
+        ? safeRoute('course.player', formation.id)
+        : safeRoute('student.learnings.detail', formation.slug);
 }
 </script>
 
 <template>
     <Head title="Mes formations"/>
 
-    <LearningLayout active-item="formations" :catalog-stats="catalogStats">
+    <LearningLayout :catalog-stats="catalogStats" active-item="formations">
         <template #breadcrumb>
             <span class="text-slate-300">Formations</span>
         </template>
@@ -209,7 +210,8 @@ function formationHref(formation: LearningFormation): string {
                     Vos formations
                 </h1>
                 <p class="mt-3 max-w-3xl text-sm leading-6 text-slate-400 sm:text-base">
-                    Reprenez votre apprentissage, explorez le catalogue et retrouvez toutes vos formations au même endroit.
+                    Reprenez votre apprentissage, explorez le catalogue et retrouvez toutes vos formations au même
+                    endroit.
                 </p>
             </section>
 

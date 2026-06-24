@@ -1,8 +1,8 @@
-<script setup lang="ts">
-import { Link } from '@inertiajs/vue3';
+<script lang="ts" setup>
+import {Link} from '@inertiajs/vue3';
 import ContentFormatBadges from '@/Components/Learning/ContentFormatBadges.vue';
 import LearningIcon from '@/Components/Learning/LearningIcon.vue';
-import type { LearningFormation } from '@/types/learning';
+import type {LearningFormation} from '@/types/learning';
 
 const props = withDefaults(
     defineProps<{
@@ -131,7 +131,6 @@ function isCompleted(): boolean {
                 {{ formationBadge() }}
             </span>
             <span
-                class="shrink-0 rounded px-2 py-1 text-[10px] font-bold uppercase tracking-wide"
                 :class="progress !== null
                     ? isCompleted()
                         ? 'bg-emerald-400/15 text-emerald-300'
@@ -139,6 +138,7 @@ function isCompleted(): boolean {
                     : Number(formation.price ?? 0) <= 0
                         ? 'bg-sky-400/15 text-sky-300'
                         : 'bg-violet-400/15 text-violet-300'"
+                class="shrink-0 rounded px-2 py-1 text-[10px] font-bold uppercase tracking-wide"
             >
                 {{
                     progress !== null
@@ -165,7 +165,7 @@ function isCompleted(): boolean {
                     <LearningIcon class="size-4 brightness-0 invert opacity-60" name="document-text"/>
                     {{ contentSummary() }}
                 </span>
-                <span class="inline-flex items-center gap-1.5" :class="difficultyClass()">
+                <span :class="difficultyClass()" class="inline-flex items-center gap-1.5">
                     <LearningIcon class="size-4 brightness-0 invert opacity-60" name="academic-cap"/>
                     {{ difficultyLabel() }}
                 </span>
@@ -182,8 +182,8 @@ function isCompleted(): boolean {
                 </div>
                 <div class="h-1.5 bg-white/10">
                     <div
+                        :style="{ width: `${Math.min(100, Math.max(0, <number>progress))}%` }"
                         class="h-full bg-[#df3e75] transition-[width]"
-                        :style="{ width: `${Math.min(100, Math.max(0, progress))}%` }"
                     />
                 </div>
             </div>
@@ -204,12 +204,12 @@ function isCompleted(): boolean {
 
     <article
         v-else
-        class="group flex min-h-[374px] flex-col overflow-hidden border border-white/10 bg-[#101d2d] transition hover:-translate-y-0.5 hover:border-[#a53a66]/65 hover:shadow-2xl"
+        class="group flex min-h-93.5 flex-col overflow-hidden border border-white/10 bg-[#101d2d] transition hover:-translate-y-0.5 hover:border-[#a53a66]/65 hover:shadow-2xl"
     >
         <Link :href="href" class="relative block h-32 overflow-hidden">
             <img
-                :src="imageUrl()"
                 :alt="formation.title"
+                :src="imageUrl()"
                 class="size-full object-cover transition duration-300 group-hover:scale-[1.03]"
                 @error="replaceBrokenImage"
             />
@@ -220,10 +220,10 @@ function isCompleted(): boolean {
 
         <div class="border-b border-white/10 px-3 py-2.5">
             <ContentFormatBadges
-                compact
-                :videos="formation.video_count"
                 :pdfs="formation.pdf_count"
                 :texts="formation.text_count"
+                :videos="formation.video_count"
+                compact
             />
         </div>
 
@@ -247,22 +247,22 @@ function isCompleted(): boolean {
                         </p>
                     </div>
                     <div class="text-right">
-                        <p class="text-xs font-medium" :class="difficultyClass()">{{ difficultyLabel() }}</p>
+                        <p :class="difficultyClass()" class="text-xs font-medium">{{ difficultyLabel() }}</p>
                         <p class="mt-1 text-[11px] text-slate-500">{{ formatDuration() }}</p>
                     </div>
                 </div>
 
                 <div v-if="progress !== null" class="mt-4 flex items-center gap-3">
                     <div class="h-1.5 flex-1 bg-white/10">
-                        <div class="h-full bg-[#df3e75]" :style="{ width: `${progress}%` }" />
+                        <div :style="{ width: `${progress}%` }" class="h-full bg-[#df3e75]"/>
                     </div>
                     <span class="text-xs font-semibold text-[#ff79a5]">{{ progress }}%</span>
                 </div>
                 <div v-else class="mt-4 flex items-center justify-between">
                     <span class="text-xs text-slate-500">{{ formation.students_count ?? 0 }} apprenants</span>
                     <span
-                        class="text-base font-semibold"
                         :class="Number(formation.price ?? 0) <= 0 ? 'text-emerald-300' : 'text-white'"
+                        class="text-base font-semibold"
                     >
                         {{ formatPrice() }}
                     </span>

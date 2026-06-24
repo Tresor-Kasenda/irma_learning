@@ -1,0 +1,1 @@
+import{_ as s}from"./_plugin-vue_export-helper-DlAUqK2U.js";import{i as t,s as r,o}from"./app-C0H-2VIZ.js";const c={},n={class:"flex min-h-screen flex-col items-center justify-center bg-irma-surface px-4 py-10"};function a(e,f){return o(),t("div",n,[r(e.$slots,"default")])}const _=s(c,[["render",a]]);export{_ as G};
