@@ -1,7 +1,10 @@
 export interface LearningEnrollment {
     id: number;
     status?: string;
+    payment_status?: string;
     progress_percentage: number | string | null;
+    last_accessed_at?: string | null;
+    updated_at?: string | null;
 }
 
 export interface LearningFormation {
@@ -30,4 +33,3 @@ export interface LearningCatalogStats {
     pdfs: number;
     texts: number;
 }
-

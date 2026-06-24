@@ -5,10 +5,10 @@ declare(strict_types=1);
 use App\Enums\EnrollmentPaymentEnum;
 use App\Enums\EnrollmentStatusEnum;
 use App\Enums\UserProgressEnum;
+use App\Http\Controllers\Dashboard\DashboardPageController;
 use App\Http\Controllers\Dashboard\Formations\StudentCertificationController;
 use App\Http\Controllers\Dashboard\Formations\StudentFormationController;
 use App\Http\Controllers\Dashboard\Formations\StudentLearningController;
-use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\EnrollmentController;
 use App\Http\Controllers\ExamController;
 use App\Http\Controllers\Frontends\DetailFormationController;
@@ -31,7 +31,7 @@ Route::get('/{formation:slug}/show', DetailFormationController::class)->name('fo
 Route::get('/nos-tarifs', [HomePageController::class, 'pricings'])->name('pages.pricings');
 
 Route::middleware('auth')->group(function () {
-    Route::get('/dashboard', DashboardController::class)->name('dashboard');
+    Route::get('/dashboard', DashboardPageController::class)->name('dashboard');
     Route::get('/learnings', StudentFormationController::class)->name('student.learnings');
     Route::get('/certificats', StudentCertificationController::class)->name('certificats');
     Route::get('/inprogress', StudentLearningController::class)->name('student.progress');
@@ -70,7 +70,6 @@ Route::middleware('auth')->group(function () {
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
-    Route::get('/dash', [DashboardController::class, 'index'])->name('content');
     Route::get('/formation/{formation:id}/payment', StudentPayment::class)
         ->name('student.payment.create');
 
@@ -87,7 +86,7 @@ Route::middleware('auth')->group(function () {
             ->where('user_id', $user->id)
             ->where('formation_id', $formation->id)
             ->whereIn('payment_status', [EnrollmentPaymentEnum::PAID, EnrollmentPaymentEnum::FREE])
-            ->where('status', EnrollmentStatusEnum::ACTIVE)
+            ->whereIn('status', [EnrollmentStatusEnum::ACTIVE, EnrollmentStatusEnum::COMPLETED])
             ->first();
 
         if (!$enrollment) {

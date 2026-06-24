@@ -57,6 +57,17 @@ test('it renders course player for enrolled user', function () {
         ->assertSee($this->chapter1->title);
 });
 
+test('it renders course player for a completed enrollment', function () {
+    $this->enrollment->update([
+        'status' => EnrollmentStatusEnum::COMPLETED,
+        'progress_percentage' => 100,
+    ]);
+
+    $this->get(route('course.player', $this->formation))
+        ->assertSuccessful()
+        ->assertSee($this->formation->title);
+});
+
 test('it loads specified chapter when chapterId provided', function () {
     $this->get(route('course.player', [
         'formation' => $this->formation->id,
