@@ -18,7 +18,7 @@
                             </path>
                         </svg>
                     </a>
-                    <a href="{{ route('profile') }}" wire:navigate aria-label="Retour dashboard"
+                    <a href="{{ route('profile.edit') }}" wire:navigate aria-label="Retour dashboard"
                        class="text-fg hover:bg-bg-light ease-linear duration-100 size-10 hidden sm:flex items-center justify-center rounded-md">
                         <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="currentColor"
                              class="size-5"

@@ -162,10 +162,7 @@ final class CoursePlayer extends Component
             return true;
         }
 
-        return $exam->attempts()
-            ->where('user_id', auth()->id())
-            ->where('score', '>=', $exam->passing_score ?? 70) // Fallback to 70 if null, though model has default
-            ->exists();
+        return $exam->hasUserPassed(auth()->user());
     }
 
     public function nextChapter(): void

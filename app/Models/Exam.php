@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Enums\ExamAttemptEnum;
 use Database\Factories\ExamFactory;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -66,6 +67,15 @@ final class Exam extends Model
         return $this->attempts()
             ->where('user_id', $user->id)
             ->count();
+    }
+
+    public function hasUserPassed(User $user): bool
+    {
+        return $this->attempts()
+            ->where('user_id', $user->id)
+            ->where('status', ExamAttemptEnum::COMPLETED->value)
+            ->where('percentage', '>=', $this->getPassingScore())
+            ->exists();
     }
 
     public function attempts(): HasMany

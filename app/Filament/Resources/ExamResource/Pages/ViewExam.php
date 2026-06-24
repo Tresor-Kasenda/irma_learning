@@ -1,7 +1,10 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Filament\Resources\ExamResource\Pages;
 
+use App\Enums\ExamAttemptEnum;
 use App\Filament\Resources\ChapterResource;
 use App\Filament\Resources\ExamResource;
 use App\Models\Chapter;
@@ -14,7 +17,7 @@ use Filament\Infolists\Components\TextEntry;
 use Filament\Resources\Pages\ViewRecord;
 use Filament\Schemas\Schema;
 
-class ViewExam extends ViewRecord
+final class ViewExam extends ViewRecord
 {
     protected static string $resource = ExamResource::class;
 
@@ -29,14 +32,14 @@ class ViewExam extends ViewRecord
 
                         TextEntry::make('examable_type')
                             ->label('Type d\'élément')
-                            ->formatStateUsing(fn(string $state): string => match ($state) {
+                            ->formatStateUsing(fn (string $state): string => match ($state) {
                                 Formation::class => 'Formation',
                                 Section::class => 'Section',
                                 Chapter::class => 'Chapitre',
                                 default => 'Inconnu',
                             })
                             ->badge()
-                            ->color(fn($state): string => match ($state) {
+                            ->color(fn ($state): string => match ($state) {
                                 Formation::class => 'success',
                                 Section::class => 'warning',
                                 Chapter::class => 'danger',
@@ -102,11 +105,11 @@ class ViewExam extends ViewRecord
                     ->schema([
                         TextEntry::make('questions_count')
                             ->label('Nombre de questions')
-                            ->getStateUsing(fn(Exam $record): int => $record->questions()->count()),
+                            ->getStateUsing(fn (Exam $record): int => $record->questions()->count()),
 
                         TextEntry::make('attempts_count')
                             ->label('Nombre de tentatives')
-                            ->getStateUsing(fn(Exam $record): int => $record->attempts()->count()),
+                            ->getStateUsing(fn (Exam $record): int => $record->attempts()->count()),
 
                         TextEntry::make('success_rate')
                             ->label('Taux de réussite (%)')
@@ -116,9 +119,11 @@ class ViewExam extends ViewRecord
                                     return 'N/A';
                                 }
                                 $successfulAttempts = $record->attempts()
-                                    ->where('score', '>=', $record->passing_score)
+                                    ->where('status', ExamAttemptEnum::COMPLETED->value)
+                                    ->where('percentage', '>=', $record->getPassingScore())
                                     ->count();
-                                return round(($successfulAttempts / $totalAttempts) * 100, 1) . '%';
+
+                                return round(($successfulAttempts / $totalAttempts) * 100, 1).'%';
                             }),
                     ])
                     ->columns(3),

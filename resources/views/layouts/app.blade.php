@@ -23,7 +23,7 @@
     @filamentStyles
     @vite('resources/css/app.css')
 </head>
-<body class="overflow-hidden overflow-y-auto bg-bg">
+<body class="overflow-hidden overflow-y-auto bg-irma-surface">
 <div class="min-h-screen">
     <livewire:layout.navigation/>
     <main class="py-8 relative">
@@ -32,6 +32,5 @@
     </main>
 </div>
 @filamentScripts
-@vite('resources/js/app.js')
 </body>
 </html>

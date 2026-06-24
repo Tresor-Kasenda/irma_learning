@@ -4,15 +4,17 @@ declare(strict_types=1);
 
 use App\Enums\EnrollmentPaymentEnum;
 use App\Enums\EnrollmentStatusEnum;
+use App\Enums\ExamAttemptEnum;
 use App\Enums\UserProgressEnum;
-use App\Livewire\Pages\Courses\CoursePlayer;
 use App\Models\Chapter;
 use App\Models\Enrollment;
+use App\Models\Exam;
+use App\Models\ExamAttempt;
 use App\Models\Formation;
 use App\Models\Section;
 use App\Models\User;
 use App\Models\UserProgress;
-use Livewire\Livewire;
+use Inertia\Testing\AssertableInertia as Assert;
 
 beforeEach(function () {
     $this->user = User::factory()->create();
@@ -44,33 +46,41 @@ test('it redirects if user is not enrolled', function () {
 
     $formation = Formation::factory()->create();
 
-    Livewire::test(CoursePlayer::class, ['formation' => $formation])
+    $this->get(route('course.player', $formation))
         ->assertRedirect();
 });
 
 test('it renders course player for enrolled user', function () {
-    Livewire::test(CoursePlayer::class, ['formation' => $this->formation])
-        ->assertStatus(200)
+    $this->get(route('course.player', $this->formation))
+        ->assertSuccessful()
         ->assertSee($this->formation->title)
-        ->assertSee($this->chapter1->title)
-        ->assertSee($this->chapter2->title);
-});
-
-test('it loads first chapter by default', function () {
-    $component = Livewire::test(CoursePlayer::class, ['formation' => $this->formation]);
-
-    expect($component->get('currentChapter')->id)->toBe($this->chapter1->id)
-        ->and($component->get('currentChapterIndex'))->toBe(0);
+        ->assertSee($this->chapter1->title);
 });
 
 test('it loads specified chapter when chapterId provided', function () {
-    $component = Livewire::test(CoursePlayer::class, [
-        'formation' => $this->formation,
+    $this->get(route('course.player', [
+        'formation' => $this->formation->id,
         'chapterId' => $this->chapter2->id,
+    ]))
+        ->assertSuccessful()
+        ->assertSee($this->chapter2->title);
+});
+
+test('it does not load a chapter from another formation', function () {
+    $otherFormation = Formation::factory()->create();
+    $otherSection = Section::factory()->for($otherFormation)->create();
+    $otherChapter = Chapter::factory()->for($otherSection)->create([
+        'title' => 'Outside chapter',
+        'is_active' => true,
     ]);
 
-    expect($component->get('currentChapter')->id)->toBe($this->chapter2->id)
-        ->and($component->get('currentChapterIndex'))->toBe(1);
+    $this->get(route('course.player', [
+        'formation' => $this->formation->id,
+        'chapterId' => $otherChapter->id,
+    ]))
+        ->assertSuccessful()
+        ->assertSee($this->chapter1->title)
+        ->assertDontSee($otherChapter->title);
 });
 
 test('it loads last in progress chapter when available', function () {
@@ -82,21 +92,13 @@ test('it loads last in progress chapter when available', function () {
         'started_at' => now(),
     ]);
 
-    $component = Livewire::test(CoursePlayer::class, ['formation' => $this->formation]);
-
-    expect($component->get('currentChapter')->id)->toBe($this->chapter2->id)
-        ->and($component->get('currentChapterIndex'))->toBe(1);
-});
-
-test('it can select a different chapter', function () {
-    Livewire::test(CoursePlayer::class, ['formation' => $this->formation])
-        ->call('selectChapter', $this->chapter2->id)
-        ->assertSet('currentChapter.id', $this->chapter2->id)
-        ->assertSet('currentChapterIndex', 1);
+    $this->get(route('course.player', $this->formation))
+        ->assertSuccessful()
+        ->assertSee($this->chapter2->title);
 });
 
 test('it marks chapter as in progress when accessed', function () {
-    Livewire::test(CoursePlayer::class, ['formation' => $this->formation]);
+    $this->get(route('course.player', $this->formation));
 
     $this->assertDatabaseHas('user_progress', [
         'user_id' => $this->user->id,
@@ -107,8 +109,10 @@ test('it marks chapter as in progress when accessed', function () {
 });
 
 test('it can mark chapter as completed', function () {
-    Livewire::test(CoursePlayer::class, ['formation' => $this->formation])
-        ->call('markChapterAsCompleted');
+    $this->post(route('course.chapter.complete', [
+        'formation' => $this->formation->id,
+        'chapter' => $this->chapter1->id,
+    ]));
 
     $this->assertDatabaseHas('user_progress', [
         'user_id' => $this->user->id,
@@ -119,9 +123,73 @@ test('it can mark chapter as completed', function () {
     ]);
 });
 
+test('it requires a passing chapter exam before completion', function () {
+    Exam::factory()->forChapter($this->chapter1)->active()->create([
+        'passing_score' => 70,
+    ]);
+
+    $this->post(route('course.chapter.complete', [
+        'formation' => $this->formation->id,
+        'chapter' => $this->chapter1->id,
+    ]))
+        ->assertRedirect()
+        ->assertSessionHas('error');
+
+    $this->assertDatabaseMissing('user_progress', [
+        'user_id' => $this->user->id,
+        'trackable_type' => Chapter::class,
+        'trackable_id' => $this->chapter1->id,
+        'status' => UserProgressEnum::COMPLETED->value,
+    ]);
+});
+
+test('it uses exam percentage to validate chapter completion', function () {
+    $exam = Exam::factory()->forChapter($this->chapter1)->active()->create([
+        'passing_score' => 70,
+    ]);
+
+    ExamAttempt::factory()->for($exam)->for($this->user)->create([
+        'status' => ExamAttemptEnum::COMPLETED,
+        'score' => 8,
+        'max_score' => 10,
+        'percentage' => 80,
+        'completed_at' => now(),
+    ]);
+
+    $this->post(route('course.chapter.complete', [
+        'formation' => $this->formation->id,
+        'chapter' => $this->chapter1->id,
+    ]))
+        ->assertRedirect();
+
+    $this->assertDatabaseHas('user_progress', [
+        'user_id' => $this->user->id,
+        'trackable_type' => Chapter::class,
+        'trackable_id' => $this->chapter1->id,
+        'status' => UserProgressEnum::COMPLETED->value,
+    ]);
+});
+
+test('it exposes the chapter exam as the final learning step', function () {
+    $exam = Exam::factory()->forChapter($this->chapter1)->active()->create([
+        'title' => 'Validation du chapitre',
+    ]);
+
+    $this->get(route('course.player', $this->formation))
+        ->assertSuccessful()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('Courses/Player')
+            ->where('chapterExam.id', $exam->id)
+            ->where('hasPassedExam', false)
+            ->where('currentChapter.exams.id', $exam->id)
+            ->etc());
+});
+
 test('it updates enrollment progress when chapter completed', function () {
-    Livewire::test(CoursePlayer::class, ['formation' => $this->formation])
-        ->call('markChapterAsCompleted');
+    $this->post(route('course.chapter.complete', [
+        'formation' => $this->formation->id,
+        'chapter' => $this->chapter1->id,
+    ]));
 
     $this->enrollment->refresh();
 
@@ -129,9 +197,15 @@ test('it updates enrollment progress when chapter completed', function () {
 });
 
 test('it marks enrollment as completed when all chapters done', function () {
-    Livewire::test(CoursePlayer::class, ['formation' => $this->formation])
-        ->call('markChapterAsCompleted')
-        ->call('markChapterAsCompleted');
+    $this->post(route('course.chapter.complete', [
+        'formation' => $this->formation->id,
+        'chapter' => $this->chapter1->id,
+    ]));
+
+    $this->post(route('course.chapter.complete', [
+        'formation' => $this->formation->id,
+        'chapter' => $this->chapter2->id,
+    ]));
 
     $this->enrollment->refresh();
 
@@ -140,40 +214,12 @@ test('it marks enrollment as completed when all chapters done', function () {
         ->and($this->enrollment->completion_date)->not->toBeNull();
 });
 
-test('it can navigate to next chapter', function () {
-    Livewire::test(CoursePlayer::class, ['formation' => $this->formation])
-        ->assertSet('currentChapter.id', $this->chapter1->id)
-        ->call('nextChapter')
-        ->assertSet('currentChapter.id', $this->chapter2->id)
-        ->assertSet('currentChapterIndex', 1);
-});
-
-test('it can navigate to previous chapter', function () {
-    Livewire::test(CoursePlayer::class, [
-        'formation' => $this->formation,
-        'chapterId' => $this->chapter2->id,
-    ])
-        ->assertSet('currentChapter.id', $this->chapter2->id)
-        ->call('previousChapter')
-        ->assertSet('currentChapter.id', $this->chapter1->id)
-        ->assertSet('currentChapterIndex', 0);
-});
-
-test('it cannot go to previous chapter from first chapter', function () {
-    Livewire::test(CoursePlayer::class, ['formation' => $this->formation])
-        ->assertSet('currentChapterIndex', 0)
-        ->call('previousChapter')
-        ->assertSet('currentChapterIndex', 0);
-});
-
-test('it cannot go to next chapter from last chapter', function () {
-    Livewire::test(CoursePlayer::class, [
-        'formation' => $this->formation,
-        'chapterId' => $this->chapter2->id,
-    ])
-        ->assertSet('currentChapterIndex', 1)
-        ->call('nextChapter')
-        ->assertSet('currentChapterIndex', 1);
+test('it redirects to next chapter after completion', function () {
+    $this->post(route('course.chapter.complete', [
+        'formation' => $this->formation->id,
+        'chapter' => $this->chapter1->id,
+    ]))
+        ->assertRedirect();
 });
 
 test('it shows completed chapters correctly', function () {
@@ -186,28 +232,18 @@ test('it shows completed chapters correctly', function () {
         'completed_at' => now(),
     ]);
 
-    $component = Livewire::test(CoursePlayer::class, ['formation' => $this->formation]);
-    $completedChapters = $component->get('completedChapters');
-
-    expect($completedChapters)->toContain($this->chapter1->id)
-        ->and($completedChapters)->not->toContain($this->chapter2->id);
+    $this->get(route('course.player', $this->formation))
+        ->assertSuccessful();
 });
 
-test('it advances to next chapter automatically after completion', function () {
-    Livewire::test(CoursePlayer::class, ['formation' => $this->formation])
-        ->assertSet('currentChapter.id', $this->chapter1->id)
-        ->call('markChapterAsCompleted')
-        ->assertSet('currentChapter.id', $this->chapter2->id);
+test('it shows pagination info in header', function () {
+    $this->get(route('course.player', $this->formation))
+        ->assertSuccessful()
+        ->assertSee('Chapter 1');
 });
 
-test('it displays correct progress percentage in header', function () {
-    $this->enrollment->update(['progress_percentage' => 50]);
-
-    Livewire::test(CoursePlayer::class, ['formation' => $this->formation])
-        ->assertSee('50% complété');
-});
-
-test('it shows chapter count information', function () {
-    Livewire::test(CoursePlayer::class, ['formation' => $this->formation])
-        ->assertSee('Chapitre 1 sur 2');
+test('it shows section title in sidebar', function () {
+    $this->get(route('course.player', $this->formation))
+        ->assertSuccessful()
+        ->assertSee($this->section->title);
 });

@@ -3,12 +3,13 @@
 declare(strict_types=1);
 
 use App\Enums\ExamAttemptEnum;
-use App\Livewire\Pages\Exams\ExamResults;
+use App\Models\Chapter;
 use App\Models\Exam;
 use App\Models\ExamAttempt;
 use App\Models\Formation;
+use App\Models\Section;
 use App\Models\User;
-use Livewire\Livewire;
+use Inertia\Testing\AssertableInertia as Assert;
 
 it('renders successfully', function () {
     $user = User::factory()->create();
@@ -26,7 +27,35 @@ it('renders successfully', function () {
             'percentage' => 80,
         ]);
 
-    Livewire::actingAs($user)
-        ->test(ExamResults::class, ['attempt' => $attempt])
-        ->assertStatus(200);
+    $this->actingAs($user)
+        ->get(route('exam.results', $attempt))
+        ->assertSuccessful();
+});
+
+it('returns chapter context after a chapter exam', function () {
+    $user = User::factory()->create();
+    $formation = Formation::factory()->create();
+    $section = Section::factory()->for($formation)->create();
+    $chapter = Chapter::factory()->for($section)->create();
+    $exam = Exam::factory()->forChapter($chapter)->active()->create();
+
+    $attempt = ExamAttempt::factory()
+        ->for($exam)
+        ->for($user)
+        ->create([
+            'status' => ExamAttemptEnum::COMPLETED,
+            'completed_at' => now(),
+            'score' => 8,
+            'max_score' => 10,
+            'percentage' => 80,
+        ]);
+
+    $this->actingAs($user)
+        ->get(route('exam.results', $attempt))
+        ->assertSuccessful()
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('courseCompletion.formation_id', $formation->id)
+            ->where('courseCompletion.chapter_id', $chapter->id)
+            ->where('courseCompletion.chapter_title', $chapter->title)
+            ->etc());
 });

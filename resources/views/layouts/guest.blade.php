@@ -12,9 +12,9 @@
     <link rel="icon" type="image/svg+xml" href="{{ asset("images/irma-logo-base.svg") }}">
 
     <!-- Scripts -->
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
+    @vite(['resources/css/app.css'])
 </head>
-<body class="bg-bg-lighter/50 font-sans">
+<body class="bg-irma-surface font-sans">
 <main class="flex min-h-screen justify-center items-center">
     <x-notification-popup/>
     {{ $slot }}

@@ -74,7 +74,7 @@ final class ExamAttempt extends Model
             'score' => $totalScore,
             'max_score' => $maxScore,
             'percentage' => $percentage,
-            'time_taken' => now()->diffInSeconds($this->started_at),
+            'time_taken' => (int) max(0, $this->started_at->diffInSeconds(now())),
         ]);
 
         if ($this->isPassed() && $this->exam->examable_type === 'App\Models\Chapter') {

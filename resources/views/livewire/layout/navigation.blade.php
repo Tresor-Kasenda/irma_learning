@@ -97,7 +97,7 @@ new class extends Component {
 
                     {{-- Lien vers le profil --}}
                     <li>
-                        <a class="ui-dropdown-item gap-x-2 hover:bg-primary-50" href="{{ route('profile') }}"
+                        <a class="ui-dropdown-item gap-x-2 hover:bg-primary-50" href="{{ route('profile.edit') }}"
                            wire:navigate>
                             <svg class="size-5 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"

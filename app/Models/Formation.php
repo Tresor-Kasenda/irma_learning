@@ -4,12 +4,16 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Enums\ChapterTypeEnum;
+use App\Enums\EnrollmentPaymentEnum;
 use App\Enums\FormationLevelEnum;
 use Database\Factories\FormationFactory;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Spatie\Activitylog\LogOptions;
@@ -24,6 +28,36 @@ final class Formation extends Model
 
     use HasSlug;
     use LogsActivity;
+
+    /**
+     * @return array<string, callable(Builder): Builder>
+     */
+    public static function catalogCountRelations(): array
+    {
+        return [
+            'chapters as chapter_count' => fn (Builder $query): Builder => $query
+                ->where('chapters.is_active', true),
+            'chapters as video_count' => fn (Builder $query): Builder => $query
+                ->where('chapters.is_active', true)
+                ->where('content_type', ChapterTypeEnum::VIDEO->value),
+            'chapters as pdf_count' => fn (Builder $query): Builder => $query
+                ->where('chapters.is_active', true)
+                ->where('content_type', ChapterTypeEnum::PDF->value),
+            'chapters as text_count' => fn (Builder $query): Builder => $query
+                ->where('chapters.is_active', true)
+                ->where('content_type', ChapterTypeEnum::TEXT->value),
+            'enrollments as students_count' => fn (Builder $query): Builder => $query
+                ->whereIn('payment_status', [
+                    EnrollmentPaymentEnum::PAID->value,
+                    EnrollmentPaymentEnum::FREE->value,
+                ]),
+        ];
+    }
+
+    public function getRouteKeyName(): string
+    {
+        return 'slug';
+    }
 
     public function getSlugOptions(): SlugOptions
     {
@@ -77,6 +111,11 @@ final class Formation extends Model
     public function sections(): HasMany
     {
         return $this->hasMany(Section::class)->orderBy('order_position');
+    }
+
+    public function chapters(): HasManyThrough
+    {
+        return $this->hasManyThrough(Chapter::class, Section::class);
     }
 
     public function getEnrollmentCount(): int
