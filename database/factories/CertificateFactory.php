@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Database\Factories;
 
+use App\Models\Formation;
+use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -11,15 +13,16 @@ use Illuminate\Database\Eloquent\Factories\Factory;
  */
 final class CertificateFactory extends Factory
 {
-    /**
-     * Define the model's default state.
-     *
-     * @return array<string, mixed>
-     */
     public function definition(): array
     {
         return [
-            //
+            'user_id' => User::factory(),
+            'formation_id' => Formation::factory(),
+            'final_score' => $this->faker->randomFloat(2, 60, 100),
+            'issue_date' => now(),
+            'expiry_date' => $this->faker->optional(0.3)->dateTimeBetween('+1 year', '+3 years'),
+            'status' => 'active',
+            'metadata' => ['duration_hours' => $this->faker->numberBetween(10, 100)],
         ];
     }
 }

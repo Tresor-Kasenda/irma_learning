@@ -71,7 +71,7 @@ final class Certificate extends Model
     protected function generateCertificateNumber(): string
     {
         return 'CERT-'.date('Y').'-'.mb_str_pad(
-            self::whereYear('created_at', date('Y'))->count() + 1,
+            (string) (self::whereYear('created_at', date('Y'))->count() + 1),
             6,
             '0',
             STR_PAD_LEFT

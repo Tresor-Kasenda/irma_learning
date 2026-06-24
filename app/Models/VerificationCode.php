@@ -20,6 +20,12 @@ final class VerificationCode extends Model
     /** @use HasFactory<VerificationCodeFactory> */
     use HasFactory;
 
+    public $incrementing = false;
+
+    protected $primaryKey = 'code';
+
+    protected $keyType = 'string';
+
     protected $guarded = [];
 
     public function user(): BelongsTo

@@ -4,6 +4,10 @@ declare(strict_types=1);
 
 namespace Database\Factories;
 
+use App\Enums\EnrollmentPaymentEnum;
+use App\Enums\EnrollmentStatusEnum;
+use App\Models\Formation;
+use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -11,15 +15,17 @@ use Illuminate\Database\Eloquent\Factories\Factory;
  */
 final class EnrollmentFactory extends Factory
 {
-    /**
-     * Define the model's default state.
-     *
-     * @return array<string, mixed>
-     */
     public function definition(): array
     {
         return [
-            //
+            'user_id' => User::factory(),
+            'formation_id' => Formation::factory(),
+            'status' => EnrollmentStatusEnum::ACTIVE->value,
+            'payment_status' => EnrollmentPaymentEnum::PENDING->value,
+            'amount_paid' => 0,
+            'currency' => 'XAF',
+            'enrollment_date' => now(),
+            'progress_percentage' => 0,
         ];
     }
 }

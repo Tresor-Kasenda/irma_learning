@@ -21,4 +21,12 @@ final class UserProfile extends Model
     {
         return $this->belongsTo(User::class, 'user_id');
     }
+
+    protected function casts(): array
+    {
+        return [
+            'birth_date' => 'date',
+            'preferences' => 'array',
+        ];
+    }
 }
