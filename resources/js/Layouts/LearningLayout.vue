@@ -3,6 +3,7 @@ import {ref} from 'vue';
 import LearningSidebar from '@/Components/Learning/LearningSidebar.vue';
 import LearningHeader from '@/Components/Learning/LearningHeader.vue';
 import type {LearningCatalogStats} from '@/types/learning';
+import {useUiStore} from '@/stores';
 
 type ActiveItem = 'dashboard' | 'formations' | 'in-progress' | 'certified' | 'enterprise';
 
@@ -12,6 +13,7 @@ defineProps<{
 }>();
 
 const mobileSidebarOpen = ref(false);
+const uiStore = useUiStore();
 </script>
 
 <template>
@@ -22,7 +24,8 @@ const mobileSidebarOpen = ref(false);
             :catalog-stats="catalogStats"
         />
 
-        <main class="min-h-screen lg:pl-63">
+        <main
+            :class="['min-h-screen transition-[padding] duration-200', uiStore.sidebarCollapsed ? 'lg:pl-20' : 'lg:pl-63']">
             <LearningHeader v-model:mobileSidebarOpen="mobileSidebarOpen">
                 <template #breadcrumb>
                     <slot name="breadcrumb"/>

@@ -1,9 +1,10 @@
-import { defineStore } from 'pinia';
-import { ref } from 'vue';
+import {defineStore} from 'pinia';
+import {ref} from 'vue';
 
 export const useUiStore = defineStore('ui', () => {
     const sidebarOpen = ref(false);
     const searchOpen = ref(false);
+    const sidebarCollapsed = ref(localStorage.getItem('sidebarCollapsed') === 'true');
 
     function toggleSidebar(): void {
         sidebarOpen.value = !sidebarOpen.value;
@@ -17,5 +18,18 @@ export const useUiStore = defineStore('ui', () => {
         searchOpen.value = !searchOpen.value;
     }
 
-    return { sidebarOpen, searchOpen, toggleSidebar, closeSidebar, toggleSearch };
+    function toggleSidebarCollapsed(): void {
+        sidebarCollapsed.value = !sidebarCollapsed.value;
+        localStorage.setItem('sidebarCollapsed', sidebarCollapsed.value.toString());
+    }
+
+    return {
+        sidebarOpen,
+        searchOpen,
+        sidebarCollapsed,
+        toggleSidebar,
+        closeSidebar,
+        toggleSearch,
+        toggleSidebarCollapsed
+    };
 });

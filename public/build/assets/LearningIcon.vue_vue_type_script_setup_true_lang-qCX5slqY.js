@@ -1,1 +1,0 @@
-import{d as n,i as t,o as a}from"./app-BvuXhuHo.js";const o=["src","alt"],l=n({__name:"LearningIcon",props:{name:{},alt:{default:""}},setup(e){return(c,s)=>(a(),t("img",{src:`/icons/heroicons/${e.name}.svg`,alt:e.alt},null,8,o))}});export{l as _};
