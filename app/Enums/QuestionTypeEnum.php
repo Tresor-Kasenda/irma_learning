@@ -12,18 +12,12 @@ enum QuestionTypeEnum: string
 
     case TRUE_FALSE = 'true_false';
 
-    case TEXT = 'text';
-
-    case ESSAY = 'essay';
-
     public function getLabel(): string
     {
         return match ($this) {
             self::MULTIPLE_CHOICE => 'Choix multiple',
             self::SINGLE_CHOICE => 'Choix unique',
             self::TRUE_FALSE => 'Vrai ou faux',
-            self::TEXT => 'Texte',
-            self::ESSAY => 'Essai',
         };
     }
 }

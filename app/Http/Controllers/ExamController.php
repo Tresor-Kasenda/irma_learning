@@ -4,18 +4,28 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Enums\CertificateStatusEnum;
+use App\Enums\EnrollmentPaymentEnum;
+use App\Enums\EnrollmentStatusEnum;
 use App\Enums\ExamAttemptEnum;
 use App\Enums\QuestionTypeEnum;
+use App\Models\Certificate;
+use App\Models\Chapter;
+use App\Models\Enrollment;
 use App\Models\Exam;
 use App\Models\ExamAttempt;
+use App\Models\Formation;
+use App\Models\Section;
+use App\Models\User;
 use App\Models\UserAnswer;
+use App\Services\CourseProgressionService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 
 final class ExamController extends Controller
 {
-    public function take(Exam $exam)
+    public function take(Exam $exam, CourseProgressionService $progression)
     {
         $user = auth()->user();
 
@@ -30,6 +40,18 @@ final class ExamController extends Controller
         }
         if (! $exam->canUserAttempt($user)) {
             abort(403, 'Vous avez atteint le nombre maximum de tentatives pour cet examen.');
+        }
+
+        if ($exam->examable_type === Section::class) {
+            $section = $exam->examable;
+            $formation = $this->resolveFormation($exam);
+
+            abort_unless($formation && $this->isEnrolled($user, $formation), 403, 'Vous devez être inscrit à cette formation.');
+
+            if (! $progression->hasCompletedSectionChapters($user, $section)) {
+                return redirect()->route('course.player', $formation->id)
+                    ->with('error', 'Vous devez terminer tous les chapitres de la section avant de passer son examen.');
+            }
         }
 
         $attempt = ExamAttempt::firstOrCreate(
@@ -96,8 +118,6 @@ final class ExamController extends Controller
                     : json_decode($userAnswer->selected_options ?? '[]', true);
             } elseif (in_array($userAnswer->question->question_type, [QuestionTypeEnum::SINGLE_CHOICE, QuestionTypeEnum::TRUE_FALSE])) {
                 $existingAnswers[$questionId] = $userAnswer->selected_option_id;
-            } elseif (in_array($userAnswer->question->question_type, [QuestionTypeEnum::TEXT, QuestionTypeEnum::ESSAY])) {
-                $existingAnswers[$questionId] = $userAnswer->answer_text;
             }
         }
 
@@ -149,10 +169,6 @@ final class ExamController extends Controller
             $updateData['selected_option_id'] = null;
             $updateData['selected_options'] = is_array($answer) ? $answer : [];
             $updateData['answer_text'] = null;
-        } elseif (in_array($question->question_type, [QuestionTypeEnum::TEXT, QuestionTypeEnum::ESSAY])) {
-            $updateData['selected_option_id'] = null;
-            $updateData['selected_options'] = null;
-            $updateData['answer_text'] = $answer;
         }
 
         UserAnswer::updateOrCreate(
@@ -166,7 +182,7 @@ final class ExamController extends Controller
         return response()->json(['saved' => true]);
     }
 
-    public function submit(Exam $exam)
+    public function submit(Exam $exam, CourseProgressionService $progression)
     {
         $user = auth()->user();
         $attempt = ExamAttempt::where('exam_id', $exam->id)
@@ -176,17 +192,31 @@ final class ExamController extends Controller
 
         $attempt->complete();
 
+        $formation = $this->resolveFormation($exam);
+        if ($formation) {
+            $progression->syncCompletion($user, $formation);
+        }
+
         if ($exam->show_results_immediately) {
             return redirect()->to(route('exam.results', $attempt));
         }
 
-        if ($exam->examable_type === 'App\Models\Chapter') {
+        if ($exam->examable_type === Section::class && $formation) {
+            $nextChapter = $this->nextSectionFirstChapter($exam, $formation, $progression);
+
+            return redirect()->route('course.player', array_filter([
+                'formation' => $formation->id,
+                'chapterId' => $nextChapter?->id,
+            ]))->with('success', 'Votre examen a été soumis avec succès!');
+        }
+
+        if ($exam->examable_type === Chapter::class) {
             $chapter = $exam->examable;
             $chapter->load('section.formation');
 
             if ($chapter->section && $chapter->section->formation) {
                 return redirect()->route('course.player', [
-                    'formation' => $chapter->section->formation->slug,
+                    'formation' => $chapter->section->formation->id,
                     'chapterId' => $chapter->id,
                 ])->with('success', 'Votre examen a été soumis avec succès!');
             }
@@ -195,7 +225,7 @@ final class ExamController extends Controller
         return redirect()->route('dashboard')->with('success', 'Votre examen a été soumis avec succès!');
     }
 
-    public function results(ExamAttempt $attempt)
+    public function results(ExamAttempt $attempt, CourseProgressionService $progression)
     {
         Gate::authorize('view', $attempt);
 
@@ -213,8 +243,19 @@ final class ExamController extends Controller
             })
             ->values();
 
+        $user = auth()->user();
         $passed = (float) $attempt->percentage >= $attempt->exam->getPassingScore();
-        $canRetry = ! $passed && $attempt->exam->canUserAttempt(auth()->user());
+        $canRetry = ! $passed && $attempt->exam->canUserAttempt($user);
+        $formation = $this->resolveFormation($attempt->exam);
+        $nextStep = $this->buildNextStep($attempt->exam, $formation, $passed, $progression);
+
+        $certificate = $formation
+            ? Certificate::query()
+                ->where('user_id', $user->id)
+                ->where('formation_id', $formation->id)
+                ->where('status', CertificateStatusEnum::ACTIVE->value)
+                ->first(['id', 'certificate_number', 'final_score'])
+            : null;
 
         $timeTaken = null;
         if ($attempt->started_at && $attempt->completed_at) {
@@ -281,6 +322,91 @@ final class ExamController extends Controller
             }),
             'canRetry' => $canRetry,
             'courseCompletion' => $courseCompletion,
+            'nextStep' => $nextStep,
+            'certificate' => $certificate,
         ]);
+    }
+
+    private function isEnrolled(User $user, Formation $formation): bool
+    {
+        return Enrollment::query()
+            ->where('user_id', $user->id)
+            ->where('formation_id', $formation->id)
+            ->whereIn('status', [
+                EnrollmentStatusEnum::ACTIVE->value,
+                EnrollmentStatusEnum::COMPLETED->value,
+            ])
+            ->whereIn('payment_status', [
+                EnrollmentPaymentEnum::PAID->value,
+                EnrollmentPaymentEnum::FREE->value,
+            ])
+            ->exists();
+    }
+
+    private function resolveFormation(Exam $exam): ?Formation
+    {
+        $examable = $exam->examable;
+
+        if ($examable instanceof Formation) {
+            return $examable;
+        }
+
+        if ($examable instanceof Section) {
+            $examable->loadMissing('formation');
+
+            return $examable->formation;
+        }
+
+        if ($examable instanceof Chapter) {
+            $examable->loadMissing('section.formation');
+
+            return $examable->section?->formation;
+        }
+
+        return null;
+    }
+
+    private function nextSectionFirstChapter(Exam $exam, Formation $formation, CourseProgressionService $progression): ?Chapter
+    {
+        $sections = $progression->orderedSections($formation);
+        $index = $sections->search(fn (Section $section): bool => $section->id === $exam->examable_id);
+
+        if ($index === false) {
+            return null;
+        }
+
+        return $sections->get($index + 1)?->chapters->first();
+    }
+
+    /**
+     * @return array{type:string, formation_id?:int, chapter_id?:int}|null
+     */
+    private function buildNextStep(Exam $exam, ?Formation $formation, bool $passed, CourseProgressionService $progression): ?array
+    {
+        if (! $formation || $exam->examable_type !== Section::class) {
+            return null;
+        }
+
+        if (! $passed) {
+            return ['type' => 'retry'];
+        }
+
+        $user = auth()->user();
+
+        if ($progression->isFormationComplete($user, $formation)) {
+            return ['type' => 'completed', 'formation_id' => $formation->id];
+        }
+
+        $nextChapter = $this->nextSectionFirstChapter($exam, $formation, $progression);
+
+        if ($nextChapter) {
+            return [
+                'type' => 'next_section',
+                'formation_id' => $formation->id,
+                'chapter_id' => $nextChapter->id,
+            ];
+        }
+
+        return ['type' => 'continue', 'formation_id' => $formation->id];
     }
 }

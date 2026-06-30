@@ -45,79 +45,36 @@ final class ExamResource extends Resource
                             ->options([
                                 Formation::class => 'Formation',
                                 Section::class => 'Section',
-                                Chapter::class => 'Chapitre',
                             ])
+                            ->default(Section::class)
                             ->required()
                             ->live()
-                            ->afterStateUpdated(fn(Set $set) => $set('examable_id', null)),
+                            ->afterStateUpdated(fn (Set $set) => $set('examable_id', null)),
 
                         Forms\Components\Select::make('formation_id')
                             ->label('Formation')
-                            ->options(fn() => Formation::pluck('title', 'id')->toArray())
+                            ->options(fn () => Formation::pluck('title', 'id')->toArray())
                             ->searchable()
                             ->preload()
                             ->required()
                             ->live()
-                            ->visible(fn(Get $get) => !empty($get('examable_type')))
-                            ->afterStateUpdated(function (Set $set) {
-                                $set('section_id', null);
-                                $set('examable_id', null);
-                            }),
-
-                        Forms\Components\Select::make('section_id')
-                            ->label('Section')
-                            ->options(function (Get $get) {
-                                $formationId = $get('formation_id');
-                                if (!$formationId) {
-                                    return [];
-                                }
-
-                                return Section::where('formation_id', $formationId)
-                                    ->pluck('title', 'id')
-                                    ->toArray();
-                            })
-                            ->searchable()
-                            ->preload()
-                            ->live()
-                            ->required(fn(Get $get) => $get('examable_type') === Chapter::class)
-                            ->visible(fn(Get $get) => $get('examable_type') === Chapter::class &&
-                                !empty($get('formation_id')))
-                            ->afterStateUpdated(function (Set $set) {
-                                $set('examable_id', null);
-                            }),
+                            ->visible(fn (Get $get) => ! empty($get('examable_type')))
+                            ->afterStateUpdated(fn (Set $set) => $set('examable_id', null)),
 
                         Forms\Components\Select::make('examable_id')
-                            ->label(fn(Get $get) => match ($get('examable_type')) {
-                                Formation::class => 'Formation',
-                                Section::class => 'Section',
-                                Chapter::class => 'Chapitre',
-                                default => 'Élément',
-                            })
-                            ->options(function (Get $get) {
-                                $type = $get('examable_type');
-
-                                if (!$type) {
-                                    return [];
-                                }
-
-                                return match ($type) {
-                                    Formation::class => [$get('formation_id') => Formation::find($get('formation_id'))?->title ?? ''],
-                                    Section::class => Section::where('formation_id', $get('formation_id'))
-                                        ->pluck('title', 'id')
-                                        ->toArray(),
-                                    Chapter::class => Chapter::where('section_id', $get('section_id'))
-                                        ->pluck('title', 'id')
-                                        ->toArray(),
-                                    default => [],
-                                };
+                            ->label(fn (Get $get) => $get('examable_type') === Formation::class ? 'Formation' : 'Section')
+                            ->helperText('Pour une section, l\'étudiant doit terminer tous ses chapitres avant de pouvoir passer l\'examen.')
+                            ->options(fn (Get $get) => match ($get('examable_type')) {
+                                Formation::class => [$get('formation_id') => Formation::find($get('formation_id'))?->title ?? ''],
+                                Section::class => Section::where('formation_id', $get('formation_id'))
+                                    ->pluck('title', 'id')
+                                    ->toArray(),
+                                default => [],
                             })
                             ->searchable()
                             ->preload()
                             ->required()
-                            ->hidden(fn(Get $get) => ($get('examable_type') === Formation::class && empty($get('formation_id'))) ||
-                                ($get('examable_type') === Section::class && empty($get('formation_id'))) ||
-                                ($get('examable_type') === Chapter::class && empty($get('section_id'))) ||
-                                empty($get('examable_type'))),
+                            ->hidden(fn (Get $get) => empty($get('formation_id')) || empty($get('examable_type'))),
                     ])
                     ->columns(2),
 
@@ -205,7 +162,7 @@ final class ExamResource extends Resource
             ->groups([
                 Tables\Grouping\Group::make('examable_type')
                     ->label('Type d\'examen')
-                    ->getTitleFromRecordUsing(fn($record) => match ($record->examable_type) {
+                    ->getTitleFromRecordUsing(fn ($record) => match ($record->examable_type) {
                         Formation::class => '📚 Formation',
                         Section::class => '📖 Section',
                         Chapter::class => '📄 Chapitre',
@@ -230,14 +187,14 @@ final class ExamResource extends Resource
 
                 TextColumn::make('examable_type')
                     ->label('Type')
-                    ->formatStateUsing(fn($state): string => match ($state) {
+                    ->formatStateUsing(fn ($state): string => match ($state) {
                         Formation::class => 'Formation',
                         Section::class => 'Section',
                         Chapter::class => 'Chapitre',
                         default => 'Inconnu',
                     })
                     ->badge()
-                    ->color(fn($state): string => match ($state) {
+                    ->color(fn ($state): string => match ($state) {
                         Formation::class => 'success',
                         Section::class => 'info',
                         Chapter::class => 'warning',
@@ -248,7 +205,7 @@ final class ExamResource extends Resource
                     ->label('Élément associé')
                     ->searchable()
                     ->limit(40)
-                    ->description(fn(Exam $record): ?string => $record->formation_title),
+                    ->description(fn (Exam $record): ?string => $record->formation_title),
 
                 TextColumn::make('duration_minutes')
                     ->label('Durée (min)')
@@ -264,7 +221,7 @@ final class ExamResource extends Resource
                     ->label('Questions')
                     ->counts('questions')
                     ->badge()
-                    ->color(fn($state): string => match (true) {
+                    ->color(fn ($state): string => match (true) {
                         $state === 0 => 'danger',
                         $state < 5 => 'warning',
                         $state >= 10 => 'success',
@@ -320,11 +277,11 @@ final class ExamResource extends Resource
                     \Filament\Actions\BulkAction::make('activate')
                         ->label('Activer')
                         ->icon('heroicon-o-check-circle')
-                        ->action(fn(Builder $query) => $query->update(['is_active' => true])),
+                        ->action(fn (Builder $query) => $query->update(['is_active' => true])),
                     \Filament\Actions\BulkAction::make('deactivate')
                         ->label('Désactiver')
                         ->icon('heroicon-o-x-circle')
-                        ->action(fn(Builder $query) => $query->update(['is_active' => false])),
+                        ->action(fn (Builder $query) => $query->update(['is_active' => false])),
                     \Filament\Actions\BulkAction::make('duplicate')
                         ->label('Dupliquer')
                         ->icon('heroicon-o-document-duplicate')
@@ -368,6 +325,6 @@ final class ExamResource extends Resource
 
     public static function getNavigationBadge(): ?string
     {
-        return (string)self::getModel()::count();
+        return (string) self::getModel()::count();
     }
 }

@@ -47,7 +47,9 @@ final class QuestionOptionSeeder extends Seeder
         QuestionOption::query()->create(['question_id' => 6, 'option_text' => 'Vrai', 'is_correct' => true, 'order_position' => 1]);
         QuestionOption::query()->create(['question_id' => 6, 'option_text' => 'Faux', 'is_correct' => false, 'order_position' => 2]);
 
-        // === Q7: Question essai - pas d'options ===
+        // === Q7: GET vs POST (V/F) ===
+        QuestionOption::query()->create(['question_id' => 7, 'option_text' => 'Vrai', 'is_correct' => true, 'order_position' => 1]);
+        QuestionOption::query()->create(['question_id' => 7, 'option_text' => 'Faux', 'is_correct' => false, 'order_position' => 2]);
 
         // === Q8: Commande Artisan migration ===
         QuestionOption::query()->create(['question_id' => 8, 'option_text' => 'php artisan make:migration', 'is_correct' => true, 'order_position' => 1]);
@@ -55,7 +57,9 @@ final class QuestionOptionSeeder extends Seeder
         QuestionOption::query()->create(['question_id' => 8, 'option_text' => 'php artisan generate:migration', 'is_correct' => false, 'order_position' => 3]);
         QuestionOption::query()->create(['question_id' => 8, 'option_text' => 'php artisan new:migration', 'is_correct' => false, 'order_position' => 4]);
 
-        // === Q9: Question text - pas d'options ===
+        // === Q9: Vite HMR (V/F) ===
+        QuestionOption::query()->create(['question_id' => 9, 'option_text' => 'Vrai', 'is_correct' => true, 'order_position' => 1]);
+        QuestionOption::query()->create(['question_id' => 9, 'option_text' => 'Faux', 'is_correct' => false, 'order_position' => 2]);
 
         // === Q10: Cloud pour Forge ===
         QuestionOption::query()->create(['question_id' => 10, 'option_text' => 'DigitalOcean', 'is_correct' => true, 'order_position' => 1]);

@@ -1,18 +1,20 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Filament\Resources\ExamResource\RelationManagers;
 
 use App\Enums\QuestionTypeEnum;
 use App\Models\Question;
 use Filament\Forms;
-use Filament\Schemas\Schema;
 use Filament\Resources\RelationManagers\RelationManager;
+use Filament\Schemas\Schema;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 
-class QuestionsRelationManager extends RelationManager
+final class QuestionsRelationManager extends RelationManager
 {
     protected static string $relationship = 'questions';
 
@@ -35,7 +37,7 @@ class QuestionsRelationManager extends RelationManager
 
                         Forms\Components\Select::make('question_type')
                             ->label('Type de question')
-                            ->options(collect(QuestionTypeEnum::cases())->mapWithKeys(fn($type) => [$type->value => $type->getLabel()]))
+                            ->options(collect(QuestionTypeEnum::cases())->mapWithKeys(fn ($type) => [$type->value => $type->getLabel()]))
                             ->required()
                             ->native(false)
                             ->live(),
@@ -60,11 +62,13 @@ class QuestionsRelationManager extends RelationManager
                             ->numeric()
                             ->default(function (Forms\Get $get) {
                                 $examId = $get('exam_id');
-                                if (!$examId) return 1;
+                                if (! $examId) {
+                                    return 1;
+                                }
 
                                 return Question::query()
-                                        ->where('exam_id', $examId)
-                                        ->max('order_position') + 1;
+                                    ->where('exam_id', $examId)
+                                    ->max('order_position') + 1;
                             })
                             ->required()
                             ->disabled()
@@ -94,6 +98,7 @@ class QuestionsRelationManager extends RelationManager
                                             ->numeric()
                                             ->default(function (Forms\Get $get) {
                                                 $options = collect($get('../../options') ?? []);
+
                                                 return $options->count() > 0 ? $options->max('order_position') + 1 : 1;
                                             })
                                             ->disabled()
@@ -112,9 +117,9 @@ class QuestionsRelationManager extends RelationManager
                                                     });
                                                 }
                                             })
-                                            ->visible(fn(Forms\Get $get) => in_array($get('../../question_type'), [
+                                            ->visible(fn (Forms\Get $get) => in_array($get('../../question_type'), [
                                                 QuestionTypeEnum::SINGLE_CHOICE->value,
-                                                QuestionTypeEnum::MULTIPLE_CHOICE->value
+                                                QuestionTypeEnum::MULTIPLE_CHOICE->value,
                                             ]))
                                             ->default(false),
                                     ]),
@@ -122,17 +127,17 @@ class QuestionsRelationManager extends RelationManager
                             ->minItems(4)
                             ->maxItems(5)
                             ->defaultItems(4)
-                            ->itemLabel(fn(array $state): ?string => $state['option_text'] ?? 'Nouvelle option')
+                            ->itemLabel(fn (array $state): ?string => $state['option_text'] ?? 'Nouvelle option')
                             ->collapsed()
                             ->cloneable()
                             ->reorderable()
                             ->columnSpanFull()
-                            ->visible(fn(Forms\Get $get) => in_array($get('question_type'), [
+                            ->visible(fn (Forms\Get $get) => in_array($get('question_type'), [
                                 QuestionTypeEnum::SINGLE_CHOICE->value,
                                 QuestionTypeEnum::MULTIPLE_CHOICE->value,
                             ])),
                     ])
-                    ->visible(fn(Forms\Get $get) => in_array($get('question_type'), ['single_choice', 'multiple_choice'])),
+                    ->visible(fn (Forms\Get $get) => in_array($get('question_type'), ['single_choice', 'multiple_choice'])),
             ]);
     }
 
@@ -150,17 +155,16 @@ class QuestionsRelationManager extends RelationManager
                     ->label('Question')
                     ->searchable()
                     ->limit(50)
-                    ->tooltip(fn(Model $record) => $record->question_text),
+                    ->tooltip(fn (Model $record) => $record->question_text),
 
                 Tables\Columns\TextColumn::make('question_type')
                     ->label('Type')
-                    ->formatStateUsing(fn($state) => $state->getLabel())
+                    ->formatStateUsing(fn ($state) => $state->getLabel())
                     ->badge()
-                    ->color(fn($state) => match ($state) {
+                    ->color(fn ($state) => match ($state) {
                         QuestionTypeEnum::SINGLE_CHOICE => 'success',
                         QuestionTypeEnum::MULTIPLE_CHOICE => 'info',
                         QuestionTypeEnum::TRUE_FALSE => 'warning',
-                        QuestionTypeEnum::ESSAY => 'gray',
                         default => 'primary',
                     }),
 
@@ -182,7 +186,7 @@ class QuestionsRelationManager extends RelationManager
             ->filters([
                 Tables\Filters\SelectFilter::make('question_type')
                     ->label('Type de question')
-                    ->options(collect(QuestionTypeEnum::cases())->mapWithKeys(fn($type) => [$type->value => $type->getLabel()]))
+                    ->options(collect(QuestionTypeEnum::cases())->mapWithKeys(fn ($type) => [$type->value => $type->getLabel()]))
                     ->multiple(),
 
                 Tables\Filters\TernaryFilter::make('is_required')
@@ -218,7 +222,7 @@ class QuestionsRelationManager extends RelationManager
                         ->icon('heroicon-o-eye')
                         ->color('info')
                         ->slideOver()
-                        ->modalContent(fn(Question $record) => view('filament.resources.question.preview', ['question' => $record]))
+                        ->modalContent(fn (Question $record) => view('filament.resources.question.preview', ['question' => $record]))
                         ->modalWidth('3xl'),
 
                     \Filament\Actions\Action::make('duplicate')
@@ -227,10 +231,10 @@ class QuestionsRelationManager extends RelationManager
                         ->color('warning')
                         ->action(function (Question $record) {
                             $newQuestion = $record->replicate(['options_count', 'answers_count']);
-                            $newQuestion->question_text = $record->question_text . ' (Copie)';
+                            $newQuestion->question_text = $record->question_text.' (Copie)';
                             $newQuestion->order_position = Question::query()
-                                    ->where('exam_id', '=', $record->exam_id)
-                                    ->max('order_position') + 1;
+                                ->where('exam_id', '=', $record->exam_id)
+                                ->max('order_position') + 1;
                             $newQuestion->save();
 
                             foreach ($record->options as $option) {
@@ -242,7 +246,7 @@ class QuestionsRelationManager extends RelationManager
                             $this->mountedTableActionRecord = $newQuestion->getKey();
                         })
                         ->successNotificationTitle('Question dupliquée avec succès'),
-                ])
+                ]),
             ])
             ->bulkActions([
                 \Filament\Actions\BulkActionGroup::make([
@@ -251,12 +255,12 @@ class QuestionsRelationManager extends RelationManager
                         ->label('Rendre obligatoire')
                         ->icon('heroicon-o-exclamation-triangle')
                         ->color('warning')
-                        ->action(fn(Collection $records) => $records->each->update(['is_required' => true])),
+                        ->action(fn (Collection $records) => $records->each->update(['is_required' => true])),
                     \Filament\Actions\BulkAction::make('make_optional')
                         ->label('Rendre optionnel')
                         ->icon('heroicon-o-minus-circle')
                         ->color('gray')
-                        ->action(fn(Collection $records) => $records->each->update(['is_required' => false])),
+                        ->action(fn (Collection $records) => $records->each->update(['is_required' => false])),
                 ]),
             ])
             ->defaultSort('order_position')

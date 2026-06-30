@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Dashboard\Formations;
 
+use App\Enums\CertificateStatusEnum;
 use App\Http\Controllers\Controller;
 use App\Models\Certificate;
 use Inertia\Inertia;
@@ -11,9 +12,18 @@ use Inertia\Response;
 
 final class StudentCertificationController extends Controller
 {
-    public function __invoke()
+    public function __invoke(): Response
     {
-        return Inertia::render('Dashboard/Formations/Certifications/Index', []);
+        $certificates = Certificate::query()
+            ->with(['formation:id,title,slug,difficulty_level'])
+            ->where('user_id', auth()->id())
+            ->where('status', CertificateStatusEnum::ACTIVE->value)
+            ->latest('issue_date')
+            ->get(['id', 'formation_id', 'certificate_number', 'final_score', 'issue_date', 'status']);
+
+        return Inertia::render('Dashboard/Formations/Certifications/Index', [
+            'certificates' => $certificates,
+        ]);
     }
 
     public function show(Certificate $certificate): Response

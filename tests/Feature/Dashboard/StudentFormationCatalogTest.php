@@ -175,7 +175,7 @@ test('invalid filters are normalized and discover results are paginated by nine'
         ->get(route('student.learnings', [
             'tab' => 'invalid',
             'level' => 'expert',
-            'content' => 'audio',
+            'content' => 'podcast',
             'sort' => 'random',
         ]))
         ->assertSuccessful()

@@ -64,27 +64,6 @@ final class QuestionFactory extends Factory
     }
 
     /**
-     * Question à réponse courte
-     */
-    public function text(): static
-    {
-        return $this->state(fn (array $attributes) => [
-            'question_type' => QuestionTypeEnum::TEXT,
-        ]);
-    }
-
-    /**
-     * Question de type essai
-     */
-    public function essay(): static
-    {
-        return $this->state(fn (array $attributes) => [
-            'question_type' => QuestionTypeEnum::ESSAY,
-            'points' => $this->faker->randomElement([5, 10, 15, 20]),
-        ]);
-    }
-
-    /**
      * Question optionnelle
      */
     public function optional(): static

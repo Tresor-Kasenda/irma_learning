@@ -18,8 +18,11 @@ final class MakeAdmin extends MakeUserCommand
 {
     protected $signature = 'make:admin
                             {--name= : The name of the user}
+                            {--username= : The username of the user}
                             {--email= : A valid and unique email address}
-                            {--password= : The password for the user (min. 8 characters)}';
+                            {--password= : The password for the user (min. 8 characters)}
+                            {--role= : The role of the user}
+                            {--panel= : The panel to create the user in}';
 
     protected $description = 'Create admin user for application';
 
@@ -33,9 +36,9 @@ final class MakeAdmin extends MakeUserCommand
     public function roles(): array
     {
         return [
-            'ADMIN',
-            'INSTRUCTOR',
-            'ROOT',
+            'admin' => 'Admin',
+            'instructor' => 'Instructor',
+            'root' => 'Root',
         ];
     }
 

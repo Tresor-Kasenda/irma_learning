@@ -4,17 +4,13 @@ declare(strict_types=1);
 
 use App\Enums\EnrollmentPaymentEnum;
 use App\Enums\EnrollmentStatusEnum;
-use App\Enums\ExamAttemptEnum;
 use App\Enums\UserProgressEnum;
 use App\Models\Chapter;
 use App\Models\Enrollment;
-use App\Models\Exam;
-use App\Models\ExamAttempt;
 use App\Models\Formation;
 use App\Models\Section;
 use App\Models\User;
 use App\Models\UserProgress;
-use Inertia\Testing\AssertableInertia as Assert;
 
 beforeEach(function () {
     $this->user = User::factory()->create();
@@ -132,68 +128,6 @@ test('it can mark chapter as completed', function () {
         'status' => UserProgressEnum::COMPLETED->value,
         'progress_percentage' => 100,
     ]);
-});
-
-test('it requires a passing chapter exam before completion', function () {
-    Exam::factory()->forChapter($this->chapter1)->active()->create([
-        'passing_score' => 70,
-    ]);
-
-    $this->post(route('course.chapter.complete', [
-        'formation' => $this->formation->id,
-        'chapter' => $this->chapter1->id,
-    ]))
-        ->assertRedirect()
-        ->assertSessionHas('error');
-
-    $this->assertDatabaseMissing('user_progress', [
-        'user_id' => $this->user->id,
-        'trackable_type' => Chapter::class,
-        'trackable_id' => $this->chapter1->id,
-        'status' => UserProgressEnum::COMPLETED->value,
-    ]);
-});
-
-test('it uses exam percentage to validate chapter completion', function () {
-    $exam = Exam::factory()->forChapter($this->chapter1)->active()->create([
-        'passing_score' => 70,
-    ]);
-
-    ExamAttempt::factory()->for($exam)->for($this->user)->create([
-        'status' => ExamAttemptEnum::COMPLETED,
-        'score' => 8,
-        'max_score' => 10,
-        'percentage' => 80,
-        'completed_at' => now(),
-    ]);
-
-    $this->post(route('course.chapter.complete', [
-        'formation' => $this->formation->id,
-        'chapter' => $this->chapter1->id,
-    ]))
-        ->assertRedirect();
-
-    $this->assertDatabaseHas('user_progress', [
-        'user_id' => $this->user->id,
-        'trackable_type' => Chapter::class,
-        'trackable_id' => $this->chapter1->id,
-        'status' => UserProgressEnum::COMPLETED->value,
-    ]);
-});
-
-test('it exposes the chapter exam as the final learning step', function () {
-    $exam = Exam::factory()->forChapter($this->chapter1)->active()->create([
-        'title' => 'Validation du chapitre',
-    ]);
-
-    $this->get(route('course.player', $this->formation))
-        ->assertSuccessful()
-        ->assertInertia(fn (Assert $page) => $page
-            ->component('Dashboard/Learnings/StudentLearningPlay')
-            ->where('chapterExam.id', $exam->id)
-            ->where('hasPassedExam', false)
-            ->where('currentChapter.exams.id', $exam->id)
-            ->etc());
 });
 
 test('it updates enrollment progress when chapter completed', function () {

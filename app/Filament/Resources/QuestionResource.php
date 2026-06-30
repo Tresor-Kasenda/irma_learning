@@ -28,7 +28,7 @@ use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use UnitEnum;
 
-class QuestionResource extends Resource
+final class QuestionResource extends Resource
 {
     protected static ?string $model = Question::class;
 
@@ -46,48 +46,48 @@ class QuestionResource extends Resource
             ->groups([
                 Tables\Grouping\Group::make('exam.title')
                     ->label('Examen')
-                    ->collapsible()
+                    ->collapsible(),
             ])
             ->defaultGroup('exam.title')
             ->columns([
-                Tables\Columns\TextColumn::make('exam.title')
+                TextColumn::make('exam.title')
                     ->label('Examen')
                     ->sortable()
                     ->limit(20)
                     ->tooltip(function (TextColumn $column): ?string {
                         $state = $column->getState();
-                        if (strlen($state) <= $column->getCharacterLimit()) {
+                        if (mb_strlen($state) <= $column->getCharacterLimit()) {
                             return null;
                         }
+
                         return $state;
                     })
                     ->searchable(),
 
-                Tables\Columns\TextColumn::make('question_text')
+                TextColumn::make('question_text')
                     ->label('Question')
                     ->limit(60)
-                    ->tooltip(fn($record) => strip_tags($record->question_text))
+                    ->tooltip(fn ($record) => strip_tags($record->question_text))
                     ->html()
                     ->searchable(),
 
-                Tables\Columns\TextColumn::make('question_type')
+                TextColumn::make('question_type')
                     ->label('Type')
                     ->badge()
-                    ->formatStateUsing(fn($state) => $state->getLabel())
-                    ->color(fn(QuestionTypeEnum $state): string => match ($state) {
+                    ->formatStateUsing(fn ($state) => $state->getLabel())
+                    ->color(fn (QuestionTypeEnum $state): string => match ($state) {
                         QuestionTypeEnum::SINGLE_CHOICE => 'success',
                         QuestionTypeEnum::MULTIPLE_CHOICE => 'info',
                         QuestionTypeEnum::TRUE_FALSE => 'warning',
-                        QuestionTypeEnum::ESSAY => 'gray',
                         default => 'primary',
                     }),
 
-                Tables\Columns\TextColumn::make('points')
+                TextColumn::make('points')
                     ->label('Points')
                     ->numeric()
                     ->sortable(),
 
-                Tables\Columns\TextColumn::make('order_position')
+                TextColumn::make('order_position')
                     ->label('Position')
                     ->numeric()
                     ->sortable(),
@@ -115,7 +115,7 @@ class QuestionResource extends Resource
                         ->label('Supprimer')
                         ->icon('heroicon-o-trash')
                         ->requiresConfirmation(),
-                ])
+                ]),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
@@ -160,8 +160,9 @@ class QuestionResource extends Resource
                             ->relationship('exam', 'title')
                             ->live()
                             ->afterStateUpdated(function (Set $set, $state) {
-                                if (!$state) {
+                                if (! $state) {
                                     $set('order_position', 1);
+
                                     return;
                                 }
 
@@ -179,7 +180,7 @@ class QuestionResource extends Resource
 
                         Forms\Components\Select::make('question_type')
                             ->label('Type de question')
-                            ->options(collect(QuestionTypeEnum::cases())->mapWithKeys(fn($type) => [$type->value => $type->getLabel()]))
+                            ->options(collect(QuestionTypeEnum::cases())->mapWithKeys(fn ($type) => [$type->value => $type->getLabel()]))
                             ->required()
                             ->native(false)
                             ->live(),
@@ -231,6 +232,7 @@ class QuestionResource extends Resource
                                             ->numeric()
                                             ->default(function (Get $get) {
                                                 $options = collect($get('../../options') ?? []);
+
                                                 return $options->count() > 0 ? $options->max('order_position') + 1 : 1;
                                             })
                                             ->disabled()
@@ -249,9 +251,9 @@ class QuestionResource extends Resource
                                                     });
                                                 }
                                             })
-                                            ->visible(fn(Get $get) => in_array($get('../../question_type'), [
+                                            ->visible(fn (Get $get) => in_array($get('../../question_type'), [
                                                 QuestionTypeEnum::SINGLE_CHOICE->value,
-                                                QuestionTypeEnum::MULTIPLE_CHOICE->value
+                                                QuestionTypeEnum::MULTIPLE_CHOICE->value,
                                             ]))
                                             ->default(false),
                                     ]),
@@ -259,17 +261,17 @@ class QuestionResource extends Resource
                             ->minItems(4)
                             ->maxItems(5)
                             ->defaultItems(4)
-                            ->itemLabel(fn(array $state): ?string => $state['option_text'] ?? 'Nouvelle option')
+                            ->itemLabel(fn (array $state): ?string => $state['option_text'] ?? 'Nouvelle option')
                             ->collapsed()
                             ->cloneable()
                             ->reorderable()
                             ->columnSpanFull()
-                            ->visible(fn(Get $get) => in_array($get('question_type'), [
+                            ->visible(fn (Get $get) => in_array($get('question_type'), [
                                 QuestionTypeEnum::SINGLE_CHOICE->value,
                                 QuestionTypeEnum::MULTIPLE_CHOICE->value,
                             ])),
                     ])
-                    ->visible(fn(Get $get) => in_array($get('question_type'), ['single_choice', 'multiple_choice'])),
+                    ->visible(fn (Get $get) => in_array($get('question_type'), ['single_choice', 'multiple_choice'])),
             ]);
     }
 }

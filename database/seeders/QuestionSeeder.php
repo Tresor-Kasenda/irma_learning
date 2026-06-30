@@ -74,9 +74,9 @@ final class QuestionSeeder extends Seeder
 
         Question::query()->create([
             'exam_id' => 1,
-            'question_text' => 'Expliquez la différence entre une requête GET et une requête POST en HTTP.',
-            'question_type' => 'essay',
-            'points' => 20,
+            'question_text' => 'En HTTP, une requête GET transmet les paramètres dans l\'URL tandis qu\'une requête POST les transmet dans le corps de la requête.',
+            'question_type' => 'true_false',
+            'points' => 10,
             'order_position' => 7,
             'explanation' => 'GET récupère des données (visible dans l\'URL, limité en taille), POST envoie des données (dans le corps, pas de limite de taille).',
             'is_required' => true,
@@ -94,8 +94,8 @@ final class QuestionSeeder extends Seeder
 
         Question::query()->create([
             'exam_id' => 1,
-            'question_text' => 'Citez deux avantages de l\'utilisation de Vite comme bundler.',
-            'question_type' => 'text',
+            'question_text' => 'Vite propose un rechargement à chaud (HMR) ultra-rapide et des builds optimisés avec Rollup.',
+            'question_type' => 'true_false',
             'points' => 10,
             'order_position' => 9,
             'explanation' => 'Vite offre un rechargement à chaud ultra-rapide (HMR) et des builds optimisés avec Rollup.',

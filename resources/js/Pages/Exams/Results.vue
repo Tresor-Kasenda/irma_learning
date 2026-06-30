@@ -57,12 +57,26 @@ interface CourseCompletion {
     chapter_title: string;
 }
 
+interface NextStep {
+    type: 'next_section' | 'completed' | 'continue' | 'retry';
+    formation_id?: number;
+    chapter_id?: number;
+}
+
+interface CertificateInfo {
+    id: number;
+    certificate_number: string;
+    final_score: number | string;
+}
+
 const props = defineProps<{
     attempt: Attempt;
     exam: Exam;
     userAnswers: UserAnswer[];
     canRetry: boolean;
     courseCompletion: CourseCompletion | null;
+    nextStep: NextStep | null;
+    certificate: CertificateInfo | null;
 }>();
 
 function isOptionSelected(answer: UserAnswer, optionId: number): boolean {
@@ -293,12 +307,37 @@ function formatDate(date: string | null): string {
                 >
                     Valider le chapitre et continuer
                 </Link>
+                <Link v-if="attempt.passed && nextStep?.type === 'next_section' && nextStep.chapter_id"
+                      :href="route('course.player', {
+                          formation: nextStep.formation_id,
+                          chapterId: nextStep.chapter_id,
+                      })"
+                      class="px-6 py-3 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
+                >
+                    Continuer vers la section suivante
+                </Link>
+                <Link v-else-if="attempt.passed && nextStep?.type === 'completed' && certificate"
+                      :href="route('certificats.show', certificate.id)"
+                      class="px-6 py-3 bg-emerald-600 text-white rounded-lg hover:bg-emerald-500 transition-colors"
+                >
+                    Voir mon certificat
+                </Link>
                 <Link v-if="canRetry"
                       :href="route('exam.take', exam.id)"
                       class="px-6 py-3 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
                 >
                     Réessayer l'examen
                 </Link>
+            </div>
+
+            <div
+                v-if="attempt.passed && nextStep?.type === 'completed' && certificate"
+                class="mt-6 flex items-center justify-center"
+            >
+                <p class="rounded-lg bg-emerald-500/10 px-4 py-3 text-center text-sm text-emerald-300">
+                    🎓 Félicitations ! Vous avez terminé la formation. Certificat
+                    <span class="font-semibold">{{ certificate.certificate_number }}</span> délivré.
+                </p>
             </div>
         </div>
     </div>

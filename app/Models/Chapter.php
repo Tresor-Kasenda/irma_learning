@@ -29,7 +29,6 @@ final class Chapter extends Model
         'content_type',
         'media_url',
         'video_url',
-        'audio_url',
         'cover_image',
         'markdown_file',
         'duration_minutes',

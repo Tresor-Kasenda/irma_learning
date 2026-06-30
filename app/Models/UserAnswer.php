@@ -61,13 +61,6 @@ final class UserAnswer extends Model
                     $isCorrect = $percentage === 1.0;
                 }
                 break;
-
-            case 'text':
-            case 'essay':
-                // Manual grading required — keep is_correct null and points_earned 0
-                $this->update(['is_correct' => null, 'points_earned' => 0]);
-
-                return;
         }
 
         $this->update([

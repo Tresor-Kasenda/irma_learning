@@ -88,34 +88,6 @@ test('admin can create exam for section', function () {
     ]);
 });
 
-test('admin can create exam for chapter', function () {
-    $formation = Formation::factory()->create();
-    $section = Section::factory()->for($formation)->create();
-    $chapter = Chapter::factory()->for($section)->create(['title' => 'Chapitre 1 - Introduction']);
-
-    Livewire::test(CreateExam::class)
-        ->fillForm([
-            'examable_type' => Chapter::class,
-            'formation_id' => $formation->id,
-            'section_id' => $section->id,
-            'examable_id' => $chapter->id,
-            'title' => 'Examen Chapitre 1',
-            'description' => 'Test de validation du chapitre',
-            'duration_minutes' => 30,
-            'passing_score' => 70,
-            'max_attempts' => 3,
-            'is_active' => true,
-        ])
-        ->call('create')
-        ->assertHasNoErrors();
-
-    $this->assertDatabaseHas('exams', [
-        'examable_type' => Chapter::class,
-        'examable_id' => $chapter->id,
-        'title' => 'Examen Chapitre 1',
-    ]);
-});
-
 test('admin can filter exams by type', function () {
     $formation = Formation::factory()->create();
     $formationExam = Exam::factory()->forFormation($formation)->create();

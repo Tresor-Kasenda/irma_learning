@@ -1,34 +1,32 @@
 <script lang="ts" setup>
 import {Head, Link, router} from '@inertiajs/vue3';
 import {computed, ref} from 'vue';
-import ChapterExamCard from '@/Components/Learning/ChapterExamCard.vue';
 import CourseCurriculum from '@/Components/Learning/CourseCurriculum.vue';
 import LearningIcon from '@/Components/Learning/LearningIcon.vue';
 
-interface Exam {
-    id: number;
-    title: string;
-    description?: string | null;
-    duration_minutes: number;
-    passing_score: number;
-    max_attempts?: number;
-    is_active: boolean;
-}
-
 interface Chapter {
     id: number;
+    section_id: number;
     title: string;
     description: string | null;
     content: string | null;
     content_type: string | null;
     media_url: string | null;
     video_url: string | null;
-    audio_url: string | null;
     duration_minutes: number | null;
     order_position: number;
     is_active: boolean;
     is_free: boolean;
-    exams?: Exam | null;
+}
+
+interface SectionState {
+    id: number;
+    unlocked: boolean;
+    chapters_complete: boolean;
+    exam_id: number | null;
+    exam_passed: boolean | null;
+    complete: boolean;
+    needs_exam: boolean;
 }
 
 interface Section {
@@ -57,12 +55,18 @@ const props = defineProps<{
     currentChapter: Chapter | null;
     currentChapterIndex: number;
     completedChapters: number[];
+    sections: SectionState[];
     htmlContent: string;
-    chapterExam: Exam | null;
-    hasPassedExam: boolean;
 }>();
 
 const showCurriculum = ref(false);
+
+const currentSectionState = computed(
+    () => props.sections.find((section) => section.id === props.currentChapter?.section_id) ?? null,
+);
+const lockedSectionIds = computed(
+    () => props.sections.filter((section) => !section.unlocked).map((section) => section.id),
+);
 
 const currentChapterCompleted = computed(
     () => Boolean(props.currentChapter && props.completedChapters.includes(props.currentChapter.id)),
@@ -105,9 +109,9 @@ function markComplete(): void {
     );
 }
 
-function takeExam(): void {
-    if (props.chapterExam) {
-        router.get(route('exam.take', props.chapterExam.id));
+function takeSectionExam(): void {
+    if (currentSectionState.value?.exam_id) {
+        router.get(route('exam.take', currentSectionState.value.exam_id));
     }
 }
 
@@ -124,7 +128,6 @@ function contentTypeLabel(contentType: string | null): string {
         video: 'Vidéo',
         pdf: 'Document PDF',
         text: 'Lecture',
-        audio: 'Audio',
     };
 
     return labels[contentType ?? ''] ?? 'Chapitre';
@@ -166,6 +169,29 @@ function contentTypeLabel(contentType: string | null): string {
             <main class="min-w-0 flex-1 overflow-y-auto">
                 <div class="mx-auto max-w-5xl px-4 py-7 sm:px-6 lg:px-8">
                     <div v-if="currentChapter">
+                        <section
+                            v-if="currentSectionState?.needs_exam"
+                            class="mb-6 flex flex-col gap-4 border border-amber-400/30 bg-amber-400/10 p-5 sm:flex-row sm:items-center sm:justify-between"
+                        >
+                            <div class="flex items-start gap-3">
+                                <LearningIcon class="mt-0.5 size-6 shrink-0 brightness-0 invert" name="academic-cap"/>
+                                <div>
+                                    <h3 class="text-base font-semibold text-white">Section terminée — évaluez vos acquis</h3>
+                                    <p class="mt-1 text-sm text-amber-100/80">
+                                        Réussissez l'examen de cette section pour débloquer la suivante.
+                                    </p>
+                                </div>
+                            </div>
+                            <button
+                                class="inline-flex h-11 shrink-0 items-center justify-center gap-2 bg-amber-500 px-5 text-sm font-semibold text-[#1a1205] transition hover:bg-amber-400"
+                                type="button"
+                                @click="takeSectionExam"
+                            >
+                                Passer l'examen de la section
+                                <LearningIcon class="size-4" name="arrow-right"/>
+                            </button>
+                        </section>
+
                         <div class="border-b border-white/10 pb-6">
                             <p class="text-[11px] font-semibold uppercase text-[#ff79a5]">
                                 {{ contentTypeLabel(currentChapter.content_type) }}
@@ -187,26 +213,6 @@ function contentTypeLabel(contentType: string | null): string {
                                 <source :src="mediaUrl(currentChapter.video_url)" type="video/mp4"/>
                                 Votre navigateur ne supporte pas la lecture de vidéos.
                             </video>
-                        </div>
-
-                        <div
-                            v-else-if="currentChapter.content_type === 'audio' && currentChapter.audio_url"
-                            class="mt-6 border border-white/10 bg-[#101d2d] p-5"
-                        >
-                            <div class="flex items-center gap-4">
-                                <span class="grid size-12 place-items-center bg-[#7d254a]">
-                                    <LearningIcon class="size-5 brightness-0 invert" name="play"/>
-                                </span>
-                                <div>
-                                    <h3 class="font-semibold text-white">{{ currentChapter.title }}</h3>
-                                    <p class="mt-1 text-xs text-slate-500">{{ currentChapter.duration_minutes }}
-                                        minutes</p>
-                                </div>
-                            </div>
-                            <audio class="mt-5 w-full" controls controlslist="nodownload">
-                                <source :src="mediaUrl(currentChapter.audio_url)"/>
-                                Votre navigateur ne supporte pas la lecture audio.
-                            </audio>
                         </div>
 
                         <div
@@ -240,25 +246,16 @@ function contentTypeLabel(contentType: string | null): string {
                             v-html="htmlContent"
                         />
 
-                        <ChapterExamCard
-                            v-if="chapterExam"
-                            :chapter-completed="currentChapterCompleted"
-                            :exam="chapterExam"
-                            :passed="hasPassedExam"
-                            @complete="markComplete"
-                            @take="takeExam"
-                        />
-
                         <section
-                            v-else-if="!currentChapterCompleted"
+                            v-if="!currentChapterCompleted"
                             class="mt-8 flex flex-col gap-4 border border-white/10 bg-[#101d2d] p-5 sm:flex-row sm:items-center sm:justify-between"
                         >
                             <div>
                                 <p class="text-[11px] font-semibold uppercase text-slate-500">Fin du chapitre</p>
-                                <h3 class="mt-1 text-lg font-semibold text-white">Marquer cette étape comme
-                                    terminée</h3>
+                                <h3 class="mt-1 text-lg font-semibold text-white">Marquer ce chapitre comme
+                                    terminé</h3>
                                 <p class="mt-2 text-sm text-slate-400">
-                                    Ce chapitre ne possède pas encore d'examen de validation.
+                                    Terminez tous les chapitres de la section pour débloquer son examen.
                                 </p>
                             </div>
                             <button
@@ -323,6 +320,7 @@ function contentTypeLabel(contentType: string | null): string {
                     <CourseCurriculum
                         :completed-chapters="completedChapters"
                         :current-chapter-id="currentChapter?.id ?? null"
+                        :locked-section-ids="lockedSectionIds"
                         :sections="formation.sections"
                         @select="selectChapter"
                     />

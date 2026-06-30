@@ -16,6 +16,17 @@ final class Certificate extends Model
     /** @use HasFactory<CertificateFactory> */
     use HasFactory;
 
+    protected $fillable = [
+        'user_id',
+        'formation_id',
+        'issue_date',
+        'expiry_date',
+        'status',
+        'file_path',
+        'final_score',
+        'metadata',
+    ];
+
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class, 'user_id');
