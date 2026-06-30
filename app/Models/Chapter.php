@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Models;
 
 use App\Enums\ChapterTypeEnum;
+use App\Services\CatalogStatsService;
 use App\Services\MarkdownService;
 use App\Services\MarkdownToHtmlConverter;
 use Database\Factories\ChapterFactory;
@@ -149,6 +150,9 @@ final class Chapter extends Model
                 $chapter->order_position = $maxPosition + 1;
             }
         });
+
+        self::saved(fn (): null => self::flushCatalogStats());
+        self::deleted(fn (): null => self::flushCatalogStats());
     }
 
     protected function casts(): array
@@ -159,5 +163,12 @@ final class Chapter extends Model
             'metadata' => 'array',
             'content_type' => ChapterTypeEnum::class,
         ];
+    }
+
+    private static function flushCatalogStats(): null
+    {
+        app(CatalogStatsService::class)->forget();
+
+        return null;
     }
 }

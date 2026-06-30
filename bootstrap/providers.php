@@ -8,5 +8,4 @@ return [
     App\Providers\AppServiceProvider::class,
     App\Providers\Filament\AdminPanelProvider::class,
     MarkdownServiceProvider::class,
-    App\Providers\VoltServiceProvider::class,
 ];

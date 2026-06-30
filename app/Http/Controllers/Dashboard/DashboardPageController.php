@@ -4,23 +4,24 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Dashboard;
 
-use App\Enums\ChapterTypeEnum;
+use App\Enums\CertificateStatusEnum;
 use App\Enums\EnrollmentPaymentEnum;
 use App\Enums\EnrollmentStatusEnum;
 use App\Enums\UserProgressEnum;
 use App\Http\Controllers\Controller;
+use App\Models\Certificate;
 use App\Models\Chapter;
 use App\Models\Enrollment;
 use App\Models\Formation;
 use App\Models\UserProgress;
-use Illuminate\Database\Eloquent\Builder;
+use App\Services\CatalogStatsService;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 
 final class DashboardPageController extends Controller
 {
-    public function __invoke()
+    public function __invoke(CatalogStatsService $catalogStats)
     {
 
         $user = auth()->user();
@@ -28,7 +29,7 @@ final class DashboardPageController extends Controller
 
         $myEnrollments = Enrollment::query()
             ->with([
-                'formation' => fn(BelongsTo $query): BelongsTo => $query
+                'formation' => fn (BelongsTo $query): BelongsTo => $query
                     ->withCount($catalogCountRelations),
             ])
             ->where('user_id', $user->id)
@@ -43,7 +44,7 @@ final class DashboardPageController extends Controller
         $continueWatching = UserProgress::query()
             ->with(['trackable' => function ($query) use ($catalogCountRelations) {
                 $query->with([
-                    'section.formation' => fn(BelongsTo $query): BelongsTo => $query
+                    'section.formation' => fn (BelongsTo $query): BelongsTo => $query
                         ->withCount($catalogCountRelations),
                 ]);
             }])
@@ -65,14 +66,31 @@ final class DashboardPageController extends Controller
             })
             ->when($search, function ($query) use ($search) {
                 $query->where(function ($q) use ($search) {
-                    $q->where('title', 'like', '%' . $search . '%')
-                        ->orWhere('short_description', 'like', '%' . $search . '%')
-                        ->orWhere('description', 'like', '%' . $search . '%');
+                    $q->where('title', 'like', '%'.$search.'%')
+                        ->orWhere('short_description', 'like', '%'.$search.'%')
+                        ->orWhere('description', 'like', '%'.$search.'%');
                 });
             })
             ->limit(8)
             ->latest()
             ->get();
+
+        $recentFormations = Formation::query()
+            ->withCount($catalogCountRelations)
+            ->where('is_active', true)
+            ->latest()
+            ->limit(8)
+            ->get();
+
+        $completedCertificates = Certificate::query()
+            ->where('user_id', $user->id)
+            ->where('status', CertificateStatusEnum::ACTIVE->value)
+            ->get(['id', 'formation_id', 'certificate_number'])
+            ->keyBy('formation_id')
+            ->map(fn (Certificate $certificate): array => [
+                'id' => $certificate->id,
+                'certificate_number' => $certificate->certificate_number,
+            ]);
 
         $stats = [
             'totalEnrollments' => Enrollment::where('user_id', $user->id)->count(),
@@ -86,7 +104,7 @@ final class DashboardPageController extends Controller
             'completedEnrollments' => Enrollment::where('user_id', $user->id)
                 ->where('status', EnrollmentStatusEnum::COMPLETED->value)
                 ->count(),
-            'averageProgress' => (int)Enrollment::where('user_id', $user->id)
+            'averageProgress' => (int) Enrollment::where('user_id', $user->id)
                 ->whereIn('payment_status', [
                     EnrollmentPaymentEnum::PAID->value,
                     EnrollmentPaymentEnum::FREE->value,
@@ -106,23 +124,14 @@ final class DashboardPageController extends Controller
             ['name' => 'Marketing', 'count' => 0],
         ];
 
-        $activeChapters = Chapter::query()
-            ->where('chapters.is_active', true)
-            ->whereHas('section.formation', fn(Builder $query): Builder => $query->active());
-
-        $catalogStats = [
-            'formations' => Formation::query()->active()->count(),
-            'videos' => (clone $activeChapters)->where('content_type', ChapterTypeEnum::VIDEO->value)->count(),
-            'pdfs' => (clone $activeChapters)->where('content_type', ChapterTypeEnum::PDF->value)->count(),
-            'texts' => (clone $activeChapters)->where('content_type', ChapterTypeEnum::TEXT->value)->count(),
-        ];
-
         return Inertia::render('Dashboard/Index', [
             'myEnrollments' => $myEnrollments,
             'continueWatching' => $continueWatching,
             'recommendedFormations' => $recommendedFormations,
+            'recentFormations' => $recentFormations,
+            'completedCertificates' => $completedCertificates,
             'stats' => $stats,
-            'catalogStats' => $catalogStats,
+            'catalogStats' => $catalogStats->get(),
             'popularCategories' => $popularCategories,
             'search' => $search,
         ]);

@@ -1,1 +1,0 @@
-import{_ as o}from"./LearningLayout.vue_vue_type_script_setup_true_lang-2hCY4S3F.js";import{d as e,c as r,o as t}from"./app-DW4M4MPG.js";import"./LearningIcon.vue_vue_type_script_setup_true_lang-C8bN7zMR.js";/* empty css            */const i=e({__name:"Index",setup(a){return(n,_)=>(t(),r(o))}});export{i as default};

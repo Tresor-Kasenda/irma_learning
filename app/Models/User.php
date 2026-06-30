@@ -82,11 +82,6 @@ final class User extends Authenticatable implements FilamentUser
         return $this->hasMany(ExamAttempt::class);
     }
 
-    public function payments(): HasMany
-    {
-        return $this->hasMany(Payment::class);
-    }
-
     public function answers(): HasManyThrough
     {
         return $this->hasManyThrough(UserAnswer::class, ExamAttempt::class);

@@ -84,7 +84,7 @@ final class ExamController extends Controller
             ];
         });
 
-        $userAnswers = UserAnswer::where('exam_attempt_id', $attempt->id)->get();
+        $userAnswers = UserAnswer::with('question')->where('exam_attempt_id', $attempt->id)->get();
         $existingAnswers = [];
 
         foreach ($userAnswers as $userAnswer) {

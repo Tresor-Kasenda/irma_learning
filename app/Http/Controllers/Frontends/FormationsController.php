@@ -1,29 +1,31 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers\Frontends;
 
 use App\Enums\ChapterTypeEnum;
 use App\Enums\EnrollmentPaymentEnum;
 use App\Enums\EnrollmentStatusEnum;
 use App\Http\Controllers\Controller;
-use App\Models\Chapter;
 use App\Models\Enrollment;
 use App\Models\Formation;
+use App\Services\CatalogStatsService;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
-class FormationsController extends Controller
+final class FormationsController extends Controller
 {
-    public function __invoke(Request $request)
+    public function __invoke(Request $request, CatalogStatsService $catalogStatsService)
     {
-        $search = mb_trim((string)$request->query('search', ''));
-        $category = (string)$request->query('category', 'all');
-        $level = (string)$request->query('level', '');
-        $contentType = (string)$request->query('content', '');
-        $sort = (string)$request->query('sort', 'popular');
+        $search = mb_trim((string) $request->query('search', ''));
+        $category = (string) $request->query('category', 'all');
+        $level = (string) $request->query('level', '');
+        $contentType = (string) $request->query('content', '');
+        $sort = (string) $request->query('sort', 'popular');
         $user = $request->user();
 
         $allowedCategories = ['all', 'in-progress', 'certified', 'continuous', 'enterprise'];
@@ -35,19 +37,19 @@ class FormationsController extends Controller
         ];
         $allowedSorts = ['popular', 'recent', 'duration-asc', 'duration-desc', 'price-asc'];
 
-        if (!in_array($category, $allowedCategories, true)) {
+        if (! in_array($category, $allowedCategories, true)) {
             $category = 'all';
         }
 
-        if (!in_array($level, $allowedLevels, true)) {
+        if (! in_array($level, $allowedLevels, true)) {
             $level = '';
         }
 
-        if (!in_array($contentType, $allowedContentTypes, true)) {
+        if (! in_array($contentType, $allowedContentTypes, true)) {
             $contentType = '';
         }
 
-        if (!in_array($sort, $allowedSorts, true)) {
+        if (! in_array($sort, $allowedSorts, true)) {
             $sort = 'popular';
         }
 
@@ -57,7 +59,7 @@ class FormationsController extends Controller
 
         if ($user) {
             $query->with([
-                'enrollments' => fn(HasMany $query): HasMany => $query
+                'enrollments' => fn (HasMany $query): HasMany => $query
                     ->where('user_id', $user->id)
                     ->select(['id', 'formation_id', 'user_id', 'status', 'progress_percentage']),
             ]);
@@ -65,16 +67,16 @@ class FormationsController extends Controller
 
         if ($search !== '') {
             $query->where(function (Builder $query) use ($search): void {
-                $query->where('title', 'like', '%' . $search . '%')
-                    ->orWhere('short_description', 'like', '%' . $search . '%')
-                    ->orWhere('description', 'like', '%' . $search . '%')
-                    ->orWhere('tags', 'like', '%' . $search . '%');
+                $query->where('title', 'like', '%'.$search.'%')
+                    ->orWhere('short_description', 'like', '%'.$search.'%')
+                    ->orWhere('description', 'like', '%'.$search.'%')
+                    ->orWhere('tags', 'like', '%'.$search.'%');
             });
         }
 
         match ($category) {
             'in-progress' => $user
-                ? $query->whereHas('enrollments', fn(Builder $query): Builder => $query
+                ? $query->whereHas('enrollments', fn (Builder $query): Builder => $query
                     ->where('user_id', $user->id)
                     ->where('status', EnrollmentStatusEnum::ACTIVE->value)
                     ->whereBetween('progress_percentage', [1, 99]))
@@ -90,7 +92,7 @@ class FormationsController extends Controller
         }
 
         if ($contentType !== '') {
-            $query->whereHas('chapters', fn(Builder $query): Builder => $query
+            $query->whereHas('chapters', fn (Builder $query): Builder => $query
                 ->where('chapters.is_active', true)
                 ->where('content_type', $contentType));
         }
@@ -108,30 +110,14 @@ class FormationsController extends Controller
 
         $formations = $query->paginate(8)->withQueryString();
 
-        $catalogStats = Chapter::query()
-            ->where('chapters.is_active', true)
-            ->whereHas('section.formation', fn(Builder $query): Builder => $query->active())
-            ->selectRaw("
-                count(*) as total_chapters,
-                count(case when content_type = ? then 1 end) as videos,
-                count(case when content_type = ? then 1 end) as pdfs,
-                count(case when content_type = ? then 1 end) as texts
-            ", [
-                ChapterTypeEnum::VIDEO->value,
-                ChapterTypeEnum::PDF->value,
-                ChapterTypeEnum::TEXT->value,
-            ])
-            ->first()
-            ?->toArray() ?? [];
-
-        $catalogStats['formations'] = Formation::query()->active()->count();
+        $catalogStats = $catalogStatsService->get();
 
         $continueLearning = null;
 
         if ($user) {
             $continueLearning = Enrollment::query()
                 ->with([
-                    'formation' => fn(BelongsTo $query): BelongsTo => $query->withCount(Formation::catalogCountRelations()),
+                    'formation' => fn (BelongsTo $query): BelongsTo => $query->withCount(Formation::catalogCountRelations()),
                 ])
                 ->where('user_id', $user->id)
                 ->where('status', EnrollmentStatusEnum::ACTIVE->value)
@@ -139,11 +125,12 @@ class FormationsController extends Controller
                     EnrollmentPaymentEnum::PAID->value,
                     EnrollmentPaymentEnum::FREE->value,
                 ])
-                ->whereHas('formation', fn(Builder $query): Builder => $query->active())
+                ->whereHas('formation', fn (Builder $query): Builder => $query->active())
                 ->whereBetween('progress_percentage', [1, 99])
                 ->latest('updated_at')
                 ->first();
         }
+
         return Inertia::render('Frontends/Formations/Index', [
             'formations' => $formations,
             'catalogStats' => $catalogStats,

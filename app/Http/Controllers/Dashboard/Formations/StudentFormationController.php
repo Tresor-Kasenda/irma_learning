@@ -8,9 +8,9 @@ use App\Enums\ChapterTypeEnum;
 use App\Enums\EnrollmentPaymentEnum;
 use App\Enums\EnrollmentStatusEnum;
 use App\Http\Controllers\Controller;
-use App\Models\Chapter;
 use App\Models\Enrollment;
 use App\Models\Formation;
+use App\Services\CatalogStatsService;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Http\Request;
@@ -19,7 +19,7 @@ use Inertia\Response;
 
 final class StudentFormationController extends Controller
 {
-    public function __invoke(Request $request): Response
+    public function __invoke(Request $request, CatalogStatsService $catalogStats): Response
     {
         $user = $request->user();
         $tab = (string) $request->query('tab', 'recent');
@@ -101,10 +101,6 @@ final class StudentFormationController extends Controller
 
         $this->applySort($formations, $sort, $tab, $user->id);
 
-        $activeChapters = Chapter::query()
-            ->where('chapters.is_active', true)
-            ->whereHas('section.formation', fn (Builder $query): Builder => $query->active());
-
         return Inertia::render('Dashboard/Formations/Index', [
             'formations' => $formations->paginate(9)->withQueryString(),
             'tabCounts' => [
@@ -113,18 +109,7 @@ final class StudentFormationController extends Controller
                 'started' => $this->queryForTab('started', $user->id)->count(),
                 'completed' => $this->queryForTab('completed', $user->id)->count(),
             ],
-            'catalogStats' => [
-                'formations' => Formation::query()->active()->count(),
-                'videos' => (clone $activeChapters)
-                    ->where('content_type', ChapterTypeEnum::VIDEO->value)
-                    ->count(),
-                'pdfs' => (clone $activeChapters)
-                    ->where('content_type', ChapterTypeEnum::PDF->value)
-                    ->count(),
-                'texts' => (clone $activeChapters)
-                    ->where('content_type', ChapterTypeEnum::TEXT->value)
-                    ->count(),
-            ],
+            'catalogStats' => $catalogStats->get(),
             'filters' => [
                 'tab' => $tab,
                 'search' => $search,

@@ -3,10 +3,7 @@
 declare(strict_types=1);
 
 use App\Http\Middleware\CheckUserStatus;
-use App\Http\Middleware\EnsureAllChaptersCompleted;
-use App\Http\Middleware\EnsureMasterClassAccess;
 use App\Http\Middleware\ForcePasswordChange;
-use App\Http\Middleware\RestrictStudentMasterClassAccess;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -30,9 +27,6 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
         $middleware->alias([
             'force.password.change' => ForcePasswordChange::class,
-            'completed.chapters' => EnsureAllChaptersCompleted::class,
-            'ensure.master.class.access' => EnsureMasterClassAccess::class,
-            'restrict.student.access' => RestrictStudentMasterClassAccess::class,
             'check.status' => CheckUserStatus::class,
         ]);
 

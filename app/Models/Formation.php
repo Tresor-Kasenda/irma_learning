@@ -7,6 +7,7 @@ namespace App\Models;
 use App\Enums\ChapterTypeEnum;
 use App\Enums\EnrollmentPaymentEnum;
 use App\Enums\FormationLevelEnum;
+use App\Services\CatalogStatsService;
 use Database\Factories\FormationFactory;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -130,6 +131,12 @@ final class Formation extends Model
         return $this->hasMany(Enrollment::class);
     }
 
+    protected static function booted(): void
+    {
+        self::saved(fn (): null => self::flushCatalogStats());
+        self::deleted(fn (): null => self::flushCatalogStats());
+    }
+
     protected function casts(): array
     {
         return [
@@ -140,5 +147,12 @@ final class Formation extends Model
             'price' => 'decimal:2',
             'duration_hours' => 'integer',
         ];
+    }
+
+    private static function flushCatalogStats(): null
+    {
+        app(CatalogStatsService::class)->forget();
+
+        return null;
     }
 }

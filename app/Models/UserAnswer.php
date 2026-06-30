@@ -44,7 +44,7 @@ final class UserAnswer extends Model
                 break;
 
             case 'multiple_choice':
-                $correctOptions = $this->question->options()->where('is_correct', true)->get();
+                $correctOptions = $this->question->options->where('is_correct', true);
                 $selectedOptions = is_array($this->selected_options) ? $this->selected_options : [];
 
                 $correctSelected = collect($selectedOptions)->filter(

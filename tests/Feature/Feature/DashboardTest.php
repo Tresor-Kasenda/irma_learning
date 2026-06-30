@@ -89,7 +89,7 @@ test('dashboard provides reusable formation card data', function () {
         ->get(route('dashboard'))
         ->assertSuccessful()
         ->assertInertia(fn (Assert $page) => $page
-            ->component('Dashboard')
+            ->component('Dashboard/Index')
             ->where('myEnrollments.0.formation.title', 'Formation multimédia')
             ->where('myEnrollments.0.formation.video_count', 1)
             ->where('myEnrollments.0.formation.pdf_count', 1)

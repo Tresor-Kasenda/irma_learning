@@ -54,7 +54,7 @@ final class ExamAttempt extends Model
 
     public function complete(): void
     {
-        $userAnswers = $this->userAnswers()->with('question.options')->get();
+        $userAnswers = $this->userAnswers()->with(['question.options', 'selectedOption'])->get();
 
         foreach ($userAnswers as $userAnswer) {
             $userAnswer->checkCorrectness();

@@ -1674,7 +1674,14 @@ class Post extends Model
                 SELECT COUNT(*) FROM likes 
                 WHERE likes.post_id = posts.id
             ) as likes_count'),
-            DB::raw('(comments_count + likes_count * 2) as engagement_score')
+            DB::raw('(
+                SELECT COUNT(*) FROM comments 
+                WHERE comments.post_id = posts.id 
+                AND comments.approved = 1
+            ) + (
+                SELECT COUNT(*) FROM likes 
+                WHERE likes.post_id = posts.id
+            ) * 2 as engagement_score')
         ]);
     }
     
@@ -1942,14 +1949,16 @@ class PostController extends Controller
 ### JOIN Explicites vs Relations
 
 ```php
-// ❌ Peut générer des requêtes sous-optimales
+// ⚠️ whereHas génère une sous-requête EXISTS, 
+// qui peut être aussi efficace qu'un JOIN avec les bons index
 $posts = Post::with('author')
             ->whereHas('author', function ($query) {
                 $query->where('verified', true);
             })
             ->get();
 
-// ✅ JOIN explicite plus efficace
+// ✅ JOIN explicite peut être plus efficace pour certains cas
+// (ex: quand vous avez besoin des colonnes de la table jointe)
 $posts = Post::join('users', 'posts.user_id', '=', 'users.id')
             ->where('users.verified', true)
             ->select([
@@ -2990,10 +2999,8 @@ trait Cacheable
     }
     
     // Invalidation automatique
-    protected static function boot()
+    protected static function bootCacheable()
     {
-        parent::boot();
-        
         static::updated(function ($model) {
             $model->clearCache();
         });
@@ -3006,7 +3013,7 @@ trait Cacheable
     public function clearCache()
     {
         $pattern = static::getCacheKey($this->id) . '*';
-        Cache::flush(); // En production, utilisez des tags Redis
+        Cache::tags([class_basename(static::class)])->flush();
     }
 }
 
@@ -3170,6 +3177,11 @@ class TaggedCacheService
         Cache::tags(["category.{$categoryId}"])->flush();
     }
     
+    public function invalidatePost($postId)
+    {
+        Cache::tags(["post.{$postId}"])->flush();
+    }
+    
     public function invalidateAllPosts()
     {
         Cache::tags(['posts'])->flush();
@@ -3208,7 +3220,7 @@ class PostObserver
 ### Cache Write-Through
 
 ```php
-class WriteThoughCacheRepository
+class WriteThroughCacheRepository
 {
     protected $model;
     protected $cache;
@@ -3564,7 +3576,7 @@ class CacheAnalytics
         $pattern = "cache.misses.*.{$date}";
         
         // Récupérer toutes les clés de miss
-        $keys = Cache::keys($pattern);
+        $keys = Redis::keys($pattern);
         $misses = [];
         
         foreach ($keys as $key) {
@@ -4746,7 +4758,7 @@ class ProgressiveChunkProcessor
     public function processWithProgress($query, callable $processor, $chunkSize = 1000)
     {
         $this->totalItems = $query->count();
-        $this->info("Starting processing of {$this->totalItems} items...");
+        echo "Starting processing of {$this->totalItems} items...\n";
         
         $query->chunkById($chunkSize, function ($chunk) use ($processor) {
             $this->processChunkWithProgress($chunk, $processor);
@@ -4850,10 +4862,11 @@ class BulkInsertService
             $columns = array_keys($chunk[0]);
             $columnsString = '`' . implode('`, `', $columns) . '`';
             
+            $pdo = DB::connection()->getPdo();
             $values = [];
             foreach ($chunk as $row) {
                 $rowValues = collect($row)
-                    ->map(fn($value) => is_null($value) ? 'NULL' : "'" . addslashes($value) . "'")
+                    ->map(fn($value) => is_null($value) ? 'NULL' : $pdo->quote($value))
                     ->implode(', ');
                 $values[] = "({$rowValues})";
             }
@@ -4890,6 +4903,7 @@ class BulkInsertService
         $columns = array_keys($data[0]);
         $columns = array_filter($columns, fn($col) => $col !== $primaryKey);
         
+        $pdo = DB::connection()->getPdo();
         $cases = [];
         $ids = [];
         
@@ -4897,7 +4911,7 @@ class BulkInsertService
             $ids[] = $row[$primaryKey];
             
             foreach ($columns as $column) {
-                $value = is_null($row[$column]) ? 'NULL' : "'" . addslashes($row[$column]) . "'";
+                $value = is_null($row[$column]) ? 'NULL' : $pdo->quote($row[$column]);
                 $cases[$column][] = "WHEN {$row[$primaryKey]} THEN {$value}";
             }
         }
@@ -5239,7 +5253,7 @@ class DataMigrationService
         $totalUsers = DB::connection('old_db')->table('users')->count();
         $processed = 0;
         
-        $this->info("Migrating {$totalUsers} users...");
+        echo "Migrating {$totalUsers} users...\n";
         
         DB::connection('old_db')
             ->table('users')
@@ -5257,10 +5271,10 @@ class DataMigrationService
                 $processed += count($newUsers);
                 $percentage = round(($processed / $totalUsers) * 100, 1);
                 
-                $this->info("Progress: {$percentage}% ({$processed}/{$totalUsers})");
+                echo "Progress: {$percentage}% ({$processed}/{$totalUsers})\n";
             });
         
-        $this->info("Migration completed!");
+        echo "Migration completed!\n";
     }
     
     private function transformUser($oldUser)
@@ -5300,9 +5314,9 @@ class DatabaseCleanupService
         ];
         
         foreach ($cleanupTasks as $name => $config) {
-            $this->info("Cleaning up {$name}...");
+            echo "Cleaning up {$name}...\n";
             $deleted = $this->cleanupTable($config, $cutoffDate, $chunkSize);
-            $this->info("Deleted {$deleted} old {$name} records");
+            echo "Deleted {$deleted} old {$name} records\n";
         }
     }
     
@@ -6918,14 +6932,23 @@ class EcommerceCatalogService
         $cacheKey = "product.{$product->id}.related";
         
         return $this->cache->remember($cacheKey, 7200, function () use ($product, $limit) {
-            // Algorithme de recommandation simple mais efficace
+            // Algorithme de recommandation : éviter ORDER BY RAND() sur les grosses tables
+            // Utiliser un offset aléatoire pour de meilleures performances
+            $total = Product::where('category_id', $product->category_id)
+                           ->where('id', '!=', $product->id)
+                           ->where('active', true)
+                           ->where('stock_quantity', '>', 0)
+                           ->count();
+            
+            $offset = max(0, $total - $limit > 0 ? mt_rand(0, $total - $limit) : 0);
+            
             return Product::select(['id', 'name', 'slug', 'price', 'discount_price'])
                          ->with(['primaryImage:product_id,url,alt_text'])
                          ->where('category_id', $product->category_id)
                          ->where('id', '!=', $product->id)
                          ->where('active', true)
                          ->where('stock_quantity', '>', 0)
-                         ->orderByRaw('RAND()')
+                         ->offset($offset)
                          ->limit($limit)
                          ->get();
         });
@@ -7116,7 +7139,7 @@ class HighPerformanceApiController extends Controller
     
     protected function loadConditionalRelations($query, $request)
     {
-        $includes = array_filter(explode(',', $request->get('include', '')));
+        $includes = array_filter(array_map('trim', explode(',', $request->get('include', ''))));
         $relations = [];
         
         foreach ($includes as $include) {
@@ -8325,8 +8348,6 @@ class Kernel extends ConsoleKernel
 
 **Dans le prochain chapitre, nous allons consolider toutes ces bonnes pratiques !**
 
-**Dans le prochain chapitre, nous allons consolider toutes ces bonnes pratiques !**
-
 ---
 
 # Chapitre 13 : Bonnes Pratiques et Anti-Patterns {#chapitre-13}
@@ -9202,7 +9223,7 @@ abstract class PerformanceTestCase extends TestCase
         DB::enableQueryLog();
         
         // Réinitialiser les stats de cache
-        Cache::getRedis()->flushall();
+        Redis::connection('cache')->flushdb();
     }
     
     protected function recordMetrics($operation = 'default')
@@ -9689,7 +9710,7 @@ jobs:
             -   name: Setup PHP
                 uses: shivammathur/setup-php@v2
                 with:
-                    php-version: '8.2'
+                    php-version: '8.4'
                     extensions: mbstring, dom, fileinfo, mysql, redis
                     coverage: none
 
@@ -9864,10 +9885,10 @@ class EloquentBenchmark extends PerformanceTestCase
         $benchmarks['raw_sql'] = (microtime(true) - $startTime) * 1000;
         
         // Logging des résultats pour analyse
-        $this->info("Performance Benchmark Results:");
-        $this->info("Eloquent: {$benchmarks['eloquent']}ms");
-        $this->info("Query Builder: {$benchmarks['query_builder']}ms");
-        $this->info("Raw SQL: {$benchmarks['raw_sql']}ms");
+        fwrite(STDERR, "Performance Benchmark Results:\n");
+        fwrite(STDERR, "Eloquent: {$benchmarks['eloquent']}ms\n");
+        fwrite(STDERR, "Query Builder: {$benchmarks['query_builder']}ms\n");
+        fwrite(STDERR, "Raw SQL: {$benchmarks['raw_sql']}ms\n");
         
         // Vérifications de cohérence
         $this->assertEquals(100, $eloquentPosts->count());
@@ -9897,9 +9918,9 @@ class EloquentBenchmark extends PerformanceTestCase
             $benchmarks[$method] = (microtime(true) - $startTime) * 1000;
         }
         
-        $this->info("Pagination Benchmark Results:");
+        fwrite(STDERR, "Pagination Benchmark Results:\n");
         foreach ($benchmarks as $method => $time) {
-            $this->info("{$method}: {$time}ms");
+            fwrite(STDERR, "{$method}: {$time}ms\n");
         }
         
         // Cursor pagination devrait être la plus rapide pour les grandes offsets
@@ -10100,7 +10121,7 @@ server {
     }
 
     location ~ \.php$ {
-        fastcgi_pass unix:/run/php/php8.2-fpm.sock;
+        fastcgi_pass unix:/run/php/php8.4-fpm.sock;
         fastcgi_index index.php;
         fastcgi_param SCRIPT_FILENAME $realpath_root$fastcgi_script_name;
         include fastcgi_params;
@@ -10148,10 +10169,8 @@ innodb_log_file_size = 1G
 innodb_log_buffer_size = 64M
 innodb_flush_log_at_trx_commit = 2
 
-# Query Cache
-query_cache_type = 1
-query_cache_size = 256M
-query_cache_limit = 2M
+# Note : MySQL Query Cache a été supprimé dans MySQL 8.0.
+# Utilisez plutôt le cache applicatif (Redis) ou ProxySQL.
 
 # Connections
 max_connections = 500
@@ -10213,7 +10232,29 @@ class AddPerformanceIndexes extends Migration
 
     public function down()
     {
-        // Drop indexes
+        Schema::table('users', function (Blueprint $table) {
+            $table->dropIndex(['email', 'email_verified_at']);
+            $table->dropIndex(['created_at', 'updated_at']);
+        });
+
+        Schema::table('posts', function (Blueprint $table) {
+            $table->dropIndex(['published', 'published_at']);
+            $table->dropIndex(['user_id', 'created_at']);
+            $table->dropIndex(['category_id', 'published']);
+            $table->dropFulltext(['title', 'content']);
+        });
+
+        Schema::table('sessions', function (Blueprint $table) {
+            $table->dropIndex(['user_id', 'last_activity']);
+        });
+
+        Schema::table('jobs', function (Blueprint $table) {
+            $table->dropIndex(['queue', 'reserved_at']);
+        });
+
+        Schema::table('failed_jobs', function (Blueprint $table) {
+            $table->dropIndex('failed_at');
+        });
     }
 }
 ```
@@ -10628,7 +10669,7 @@ jobs:
             -   name: Setup PHP
                 uses: shivammathur/setup-php@v2
                 with:
-                    php-version: '8.2'
+                    php-version: '8.4'
                     extensions: mbstring, dom, fileinfo, mysql, redis
             -   name: Install dependencies
                 run: composer install --no-dev --optimize-autoloader
@@ -10661,7 +10702,7 @@ jobs:
             -   name: Setup PHP
                 uses: shivammathur/setup-php@v2
                 with:
-                    php-version: '8.2'
+                    php-version: '8.4'
 
             -   name: Build for production
                 run: |
@@ -10721,7 +10762,7 @@ host('production')
     ->set('branch', 'main');
 
 // Optimisations Laravel
-set('laravel_version', 10);
+set('laravel_version', 11);
 
 // Tasks personnalisées
 task('artisan:cache:warm', function () {

@@ -189,7 +189,7 @@ test('it exposes the chapter exam as the final learning step', function () {
     $this->get(route('course.player', $this->formation))
         ->assertSuccessful()
         ->assertInertia(fn (Assert $page) => $page
-            ->component('Courses/Player')
+            ->component('Dashboard/Learnings/StudentLearningPlay')
             ->where('chapterExam.id', $exam->id)
             ->where('hasPassedExam', false)
             ->where('currentChapter.exams.id', $exam->id)

@@ -13,12 +13,11 @@ use App\Http\Controllers\Dashboard\Learnings\StudentLearningPlayController;
 use App\Http\Controllers\EnrollmentController;
 use App\Http\Controllers\ExamController;
 use App\Http\Controllers\Frontends\DetailFormationController;
+use App\Http\Controllers\Frontends\FormationAccessController;
 use App\Http\Controllers\Frontends\FormationsController;
 use App\Http\Controllers\Frontends\HomePageController;
+use App\Http\Controllers\Frontends\PaymentController;
 use App\Http\Controllers\ProfileController;
-use App\Livewire\Pages\Courses\LearningCourse;
-use App\Livewire\Pages\Frontend\Payments\StudentPayment;
-use App\Livewire\ValidateFormationAccess;
 use App\Models\Chapter;
 use App\Models\Enrollment;
 use App\Models\Formation;
@@ -33,6 +32,7 @@ Route::get('/nos-tarifs', [HomePageController::class, 'pricings'])->name('pages.
 Route::middleware('auth')->group(function () {
     Route::get('/dashboard', DashboardPageController::class)->name('dashboard');
     Route::get('/certificats', StudentCertificationController::class)->name('certificats');
+    Route::get('/certificats/{certificate}', [StudentCertificationController::class, 'show'])->name('certificats.show');
     Route::get('/inprogress', StudentLearningController::class)->name('student.progress');
 
     Route::get('/learnings', StudentFormationController::class)->name('student.learnings');
@@ -66,16 +66,18 @@ Route::middleware('auth')->group(function () {
         return redirect()->route('course.player', $formation->id);
     })->name('formation.enroll');
 
-    Route::get('/formation/{formation:id}/validate', ValidateFormationAccess::class)
+    Route::get('/formation/{formation:id}/validate', [FormationAccessController::class, 'create'])
         ->name('student.formations.validate-code');
+    Route::post('/formation/{formation:id}/validate', [FormationAccessController::class, 'store']);
 
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::post('/profile/avatar', [ProfileController::class, 'updateAvatar'])->name('profile.avatar.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
-    Route::get('/formation/{formation:id}/payment', StudentPayment::class)
+    Route::get('/formation/{formation:id}/payment', PaymentController::class)
         ->name('student.payment.create');
+    Route::post('/formation/{formation:id}/payment', [PaymentController::class, 'store']);
 
     Route::post('/course/{formation:id}/chapter/{chapter}/complete', function (Formation $formation, Chapter $chapter) {
         $user = auth()->user();
@@ -168,10 +170,6 @@ Route::middleware('auth')->group(function () {
         ->name('exam.submit');
     Route::get('/exam/attempt/{attempt}/results', [ExamController::class, 'results'])
         ->name('exam.results');
-
-    Route::get('/master-class/{masterClass}/formations', LearningCourse::class)
-        ->name('master-class')
-        ->middleware('restrict.student.access');
 
     Route::group(['prefix' => 'enrollments'], function () {
         Route::get('/{enrollment}/invoice', EnrollmentController::class)

@@ -121,5 +121,228 @@ final class SectionSeeder extends Seeder
             'duration' => 300,
             'is_active' => true,
         ]);
+
+        // === Formation 4: Cybersécurité & Ethical Hacking ===
+        Section::query()->create([
+            'formation_id' => 4,
+            'title' => 'Fondamentaux de la Cybersécurité',
+            'description' => 'Les bases de la sécurité informatique et des menaces.',
+            'order_position' => 1,
+            'duration' => 120,
+            'is_active' => true,
+        ]);
+
+        Section::query()->create([
+            'formation_id' => 4,
+            'title' => 'Ethical Hacking & Pentest',
+            'description' => 'Techniques de test d\'intrusion et hacking éthique.',
+            'order_position' => 2,
+            'duration' => 250,
+            'is_active' => true,
+        ]);
+
+        Section::query()->create([
+            'formation_id' => 4,
+            'title' => 'Sécurité des Réseaux',
+            'description' => 'Protection des infrastructures réseau.',
+            'order_position' => 3,
+            'duration' => 180,
+            'is_active' => true,
+        ]);
+
+        Section::query()->create([
+            'formation_id' => 4,
+            'title' => 'Sécurité des Applications Web',
+            'description' => 'Sécurisez vos applications contre les attaques courantes.',
+            'order_position' => 4,
+            'duration' => 200,
+            'is_active' => true,
+        ]);
+
+        // === Formation 5: Cloud Computing & DevOps ===
+        Section::query()->create([
+            'formation_id' => 5,
+            'title' => 'Introduction au Cloud Computing',
+            'description' => 'Les concepts clés du cloud et AWS.',
+            'order_position' => 1,
+            'duration' => 120,
+            'is_active' => true,
+        ]);
+
+        Section::query()->create([
+            'formation_id' => 5,
+            'title' => 'Docker & Conteneurisation',
+            'description' => 'Maîtrisez Docker et la gestion des conteneurs.',
+            'order_position' => 2,
+            'duration' => 150,
+            'is_active' => true,
+        ]);
+
+        Section::query()->create([
+            'formation_id' => 5,
+            'title' => 'Kubernetes & Orchestration',
+            'description' => 'Orchestrez vos conteneurs avec Kubernetes.',
+            'order_position' => 3,
+            'duration' => 200,
+            'is_active' => true,
+        ]);
+
+        Section::query()->create([
+            'formation_id' => 5,
+            'title' => 'CI/CD & Infrastructure as Code',
+            'description' => 'Automatisez vos déploiements avec des pipelines CI/CD.',
+            'order_position' => 4,
+            'duration' => 150,
+            'is_active' => true,
+        ]);
+
+        // === Formation 6: Initiation à l\'Algorithmique ===
+        Section::query()->create([
+            'formation_id' => 6,
+            'title' => 'Concepts Fondamentaux',
+            'description' => 'Les bases de l\'algorithmique.',
+            'order_position' => 1,
+            'duration' => 90,
+            'is_active' => true,
+        ]);
+
+        Section::query()->create([
+            'formation_id' => 6,
+            'title' => 'Structures de Données',
+            'description' => 'Listes, piles, files, arbres et graphes.',
+            'order_position' => 2,
+            'duration' => 120,
+            'is_active' => true,
+        ]);
+
+        Section::query()->create([
+            'formation_id' => 6,
+            'title' => 'Algorithmes de Tri et Recherche',
+            'description' => 'Les algorithmes classiques et leur complexité.',
+            'order_position' => 3,
+            'duration' => 100,
+            'is_active' => true,
+        ]);
+
+        // === Formation 7: Excel & Analyse de Données ===
+        Section::query()->create([
+            'formation_id' => 7,
+            'title' => 'Les bases d\'Excel',
+            'description' => 'Prise en main et fondamentaux d\'Excel.',
+            'order_position' => 1,
+            'duration' => 60,
+            'is_active' => true,
+        ]);
+
+        Section::query()->create([
+            'formation_id' => 7,
+            'title' => 'Formules et Fonctions',
+            'description' => 'Maîtrisez les fonctions avancées d\'Excel.',
+            'order_position' => 2,
+            'duration' => 90,
+            'is_active' => true,
+        ]);
+
+        Section::query()->create([
+            'formation_id' => 7,
+            'title' => 'Tableaux Croisés Dynamiques',
+            'description' => 'Analysez vos données avec les TCD.',
+            'order_position' => 3,
+            'duration' => 60,
+            'is_active' => true,
+        ]);
+
+        // === Formation 8: Design Thinking & Innovation ===
+        Section::query()->create([
+            'formation_id' => 8,
+            'title' => 'Introduction au Design Thinking',
+            'description' => 'Les principes fondamentaux du Design Thinking.',
+            'order_position' => 1,
+            'duration' => 60,
+            'is_active' => true,
+        ]);
+
+        Section::query()->create([
+            'formation_id' => 8,
+            'title' => 'Phase d\'Empathie et Définition',
+            'description' => 'Comprendre les utilisateurs et définir le problème.',
+            'order_position' => 2,
+            'duration' => 90,
+            'is_active' => true,
+        ]);
+
+        Section::query()->create([
+            'formation_id' => 8,
+            'title' => 'Idéation et Prototypage',
+            'description' => 'Générer des idées et créer des prototypes.',
+            'order_position' => 3,
+            'duration' => 90,
+            'is_active' => true,
+        ]);
+
+        Section::query()->create([
+            'formation_id' => 8,
+            'title' => 'Tests et Implémentation',
+            'description' => 'Tester vos solutions et les mettre en œuvre.',
+            'order_position' => 4,
+            'duration' => 60,
+            'is_active' => true,
+        ]);
+
+        // === Formation 9: Communication & Prise de Parole ===
+        Section::query()->create([
+            'formation_id' => 9,
+            'title' => 'Fondamentaux de la Communication',
+            'description' => 'Les bases d\'une communication efficace.',
+            'order_position' => 1,
+            'duration' => 60,
+            'is_active' => true,
+        ]);
+
+        Section::query()->create([
+            'formation_id' => 9,
+            'title' => 'Prise de Parole en Public',
+            'description' => 'Techniques pour captiver votre auditoire.',
+            'order_position' => 2,
+            'duration' => 90,
+            'is_active' => true,
+        ]);
+
+        Section::query()->create([
+            'formation_id' => 9,
+            'title' => 'Communication Non Verbale',
+            'description' => 'Maîtrisez le langage corporel et le paralangage.',
+            'order_position' => 3,
+            'duration' => 60,
+            'is_active' => true,
+        ]);
+
+        // === Formation 10: Gestion de Projet Agile avec Scrum ===
+        Section::query()->create([
+            'formation_id' => 10,
+            'title' => 'Introduction à l\'Agilité',
+            'description' => 'Les principes et valeurs du manifeste agile.',
+            'order_position' => 1,
+            'duration' => 60,
+            'is_active' => true,
+        ]);
+
+        Section::query()->create([
+            'formation_id' => 10,
+            'title' => 'Scrum Framework',
+            'description' => 'Rôles, événements et artefacts Scrum.',
+            'order_position' => 2,
+            'duration' => 120,
+            'is_active' => true,
+        ]);
+
+        Section::query()->create([
+            'formation_id' => 10,
+            'title' => 'Cérémonies et Artefacts Scrum',
+            'description' => 'Mettez en pratique Scrum au quotidien.',
+            'order_position' => 3,
+            'duration' => 80,
+            'is_active' => true,
+        ]);
     }
 }

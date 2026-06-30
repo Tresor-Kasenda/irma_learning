@@ -35,7 +35,7 @@ it('exposes the real content composition for each formation', function () {
     $this->get(route('certifications'))
         ->assertSuccessful()
         ->assertInertia(fn (Assert $page) => $page
-            ->component('Certifications/Index')
+            ->component('Frontends/Formations/Index')
             ->where('formations.data.0.title', 'Gestion des risques')
             ->where('formations.data.0.chapter_count', 4)
             ->where('formations.data.0.video_count', 1)

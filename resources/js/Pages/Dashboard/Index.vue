@@ -36,12 +36,19 @@ interface Stats {
     certificatesEarned: number;
 }
 
+interface CertificateRef {
+    id: number;
+    certificate_number: string;
+}
+
 type TabKey = 'recent' | 'discover' | 'started' | 'completed';
 
 const props = defineProps<{
     myEnrollments: EnrollmentData[];
     continueWatching: UserProgressData | null;
     recommendedFormations: LearningFormation[];
+    recentFormations: LearningFormation[];
+    completedCertificates: Record<number, CertificateRef>;
     stats: Stats;
     catalogStats: LearningCatalogStats;
     search: string | null;
@@ -74,7 +81,6 @@ const visibleEnrollments = computed(
 );
 
 // Tab data
-const recentEnrollments = computed(() => visibleEnrollments.value);
 const startedEnrollments = computed(() =>
     visibleEnrollments.value.filter((e) => {
         const p = Number(e.progress_percentage ?? 0);
@@ -86,22 +92,21 @@ const completedEnrollments = computed(() =>
 );
 
 const tabs = computed(() => [
-    {key: 'recent' as TabKey, label: 'Récent', count: recentEnrollments.value.length},
+    {key: 'recent' as TabKey, label: 'Récent', count: props.recentFormations.length},
     {key: 'discover' as TabKey, label: 'Découvrir', count: props.recommendedFormations.length},
     {key: 'started' as TabKey, label: 'En cours', count: startedEnrollments.value.length},
     {key: 'completed' as TabKey, label: 'Terminé', count: completedEnrollments.value.length},
 ]);
 
-const currentEnrollments = computed(() => {
-    switch (activeTab.value) {
-        case 'started':
-            return startedEnrollments.value;
-        case 'completed':
-            return completedEnrollments.value;
-        default:
-            return recentEnrollments.value;
-    }
-});
+function certificateFor(formationId: number): CertificateRef | undefined {
+    return props.completedCertificates?.[formationId];
+}
+
+function certificateHrefFor(formationId: number): string {
+    const certificate = certificateFor(formationId);
+
+    return certificate ? safeRoute('certificats.show', certificate.id) : '';
+}
 
 const recommendedHighlight = computed(
     () => props.recommendedFormations.find((f) => f.is_featured) ?? props.recommendedFormations[0] ?? null,
@@ -187,7 +192,7 @@ function progressValue(enrollment: EnrollmentData): number {
             <ContinueLearningBanner
                 v-else-if="recommendedHighlight"
                 :formation="recommendedHighlight"
-                :href="safeRoute('course.player', recommendedHighlight.slug)"
+                :href="safeRoute('student.learnings.detail', recommendedHighlight.slug)"
                 action-label="Découvrir"
                 class="mt-6"
                 context-label="Formation recommandée"
@@ -220,14 +225,80 @@ function progressValue(enrollment: EnrollmentData): number {
                     </button>
                 </nav>
 
-                <!-- Recent / Started / Completed tabs -->
-                <div v-if="activeTab !== 'discover'" class="mt-5">
+                <!-- Récent : catalogue récemment publié → page détail -->
+                <div v-if="activeTab === 'recent'" class="mt-5">
                     <div
-                        v-if="currentEnrollments.length > 0"
+                        v-if="recentFormations.length > 0"
                         class="grid gap-4 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4"
                     >
                         <FormationCard
-                            v-for="enrollment in currentEnrollments"
+                            v-for="formation in recentFormations"
+                            :key="formation.id"
+                            :formation="formation"
+                            :href="safeRoute('student.learnings.detail', formation.slug)"
+                            badge="Nouveau"
+                        />
+                    </div>
+
+                    <div
+                        v-else
+                        class="flex min-h-56 flex-col items-center justify-center border border-dashed border-white/15 bg-[#0c1b2c] px-5 text-center"
+                    >
+                        <LearningIcon class="size-9 brightness-0 invert opacity-50" name="book-open"/>
+                        <h3 class="mt-4 text-base font-semibold text-white">Aucune formation récente</h3>
+                        <p class="mt-2 text-sm text-slate-400">De nouvelles formations arrivent bientôt.</p>
+                    </div>
+                </div>
+
+                <!-- Découvrir : catalogue général → page détail -->
+                <div v-else-if="activeTab === 'discover'" class="mt-5">
+                    <template v-if="recommendedFormations.length > 0">
+                        <div class="mb-4 flex items-center justify-between gap-4">
+                            <p class="text-sm text-slate-400">Explorez l'ensemble du catalogue IRMA Learning.</p>
+                            <Link
+                                :href="safeRoute('student.learnings')"
+                                class="inline-flex shrink-0 items-center gap-1.5 text-sm font-semibold text-[#ff79a5] transition hover:text-[#ffa0c0]"
+                            >
+                                Voir le catalogue
+                                <LearningIcon class="size-4 brightness-0 invert opacity-80" name="arrow-right"/>
+                            </Link>
+                        </div>
+                        <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
+                            <FormationCard
+                                v-for="formation in recommendedFormations"
+                                :key="formation.id"
+                                :formation="formation"
+                                :href="safeRoute('student.learnings.detail', formation.slug)"
+                            />
+                        </div>
+                    </template>
+
+                    <div
+                        v-else
+                        class="flex min-h-48 items-center justify-between gap-5 border border-white/10 bg-[#101d2d] p-5"
+                    >
+                        <div>
+                            <h3 class="text-base font-semibold text-white">Aucune formation pour cette recherche</h3>
+                            <p class="mt-2 text-sm text-slate-400">Consultez le catalogue complet pour élargir les
+                                résultats.</p>
+                        </div>
+                        <Link
+                            :href="safeRoute('student.learnings')"
+                            class="inline-flex h-10 shrink-0 items-center bg-[#a72f5d] px-4 text-sm font-semibold text-white hover:bg-[#c43b6d]"
+                        >
+                            Voir le catalogue
+                        </Link>
+                    </div>
+                </div>
+
+                <!-- En cours : apprentissage en cours → interface d'apprentissage -->
+                <div v-else-if="activeTab === 'started'" class="mt-5">
+                    <div
+                        v-if="startedEnrollments.length > 0"
+                        class="grid gap-4 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4"
+                    >
+                        <FormationCard
+                            v-for="enrollment in startedEnrollments"
                             :key="enrollment.id"
                             :formation="enrollment.formation"
                             :href="safeRoute('course.player', enrollment.formation.id)"
@@ -240,12 +311,8 @@ function progressValue(enrollment: EnrollmentData): number {
                         v-else
                         class="flex min-h-56 flex-col items-center justify-center border border-dashed border-white/15 bg-[#0c1b2c] px-5 text-center"
                     >
-                        <LearningIcon class="size-9 brightness-0 invert opacity-50" name="book-open"/>
-                        <h3 class="mt-4 text-base font-semibold text-white">
-                            {{
-                                activeTab === 'started' ? 'Aucune formation en cours' : activeTab === 'completed' ? 'Aucune formation terminée' : 'Aucune formation récente'
-                            }}
-                        </h3>
+                        <LearningIcon class="size-9 brightness-0 invert opacity-50" name="chart-bar"/>
+                        <h3 class="mt-4 text-base font-semibold text-white">Aucune formation en cours</h3>
                         <p class="mt-2 text-sm text-slate-400">Commencez un parcours depuis le catalogue IRMA
                             Learning.</p>
                         <button
@@ -258,36 +325,31 @@ function progressValue(enrollment: EnrollmentData): number {
                     </div>
                 </div>
 
-                <!-- Discover tab -->
-                <div v-if="activeTab === 'discover'" class="mt-5">
+                <!-- Terminé : formations finies → page détail + état certifié -->
+                <div v-else class="mt-5">
                     <div
-                        v-if="recommendedFormations.length > 0"
+                        v-if="completedEnrollments.length > 0"
                         class="grid gap-4 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4"
                     >
                         <FormationCard
-                            v-for="formation in recommendedFormations"
-                            :key="formation.id"
-                            :formation="formation"
-                            :href="safeRoute('student.learnings.detail', formation.slug)"
+                            v-for="enrollment in completedEnrollments"
+                            :key="enrollment.id"
+                            :certificate-href="certificateHrefFor(enrollment.formation.id)"
+                            :certified="Boolean(certificateFor(enrollment.formation.id))"
+                            :formation="enrollment.formation"
+                            :href="safeRoute('student.learnings.detail', enrollment.formation.slug)"
+                            :progress="progressValue(enrollment)"
+                            badge="Terminé"
                         />
                     </div>
 
                     <div
                         v-else
-                        class="flex min-h-48 items-center justify-between gap-5 border border-white/10 bg-[#101d2d] p-5"
+                        class="flex min-h-56 flex-col items-center justify-center border border-dashed border-white/15 bg-[#0c1b2c] px-5 text-center"
                     >
-                        <div>
-                            <h3 class="text-base font-semibold text-white">Aucune recommandation pour cette
-                                recherche</h3>
-                            <p class="mt-2 text-sm text-slate-400">Consultez le catalogue complet pour élargir les
-                                résultats.</p>
-                        </div>
-                        <Link
-                            :href="safeRoute('student.learnings')"
-                            class="inline-flex h-10 shrink-0 items-center bg-[#a72f5d] px-4 text-sm font-semibold text-white hover:bg-[#c43b6d]"
-                        >
-                            Voir le catalogue
-                        </Link>
+                        <LearningIcon class="size-9 brightness-0 invert opacity-50" name="academic-cap"/>
+                        <h3 class="mt-4 text-base font-semibold text-white">Aucune formation terminée</h3>
+                        <p class="mt-2 text-sm text-slate-400">Terminez une formation pour la retrouver ici.</p>
                     </div>
                 </div>
             </section>

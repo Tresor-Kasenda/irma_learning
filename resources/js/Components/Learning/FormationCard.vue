@@ -11,11 +11,15 @@ const props = withDefaults(
         progress?: number | null;
         badge?: string;
         variant?: 'default' | 'scrimba';
+        certified?: boolean;
+        certificateHref?: string;
     }>(),
     {
         progress: null,
         badge: '',
         variant: 'default',
+        certified: false,
+        certificateHref: '',
     },
 );
 
@@ -216,6 +220,13 @@ function isCompleted(): boolean {
             <span class="absolute left-3 top-3 bg-[#a72f5d] px-2 py-1 text-[11px] font-semibold text-white">
                 {{ formationBadge() }}
             </span>
+            <span
+                v-if="certified"
+                class="absolute right-3 top-3 inline-flex items-center gap-1 bg-emerald-500/90 px-2 py-1 text-[11px] font-semibold text-white"
+            >
+                <LearningIcon class="size-3.5 brightness-0 invert" name="academic-cap"/>
+                Certifié
+            </span>
         </Link>
 
         <div class="border-b border-white/10 px-3 py-2.5">
@@ -267,6 +278,16 @@ function isCompleted(): boolean {
                         {{ formatPrice() }}
                     </span>
                 </div>
+
+                <Link
+                    v-if="certificateHref"
+                    :href="certificateHref"
+                    class="mt-3 inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-300 transition hover:text-emerald-200"
+                >
+                    <LearningIcon class="size-4 brightness-0 invert opacity-80" name="academic-cap"/>
+                    Voir la certification
+                    <LearningIcon class="size-3.5 brightness-0 invert opacity-70" name="arrow-right"/>
+                </Link>
             </div>
         </div>
     </article>

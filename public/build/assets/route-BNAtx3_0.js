@@ -1,0 +1,1 @@
+function o(t,e,u,r="#"){try{return typeof route!="function"||!route().has(t)?r:route(t,e,u)}catch{return r}}function n(t){try{return typeof route!="function"||!route().has(t)?!1:!!route().current(t)}catch{return!1}}export{n as a,o as s};
