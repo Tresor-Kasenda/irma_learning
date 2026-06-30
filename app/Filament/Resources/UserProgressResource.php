@@ -30,7 +30,7 @@ final class UserProgressResource extends Resource
 
     protected static BackedEnum|string|null $navigationIcon = 'heroicon-o-chart-bar';
 
-    protected static string|UnitEnum|null $navigationGroup = 'Formation';
+    protected static string|UnitEnum|null $navigationGroup = 'Utilisateurs';
 
     protected static ?int $navigationSort = 3;
 

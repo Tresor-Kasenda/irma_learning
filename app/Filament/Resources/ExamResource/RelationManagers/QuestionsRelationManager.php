@@ -8,6 +8,8 @@ use App\Enums\QuestionTypeEnum;
 use App\Models\Question;
 use Filament\Forms;
 use Filament\Resources\RelationManagers\RelationManager;
+use Filament\Schemas\Components\Utilities\Get;
+use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Schema;
 use Filament\Tables;
 use Filament\Tables\Table;
@@ -60,7 +62,7 @@ final class QuestionsRelationManager extends RelationManager
                         Forms\Components\TextInput::make('order_position')
                             ->label('Position')
                             ->numeric()
-                            ->default(function (Forms\Get $get) {
+                            ->default(function (Get $get) {
                                 $examId = $get('exam_id');
                                 if (! $examId) {
                                     return 1;
@@ -96,7 +98,7 @@ final class QuestionsRelationManager extends RelationManager
                                         Forms\Components\TextInput::make('order_position')
                                             ->label('Position')
                                             ->numeric()
-                                            ->default(function (Forms\Get $get) {
+                                            ->default(function (Get $get) {
                                                 $options = collect($get('../../options') ?? []);
 
                                                 return $options->count() > 0 ? $options->max('order_position') + 1 : 1;
@@ -106,7 +108,7 @@ final class QuestionsRelationManager extends RelationManager
                                         Forms\Components\Toggle::make('is_correct')
                                             ->label('Réponse correcte')
                                             ->inline(false)
-                                            ->afterStateUpdated(function ($state, Forms\Set $set, Forms\Get $get) {
+                                            ->afterStateUpdated(function ($state, Set $set, Get $get) {
                                                 if ($get('../../question_type') === QuestionTypeEnum::SINGLE_CHOICE->value && $state) {
                                                     $options = collect($get('../../options') ?? []);
 
@@ -117,7 +119,7 @@ final class QuestionsRelationManager extends RelationManager
                                                     });
                                                 }
                                             })
-                                            ->visible(fn (Forms\Get $get) => in_array($get('../../question_type'), [
+                                            ->visible(fn (Get $get) => in_array($get('../../question_type'), [
                                                 QuestionTypeEnum::SINGLE_CHOICE->value,
                                                 QuestionTypeEnum::MULTIPLE_CHOICE->value,
                                             ]))
@@ -132,12 +134,12 @@ final class QuestionsRelationManager extends RelationManager
                             ->cloneable()
                             ->reorderable()
                             ->columnSpanFull()
-                            ->visible(fn (Forms\Get $get) => in_array($get('question_type'), [
+                            ->visible(fn (Get $get) => in_array($get('question_type'), [
                                 QuestionTypeEnum::SINGLE_CHOICE->value,
                                 QuestionTypeEnum::MULTIPLE_CHOICE->value,
                             ])),
                     ])
-                    ->visible(fn (Forms\Get $get) => in_array($get('question_type'), ['single_choice', 'multiple_choice'])),
+                    ->visible(fn (Get $get) => in_array($get('question_type'), ['single_choice', 'multiple_choice'])),
             ]);
     }
 
@@ -204,10 +206,6 @@ final class QuestionsRelationManager extends RelationManager
             ])
             ->actions([
                 \Filament\Actions\ActionGroup::make([
-                    \Filament\Actions\ViewAction::make()
-                        ->label('Voir')
-                        ->slideOver()
-                        ->icon('heroicon-o-eye'),
                     \Filament\Actions\EditAction::make()
                         ->label('Modifier')
                         ->slideOver()
@@ -216,14 +214,6 @@ final class QuestionsRelationManager extends RelationManager
                         ->label('Supprimer')
                         ->icon('heroicon-o-trash')
                         ->requiresConfirmation(),
-
-                    \Filament\Actions\Action::make('preview')
-                        ->label('Aperçu')
-                        ->icon('heroicon-o-eye')
-                        ->color('info')
-                        ->slideOver()
-                        ->modalContent(fn (Question $record) => view('filament.resources.question.preview', ['question' => $record]))
-                        ->modalWidth('3xl'),
 
                     \Filament\Actions\Action::make('duplicate')
                         ->label('Dupliquer')

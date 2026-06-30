@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App\Filament\Resources\ExamResource\Pages;
 
 use App\Enums\ExamAttemptEnum;
-use App\Filament\Resources\ChapterResource;
 use App\Filament\Resources\ExamResource;
 use App\Models\Chapter;
 use App\Models\Exam;
@@ -134,8 +133,8 @@ final class ViewExam extends ViewRecord
     {
         return [
             Actions\Action::make('back')
-                ->label('Retour')
-                ->url(ChapterResource::getUrl('index'))
+                ->label('Retour aux examens')
+                ->url(ExamResource::getUrl('index'))
                 ->icon('heroicon-o-arrow-left'),
         ];
     }

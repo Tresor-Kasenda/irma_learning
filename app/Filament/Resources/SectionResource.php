@@ -6,7 +6,6 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\SectionResource\Pages;
 use App\Filament\Resources\SectionResource\RelationManagers;
-use App\Models\Formation;
 use App\Models\Section;
 use BackedEnum;
 use Filament\Actions\ActionGroup;
@@ -18,7 +17,6 @@ use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
 use Filament\Forms;
 use Filament\Resources\Resource;
-use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Schema;
 use Filament\Tables;
 use Filament\Tables\Columns\TextColumn;
@@ -34,9 +32,9 @@ final class SectionResource extends Resource
 
     protected static ?string $navigationLabel = 'Sections';
 
-    protected static string|UnitEnum|null $navigationGroup = 'Gestion des formations';
+    protected static string|UnitEnum|null $navigationGroup = 'Catalogue';
 
-    protected static ?int $navigationSort = 3;
+    protected static ?int $navigationSort = 2;
 
     public static function table(Table $table): Table
     {
@@ -122,12 +120,13 @@ final class SectionResource extends Resource
                         ->icon('heroicon-o-power')
                         ->action(function ($records) {
                             foreach ($records as $record) {
-                                $record->update(['is_active' => !$record->is_active]);
+                                $record->update(['is_active' => ! $record->is_active]);
                             }
                         }),
                 ]),
             ])
-            ->defaultSort('order_position', 'asc');
+            ->defaultSort('order_position', 'asc')
+            ->reorderable('order_position');
     }
 
     public static function form(Schema $schema): Schema
@@ -139,8 +138,8 @@ final class SectionResource extends Resource
                         Forms\Components\Select::make('formation_id')
                             ->label('Formation')
                             ->relationship('formation', 'title')
-                            ->getOptionLabelFromRecordUsing(fn($record) => mb_strlen($record->title) > 50
-                                ? mb_substr($record->title, 0, 50) . '...'
+                            ->getOptionLabelFromRecordUsing(fn ($record) => mb_strlen($record->title) > 50
+                                ? mb_substr($record->title, 0, 50).'...'
                                 : $record->title
                             )
                             ->required(),
@@ -157,44 +156,10 @@ final class SectionResource extends Resource
 
                 \Filament\Schemas\Components\Section::make('Configuration')
                     ->schema([
-                        Forms\Components\TextInput::make('order_position')
-                            ->label('Position dans la formation')
-                            ->numeric()
-                            ->disabled()
-                            ->dehydrated(false)
-                            ->default(function (Get $get) {
-                                $formationId = $get('formation_id');
-                                if ($formationId) {
-                                    return (Section::query()->whereBelongsTo($formationId)->max('order_position') ?? 0) + 1;
-                                }
-                                return 1;
-                            })
-                            ->helperText('Position automatique (prochaine disponible dans cette formation)'),
-
                         Forms\Components\TextInput::make('duration')
                             ->label('Durée estimée (minutes)')
                             ->numeric()
-                            ->default(function (Get $get) {
-                                $formationId = $get('formation_id');
-                                if (!$formationId) {
-                                    return null;
-                                }
-
-                                $formation = Formation::find($formationId);
-                                if (!$formation || !$formation->duration_hours) {
-                                    return null;
-                                }
-
-                                // Convert formation duration from hours to minutes
-                                $formationDurationMinutes = $formation->duration_hours * 60;
-
-                                // Get the number of existing sections + 1 (for the new section being added)
-                                $totalSections = Section::where('formation_id', $formationId)->count() + 1;
-
-                                // Calculate average duration per section
-                                return (int)round($formationDurationMinutes / $totalSections);
-                            })
-                            ->helperText('Durée calculée automatiquement. Vous pouvez la modifier si nécessaire.'),
+                            ->helperText('Calculée automatiquement si la formation a une durée définie.'),
 
                         Forms\Components\Toggle::make('is_active')
                             ->label('Section active')
@@ -210,6 +175,7 @@ final class SectionResource extends Resource
     {
         return [
             RelationManagers\ChaptersRelationManager::class,
+            RelationManagers\ExamRelationManager::class,
         ];
     }
 
@@ -232,6 +198,6 @@ final class SectionResource extends Resource
 
     public static function getNavigationBadge(): ?string
     {
-        return (string)self::getModel()::count();
+        return (string) self::getModel()::count();
     }
 }

@@ -6,25 +6,27 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\FormationAccessCodeResource\Pages;
 use App\Models\FormationAccessCode;
+use BackedEnum;
 use Filament\Forms;
-use Filament\Schemas\Schema;
 use Filament\Resources\Resource;
+use Filament\Schemas\Schema;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Str;
+use UnitEnum;
 
 final class FormationAccessCodeResource extends Resource
 {
     protected static ?string $model = FormationAccessCode::class;
 
-    protected static \BackedEnum|string|null $navigationIcon = 'heroicon-o-key';
+    protected static BackedEnum|string|null $navigationIcon = 'heroicon-o-key';
 
     protected static ?string $navigationLabel = 'Codes d\'accès';
 
-    protected static string|\UnitEnum|null $navigationGroup = 'Formations';
+    protected static string|UnitEnum|null $navigationGroup = 'Utilisateurs';
 
-    protected static ?int $navigationSort = 8;
+    protected static ?int $navigationSort = 4;
 
     public static function form(Schema $schema): Schema
     {

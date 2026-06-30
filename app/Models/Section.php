@@ -17,6 +17,15 @@ final class Section extends Model
     /** @use HasFactory<SectionFactory> */
     use HasFactory;
 
+    protected $fillable = [
+        'formation_id',
+        'title',
+        'description',
+        'order_position',
+        'duration',
+        'is_active',
+    ];
+
     public function formation(): BelongsTo
     {
         return $this->belongsTo(Formation::class, 'formation_id');

@@ -37,7 +37,7 @@ test('dashboard exposes recent formations and completed certificates', function 
         ->get(route('dashboard'))
         ->assertSuccessful()
         ->assertInertia(fn (Assert $page) => $page
-            ->component('Dashboard/Index')
+            ->component('Student/Index')
             ->has('recentFormations', 2)
             ->where("completedCertificates.{$completedFormation->id}.id", $certificate->id)
             ->etc());
@@ -68,7 +68,7 @@ test('course detail returns formation, enrollment and certificate for the owner'
         ->get(route('student.learnings.detail', $formation->slug))
         ->assertSuccessful()
         ->assertInertia(fn (Assert $page) => $page
-            ->component('Dashboard/Learnings/CourseDetail')
+            ->component('Student/Learnings/CourseDetail')
             ->where('formation.title', 'Formation à terminer')
             ->has('enrollment')
             ->where('certificate.id', $certificate->id)
@@ -83,7 +83,7 @@ test('certificate page is visible to its owner', function () {
         ->get(route('certificats.show', $certificate))
         ->assertSuccessful()
         ->assertInertia(fn (Assert $page) => $page
-            ->component('Dashboard/Formations/Certifications/Show')
+            ->component('Student/Formations/Certifications/Show')
             ->where('certificate.id', $certificate->id)
             ->where('certificate.certificate_number', $certificate->certificate_number)
             ->etc());

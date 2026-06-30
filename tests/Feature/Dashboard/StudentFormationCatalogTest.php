@@ -45,7 +45,7 @@ test('catalog exposes the expected inertia contract and global tab counts', func
         ->get(route('student.learnings'))
         ->assertSuccessful()
         ->assertInertia(fn (Assert $page) => $page
-            ->component('Dashboard/Formations/Index')
+            ->component('Student/Formations/Index')
             ->where('filters.tab', 'recent')
             ->where('filters.sort', 'last-interacted')
             ->where('formations.total', 3)

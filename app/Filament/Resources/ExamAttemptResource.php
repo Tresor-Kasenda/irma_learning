@@ -1,28 +1,32 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Filament\Resources;
 
 use App\Enums\ExamAttemptEnum;
 use App\Filament\Resources\ExamAttemptResource\Pages;
 use App\Filament\Resources\ExamAttemptResource\RelationManagers;
 use App\Models\ExamAttempt;
-use Filament\Schemas\Schema;
+use BackedEnum;
 use Filament\Resources\Resource;
+use Filament\Schemas\Schema;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use UnitEnum;
 
-class ExamAttemptResource extends Resource
+final class ExamAttemptResource extends Resource
 {
     protected static ?string $model = ExamAttempt::class;
 
-    protected static \BackedEnum|string|null $navigationIcon = 'heroicon-o-clock';
+    protected static BackedEnum|string|null $navigationIcon = 'heroicon-o-clock';
 
     protected static ?string $navigationLabel = 'Tentatives d\'examen';
 
-    protected static string|\UnitEnum|null $navigationGroup = 'Évaluations';
+    protected static string|UnitEnum|null $navigationGroup = 'Évaluations';
 
-    protected static ?int $navigationSort = 4;
+    protected static ?int $navigationSort = 2;
 
     public static function form(Schema $schema): Schema
     {
@@ -53,7 +57,7 @@ class ExamAttemptResource extends Resource
                 Tables\Columns\TextColumn::make('status')
                     ->label('Statut')
                     ->badge()
-                    ->color(fn(string $state): string => match ($state) {
+                    ->color(fn (string $state): string => match ($state) {
                         'in_progress' => 'warning',
                         'completed' => 'success',
                         'failed' => 'danger',
@@ -66,19 +70,22 @@ class ExamAttemptResource extends Resource
                     ->numeric(decimalPlaces: 1)
                     ->sortable()
                     ->color(function ($state, $record): string {
-                        if (!$state || !$record->exam) return 'gray';
+                        if (! $state || ! $record->exam) {
+                            return 'gray';
+                        }
+
                         return $state >= $record->exam->passing_score ? 'success' : 'danger';
                     }),
 
                 Tables\Columns\TextColumn::make('score')
                     ->label('Points')
-                    ->formatStateUsing(fn($record): string => $record->score && $record->max_score ? "{$record->score}/{$record->max_score}" : 'N/A'
+                    ->formatStateUsing(fn ($record): string => $record->score && $record->max_score ? "{$record->score}/{$record->max_score}" : 'N/A'
                     )
                     ->sortable(),
 
                 Tables\Columns\TextColumn::make('time_taken')
                     ->label('Durée')
-                    ->formatStateUsing(fn($state): string => $state ? gmdate('H:i:s', $state) : 'N/A')
+                    ->formatStateUsing(fn ($state): string => $state ? gmdate('H:i:s', $state) : 'N/A')
                     ->sortable(),
 
                 Tables\Columns\TextColumn::make('started_at')
@@ -117,11 +124,11 @@ class ExamAttemptResource extends Resource
 
                 Tables\Filters\Filter::make('passed')
                     ->label('Réussi')
-                    ->query(fn(Builder $query): Builder => $query->passed()),
+                    ->query(fn (Builder $query): Builder => $query->passed()),
 
                 Tables\Filters\Filter::make('failed')
                     ->label('Échoué')
-                    ->query(fn(Builder $query): Builder => $query->where('status', 'completed')
+                    ->query(fn (Builder $query): Builder => $query->where('status', 'completed')
                         ->whereColumn('percentage', '<', 'exams.passing_score')
                     ),
             ])
@@ -133,8 +140,8 @@ class ExamAttemptResource extends Resource
                     ->icon('heroicon-o-check-circle')
                     ->color('success')
                     ->requiresConfirmation()
-                    ->action(fn(ExamAttempt $record) => $record->complete())
-                    ->visible(fn(ExamAttempt $record): bool => $record->status === 'in_progress'),
+                    ->action(fn (ExamAttempt $record) => $record->complete())
+                    ->visible(fn (ExamAttempt $record): bool => $record->status === 'in_progress'),
                 \Filament\Actions\DeleteAction::make(),
             ])
             ->bulkActions([

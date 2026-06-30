@@ -57,7 +57,7 @@ test('dashboard exposes enrollments and continue watching after seeding', functi
         ->get(route('dashboard'))
         ->assertSuccessful()
         ->assertInertia(fn (Assert $page) => $page
-            ->component('Dashboard/Index')
+            ->component('Student/Index')
             ->where('myEnrollments', fn ($enrollments) => count($enrollments) >= 1)
             ->has('continueWatching.id')
             ->etc());
@@ -70,7 +70,7 @@ test('learnings page lists formations after seeding', function () {
         ->get(route('student.learnings'))
         ->assertSuccessful()
         ->assertInertia(fn (Assert $page) => $page
-            ->component('Dashboard/Formations/Index')
+            ->component('Student/Formations/Index')
             ->where('formations.total', fn ($total) => $total >= 1)
             ->etc());
 });

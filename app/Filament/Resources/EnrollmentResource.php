@@ -29,7 +29,7 @@ final class EnrollmentResource extends Resource
 
     protected static BackedEnum|string|null $navigationIcon = 'heroicon-o-user-plus';
 
-    protected static string|UnitEnum|null $navigationGroup = 'Formation';
+    protected static string|UnitEnum|null $navigationGroup = 'Utilisateurs';
 
     protected static ?string $navigationLabel = 'Inscriptions & Paiements';
 
@@ -52,8 +52,8 @@ final class EnrollmentResource extends Resource
 
                 Tables\Columns\TextColumn::make('status')
                     ->label('Statut Inscription')
-                    ->formatStateUsing(fn($state) => $state->getLabel())
-                    ->color(fn(EnrollmentStatusEnum $state): string => match ($state) {
+                    ->formatStateUsing(fn ($state) => $state->getLabel())
+                    ->color(fn (EnrollmentStatusEnum $state): string => match ($state) {
                         EnrollmentStatusEnum::SUSPENDED => 'warning',
                         EnrollmentStatusEnum::ACTIVE => 'primary',
                         EnrollmentStatusEnum::COMPLETED => 'success',
@@ -63,8 +63,8 @@ final class EnrollmentResource extends Resource
 
                 Tables\Columns\TextColumn::make('payment_status')
                     ->label('Statut Paiement')
-                    ->formatStateUsing(fn($state) => $state->getLabel())
-                    ->color(fn(EnrollmentPaymentEnum $state): string => match ($state) {
+                    ->formatStateUsing(fn ($state) => $state->getLabel())
+                    ->color(fn (EnrollmentPaymentEnum $state): string => match ($state) {
                         EnrollmentPaymentEnum::PENDING => 'warning',
                         EnrollmentPaymentEnum::PAID => 'success',
                         EnrollmentPaymentEnum::FAILED => 'danger',
@@ -108,15 +108,15 @@ final class EnrollmentResource extends Resource
 
                 Tables\Filters\Filter::make('completed')
                     ->label('Formations complétées')
-                    ->query(fn(Builder $query): Builder => $query->where('status', 'completed')),
+                    ->query(fn (Builder $query): Builder => $query->where('status', 'completed')),
 
                 Tables\Filters\Filter::make('active_paid')
                     ->label('Inscriptions actives et payées')
-                    ->query(fn(Builder $query): Builder => $query->where('status', 'active')->where('payment_status', 'paid')),
+                    ->query(fn (Builder $query): Builder => $query->where('status', 'active')->where('payment_status', 'paid')),
 
                 Tables\Filters\Filter::make('pending_payment')
                     ->label('Paiements en attente')
-                    ->query(fn(Builder $query): Builder => $query->where('payment_status', 'pending')),
+                    ->query(fn (Builder $query): Builder => $query->where('payment_status', 'pending')),
             ])
             ->actions([
                 \Filament\Actions\ActionGroup::make([
@@ -147,15 +147,15 @@ final class EnrollmentResource extends Resource
                                 ->success()
                                 ->send();
                         })
-                        ->visible(fn(Enrollment $record) => $record->payment_status !== EnrollmentPaymentEnum::PAID),
+                        ->visible(fn (Enrollment $record) => $record->payment_status !== EnrollmentPaymentEnum::PAID),
 
                     \Filament\Actions\Action::make('generateInvoice')
                         ->label('Générer facture')
                         ->icon('heroicon-o-document-text')
                         ->color('info')
-                        ->url(fn(Enrollment $record): string => route('enrollments.invoice', $record))
+                        ->url(fn (Enrollment $record): string => route('enrollments.invoice', $record))
                         ->openUrlInNewTab()
-                        ->visible(fn(Enrollment $record): bool => $record->payment_status === EnrollmentPaymentEnum::PAID),
+                        ->visible(fn (Enrollment $record): bool => $record->payment_status === EnrollmentPaymentEnum::PAID),
 
                     \Filament\Actions\Action::make('refund')
                         ->label('Rembourser')
@@ -173,8 +173,8 @@ final class EnrollmentResource extends Resource
                             $record->update([
                                 'payment_status' => EnrollmentPaymentEnum::REFUNDED,
                                 'status' => EnrollmentStatusEnum::SUSPENDED,
-                                'payment_notes' => ($record->payment_notes ? $record->payment_notes . "\n\n" : '') .
-                                    'REMBOURSEMENT: ' . $data['refund_reason'] . ' (' . now()->format('d/m/Y H:i') . ')',
+                                'payment_notes' => ($record->payment_notes ? $record->payment_notes."\n\n" : '').
+                                    'REMBOURSEMENT: '.$data['refund_reason'].' ('.now()->format('d/m/Y H:i').')',
                             ]);
 
                             Notification::make()
@@ -183,7 +183,7 @@ final class EnrollmentResource extends Resource
                                 ->success()
                                 ->send();
                         })
-                        ->visible(fn(Enrollment $record): bool => $record->payment_status === EnrollmentPaymentEnum::PAID),
+                        ->visible(fn (Enrollment $record): bool => $record->payment_status === EnrollmentPaymentEnum::PAID),
                 ]),
             ])
             ->bulkActions([
@@ -206,7 +206,7 @@ final class EnrollmentResource extends Resource
 
                             Notification::make()
                                 ->title('Paiements validés')
-                                ->body(count($records) . ' paiements ont été marqués comme réussis.')
+                                ->body(count($records).' paiements ont été marqués comme réussis.')
                                 ->success()
                                 ->send();
                         }),
@@ -215,7 +215,7 @@ final class EnrollmentResource extends Resource
                         ->label('Mettre à jour la progression')
                         ->icon('heroicon-o-arrow-path')
                         ->color('primary')
-                        ->action(fn($records) => $records->each->updateProgress())
+                        ->action(fn ($records) => $records->each->updateProgress())
                         ->deselectRecordsAfterCompletion(),
                 ]),
             ])
@@ -359,7 +359,7 @@ final class EnrollmentResource extends Resource
 
     public static function getNavigationBadge(): ?string
     {
-        return (string)self::getModel()::count();
+        return (string) self::getModel()::count();
     }
 
     public static function getNavigationBadgeColor(): ?string

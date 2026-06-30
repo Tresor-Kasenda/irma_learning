@@ -31,7 +31,7 @@ final class CertificateResource extends Resource
 
     protected static BackedEnum|string|null $navigationIcon = 'heroicon-o-academic-cap';
 
-    protected static string|UnitEnum|null $navigationGroup = 'Certifications';
+    protected static string|UnitEnum|null $navigationGroup = 'Utilisateurs';
 
     protected static ?int $navigationSort = 4;
 
@@ -132,7 +132,7 @@ final class CertificateResource extends Resource
                 Tables\Columns\TextColumn::make('final_score')
                     ->label('Score')
                     ->suffix('%')
-                    ->color(fn($state) => $state >= 80 ? 'success' : ($state >= 60 ? 'warning' : 'danger'))
+                    ->color(fn ($state) => $state >= 80 ? 'success' : ($state >= 60 ? 'warning' : 'danger'))
                     ->sortable(),
 
                 Tables\Columns\BadgeColumn::make('status')
@@ -154,7 +154,7 @@ final class CertificateResource extends Resource
 
                 Tables\Filters\Filter::make('valid')
                     ->label('Certificats valides')
-                    ->query(fn(Builder $query): Builder => $query->where('status', 'active')
+                    ->query(fn (Builder $query): Builder => $query->where('status', 'active')
                         ->where(function ($q) {
                             $q->whereNull('expiry_date')
                                 ->orWhere('expiry_date', '>', now());
@@ -162,11 +162,11 @@ final class CertificateResource extends Resource
 
                 Tables\Filters\Filter::make('expired')
                     ->label('Certificats expirés')
-                    ->query(fn(Builder $query): Builder => $query->where('expiry_date', '<', now())),
+                    ->query(fn (Builder $query): Builder => $query->where('expiry_date', '<', now())),
 
                 Tables\Filters\Filter::make('high_score')
                     ->label('Score élevé (≥80%)')
-                    ->query(fn(Builder $query): Builder => $query->where('final_score', '>=', 80)),
+                    ->query(fn (Builder $query): Builder => $query->where('final_score', '>=', 80)),
             ])
             ->recordActions([
                 ActionGroup::make([
@@ -174,14 +174,14 @@ final class CertificateResource extends Resource
                         ->label('Télécharger')
                         ->icon('heroicon-o-arrow-down-tray')
                         ->color('primary')
-                        ->url(fn(Certificate $record) => $record->download_url)
+                        ->url(fn (Certificate $record) => $record->download_url)
                         ->openUrlInNewTab(),
 
                     Action::make('verify')
                         ->label('Vérifier')
                         ->icon('heroicon-o-shield-check')
                         ->color('success')
-                        ->url(fn(Certificate $record) => $record->verification_url)
+                        ->url(fn (Certificate $record) => $record->verification_url)
                         ->openUrlInNewTab(),
 
                     Action::make('revoke')
@@ -189,8 +189,8 @@ final class CertificateResource extends Resource
                         ->icon('heroicon-o-x-circle')
                         ->color('danger')
                         ->requiresConfirmation()
-                        ->action(fn(Certificate $record) => $record->update(['status' => CertificateStatusEnum::REVOKED]))
-                        ->visible(fn(Certificate $record) => $record->status === CertificateStatusEnum::ACTIVE),
+                        ->action(fn (Certificate $record) => $record->update(['status' => CertificateStatusEnum::REVOKED]))
+                        ->visible(fn (Certificate $record) => $record->status === CertificateStatusEnum::ACTIVE),
 
                     ViewAction::make()
                         ->label('Voir')
@@ -209,7 +209,7 @@ final class CertificateResource extends Resource
                         ->icon('heroicon-o-x-circle')
                         ->color('danger')
                         ->requiresConfirmation()
-                        ->action(fn($records) => $records->each->update(['status' => CertificateStatusEnum::REVOKED])),
+                        ->action(fn ($records) => $records->each->update(['status' => CertificateStatusEnum::REVOKED])),
                 ]),
             ])
             ->defaultSort('issue_date', 'desc');
@@ -234,7 +234,7 @@ final class CertificateResource extends Resource
 
     public static function getNavigationBadge(): ?string
     {
-        return (string)self::getModel()::count();
+        return (string) self::getModel()::count();
     }
 
     public static function getEloquentQuery(): Builder

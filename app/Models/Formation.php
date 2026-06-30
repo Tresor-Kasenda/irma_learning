@@ -30,6 +30,19 @@ final class Formation extends Model
     use HasSlug;
     use LogsActivity;
 
+    protected $fillable = [
+        'title',
+        'short_description',
+        'description',
+        'image',
+        'price',
+        'duration_hours',
+        'difficulty_level',
+        'is_active',
+        'is_featured',
+        'tags',
+    ];
+
     /**
      * @return array<string, callable(Builder): Builder>
      */

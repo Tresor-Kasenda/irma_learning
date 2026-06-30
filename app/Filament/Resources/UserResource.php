@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Filament\Resources;
 
 use App\Enums\UserRoleEnum;
@@ -26,7 +28,7 @@ use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use UnitEnum;
 
-class UserResource extends Resource
+final class UserResource extends Resource
 {
     protected static ?string $model = User::class;
 
@@ -34,7 +36,7 @@ class UserResource extends Resource
 
     protected static ?string $navigationLabel = 'Utilisateurs';
 
-    protected static string|UnitEnum|null $navigationGroup = 'Administration';
+    protected static string|UnitEnum|null $navigationGroup = 'Utilisateurs';
 
     protected static ?int $navigationSort = 1;
 
@@ -44,25 +46,24 @@ class UserResource extends Resource
             ->schema([
                 Section::make('Informations personnelles')
                     ->schema([
-                        Forms\Components\TextInput::make('name')
+                        TextInput::make('name')
                             ->label('Nom complet')
                             ->required()
                             ->maxLength(255),
 
-                        Forms\Components\TextInput::make('username')
+                        TextInput::make('username')
                             ->label('Prénom')
                             ->required()
                             ->maxLength(255),
 
-
-                        Forms\Components\TextInput::make('email')
+                        TextInput::make('email')
                             ->label('Email')
                             ->email()
                             ->required()
                             ->maxLength(255)
                             ->unique(User::class, 'email', ignoreRecord: true),
 
-                        Forms\Components\TextInput::make('phone')
+                        TextInput::make('phone')
                             ->label('Téléphone')
                             ->tel()
                             ->maxLength(20),
@@ -76,17 +77,17 @@ class UserResource extends Resource
                             ->maxLength(255)
                             ->revealable()
                             ->live()
-                            ->dehydrated(fn(?string $state): bool => filled($state))
-                            ->required(fn(string $operation, Get $get): bool => $operation === 'create')
+                            ->dehydrated(fn (?string $state): bool => filled($state))
+                            ->required(fn (string $operation, Get $get): bool => $operation === 'create')
                             ->label('Mot de passe'),
 
                         TextInput::make('password_confirmation')
                             ->password()
-                            ->required(fn(string $operation): bool => $operation === 'create')
+                            ->required(fn (string $operation): bool => $operation === 'create')
                             ->maxLength(255)
                             ->same('password')
                             ->dehydrated(false)
-                            ->visible(fn(Get $get) => $get('password'))
+                            ->visible(fn (Get $get) => $get('password'))
                             ->label('Confirmer le mot de passe'),
 
                         Forms\Components\Toggle::make('must_change_password')
@@ -103,7 +104,7 @@ class UserResource extends Resource
                             ->options(
                                 collect(UserRoleEnum::cases())
                                     ->take(7)
-                                    ->mapWithKeys(fn($role) => [$role->value => $role->getLabel()])
+                                    ->mapWithKeys(fn ($role) => [$role->value => $role->getLabel()])
                             )
                             ->required()
                             ->native(false),
@@ -113,7 +114,7 @@ class UserResource extends Resource
                             ->options(
                                 collect(UserStatusEnum::cases())
                                     ->take(7)
-                                    ->mapWithKeys(fn($role) => [$role->value => $role->getLabel()])
+                                    ->mapWithKeys(fn ($role) => [$role->value => $role->getLabel()])
                             )
                             ->required()
                             ->native(false),
@@ -129,7 +130,7 @@ class UserResource extends Resource
                 Tables\Columns\ImageColumn::make('avatar')
                     ->label('Avatar')
                     ->circular()
-                    ->defaultImageUrl(fn($record) => 'https://ui-avatars.com/api/?name=' . urlencode($record->name) . '&color=7F9CF5&background=EBF4FF'),
+                    ->defaultImageUrl(fn ($record) => 'https://ui-avatars.com/api/?name='.urlencode($record->name).'&color=7F9CF5&background=EBF4FF'),
 
                 Tables\Columns\TextColumn::make('name')
                     ->label('Nom')
@@ -150,8 +151,9 @@ class UserResource extends Resource
                 Tables\Columns\TextColumn::make('role')
                     ->label('Rôle')
                     ->badge()
-                    ->formatStateUsing(fn(UserRoleEnum $state) => $state->getLabel())
-                    ->color(fn(UserRoleEnum $state): string => match ($state) {
+                    ->formatStateUsing(fn (UserRoleEnum $state) => $state->getLabel())
+                    ->color(fn (UserRoleEnum $state): string => match ($state) {
+                        UserRoleEnum::ROOT => 'danger',
                         UserRoleEnum::ADMIN => 'danger',
                         UserRoleEnum::INSTRUCTOR => 'warning',
                         UserRoleEnum::STUDENT => 'success',
@@ -160,8 +162,8 @@ class UserResource extends Resource
                 Tables\Columns\TextColumn::make('status')
                     ->label('Statut')
                     ->badge()
-                    ->formatStateUsing(fn(UserStatusEnum $state) => $state->getLabel())
-                    ->color(fn(UserStatusEnum $state): string => match ($state) {
+                    ->formatStateUsing(fn (UserStatusEnum $state) => $state->getLabel())
+                    ->color(fn (UserStatusEnum $state): string => match ($state) {
                         UserStatusEnum::ACTIVE => 'success',
                         UserStatusEnum::INACTIVE => 'warning',
                         UserStatusEnum::BANNED => 'danger',
@@ -180,11 +182,11 @@ class UserResource extends Resource
 
                 Tables\Filters\Filter::make('email_verified')
                     ->label('Email vérifié')
-                    ->query(fn(Builder $query): Builder => $query->whereNotNull('email_verified_at')),
+                    ->query(fn (Builder $query): Builder => $query->whereNotNull('email_verified_at')),
 
                 Tables\Filters\Filter::make('must_change_password')
                     ->label('Doit changer le mot de passe')
-                    ->query(fn(Builder $query): Builder => $query->where('must_change_password', true)),
+                    ->query(fn (Builder $query): Builder => $query->where('must_change_password', true)),
             ])
             ->recordActions([
                 ActionGroup::make([
@@ -198,10 +200,10 @@ class UserResource extends Resource
                     DeleteAction::make()
                         ->label('Supprimer')
                         ->icon('heroicon-o-trash')
-                        ->visible(fn(User $record) => $record->role->value !== UserRoleEnum::ADMIN->value)
+                        ->visible(fn (User $record) => $record->role->value !== UserRoleEnum::ADMIN->value)
                         ->color('danger')
                         ->requiresConfirmation(),
-                ])
+                ]),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
@@ -214,7 +216,7 @@ class UserResource extends Resource
                                 $newStatus = $record->status === 'active' ? 'inactive' : 'active';
                                 $record->update(['status' => $newStatus]);
                             }
-                        })
+                        }),
                 ]),
 
             ])
@@ -247,6 +249,6 @@ class UserResource extends Resource
 
     public static function getNavigationBadge(): ?string
     {
-        return static::getModel()::count();
+        return (string) self::getModel()::count();
     }
 }

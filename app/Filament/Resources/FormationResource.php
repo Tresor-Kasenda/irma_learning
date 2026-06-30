@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Filament\Resources;
 
 use App\Enums\FormationLevelEnum;
@@ -27,7 +29,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Str;
 use UnitEnum;
 
-class FormationResource extends Resource
+final class FormationResource extends Resource
 {
     protected static ?string $model = Formation::class;
 
@@ -35,7 +37,7 @@ class FormationResource extends Resource
 
     protected static ?string $navigationLabel = 'Formations';
 
-    protected static string|UnitEnum|null $navigationGroup = 'Gestion des formations';
+    protected static string|UnitEnum|null $navigationGroup = 'Catalogue';
 
     protected static ?int $navigationSort = 1;
 
@@ -52,7 +54,7 @@ class FormationResource extends Resource
                             ->live(onBlur: true)
                             ->helperText('Le titre principal qui apparaîtra aux étudiants')
                             ->afterStateUpdated(
-                                fn(string $context, $state, Set $set) => $context === 'create' ? $set('slug', Str::slug($state)) : null
+                                fn (string $context, $state, Set $set) => $context === 'create' ? $set('slug', Str::slug($state)) : null
                             ),
 
                         Forms\Components\TextInput::make('slug')
@@ -72,7 +74,6 @@ class FormationResource extends Resource
                             ->rows(4)
                             ->columnSpanFull(),
 
-
                         Forms\Components\RichEditor::make('description')
                             ->label('Description complète')
                             ->placeholder('Une description détaillée de la formation')
@@ -86,7 +87,7 @@ class FormationResource extends Resource
                         Forms\Components\Select::make('difficulty_level')
                             ->label('Niveau de difficulté')
                             ->options(collect(FormationLevelEnum::cases())->mapWithKeys(
-                                fn(FormationLevelEnum $enum) => [$enum->value => $enum->getLabel()]
+                                fn (FormationLevelEnum $enum) => [$enum->value => $enum->getLabel()]
                             ))
                             ->required(),
 
@@ -128,9 +129,6 @@ class FormationResource extends Resource
                             ->image()
                             ->directory('formations')
                             ->imageEditor()
-                            ->imageResizeMode('cover')
-                            ->imageResizeTargetWidth(1200)
-                            ->imageResizeTargetHeight(630)
                             ->columnSpanFull(),
                     ]),
             ]);
@@ -145,30 +143,31 @@ class FormationResource extends Resource
                     ->circular()
                     ->extraImgAttributes(['loading' => 'lazy'])
                     ->size(40),
-                Tables\Columns\TextColumn::make('title')
+                TextColumn::make('title')
                     ->label('Titre')
                     ->searchable()
                     ->limit(40)
                     ->tooltip(function (TextColumn $column): ?string {
                         $state = $column->getState();
-                        if (strlen($state) <= $column->getCharacterLimit()) {
+                        if (mb_strlen($state) <= $column->getCharacterLimit()) {
                             return null;
                         }
+
                         return $state;
                     })
                     ->sortable(),
 
-                Tables\Columns\TextColumn::make('difficulty_level')
+                TextColumn::make('difficulty_level')
                     ->label('Niveau')
                     ->badge()
-                    ->color(fn(FormationLevelEnum $state): string => match ($state) {
+                    ->color(fn (FormationLevelEnum $state): string => match ($state) {
                         FormationLevelEnum::BEGINNER => 'success',
                         FormationLevelEnum::INTERMEDIATE => 'warning',
                         FormationLevelEnum::ADVANCED => 'danger',
                         default => 'gray',
                     }),
 
-                Tables\Columns\TextColumn::make('price')
+                TextColumn::make('price')
                     ->label('Prix')
                     ->money('EUR')
                     ->sortable(),
@@ -204,7 +203,7 @@ class FormationResource extends Resource
                         ->label('Supprimer')
                         ->icon('heroicon-o-trash')
                         ->requiresConfirmation(),
-                ])
+                ]),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
@@ -217,7 +216,7 @@ class FormationResource extends Resource
                         ->icon('heroicon-o-power')
                         ->action(function ($records) {
                             foreach ($records as $record) {
-                                $record->update(['is_active' => !$record->is_active]);
+                                $record->update(['is_active' => ! $record->is_active]);
                             }
                         }),
                 ]),
@@ -228,6 +227,7 @@ class FormationResource extends Resource
     public static function getRelations(): array
     {
         return [
+            RelationManagers\SectionsRelationManager::class,
             RelationManagers\StudentsRelationManager::class,
         ];
     }
@@ -250,6 +250,6 @@ class FormationResource extends Resource
 
     public static function getNavigationBadge(): ?string
     {
-        return static::getModel()::count();
+        return (string) self::getModel()::count();
     }
 }

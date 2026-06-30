@@ -4,19 +4,19 @@ declare(strict_types=1);
 
 use App\Enums\EnrollmentPaymentEnum;
 use App\Enums\EnrollmentStatusEnum;
-use App\Http\Controllers\Dashboard\DashboardPageController;
-use App\Http\Controllers\Dashboard\Formations\StudentCertificationController;
-use App\Http\Controllers\Dashboard\Formations\StudentFormationController;
-use App\Http\Controllers\Dashboard\Formations\StudentLearningController;
-use App\Http\Controllers\Dashboard\Learnings\StudentLearningPlayController;
-use App\Http\Controllers\EnrollmentController;
-use App\Http\Controllers\ExamController;
 use App\Http\Controllers\Frontends\DetailFormationController;
 use App\Http\Controllers\Frontends\FormationAccessController;
 use App\Http\Controllers\Frontends\FormationsController;
 use App\Http\Controllers\Frontends\HomePageController;
-use App\Http\Controllers\Frontends\PaymentController;
-use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\Student\DashboardPageController;
+use App\Http\Controllers\Student\EnrollmentController;
+use App\Http\Controllers\Student\ExamController;
+use App\Http\Controllers\Student\Formations\StudentCertificationController;
+use App\Http\Controllers\Student\Formations\StudentFormationController;
+use App\Http\Controllers\Student\Formations\StudentLearningController;
+use App\Http\Controllers\Student\Learnings\StudentLearningPlayController;
+use App\Http\Controllers\Student\PaymentController;
+use App\Http\Controllers\Student\ProfileController;
 use App\Models\Formation;
 use Illuminate\Support\Facades\Route;
 
@@ -96,3 +96,4 @@ Route::middleware('auth')->group(function () {
 });
 
 require __DIR__.'/auth.php';
+require __DIR__.'/admin.php';

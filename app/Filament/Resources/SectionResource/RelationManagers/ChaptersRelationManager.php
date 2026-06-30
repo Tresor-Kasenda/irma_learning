@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App\Filament\Resources\SectionResource\RelationManagers;
 
 use App\Enums\ChapterTypeEnum;
-use App\Filament\Resources\ChapterResource;
 use App\Models\Chapter;
 use App\Services\ChapterPdfExtractionService;
 use Exception;
@@ -15,11 +14,11 @@ use Filament\Forms\Components\RichEditor;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
-use Filament\Schemas\Schema;
 use Filament\Forms\Get;
 use Filament\Forms\Set;
 use Filament\Notifications\Notification;
 use Filament\Resources\RelationManagers\RelationManager;
+use Filament\Schemas\Schema;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Collection;
@@ -64,8 +63,8 @@ final class ChaptersRelationManager extends RelationManager
                             ->visibility('public')
                             ->preserveFilenames()
                             ->acceptedFileTypes(['video/*'])
-                            ->visible(fn(Get $get) => $get('content_type') === 'video')
-                            ->required(fn(Get $get) => $get('content_type') === 'video'),
+                            ->visible(fn (Get $get) => $get('content_type') === 'video')
+                            ->required(fn (Get $get) => $get('content_type') === 'video'),
 
                         FileUpload::make('media_url')
                             ->label('Fichier de contenu')
@@ -79,11 +78,11 @@ final class ChaptersRelationManager extends RelationManager
                             ])
                             ->maxSize(50 * 1024)
                             ->helperText('Uploadez un PDF pour extraction automatique du contenu.')
-                            ->visible(fn(Get $get) => $get('content_type') === 'pdf')
-                            ->required(fn(Get $get) => $get('content_type') === 'pdf')
+                            ->visible(fn (Get $get) => $get('content_type') === 'pdf')
+                            ->required(fn (Get $get) => $get('content_type') === 'pdf')
                             ->live()
                             ->afterStateUpdated(function ($state, Set $set) {
-                                if (!$state) {
+                                if (! $state) {
                                     return;
                                 }
 
@@ -96,14 +95,14 @@ final class ChaptersRelationManager extends RelationManager
 
                                     Notification::make()
                                         ->title('Erreur')
-                                        ->body('Impossible d\'extraire le PDF : ' . $e->getMessage())
+                                        ->body('Impossible d\'extraire le PDF : '.$e->getMessage())
                                         ->danger()
                                         ->send();
                                 }
                             })
                             ->afterStateHydrated(function ($component, $state) {
                                 if ($state && $component->getContainer()->getOperation() === 'edit') {
-                                    if (!Storage::disk('public')->exists($state[0])) {
+                                    if (! Storage::disk('public')->exists($state[0])) {
                                         Notification::make()
                                             ->title('Fichier manquant')
                                             ->body('Le fichier PDF original est introuvable.')
@@ -167,7 +166,7 @@ final class ChaptersRelationManager extends RelationManager
                 Tables\Columns\TextColumn::make('content_type')
                     ->label('Type')
                     ->badge()
-                    ->color(fn($state) => match ($state) {
+                    ->color(fn ($state) => match ($state) {
                         ChapterTypeEnum::VIDEO => 'info',
                         ChapterTypeEnum::TEXT => 'success',
                         ChapterTypeEnum::PDF => 'warning',
@@ -227,7 +226,7 @@ final class ChaptersRelationManager extends RelationManager
                     ->slideOver()
                     ->mutateFormDataUsing(function (array $data): array {
                         // Extraire le contenu du PDF si c'est un PDF
-                        if (($data['content_type'] ?? 'text') === 'pdf' && !empty($data['media_url'])) {
+                        if (($data['content_type'] ?? 'text') === 'pdf' && ! empty($data['media_url'])) {
                             try {
                                 $pdfFile = $data['media_url'];
                                 $extractionService = app(ChapterPdfExtractionService::class);
@@ -251,7 +250,7 @@ final class ChaptersRelationManager extends RelationManager
                             } catch (Exception $e) {
                                 Notification::make()
                                     ->title('Avertissement')
-                                    ->body('PDF uploadé mais extraction échouée: ' . $e->getMessage())
+                                    ->body('PDF uploadé mais extraction échouée: '.$e->getMessage())
                                     ->warning()
                                     ->send();
                             }
@@ -262,10 +261,6 @@ final class ChaptersRelationManager extends RelationManager
             ])
             ->actions([
                 \Filament\Actions\ActionGroup::make([
-                    \Filament\Actions\ViewAction::make()
-                        ->url(fn(Chapter $record): string => ChapterResource::getUrl('view', ['record' => $record]))
-                        ->label('Voir')
-                        ->icon('heroicon-o-eye'),
                     \Filament\Actions\EditAction::make()
                         ->label('Modifier')
                         ->slideOver(),
@@ -273,22 +268,13 @@ final class ChaptersRelationManager extends RelationManager
                         ->label('Supprimer')
                         ->requiresConfirmation(),
 
-                    \Filament\Actions\Action::make('preview')
-                        ->label('Aperçu')
-                        ->icon('heroicon-o-eye')
-                        ->color('info')
-                        ->slideOver()
-                        ->modalContent(fn(Chapter $record) => view('filament.resources.chapter.preview', ['chapter' => $record]))
-                        ->modalWidth('xl'),
-
                     \Filament\Actions\Action::make('duplicate')
                         ->label('Dupliquer')
                         ->icon('heroicon-o-document-duplicate')
                         ->color('warning')
                         ->action(function (Chapter $record) {
                             $newChapter = $record->replicate();
-                            $newChapter->title = $record->title . ' (Copie)';
-                            // order_position sera calculé automatiquement par le modèle
+                            $newChapter->title = $record->title.' (Copie)';
                             $newChapter->save();
 
                             $this->mountedTableActionRecord = $newChapter->getKey();
@@ -303,22 +289,22 @@ final class ChaptersRelationManager extends RelationManager
                         ->label('Activer')
                         ->icon('heroicon-o-check-circle')
                         ->color('success')
-                        ->action(fn(Collection $records) => $records->each->update(['is_active' => true])),
+                        ->action(fn (Collection $records) => $records->each->update(['is_active' => true])),
                     \Filament\Actions\BulkAction::make('deactivate')
                         ->label('Désactiver')
                         ->icon('heroicon-o-x-circle')
                         ->color('danger')
-                        ->action(fn(Collection $records) => $records->each->update(['is_active' => false])),
+                        ->action(fn (Collection $records) => $records->each->update(['is_active' => false])),
                     \Filament\Actions\BulkAction::make('make_free')
                         ->label('Rendre gratuit')
                         ->icon('heroicon-o-gift')
                         ->color('success')
-                        ->action(fn(Collection $records) => $records->each->update(['is_free' => true])),
+                        ->action(fn (Collection $records) => $records->each->update(['is_free' => true])),
                     \Filament\Actions\BulkAction::make('make_paid')
                         ->label('Rendre payant')
                         ->icon('heroicon-o-lock-closed')
                         ->color('warning')
-                        ->action(fn(Collection $records) => $records->each->update(['is_free' => false])),
+                        ->action(fn (Collection $records) => $records->each->update(['is_free' => false])),
                 ]),
             ])
             ->defaultSort('order_position')

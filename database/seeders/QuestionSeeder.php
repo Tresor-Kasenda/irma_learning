@@ -156,7 +156,7 @@ final class QuestionSeeder extends Seeder
         Question::query()->create([
             'exam_id' => 2,
             'question_text' => 'Décrivez les étapes pour créer une campagne Google Ads performante.',
-            'question_type' => 'essay',
+            'question_type' => 'single_choice',
             'points' => 25,
             'order_position' => 5,
             'explanation' => 'Définir les objectifs, choisir les mots-clés, créer des annonces, définir le budget, cibler l\'audience, et analyser les performances.',
@@ -176,7 +176,7 @@ final class QuestionSeeder extends Seeder
         Question::query()->create([
             'exam_id' => 2,
             'question_text' => 'Citez trois outils de gestion des réseaux sociaux.',
-            'question_type' => 'text',
+            'question_type' => 'single_choice',
             'points' => 10,
             'order_position' => 7,
             'explanation' => 'Hootsuite, Buffer, Later, Sprout Social, et HubSpot sont des outils populaires.',
@@ -237,7 +237,7 @@ final class QuestionSeeder extends Seeder
         Question::query()->create([
             'exam_id' => 3,
             'question_text' => 'Expliquez la différence entre le surapprentissage (overfitting) et le sous-apprentissage (underfitting).',
-            'question_type' => 'essay',
+            'question_type' => 'single_choice',
             'points' => 20,
             'order_position' => 5,
             'explanation' => 'Overfitting : le modèle apprend trop bien les données d\'entraînement mais généralise mal. Underfitting : le modèle est trop simple et ne capture pas les patterns.',
@@ -267,7 +267,7 @@ final class QuestionSeeder extends Seeder
         Question::query()->create([
             'exam_id' => 3,
             'question_text' => 'Citez deux algorithmes de clustering.',
-            'question_type' => 'text',
+            'question_type' => 'single_choice',
             'points' => 10,
             'order_position' => 8,
             'explanation' => 'K-Means, DBSCAN, Clustering hiérarchique, et Gaussian Mixture Models sont des algorithmes de clustering courants.',
@@ -287,7 +287,7 @@ final class QuestionSeeder extends Seeder
         Question::query()->create([
             'exam_id' => 3,
             'question_text' => 'Qu\'est-ce que le théorème de Bayes et à quoi sert-il en ML ?',
-            'question_type' => 'essay',
+            'question_type' => 'single_choice',
             'points' => 20,
             'order_position' => 10,
             'explanation' => 'Le théorème de Bayes décrit la probabilité conditionnelle. Il est utilisé dans les classifieurs naïfs de Bayes pour la classification.',

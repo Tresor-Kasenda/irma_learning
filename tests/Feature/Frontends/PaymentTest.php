@@ -24,7 +24,7 @@ test('the payment page renders with the formation summary', function () {
         ->get(route('student.payment.create', $formation->id))
         ->assertSuccessful()
         ->assertInertia(fn (Assert $page) => $page
-            ->component('Frontends/Payment')
+            ->component('Student/Payment')
             ->where('formation.id', $formation->id)
             ->where('formation.title', 'DevOps')
             ->where('formation.price', '75.00')

@@ -42,7 +42,7 @@ test('page exposes the in-progress inertia contract with stats', function () {
         ->get(route('student.progress'))
         ->assertSuccessful()
         ->assertInertia(fn (Assert $page) => $page
-            ->component('Dashboard/Formations/Learnings/Index')
+            ->component('Student/Formations/Learnings/Index')
             ->where('filters.sort', 'recent')
             ->where('stats.inProgress', 2)
             ->where('stats.completed', 1)

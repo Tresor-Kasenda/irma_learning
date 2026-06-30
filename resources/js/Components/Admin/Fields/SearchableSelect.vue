@@ -1,0 +1,205 @@
+<script lang="ts" setup>
+import {computed, onBeforeUnmount, onMounted, ref} from 'vue';
+import FieldWrapper from '@/Components/Admin/Fields/FieldWrapper.vue';
+
+type OptionValue = string | number;
+
+interface Option {
+    value: OptionValue;
+    label: string;
+}
+
+const props = withDefaults(
+    defineProps<{
+        modelValue: OptionValue | OptionValue[] | null;
+        label: string;
+        options?: Option[];
+        multiple?: boolean;
+        searchable?: boolean;
+        clearable?: boolean;
+        taggable?: boolean;
+        placeholder?: string;
+        error?: string;
+        hint?: string;
+        required?: boolean;
+    }>(),
+    {
+        options: () => [],
+        multiple: false,
+        searchable: true,
+        clearable: true,
+        taggable: false,
+        placeholder: 'Sélectionner…',
+    },
+);
+
+const emit = defineEmits<{ (e: 'update:modelValue', value: OptionValue | OptionValue[] | null): void }>();
+
+const root = ref<HTMLElement | null>(null);
+const open = ref(false);
+const search = ref('');
+
+const selectedValues = computed<OptionValue[]>(() => {
+    if (props.multiple) {
+        return (props.modelValue as OptionValue[] | null) ?? [];
+    }
+
+    return props.modelValue == null ? [] : [props.modelValue as OptionValue];
+});
+
+function labelFor(value: OptionValue): string {
+    return props.options.find((option) => option.value === value)?.label ?? String(value);
+}
+
+const singleLabel = computed(() => (selectedValues.value.length > 0 ? labelFor(selectedValues.value[0]) : ''));
+
+const filteredOptions = computed<Option[]>(() => {
+    const term = search.value.trim().toLowerCase();
+
+    return props.options.filter((option) => {
+        if (props.multiple && selectedValues.value.includes(option.value)) {
+            return false;
+        }
+
+        return term === '' || option.label.toLowerCase().includes(term);
+    });
+});
+
+const canAddTag = computed(() => {
+    if (!props.taggable) {
+        return false;
+    }
+    const term = search.value.trim();
+    if (term === '') {
+        return false;
+    }
+    const exists = props.options.some((option) => option.label.toLowerCase() === term.toLowerCase());
+
+    return ! exists && ! selectedValues.value.some((value) => String(value).toLowerCase() === term.toLowerCase());
+});
+
+function pick(value: OptionValue): void {
+    if (props.multiple) {
+        emit('update:modelValue', [...selectedValues.value, value]);
+        search.value = '';
+    } else {
+        emit('update:modelValue', value);
+        open.value = false;
+    }
+}
+
+function addTag(): void {
+    pick(search.value.trim());
+    search.value = '';
+}
+
+function remove(value: OptionValue): void {
+    if (props.multiple) {
+        emit('update:modelValue', selectedValues.value.filter((current) => current !== value));
+    } else {
+        emit('update:modelValue', null);
+    }
+}
+
+function clearAll(): void {
+    emit('update:modelValue', props.multiple ? [] : null);
+}
+
+function toggle(): void {
+    open.value = !open.value;
+    if (open.value) {
+        search.value = '';
+    }
+}
+
+function onClickOutside(event: MouseEvent): void {
+    if (root.value && !root.value.contains(event.target as Node)) {
+        open.value = false;
+    }
+}
+
+onMounted(() => document.addEventListener('mousedown', onClickOutside));
+onBeforeUnmount(() => document.removeEventListener('mousedown', onClickOutside));
+</script>
+
+<template>
+    <FieldWrapper :error="error" :hint="hint" :label="label" :required="required">
+        <div ref="root" class="relative">
+            <div
+                :class="open ? 'border-[#bf045b]' : 'border-slate-200'"
+                class="flex min-h-10 w-full cursor-pointer items-center gap-1.5 rounded-lg border bg-white px-2.5 py-1.5 text-sm"
+                @click="toggle"
+            >
+                <!-- Multiple: chips -->
+                <template v-if="multiple && selectedValues.length > 0">
+                    <span
+                        v-for="value in selectedValues"
+                        :key="value"
+                        class="inline-flex items-center gap-1 rounded-md bg-[#bf045b]/10 py-0.5 pl-2 pr-1 text-xs font-medium text-[#bf045b]"
+                    >
+                        {{ labelFor(value) }}
+                        <button class="grid size-4 place-items-center rounded hover:bg-[#bf045b]/20" type="button" @click.stop="remove(value)">
+                            <svg class="size-3" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18" stroke-linecap="round"/></svg>
+                        </button>
+                    </span>
+                </template>
+
+                <!-- Single: label -->
+                <span v-else-if="!multiple && singleLabel" class="flex-1 truncate text-slate-700">{{ singleLabel }}</span>
+
+                <!-- Placeholder -->
+                <span v-else class="flex-1 truncate text-slate-400">{{ placeholder }}</span>
+
+                <span class="ml-auto flex items-center gap-1">
+                    <button
+                        v-if="clearable && selectedValues.length > 0"
+                        class="grid size-5 place-items-center rounded text-slate-400 hover:text-red-500"
+                        type="button"
+                        @click.stop="clearAll"
+                    >
+                        <svg class="size-3.5" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18" stroke-linecap="round"/></svg>
+                    </button>
+                    <svg :class="open ? 'rotate-180' : ''" class="size-4 text-slate-400 transition" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </span>
+            </div>
+
+            <div v-if="open" class="absolute z-50 mt-1 w-full overflow-hidden rounded-lg border border-slate-200 bg-white shadow-lg">
+                <div v-if="searchable" class="border-b border-slate-100 p-2">
+                    <input
+                        v-model="search"
+                        :placeholder="taggable ? 'Rechercher ou ajouter…' : 'Rechercher…'"
+                        class="h-8 w-full rounded-md border border-slate-200 px-2.5 text-sm outline-none focus:border-[#bf045b]"
+                        type="text"
+                        @keydown.enter.prevent="canAddTag && addTag()"
+                        @click.stop
+                    />
+                </div>
+                <ul class="max-h-56 overflow-y-auto py-1">
+                    <li
+                        v-for="option in filteredOptions"
+                        :key="option.value"
+                        :class="selectedValues.includes(option.value) ? 'bg-[#bf045b]/5 text-[#bf045b]' : 'text-slate-700 hover:bg-slate-100'"
+                        class="flex cursor-pointer items-center justify-between px-3 py-2 text-sm"
+                        @click="pick(option.value)"
+                    >
+                        {{ option.label }}
+                        <svg v-if="selectedValues.includes(option.value)" class="size-4" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    </li>
+
+                    <li
+                        v-if="canAddTag"
+                        class="flex cursor-pointer items-center gap-2 px-3 py-2 text-sm text-[#bf045b] hover:bg-[#bf045b]/5"
+                        @click="addTag"
+                    >
+                        <svg class="size-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" stroke-linecap="round"/></svg>
+                        Ajouter « {{ search.trim() }} »
+                    </li>
+
+                    <li v-if="filteredOptions.length === 0 && !canAddTag" class="px-3 py-3 text-center text-sm text-slate-400">
+                        Aucun résultat
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </FieldWrapper>
+</template>

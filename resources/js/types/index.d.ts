@@ -7,10 +7,17 @@ export interface User {
     avatar_url?: string;
 }
 
+export interface FlashMessages {
+    success?: string | null;
+    error?: string | null;
+    info?: string | null;
+}
+
 export type PageProps<
     T extends Record<string, unknown> = Record<string, unknown>,
 > = T & {
     auth: {
         user: User;
     };
+    flash?: FlashMessages;
 };

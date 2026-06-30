@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Http\Middleware\CheckUserStatus;
+use App\Http\Middleware\EnsureUserIsAdmin;
 use App\Http\Middleware\ForcePasswordChange;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -28,6 +29,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'force.password.change' => ForcePasswordChange::class,
             'check.status' => CheckUserStatus::class,
+            'admin.access' => EnsureUserIsAdmin::class,
         ]);
 
         $middleware->appendToGroup('web', WebRequestMonitoring::class)

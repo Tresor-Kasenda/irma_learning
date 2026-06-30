@@ -40,7 +40,7 @@ final class ExamResource extends Resource
             ->schema([
                 \Filament\Schemas\Components\Section::make('Association')
                     ->schema([
-                        Forms\Components\Select::make('examable_type')
+                        Forms\Components\ToggleButtons::make('examable_type')
                             ->label('Type d\'élément')
                             ->options([
                                 Formation::class => 'Formation',
@@ -49,32 +49,24 @@ final class ExamResource extends Resource
                             ->default(Section::class)
                             ->required()
                             ->live()
-                            ->afterStateUpdated(fn (Set $set) => $set('examable_id', null)),
-
-                        Forms\Components\Select::make('formation_id')
-                            ->label('Formation')
-                            ->options(fn () => Formation::pluck('title', 'id')->toArray())
-                            ->searchable()
-                            ->preload()
-                            ->required()
-                            ->live()
-                            ->visible(fn (Get $get) => ! empty($get('examable_type')))
+                            ->grouped()
                             ->afterStateUpdated(fn (Set $set) => $set('examable_id', null)),
 
                         Forms\Components\Select::make('examable_id')
-                            ->label(fn (Get $get) => $get('examable_type') === Formation::class ? 'Formation' : 'Section')
-                            ->helperText('Pour une section, l\'étudiant doit terminer tous ses chapitres avant de pouvoir passer l\'examen.')
+                            ->label('Élément associé')
+                            ->helperText(fn (Get $get) => $get('examable_type') === Section::class
+                                ? 'Pour une section, l\'étudiant doit terminer tous ses chapitres avant de pouvoir passer l\'examen.'
+                                : null)
                             ->options(fn (Get $get) => match ($get('examable_type')) {
-                                Formation::class => [$get('formation_id') => Formation::find($get('formation_id'))?->title ?? ''],
-                                Section::class => Section::where('formation_id', $get('formation_id'))
-                                    ->pluck('title', 'id')
-                                    ->toArray(),
+                                Formation::class => Formation::pluck('title', 'id'),
+                                Section::class => Section::with('formation')->get()->mapWithKeys(
+                                    fn (Section $s) => [$s->id => "{$s->title} — {$s->formation->title}"]
+                                ),
                                 default => [],
                             })
                             ->searchable()
                             ->preload()
-                            ->required()
-                            ->hidden(fn (Get $get) => empty($get('formation_id')) || empty($get('examable_type'))),
+                            ->required(),
                     ])
                     ->columns(2),
 
@@ -254,7 +246,7 @@ final class ExamResource extends Resource
                 Tables\Filters\TernaryFilter::make('show_results_immediately')
                     ->label('Résultats immédiats'),
             ])
-            ->actions([
+            ->recordActions([
                 \Filament\Actions\ActionGroup::make([
                     \Filament\Actions\ViewAction::make()
                         ->label('Voir')
@@ -268,7 +260,7 @@ final class ExamResource extends Resource
                         ->requiresConfirmation(),
                 ]),
             ])
-            ->bulkActions([
+            ->toolbarActions([
                 \Filament\Actions\BulkActionGroup::make([
                     \Filament\Actions\DeleteBulkAction::make()
                         ->label('Supprimer')
@@ -302,6 +294,7 @@ final class ExamResource extends Resource
     {
         return [
             RelationManagers\QuestionsRelationManager::class,
+            RelationManagers\AttemptsRelationManager::class,
         ];
     }
 

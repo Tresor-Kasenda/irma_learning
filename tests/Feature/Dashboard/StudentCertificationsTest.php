@@ -27,7 +27,7 @@ test('it lists the active certificates of the authenticated learner', function (
         ->get(route('certificats'))
         ->assertSuccessful()
         ->assertInertia(fn (Assert $page) => $page
-            ->component('Dashboard/Formations/Certifications/Index')
+            ->component('Student/Formations/Certifications/Index')
             ->has('certificates', 1)
             ->where('certificates.0.id', $certificate->id)
             ->where('certificates.0.formation.title', 'Cybersécurité')
@@ -56,7 +56,7 @@ test('the certificate page is restricted to its owner', function () {
         ->get(route('certificats.show', $certificate))
         ->assertSuccessful()
         ->assertInertia(fn (Assert $page) => $page
-            ->component('Dashboard/Formations/Certifications/Show')
+            ->component('Student/Formations/Certifications/Show')
             ->where('certificate.id', $certificate->id)
             ->etc());
 });

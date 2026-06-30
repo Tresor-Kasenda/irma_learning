@@ -198,7 +198,7 @@ test('the player exposes section locking state', function () {
         ->get(route('course.player', $formation->id))
         ->assertSuccessful()
         ->assertInertia(fn (Assert $page) => $page
-            ->component('Dashboard/Learnings/StudentLearningPlay')
+            ->component('Student/Learnings/StudentLearningPlay')
             ->where('sections.0.unlocked', true)
             ->where('sections.1.unlocked', false)
             ->etc());
