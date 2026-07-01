@@ -1,6 +1,9 @@
 <script lang="ts" setup>
 import {router} from '@inertiajs/vue3';
-import {ref} from 'vue';
+import {TriangleAlert, X} from '@lucide/vue';
+import {ref, useAttrs} from 'vue';
+
+defineOptions({inheritAttrs: false});
 
 const props = withDefaults(
     defineProps<{
@@ -24,6 +27,7 @@ const props = withDefaults(
 
 const open = ref(false);
 const processing = ref(false);
+const attrs = useAttrs();
 
 function confirm(): void {
     processing.value = true;
@@ -39,28 +43,34 @@ function confirm(): void {
 </script>
 
 <template>
-    <button type="button" @click="open = true">
+    <button v-bind="attrs" type="button" @click="open = true">
         <slot/>
     </button>
 
     <Teleport to="body">
-        <div v-if="open" class="fixed inset-0 z-[60] flex items-center justify-center p-4">
-            <div class="absolute inset-0 bg-slate-900/50" @click="open = false"/>
-            <div class="relative w-full max-w-md rounded-xl border border-slate-200 bg-white p-6 shadow-xl">
-                <h3 class="text-base font-semibold text-slate-900">{{ title }}</h3>
-                <p class="mt-2 text-sm text-slate-500">{{ message }}</p>
+        <div v-if="open" class="fixed inset-0 z-[60] flex items-center justify-center p-4" role="dialog" aria-modal="true">
+            <button aria-label="Fermer la confirmation" class="absolute inset-0 bg-black/70" type="button" @click="open = false"/>
+            <div class="admin-panel relative w-full max-w-md border p-6 shadow-2xl shadow-black/30">
+                <button aria-label="Fermer" class="admin-muted admin-hover absolute right-4 top-4 grid size-8 place-items-center" type="button" @click="open = false">
+                    <X class="size-4"/>
+                </button>
+                <span :class="danger ? 'bg-rose-400/10 text-rose-300' : 'bg-amber-400/10 text-amber-300'" class="grid size-10 place-items-center">
+                    <TriangleAlert class="size-5" :stroke-width="1.7"/>
+                </span>
+                <h3 class="admin-heading mt-4 text-base font-semibold">{{ title }}</h3>
+                <p class="admin-muted mt-2 text-sm leading-6">{{ message }}</p>
                 <div class="mt-6 flex justify-end gap-2">
                     <button
-                        class="h-9 rounded-lg border border-slate-200 px-4 text-sm font-medium text-slate-600 hover:bg-slate-100"
+                        class="admin-divider admin-text admin-hover h-10 border px-4 text-sm font-medium transition"
                         type="button"
                         @click="open = false"
                     >
                         Annuler
                     </button>
                     <button
-                        :class="danger ? 'bg-red-600 hover:bg-red-500' : 'bg-[#bf045b] hover:opacity-90'"
+                        :class="danger ? 'bg-rose-600 hover:bg-rose-500' : 'bg-[#a23362] hover:bg-[#b2386e]'"
                         :disabled="processing"
-                        class="h-9 rounded-lg px-4 text-sm font-semibold text-white transition disabled:opacity-60"
+                        class="h-10 px-4 text-sm font-semibold text-white transition disabled:opacity-60"
                         type="button"
                         @click="confirm"
                     >

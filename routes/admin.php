@@ -25,8 +25,9 @@ Route::middleware(['auth', 'admin.access'])
         Route::get('formations', [FormationController::class, 'index'])->name('formations.index');
         Route::get('formations/create', [FormationController::class, 'create'])->name('formations.create');
         Route::post('formations', [FormationController::class, 'store'])->name('formations.store');
-        Route::get('formations/{formation}/edit', [FormationController::class, 'edit'])->name('formations.edit');
-        Route::post('formations/{formation}', [FormationController::class, 'update'])->name('formations.update');
-        Route::delete('formations/{formation}', [FormationController::class, 'destroy'])->name('formations.destroy');
-        Route::patch('formations/{formation}/toggle-active', [FormationController::class, 'toggleActive'])->name('formations.toggle-active');
+        Route::get('formations/{formation:id}', [FormationController::class, 'show'])->name('formations.show');
+        Route::get('formations/{formation:id}/edit', [FormationController::class, 'edit'])->name('formations.edit');
+        Route::post('formations/{formation:id}', [FormationController::class, 'update'])->name('formations.update');
+        Route::delete('formations/{formation:id}', [FormationController::class, 'destroy'])->name('formations.destroy');
+        Route::patch('formations/{formation:id}/toggle-active', [FormationController::class, 'toggleActive'])->name('formations.toggle-active');
     });

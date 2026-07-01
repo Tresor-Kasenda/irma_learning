@@ -1,19 +1,20 @@
 <script lang="ts" setup>
 defineProps<{
-    label: string;
+    label?: string;
     error?: string;
     hint?: string;
     required?: boolean;
+    forId?: string;
 }>();
 </script>
 
 <template>
     <div>
-        <label class="mb-1 block text-sm font-medium text-slate-700">
-            {{ label }}<span v-if="required" class="text-[#bf045b]"> *</span>
+        <label v-if="label" :for="forId" class="admin-muted mb-2 block text-xs font-semibold uppercase tracking-[0.08em]">
+            {{ label }}<span v-if="required" class="text-[#ef477d]"> *</span>
         </label>
         <slot/>
-        <p v-if="error" class="mt-1 text-xs text-red-600">{{ error }}</p>
-        <p v-else-if="hint" class="mt-1 text-xs text-slate-400">{{ hint }}</p>
+        <p v-if="error" class="mt-1.5 text-xs text-rose-400">{{ error }}</p>
+        <p v-else-if="hint" class="admin-muted mt-1.5 text-xs leading-5">{{ hint }}</p>
     </div>
 </template>

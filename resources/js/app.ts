@@ -6,8 +6,10 @@ import {createPinia} from 'pinia';
 import {createApp, DefineComponent, h} from 'vue';
 import {ZiggyVue} from '../../vendor/tightenco/ziggy';
 import confetti from 'canvas-confetti';
+import {initializeUiTheme} from '@/stores/ui';
 
 window.confetti = confetti;
+initializeUiTheme();
 
 const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
 

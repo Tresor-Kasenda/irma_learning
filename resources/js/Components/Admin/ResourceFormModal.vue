@@ -1,4 +1,6 @@
 <script lang="ts" setup>
+import {X} from '@lucide/vue';
+
 withDefaults(
     defineProps<{
         show: boolean;
@@ -21,23 +23,22 @@ const emit = defineEmits<{ (e: 'close'): void; (e: 'submit'): void }>();
     <Teleport to="body">
         <div v-if="show" :class="slideOver ? 'justify-end' : 'items-center justify-center p-4'"
              class="fixed inset-0 z-60 flex">
-            <div class="absolute inset-0 bg-slate-900/50" @click="emit('close')"/>
+            <button aria-label="Fermer le formulaire" class="absolute inset-0 bg-black/70" type="button" @click="emit('close')"/>
 
             <form
-                :class="slideOver ? 'h-full w-full max-w-xl' : 'w-full max-w-2xl rounded-xl'"
-                class="relative flex flex-col overflow-hidden border border-slate-200 bg-white shadow-xl"
+                :class="slideOver ? 'h-full w-full max-w-xl' : 'w-full max-w-2xl'"
+                class="admin-panel admin-text relative flex flex-col overflow-hidden border shadow-2xl shadow-black/30"
                 @submit.prevent="emit('submit')"
             >
-                <div class="flex items-center justify-between border-b border-slate-200 px-6 py-4">
-                    <h2 class="text-base font-semibold text-slate-900">{{ title }}</h2>
+                <div class="admin-divider flex items-center justify-between border-b px-6 py-4">
+                    <h2 class="admin-heading text-base font-semibold">{{ title }}</h2>
                     <button
-                        class="grid size-8 place-items-center rounded-lg text-slate-400 hover:bg-slate-100 hover:text-slate-600"
+                        aria-label="Fermer"
+                        class="admin-muted admin-hover grid size-8 place-items-center transition"
                         type="button"
                         @click="emit('close')"
                     >
-                        <svg class="size-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                            <path d="M6 6l12 12M18 6L6 18" stroke-linecap="round"/>
-                        </svg>
+                        <X class="size-5"/>
                     </button>
                 </div>
 
@@ -45,9 +46,9 @@ const emit = defineEmits<{ (e: 'close'): void; (e: 'submit'): void }>();
                     <slot/>
                 </div>
 
-                <div class="flex justify-end gap-2 border-t border-slate-200 px-6 py-4">
+                <div class="admin-divider flex justify-end gap-2 border-t px-6 py-4">
                     <button
-                        class="h-10 rounded-lg border border-slate-200 px-4 text-sm font-medium text-slate-600 hover:bg-slate-100"
+                        class="admin-divider admin-text admin-hover h-10 border px-4 text-sm font-medium transition"
                         type="button"
                         @click="emit('close')"
                     >
@@ -55,7 +56,7 @@ const emit = defineEmits<{ (e: 'close'): void; (e: 'submit'): void }>();
                     </button>
                     <button
                         :disabled="processing"
-                        class="h-10 rounded-lg bg-[#bf045b] px-5 text-sm font-semibold text-white transition hover:opacity-90 disabled:opacity-60"
+                        class="h-10 bg-[#a23362] px-5 text-sm font-semibold text-white transition hover:bg-[#b2386e] disabled:opacity-60"
                         type="submit"
                     >
                         {{ processing ? 'Enregistrement…' : submitLabel }}

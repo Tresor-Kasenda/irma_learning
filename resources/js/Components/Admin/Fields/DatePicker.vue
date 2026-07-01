@@ -1,4 +1,5 @@
 <script lang="ts" setup>
+import {CalendarDays, ChevronLeft, ChevronRight, X} from '@lucide/vue';
 import {computed, onBeforeUnmount, onMounted, ref} from 'vue';
 import FieldWrapper from '@/Components/Admin/Fields/FieldWrapper.vue';
 
@@ -116,47 +117,49 @@ onBeforeUnmount(() => document.removeEventListener('mousedown', onClickOutside))
 <template>
     <FieldWrapper :error="error" :hint="hint" :label="label" :required="required">
         <div ref="root" class="relative">
-            <button
-                :class="open ? 'border-[#bf045b]' : 'border-slate-200'"
-                class="flex h-10 w-full items-center justify-between rounded-lg border bg-white px-3 text-left text-sm outline-none"
-                type="button"
+            <div
+                :aria-expanded="open"
+                aria-haspopup="dialog"
+                :class="open ? 'border-[#c23a72]' : ''"
+                class="admin-field flex h-11 w-full cursor-pointer items-center justify-between border px-3 text-left text-sm outline-none transition"
+                role="button"
+                tabindex="0"
                 @click="toggle"
+                @keydown.enter.prevent="toggle"
+                @keydown.escape="open = false"
+                @keydown.space.prevent="toggle"
             >
-                <span :class="displayValue ? 'text-slate-700' : 'text-slate-400'">
+                <span :class="displayValue ? 'admin-heading' : 'admin-muted'">
                     {{ displayValue || placeholder }}
                 </span>
-                <span class="flex items-center gap-1">
-                    <span
-                        v-if="clearable && modelValue"
-                        class="grid size-5 place-items-center rounded text-slate-400 hover:text-red-500"
-                        role="button"
-                        @click.stop="clear"
-                    >
-                        <svg class="size-3.5" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
-                            <path d="M6 6l12 12M18 6L6 18" stroke-linecap="round"/>
-                        </svg>
-                    </span>
-                    <svg class="size-4 text-slate-400" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24">
-                        <path d="M8 2v3M16 2v3M3 8h18M5 5h14a1 1 0 011 1v14a1 1 0 01-1 1H5a1 1 0 01-1-1V6a1 1 0 011-1z" stroke-linecap="round"/>
-                    </svg>
-                </span>
+                <CalendarDays class="size-4 text-slate-500" :stroke-width="1.7"/>
+            </div>
+
+            <button
+                v-if="clearable && modelValue"
+                aria-label="Effacer la date"
+                class="absolute right-9 top-1/2 grid size-5 -translate-y-1/2 place-items-center text-slate-500 hover:text-rose-400"
+                type="button"
+                @click="clear"
+            >
+                <X class="size-3.5" :stroke-width="2.2"/>
             </button>
 
             <div
                 v-if="open"
-                class="absolute z-50 mt-1 w-72 rounded-lg border border-slate-200 bg-white p-3 shadow-lg"
+                class="admin-panel absolute z-50 mt-1 w-72 border p-3 shadow-2xl shadow-black/20"
             >
                 <div class="mb-2 flex items-center justify-between">
-                    <button class="grid size-7 place-items-center rounded-md text-slate-500 hover:bg-slate-100" type="button" @click="prevMonth">
-                        <svg class="size-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M15 19l-7-7 7-7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    <button aria-label="Mois précédent" class="admin-muted admin-hover grid size-7 place-items-center" type="button" @click="prevMonth">
+                        <ChevronLeft class="size-4"/>
                     </button>
-                    <span class="text-sm font-semibold text-slate-700">{{ months[view.getMonth()] }} {{ view.getFullYear() }}</span>
-                    <button class="grid size-7 place-items-center rounded-md text-slate-500 hover:bg-slate-100" type="button" @click="nextMonth">
-                        <svg class="size-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    <span class="admin-heading text-sm font-semibold">{{ months[view.getMonth()] }} {{ view.getFullYear() }}</span>
+                    <button aria-label="Mois suivant" class="admin-muted admin-hover grid size-7 place-items-center" type="button" @click="nextMonth">
+                        <ChevronRight class="size-4"/>
                     </button>
                 </div>
 
-                <div class="grid grid-cols-7 gap-1 text-center text-[11px] font-medium text-slate-400">
+                <div class="admin-muted grid grid-cols-7 gap-1 text-center text-[11px] font-medium">
                     <span v-for="day in weekDays" :key="day">{{ day }}</span>
                 </div>
                 <div class="mt-1 grid grid-cols-7 gap-1">
@@ -165,11 +168,11 @@ onBeforeUnmount(() => document.removeEventListener('mousedown', onClickOutside))
                         <button
                             v-else
                             :class="isSelected(cell)
-                                ? 'bg-[#bf045b] font-semibold text-white'
+                                ? 'bg-[#a23362] font-semibold text-white'
                                 : isToday(cell)
-                                    ? 'text-[#bf045b] ring-1 ring-[#bf045b]/40'
-                                    : 'text-slate-600 hover:bg-slate-100'"
-                            class="grid h-8 place-items-center rounded-md text-sm transition"
+                                    ? 'text-[#ef477d] ring-1 ring-[#a23362]/60'
+                                    : 'admin-muted admin-hover'"
+                            class="grid h-8 place-items-center text-sm transition"
                             type="button"
                             @click="select(cell)"
                         >

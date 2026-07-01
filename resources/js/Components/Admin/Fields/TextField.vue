@@ -10,6 +10,7 @@ withDefaults(
         hint?: string;
         required?: boolean;
         placeholder?: string;
+        inputClass?: string;
     }>(),
     {type: 'text'},
 );
@@ -23,7 +24,8 @@ defineEmits<{ (e: 'update:modelValue', value: string): void }>();
             :placeholder="placeholder"
             :type="type"
             :value="modelValue"
-            class="h-10 w-full rounded-lg border border-slate-200 px-3 text-sm outline-none focus:border-[#bf045b]"
+            :class="inputClass"
+            class="admin-field h-11 w-full border px-3 text-sm outline-none transition"
             @input="$emit('update:modelValue', ($event.target as HTMLInputElement).value)"
         />
     </FieldWrapper>

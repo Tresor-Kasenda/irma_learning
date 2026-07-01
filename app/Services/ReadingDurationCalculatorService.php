@@ -35,7 +35,7 @@ final class ReadingDurationCalculatorService
 
         $totalMinutes = $baseReadingTime + $complexityAdjustment + $interactionTime;
 
-        $totalMinutes = ceil($totalMinutes);
+        $totalMinutes = (int) ceil($totalMinutes);
 
         return [
             'total_minutes' => $totalMinutes,

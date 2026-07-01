@@ -1,5 +1,7 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
 @source '../../storage/framework/views/*.php';
 @source '../**/*.(blade.php|vue)';
@@ -14,4 +16,105 @@
     --color-irma-surface: oklch(0.97 0.01 100);
     --color-irma-text: oklch(0.2 0.02 100);
     --color-irma-glass: oklch(0.35 0.05 250 / 30%);
+}
+
+:root {
+    color-scheme: light;
+    --admin-page: #f1f5f9;
+    --admin-sidebar: #ffffff;
+    --admin-topbar: rgb(255 255 255 / 0.95);
+    --admin-panel: #ffffff;
+    --admin-panel-muted: #f8fafc;
+    --admin-field: #ffffff;
+    --admin-field-focus: #ffffff;
+    --admin-border: #dbe3ee;
+    --admin-heading: #0f172a;
+    --admin-text: #334155;
+    --admin-muted: #64748b;
+    --admin-faint: #94a3b8;
+    --admin-hover: #f1f5f9;
+}
+
+:root.dark {
+    color-scheme: dark;
+    --admin-page: #071525;
+    --admin-sidebar: #08192b;
+    --admin-topbar: rgb(7 21 37 / 0.95);
+    --admin-panel: #0e2035;
+    --admin-panel-muted: #0a1c30;
+    --admin-field: #0a1c30;
+    --admin-field-focus: #0d2138;
+    --admin-border: rgb(255 255 255 / 0.1);
+    --admin-heading: #ffffff;
+    --admin-text: #cbd5e1;
+    --admin-muted: #94a3b8;
+    --admin-faint: #64748b;
+    --admin-hover: rgb(255 255 255 / 0.05);
+}
+
+@layer components {
+    .admin-page {
+        background-color: var(--admin-page);
+        color: var(--admin-text);
+    }
+
+    .admin-sidebar {
+        background-color: var(--admin-sidebar);
+        color: var(--admin-text);
+    }
+
+    .admin-topbar {
+        background-color: var(--admin-topbar);
+        color: var(--admin-text);
+    }
+
+    .admin-panel {
+        background-color: var(--admin-panel);
+        border-color: var(--admin-border);
+    }
+
+    .admin-panel-muted {
+        background-color: var(--admin-panel-muted);
+        border-color: var(--admin-border);
+    }
+
+    .admin-field {
+        background-color: var(--admin-field);
+        border-color: var(--admin-border);
+        color: var(--admin-heading);
+    }
+
+    .admin-field::placeholder {
+        color: var(--admin-faint);
+    }
+
+    .admin-field:focus {
+        background-color: var(--admin-field-focus);
+        border-color: #c23a72;
+    }
+
+    .admin-divider {
+        border-color: var(--admin-border);
+    }
+
+    .admin-heading {
+        color: var(--admin-heading);
+    }
+
+    .admin-text {
+        color: var(--admin-text);
+    }
+
+    .admin-muted {
+        color: var(--admin-muted);
+    }
+
+    .admin-faint {
+        color: var(--admin-faint);
+    }
+
+    .admin-hover:hover {
+        background-color: var(--admin-hover);
+        color: var(--admin-heading);
+    }
 }

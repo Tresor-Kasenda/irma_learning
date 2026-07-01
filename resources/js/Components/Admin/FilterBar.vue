@@ -1,10 +1,14 @@
 <script lang="ts" setup>
 import {router} from '@inertiajs/vue3';
+import SelectField from '@/Components/Admin/Fields/SelectField.vue';
 
 export interface FilterDef {
     key: string;
     label: string;
     options: { value: string; label: string }[];
+    includeEmpty?: boolean;
+    emptyLabel?: string;
+    defaultValue?: string;
 }
 
 const props = withDefaults(
@@ -22,8 +26,18 @@ function clean(params: Record<string, any>): Record<string, any> {
     );
 }
 
-function onChange(key: string, event: Event): void {
-    const value = (event.target as HTMLSelectElement).value;
+function filterOptions(definition: FilterDef): { value: string; label: string }[] {
+    if (definition.includeEmpty === false) {
+        return definition.options;
+    }
+
+    return [
+        {value: '', label: definition.emptyLabel ?? `${definition.label} : tous`},
+        ...definition.options,
+    ];
+}
+
+function onChange(key: string, value: string): void {
     router.get(props.indexRoute, clean({...props.filters, [key]: value, page: undefined}), {
         preserveState: true,
         preserveScroll: true,
@@ -33,15 +47,15 @@ function onChange(key: string, event: Event): void {
 </script>
 
 <template>
-    <label v-for="def in definitions" :key="def.key" class="relative">
-        <span class="sr-only">{{ def.label }}</span>
-        <select
-            :value="filters[def.key] ?? ''"
-            class="h-10 rounded-lg border border-slate-200 bg-white pl-3 pr-8 text-sm text-slate-600 outline-none focus:border-[#bf045b]"
-            @change="onChange(def.key, $event)"
-        >
-            <option value="">{{ def.label }} : tous</option>
-            <option v-for="opt in def.options" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
-        </select>
-    </label>
+    <SelectField
+        v-for="def in definitions"
+        :id="`admin-filter-${def.key}`"
+        :key="def.key"
+        :label="def.label"
+        :model-value="filters[def.key] ?? def.defaultValue ?? ''"
+        :options="filterOptions(def)"
+        compact
+        hide-label
+        @update:model-value="onChange(def.key, $event)"
+    />
 </template>

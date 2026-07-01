@@ -1,4 +1,5 @@
 <script lang="ts" setup>
+import {File, FileText, ImagePlus, RefreshCw, Trash2, Video} from '@lucide/vue';
 import {computed, onBeforeUnmount, ref, watch} from 'vue';
 
 const props = withDefaults(
@@ -109,36 +110,35 @@ const uploading = computed(() => props.progress !== null && props.progress !== u
 </script>
 
 <template>
-    <div>
-        <span v-if="label" class="mb-1 block text-sm font-medium text-slate-700">{{ label }}</span>
+    <div class="min-w-0 max-w-full">
+        <span v-if="label" class="admin-muted mb-2 block text-xs font-semibold uppercase tracking-[0.08em]">{{ label }}</span>
 
         <!-- Fichier sélectionné -->
-        <div v-if="modelValue || currentUrl" class="rounded-lg border border-slate-200 bg-slate-50 p-3">
-            <div class="flex items-center gap-3">
-                <img v-if="previewImage" :src="previewImage" alt="" class="size-14 shrink-0 rounded-md object-cover"/>
-                <span v-else class="grid size-14 shrink-0 place-items-center rounded-md bg-white text-slate-400">
-                    <svg class="size-6" fill="none" stroke="currentColor" stroke-width="1.6" viewBox="0 0 24 24">
-                        <path v-if="fileKind === 'video'" d="M15 10l4.5-2.5v9L15 14M4 6h11v12H4z" stroke-linecap="round" stroke-linejoin="round"/>
-                        <path v-else-if="fileKind === 'pdf'" d="M7 3h7l5 5v13H7zM14 3v5h5M9 13h6M9 17h4" stroke-linecap="round" stroke-linejoin="round"/>
-                        <path v-else d="M7 3h7l5 5v13H7zM14 3v5h5" stroke-linecap="round" stroke-linejoin="round"/>
-                    </svg>
+        <div v-if="modelValue || currentUrl" class="admin-panel-muted min-w-0 max-w-full overflow-hidden border p-3">
+            <div class="flex min-w-0 items-start gap-3">
+                <img v-if="previewImage" :src="previewImage" alt="" class="size-14 shrink-0 object-cover"/>
+                <span v-else class="grid size-14 shrink-0 place-items-center bg-slate-200 text-slate-500 dark:bg-white/5 dark:text-slate-400">
+                    <Video v-if="fileKind === 'video'" class="size-6" :stroke-width="1.6"/>
+                    <FileText v-else-if="fileKind === 'pdf'" class="size-6" :stroke-width="1.6"/>
+                    <File v-else class="size-6" :stroke-width="1.6"/>
                 </span>
                 <div class="min-w-0 flex-1">
-                    <p class="truncate text-sm font-medium text-slate-700">
+                    <p
+                        :title="modelValue?.name ?? currentName ?? 'Fichier actuel'"
+                        class="admin-heading line-clamp-2 break-all text-sm font-medium leading-5"
+                    >
                         {{ modelValue?.name ?? currentName ?? 'Fichier actuel' }}
                     </p>
-                    <p v-if="modelValue" class="text-xs text-slate-400">{{ formatSize(modelValue.size) }}</p>
-                    <p v-else class="text-xs text-slate-400">Fichier déjà enregistré</p>
+                    <p v-if="modelValue" class="admin-muted text-xs">{{ formatSize(modelValue.size) }}</p>
+                    <p v-else class="admin-muted text-xs">Fichier déjà enregistré</p>
                 </div>
                 <button
-                    class="grid size-8 place-items-center rounded-md text-slate-400 hover:bg-red-50 hover:text-red-500"
+                    class="grid size-8 shrink-0 place-items-center text-slate-500 transition hover:bg-rose-400/10 hover:text-rose-400"
                     title="Retirer"
                     type="button"
                     @click="clear"
                 >
-                    <svg class="size-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                        <path d="M6 6l12 12M18 6L6 18" stroke-linecap="round"/>
-                    </svg>
+                    <Trash2 class="size-4" :stroke-width="1.8"/>
                 </button>
             </div>
 
@@ -148,16 +148,17 @@ const uploading = computed(() => props.progress !== null && props.progress !== u
                     <span>Envoi en cours…</span>
                     <span>{{ progress }}%</span>
                 </div>
-                <div class="h-1.5 overflow-hidden rounded-full bg-slate-200">
+                <div class="h-1.5 overflow-hidden rounded-full bg-white/10">
                     <div :style="{ width: `${progress}%` }" class="h-full bg-[#bf045b] transition-[width]"/>
                 </div>
             </div>
 
             <button
-                class="mt-2 text-xs font-medium text-[#bf045b] hover:underline"
+                class="mt-3 inline-flex items-center gap-1.5 text-xs font-medium text-[#ef477d] hover:text-rose-300"
                 type="button"
                 @click="browse"
             >
+                <RefreshCw class="size-3.5"/>
                 Remplacer le fichier
             </button>
         </div>
@@ -165,8 +166,8 @@ const uploading = computed(() => props.progress !== null && props.progress !== u
         <!-- Zone de dépôt -->
         <button
             v-else
-            :class="dragging ? 'border-[#bf045b] bg-[#bf045b]/5' : 'border-slate-300 hover:border-slate-400'"
-            class="flex w-full flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed px-4 py-8 text-center transition"
+            :class="dragging ? 'border-[#c23a72] bg-[#7d254a]/10' : 'admin-panel-muted hover:border-slate-400 dark:hover:border-white/30'"
+            class="flex w-full flex-col items-center justify-center gap-2 border border-dashed px-4 py-8 text-center transition"
             type="button"
             @click="browse"
             @dragenter.prevent="dragging = true"
@@ -174,13 +175,11 @@ const uploading = computed(() => props.progress !== null && props.progress !== u
             @dragleave.prevent="dragging = false"
             @drop.prevent="onDrop"
         >
-            <svg class="size-8 text-slate-400" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
-                <path d="M12 16V4m0 0L8 8m4-4l4 4M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-            <span class="text-sm font-medium text-slate-600">
-                Glissez-déposez un fichier, ou <span class="text-[#bf045b]">parcourir</span>
+            <ImagePlus class="size-8 text-slate-500" :stroke-width="1.5"/>
+            <span class="admin-text text-sm font-medium">
+                Glissez-déposez un fichier, ou <span class="text-[#ef477d]">parcourir</span>
             </span>
-            <span class="text-xs text-slate-400">Max {{ maxSizeMb }} Mo</span>
+            <span class="admin-muted text-xs">Max {{ maxSizeMb }} Mo</span>
         </button>
 
         <input
@@ -191,7 +190,7 @@ const uploading = computed(() => props.progress !== null && props.progress !== u
             @change="onChange"
         />
 
-        <p v-if="localError || error" class="mt-1 text-xs text-red-600">{{ localError ?? error }}</p>
-        <p v-else-if="hint" class="mt-1 text-xs text-slate-400">{{ hint }}</p>
+        <p v-if="localError || error" class="mt-1.5 text-xs text-rose-400">{{ localError ?? error }}</p>
+        <p v-else-if="hint" class="admin-muted mt-1.5 text-xs leading-5">{{ hint }}</p>
     </div>
 </template>

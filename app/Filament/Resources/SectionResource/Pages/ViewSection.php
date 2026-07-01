@@ -7,7 +7,6 @@ namespace App\Filament\Resources\SectionResource\Pages;
 use App\Filament\Resources\SectionResource;
 use App\Models\Section;
 use App\Services\ChapterContentService;
-use App\Services\ReadingDurationCalculatorService;
 use Exception;
 use Filament\Actions;
 use Filament\Forms;
@@ -16,16 +15,15 @@ use Filament\Forms\Components\RichEditor;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
-use Filament\Forms\Get;
-use Filament\Forms\Set;
 use Filament\Infolists;
-use Filament\Schemas\Schema;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ViewRecord;
+use Filament\Schemas\Components\Utilities\Get;
+use Filament\Schemas\Components\Utilities\Set;
+use Filament\Schemas\Schema;
 use Filament\Support\Colors\Color;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
-use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
 
 final class ViewSection extends ViewRecord
 {
@@ -58,15 +56,15 @@ final class ViewSection extends ViewRecord
                         Infolists\Components\TextEntry::make('is_active')
                             ->label('Active')
                             ->badge()
-                            ->formatStateUsing(fn(bool $state): string => $state ? 'Active' : 'Inactive')
-                            ->color(fn(bool $state): string => $state ? 'success' : 'danger'),
+                            ->formatStateUsing(fn (bool $state): string => $state ? 'Active' : 'Inactive')
+                            ->color(fn (bool $state): string => $state ? 'success' : 'danger'),
                         Infolists\Components\TextEntry::make('estimated_duration')
                             ->label('Durée estimée (minutes)')
                             ->suffix(' min')
                             ->placeholder('Non définie'),
                         Infolists\Components\TextEntry::make('chapters_count')
                             ->label('Nombre de chapitres')
-                            ->getStateUsing(fn(Section $record): int => $record->chapters()->count()),
+                            ->getStateUsing(fn (Section $record): int => $record->chapters()->count()),
                     ])
                     ->columns(3),
             ]);
@@ -112,10 +110,10 @@ final class ViewSection extends ViewRecord
                         ->preserveFilenames()
                         ->acceptedFileTypes(['video/*'])
                         ->visible(
-                            fn(Get $get) => $get('content_type') === 'video'
+                            fn (Get $get) => $get('content_type') === 'video'
                         )
                         ->required(
-                            fn(Get $get) => $get('content_type') === 'video'
+                            fn (Get $get) => $get('content_type') === 'video'
                         ),
 
                     FileUpload::make('media_url')
@@ -128,8 +126,8 @@ final class ViewSection extends ViewRecord
                         ->acceptedFileTypes(['application/pdf'])
                         ->maxSize(50 * 1024)
                         ->helperText('Uploadez un PDF pour extraction automatique du contenu.')
-                        ->visible(fn(Get $get) => $get('content_type') === 'pdf')
-                        ->required(fn(Get $get) => $get('content_type') === 'pdf')
+                        ->visible(fn (Get $get) => $get('content_type') === 'pdf')
+                        ->required(fn (Get $get) => $get('content_type') === 'pdf')
                         ->live()
                         ->afterStateUpdated(function ($state, Set $set, Get $get) {
                             if ($state) {
@@ -159,7 +157,7 @@ final class ViewSection extends ViewRecord
                                 } catch (Exception $e) {
                                     Notification::make()
                                         ->title('Erreur d\'extraction PDF')
-                                        ->body('Erreur lors de l\'extraction: ' . $e->getMessage())
+                                        ->body('Erreur lors de l\'extraction: '.$e->getMessage())
                                         ->danger()
                                         ->send();
                                 }
@@ -167,7 +165,7 @@ final class ViewSection extends ViewRecord
                         })
                         ->afterStateHydrated(function ($component, $state) {
                             if ($state && $component->getContainer()->getOperation() === 'edit') {
-                                if (!Storage::disk('public')->exists($state)) {
+                                if (! Storage::disk('public')->exists($state)) {
                                     Notification::make()
                                         ->title('Fichier manquant')
                                         ->body('Le fichier PDF original est introuvable.')
@@ -187,7 +185,7 @@ final class ViewSection extends ViewRecord
                     TextInput::make('order_position')
                         ->label('Position du chapitre')
                         ->numeric()
-                        ->default(fn() => (($this->record->chapters()->max('order_position') ?? 0) + 1))
+                        ->default(fn () => (($this->record->chapters()->max('order_position') ?? 0) + 1))
                         ->required()
                         ->minValue(1),
 
@@ -196,7 +194,7 @@ final class ViewSection extends ViewRecord
                         ->numeric()
                         ->suffix('minutes')
                         ->live()
-                        ->default(fn() => $this->calculateChapterDuration())
+                        ->default(fn () => $this->calculateChapterDuration())
                         ->helperText('Durée calculée automatiquement (PDF) ou selon la section'),
 
                     Toggle::make('is_free')
@@ -212,7 +210,7 @@ final class ViewSection extends ViewRecord
                 ])
                 ->action(function (array $data) {
                     DB::transaction(function () use ($data) {
-                        $providedPosition = isset($data['order_position']) ? (int)$data['order_position'] : null;
+                        $providedPosition = isset($data['order_position']) ? (int) $data['order_position'] : null;
                         $nextPosition = ($this->record->chapters()->max('order_position') ?? 0) + 1;
                         $position = ($providedPosition && $providedPosition > 0) ? $providedPosition : $nextPosition;
 
@@ -227,8 +225,8 @@ final class ViewSection extends ViewRecord
                             'content' => $data['content'] ?? null,
                             'order_position' => $position,
                             'duration_minutes' => $duration,
-                            'is_free' => !empty($data['is_free']),
-                            'is_active' => !empty($data['is_active']),
+                            'is_free' => ! empty($data['is_free']),
+                            'is_active' => ! empty($data['is_active']),
                         ];
 
                         $this->record->chapters()->create($payload);
@@ -247,8 +245,6 @@ final class ViewSection extends ViewRecord
         ];
     }
 
-
-
     protected function calculateChapterDuration(): int
     {
         $sectionDurationMinutes = $this->record->duration ?? 0;
@@ -259,6 +255,6 @@ final class ViewSection extends ViewRecord
             return 0;
         }
 
-        return (int)round($sectionDurationMinutes / $totalChapters);
+        return (int) round($sectionDurationMinutes / $totalChapters);
     }
 }

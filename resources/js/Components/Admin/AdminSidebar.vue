@@ -1,6 +1,22 @@
 <script lang="ts" setup>
 import {Link} from '@inertiajs/vue3';
-import {computed} from 'vue';
+import {
+    Award,
+    BookOpen,
+    ChartNoAxesColumnIncreasing,
+    ClipboardCheck,
+    Clock3,
+    FileText,
+    Home,
+    KeyRound,
+    Layers3,
+    Settings,
+    Users,
+    X,
+} from '@lucide/vue';
+import {computed, onBeforeUnmount, onMounted, ref} from 'vue';
+import type {Component} from 'vue';
+import {useUiStore} from '@/stores';
 import {safeCurrent, safeRoute} from '@/utilities/route';
 
 defineProps<{ open: boolean }>();
@@ -9,7 +25,7 @@ const emit = defineEmits<{ (e: 'update:open', value: boolean): void }>();
 interface NavItem {
     label: string;
     route: string;
-    icon: string;
+    icon: Component;
 }
 
 interface NavGroup {
@@ -22,36 +38,52 @@ const groups = computed<NavGroup[]>(() => [
     {
         label: 'Catalogue',
         items: [
-            {label: 'Tableau de bord', route: 'admin.dashboard', icon: 'M3 12l9-9 9 9M5 10v10h14V10'},
-            {label: 'Formations', route: 'admin.formations.index', icon: 'M12 6.2L3 11l9 4.8L21 11 12 6.2z'},
-            {label: 'Sections', route: 'admin.sections.index', icon: 'M4 6h16M4 12h16M4 18h10'},
-            {label: 'Chapitres', route: 'admin.chapters.index', icon: 'M4 5h16v14H4zM8 5v14'},
+            {label: 'Tableau de bord', route: 'admin.dashboard', icon: Home},
+            {label: 'Formations', route: 'admin.formations.index', icon: BookOpen},
+            {label: 'Sections', route: 'admin.sections.index', icon: Layers3},
+            {label: 'Chapitres', route: 'admin.chapters.index', icon: FileText},
         ],
     },
     {
         label: 'Évaluations',
         items: [
-            {label: 'Examens', route: 'admin.exams.index', icon: 'M9 12l2 2 4-4M5 4h14v16H5z'},
-            {label: 'Tentatives', route: 'admin.attempts.index', icon: 'M12 8v4l3 3M21 12a9 9 0 11-18 0 9 9 0 0118 0z'},
+            {label: 'Examens', route: 'admin.exams.index', icon: ClipboardCheck},
+            {label: 'Tentatives', route: 'admin.attempts.index', icon: Clock3},
         ],
     },
     {
         label: 'Apprenants',
         items: [
-            {label: 'Inscriptions', route: 'admin.enrollments.index', icon: 'M16 7a4 4 0 11-8 0 4 4 0 018 0zM3 21v-1a7 7 0 0114 0v1'},
-            {label: 'Progression', route: 'admin.progress.index', icon: 'M4 19V5m0 14h16M8 17v-6m4 6V8m4 9v-3'},
-            {label: 'Certificats', route: 'admin.certificates.index', icon: 'M12 15a4 4 0 100-8 4 4 0 000 8zM9 13l-2 6 5-3 5 3-2-6'},
-            {label: 'Codes d\'accès', route: 'admin.access-codes.index', icon: 'M15 7a4 4 0 10-3.8 5.3L14 15h2v2h2v2h3v-3l-3.2-3.2A4 4 0 0015 7z'},
+            {label: 'Inscriptions', route: 'admin.enrollments.index', icon: Users},
+            {label: 'Progression', route: 'admin.progress.index', icon: ChartNoAxesColumnIncreasing},
+            {label: 'Certificats', route: 'admin.certificates.index', icon: Award},
+            {label: 'Codes d\'accès', route: 'admin.access-codes.index', icon: KeyRound},
         ],
     },
     {
         label: 'Administration',
         items: [
-            {label: 'Utilisateurs', route: 'admin.users.index', icon: 'M17 20h5v-1a4 4 0 00-4-4M9 20H4v-1a4 4 0 014-4h4a4 4 0 014 4v1M12 11a4 4 0 100-8 4 4 0 000 8z'},
-            {label: 'Paramètres', route: 'admin.settings.edit', icon: 'M12 15a3 3 0 100-6 3 3 0 000 6zM19 12a7 7 0 00-.1-1l2-1.6-2-3.4-2.4 1a7 7 0 00-1.7-1l-.4-2.6H9.6l-.4 2.6a7 7 0 00-1.7 1l-2.4-1-2 3.4L5.1 11a7 7 0 000 2l-2 1.6 2 3.4 2.4-1a7 7 0 001.7 1l.4 2.6h4.8l.4-2.6a7 7 0 001.7-1l2.4 1 2-3.4-2-1.6c.1-.3.1-.7.1-1z'},
+            {label: 'Utilisateurs', route: 'admin.users.index', icon: Users},
+            {label: 'Paramètres', route: 'admin.settings.edit', icon: Settings},
         ],
     },
 ]);
+
+const uiStore = useUiStore();
+const isDesktop = ref(false);
+let desktopMediaQuery: MediaQueryList | null = null;
+
+function updateDesktopState(event?: MediaQueryListEvent): void {
+    isDesktop.value = event?.matches ?? desktopMediaQuery?.matches ?? false;
+}
+
+onMounted(() => {
+    desktopMediaQuery = window.matchMedia('(min-width: 1024px)');
+    updateDesktopState();
+    desktopMediaQuery.addEventListener('change', updateDesktopState);
+});
+
+onBeforeUnmount(() => desktopMediaQuery?.removeEventListener('change', updateDesktopState));
 
 function isActive(routeName: string): boolean {
     return safeCurrent(routeName);
@@ -59,6 +91,10 @@ function isActive(routeName: string): boolean {
 
 function href(routeName: string): string {
     return safeRoute(routeName);
+}
+
+function isAvailable(routeName: string): boolean {
+    return href(routeName) !== '#';
 }
 
 function close(): void {
@@ -77,38 +113,80 @@ function close(): void {
         />
 
         <aside
-            :class="open ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'"
-            class="fixed inset-y-0 left-0 z-50 flex w-64 flex-col border-r border-slate-200 bg-white transition-transform duration-200"
+            :aria-hidden="!open && !isDesktop"
+            :class="[
+                open ? 'translate-x-0' : '-translate-x-full lg:translate-x-0',
+                uiStore.sidebarCollapsed ? 'lg:w-20' : 'lg:w-64',
+            ]"
+            class="admin-sidebar admin-divider fixed inset-y-0 left-0 z-50 flex w-64 flex-col border-r transition-all duration-200"
+            :inert="!open && !isDesktop"
         >
-            <div class="flex h-16 shrink-0 items-center gap-2 border-b border-slate-200 px-5">
-                <img alt="IRMA" class="h-8 w-auto" src="/images/irma-logo-base.svg"/>
-                <span class="text-sm font-semibold text-slate-800">Administration</span>
+            <div
+                :class="uiStore.sidebarCollapsed ? 'lg:justify-center lg:px-0' : ''"
+                class="admin-divider flex h-16 shrink-0 items-center gap-3 border-b px-5"
+            >
+                <Link :href="href('admin.dashboard')" class="flex min-w-0 items-center gap-3" @click="close">
+                    <img alt="IRMA" class="h-10 w-auto shrink-0" src="/images/irma-logo-base.svg"/>
+                    <span v-if="!uiStore.sidebarCollapsed" class="min-w-0 lg:block">
+                        <span class="admin-heading block truncate text-sm font-semibold">IRMA Admin</span>
+                        <span class="block text-[10px] uppercase tracking-[0.18em] text-slate-500">Console de gestion</span>
+                    </span>
+                </Link>
+                <button
+                    aria-label="Fermer le menu"
+                    class="admin-divider admin-text admin-hover ml-auto grid size-9 place-items-center border lg:hidden"
+                    type="button"
+                    @click="close"
+                >
+                    <X class="size-5"/>
+                </button>
             </div>
 
-            <nav class="flex-1 overflow-y-auto px-3 py-4">
+            <nav :class="uiStore.sidebarCollapsed ? 'lg:px-2' : ''" class="flex-1 overflow-y-auto px-4 py-5">
                 <div v-for="group in groups" :key="group.label" class="mb-5">
-                    <p class="px-3 pb-1 text-[11px] font-semibold uppercase tracking-wide text-slate-400">
+                    <p
+                        v-if="!uiStore.sidebarCollapsed"
+                        class="admin-faint px-3 pb-2 text-[10px] font-semibold uppercase tracking-[0.14em]"
+                    >
                         {{ group.label }}
                     </p>
-                    <div class="grid gap-0.5">
-                        <Link
+                    <div class="grid gap-1">
+                        <component
+                            :is="isAvailable(item.route) ? Link : 'span'"
                             v-for="item in group.items"
                             :key="item.label"
-                            :class="isActive(item.route)
-                                ? 'bg-[#bf045b]/10 font-semibold text-[#bf045b]'
-                                : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'"
-                            :href="href(item.route)"
-                            class="flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition"
-                            @click="close"
+                            :class="[
+                                isActive(item.route)
+                                    ? 'bg-[#7d254a] font-semibold text-white'
+                                    : 'admin-text admin-hover',
+                                uiStore.sidebarCollapsed ? 'lg:justify-center lg:px-0' : 'px-3',
+                                !isAvailable(item.route) ? 'cursor-not-allowed opacity-40 hover:bg-transparent' : '',
+                            ]"
+                            :aria-disabled="!isAvailable(item.route)"
+                            :href="isAvailable(item.route) ? href(item.route) : undefined"
+                            :title="uiStore.sidebarCollapsed ? item.label : undefined"
+                            class="flex h-10 items-center gap-3 px-3 text-sm transition"
+                            @click="isAvailable(item.route) && close()"
                         >
-                            <svg class="size-5 shrink-0" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24">
-                                <path :d="item.icon" stroke-linecap="round" stroke-linejoin="round"/>
-                            </svg>
-                            {{ item.label }}
-                        </Link>
+                            <component :is="item.icon" class="size-5 shrink-0" :stroke-width="1.7"/>
+                            <span v-if="!uiStore.sidebarCollapsed">{{ item.label }}</span>
+                        </component>
                     </div>
                 </div>
             </nav>
+
+            <div v-if="!uiStore.sidebarCollapsed" class="admin-divider border-t p-4">
+                <Link
+                    :href="href('dashboard')"
+                    class="admin-panel-muted admin-text flex items-center gap-3 border border-[#a23362]/40 px-3 py-3 text-sm transition hover:border-[#a23362] hover:text-[#a23362]"
+                >
+                    <BookOpen class="size-5 text-[#ef477d]" :stroke-width="1.7"/>
+                    <span>
+                        <span class="block font-medium">Espace Learning</span>
+                        <span class="block text-xs text-slate-500">Voir la plateforme</span>
+                    </span>
+                </Link>
+            </div>
         </aside>
     </div>
 </template>

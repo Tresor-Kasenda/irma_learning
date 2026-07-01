@@ -19,10 +19,15 @@ final class FormationController extends Controller
 {
     private const array SORTABLE = ['title', 'price', 'duration_hours', 'created_at'];
 
+    private const array PER_PAGE_OPTIONS = [10, 25, 50, 100];
+
     public function index(Request $request): Response
     {
         $sort = in_array($request->query('sort'), self::SORTABLE, true) ? $request->query('sort') : 'created_at';
         $dir = $request->query('dir') === 'asc' ? 'asc' : 'desc';
+        $perPage = in_array($request->integer('per_page'), self::PER_PAGE_OPTIONS, true)
+            ? $request->integer('per_page')
+            : 10;
 
         $formations = Formation::query()
             ->withCount(Formation::catalogCountRelations())
@@ -37,12 +42,12 @@ final class FormationController extends Controller
             ->when($request->query('difficulty_level'), fn (Builder $query, string $level): Builder => $query
                 ->where('difficulty_level', $level))
             ->orderBy($sort, $dir)
-            ->paginate(15)
+            ->paginate($perPage)
             ->withQueryString();
 
         return Inertia::render('Admin/Formations/Index', [
             'formations' => $formations,
-            'filters' => $request->only('search', 'is_active', 'is_featured', 'difficulty_level', 'sort', 'dir'),
+            'filters' => $request->only('search', 'is_active', 'is_featured', 'difficulty_level', 'sort', 'dir', 'per_page'),
         ]);
     }
 
@@ -60,7 +65,7 @@ final class FormationController extends Controller
         return Inertia::render('Admin/Formations/Form', [
             'formation' => [
                 ...$formation->only([
-                    'id', 'title', 'short_description', 'description', 'image',
+                    'id', 'slug', 'title', 'short_description', 'description', 'image',
                     'difficulty_level', 'duration_hours', 'price', 'tags', 'is_active', 'is_featured',
                 ]),
                 'sections' => $formation->sections->map(fn ($section): array => [
@@ -70,6 +75,48 @@ final class FormationController extends Controller
                     'duration' => $section->duration,
                     'is_active' => $section->is_active,
                     'chapters_count' => $section->chapters_count,
+                ]),
+            ],
+        ]);
+    }
+
+    public function show(Formation $formation): Response
+    {
+        $formation->loadCount(['sections', 'chapters', 'enrollments']);
+        $formation->load([
+            'sections' => fn ($query) => $query
+                ->orderBy('order_position')
+                ->withCount('chapters')
+                ->withExists('exam')
+                ->with(['chapters' => fn ($query) => $query
+                    ->orderBy('order_position')
+                    ->select('id', 'section_id', 'title', 'content_type', 'duration_minutes', 'is_active')]),
+        ]);
+
+        return Inertia::render('Admin/Formations/Show', [
+            'formation' => [
+                ...$formation->only([
+                    'id', 'slug', 'title', 'short_description', 'description', 'image',
+                    'difficulty_level', 'duration_hours', 'price', 'tags', 'is_active', 'is_featured', 'created_at',
+                ]),
+                'sections_count' => $formation->sections_count,
+                'chapters_count' => $formation->chapters_count,
+                'enrollments_count' => $formation->enrollments_count,
+                'sections' => $formation->sections->map(fn ($section): array => [
+                    'id' => $section->id,
+                    'title' => $section->title,
+                    'description' => $section->description,
+                    'duration' => $section->duration,
+                    'is_active' => $section->is_active,
+                    'has_exam' => (bool) $section->exam_exists,
+                    'chapters_count' => $section->chapters_count,
+                    'chapters' => $section->chapters->map(fn ($chapter): array => [
+                        'id' => $chapter->id,
+                        'title' => $chapter->title,
+                        'content_type' => $chapter->content_type,
+                        'duration_minutes' => $chapter->duration_minutes,
+                        'is_active' => $chapter->is_active,
+                    ]),
                 ]),
             ],
         ]);
@@ -104,13 +151,19 @@ final class FormationController extends Controller
     public function update(UpdateFormationRequest $request, Formation $formation): RedirectResponse
     {
         $data = $request->safe()->except('image', 'sections');
+        $previousImage = $formation->image;
+        $newImage = null;
 
         if ($request->hasFile('image')) {
-            $this->deleteImage($formation->image);
-            $data['image'] = $this->storeImage($request);
+            $newImage = $this->storeImage($request);
+            $data['image'] = $newImage;
         }
 
         $formation->update($data);
+
+        if ($newImage !== null && $newImage !== $previousImage) {
+            $this->deleteImage($previousImage);
+        }
 
         if ($request->has('sections')) {
             $this->syncSections($formation, $request->validated('sections') ?? []);
