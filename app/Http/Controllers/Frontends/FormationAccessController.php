@@ -11,6 +11,8 @@ use App\Http\Requests\ValidateAccessCodeRequest;
 use App\Models\Formation;
 use App\Models\FormationAccessCode;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -26,6 +28,22 @@ final class FormationAccessController extends Controller
     public function store(ValidateAccessCodeRequest $request, Formation $formation): RedirectResponse
     {
         $user = $request->user();
+        $cacheKey = 'access_code_attempts_'.$user->id;
+
+        $attempts = (int) Cache::get($cacheKey, 0);
+
+        if ($attempts >= 10) {
+            Log::warning('Access code brute force blocked', [
+                'user_id' => $user->id,
+                'email' => $user->email,
+                'formation_id' => $formation->id,
+                'ip' => $request->ip(),
+            ]);
+
+            return back()->withErrors([
+                'code' => 'Trop de tentatives. Veuillez réessayer dans 30 minutes.',
+            ]);
+        }
 
         if ($formation->enrollments()->where('user_id', $user->id)->exists()) {
             return redirect()->route('formation.show', $formation)
@@ -39,10 +57,22 @@ final class FormationAccessController extends Controller
             ->first();
 
         if (! $code || ! $code->isValid()) {
+            Cache::put($cacheKey, $attempts + 1, now()->addMinutes(30));
+
+            Log::info('Access code validation failed', [
+                'user_id' => $user->id,
+                'email' => $user->email,
+                'formation_id' => $formation->id,
+                'attempt' => $attempts + 1,
+                'ip' => $request->ip(),
+            ]);
+
             return back()->withErrors([
                 'code' => 'Code d\'accès invalide ou déjà utilisé.',
             ]);
         }
+
+        Cache::forget($cacheKey);
 
         $code->update([
             'is_used' => true,

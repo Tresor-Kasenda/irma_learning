@@ -46,9 +46,10 @@ onBeforeUnmount(() => {
     }
 });
 
-const previewImage = computed(() => objectUrl.value ?? (props.modelValue ? null : props.currentUrl ?? null));
 const fileKind = computed(() => {
     const type = props.modelValue?.type ?? '';
+    const currentFile = (props.currentName ?? props.currentUrl ?? '').toLowerCase();
+
     if (type.startsWith('image/')) {
         return 'image';
     }
@@ -58,9 +59,22 @@ const fileKind = computed(() => {
     if (type === 'application/pdf') {
         return 'pdf';
     }
+    if (props.accept?.includes('video') || /\.(mp4|webm|ogg|mov)$/.test(currentFile)) {
+        return 'video';
+    }
+    if (props.accept?.includes('pdf') || currentFile.endsWith('.pdf')) {
+        return 'pdf';
+    }
+    if (props.accept?.includes('image') || /\.(jpe?g|png|webp|gif)$/.test(currentFile)) {
+        return 'image';
+    }
 
     return 'file';
 });
+const previewImage = computed(() => fileKind.value === 'image'
+    ? objectUrl.value ?? (props.modelValue ? null : props.currentUrl ?? null)
+    : null);
+const hasFile = computed(() => Boolean(props.modelValue || props.currentUrl || props.currentName));
 
 function formatSize(bytes: number): string {
     if (bytes < 1024 * 1024) {
@@ -106,7 +120,8 @@ function browse(): void {
     inputRef.value?.click();
 }
 
-const uploading = computed(() => props.progress !== null && props.progress !== undefined && props.progress < 100);
+const normalizedProgress = computed(() => Math.min(100, Math.max(0, Math.round(props.progress ?? 0))));
+const uploading = computed(() => props.progress !== null && props.progress !== undefined && normalizedProgress.value < 100);
 </script>
 
 <template>
@@ -114,7 +129,7 @@ const uploading = computed(() => props.progress !== null && props.progress !== u
         <span v-if="label" class="admin-muted mb-2 block text-xs font-semibold uppercase tracking-[0.08em]">{{ label }}</span>
 
         <!-- Fichier sélectionné -->
-        <div v-if="modelValue || currentUrl" class="admin-panel-muted min-w-0 max-w-full overflow-hidden border p-3">
+        <div v-if="hasFile" class="admin-panel-muted min-w-0 max-w-full overflow-hidden border p-3">
             <div class="flex min-w-0 items-start gap-3">
                 <img v-if="previewImage" :src="previewImage" alt="" class="size-14 shrink-0 object-cover"/>
                 <span v-else class="grid size-14 shrink-0 place-items-center bg-slate-200 text-slate-500 dark:bg-white/5 dark:text-slate-400">
@@ -146,10 +161,10 @@ const uploading = computed(() => props.progress !== null && props.progress !== u
             <div v-if="uploading" class="mt-3">
                 <div class="mb-1 flex justify-between text-xs text-slate-500">
                     <span>Envoi en cours…</span>
-                    <span>{{ progress }}%</span>
+                    <span>{{ normalizedProgress }}%</span>
                 </div>
                 <div class="h-1.5 overflow-hidden rounded-full bg-white/10">
-                    <div :style="{ width: `${progress}%` }" class="h-full bg-[#bf045b] transition-[width]"/>
+                    <div :style="{ width: `${normalizedProgress}%` }" class="h-full bg-[#bf045b] transition-[width]"/>
                 </div>
             </div>
 

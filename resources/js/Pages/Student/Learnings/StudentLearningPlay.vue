@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import {Head, Link, router} from '@inertiajs/vue3';
-import {computed, ref} from 'vue';
+import {computed, ref, watch} from 'vue';
 import CourseCurriculum from '@/Components/Learning/CourseCurriculum.vue';
 import LearningIcon from '@/Components/Learning/LearningIcon.vue';
 
@@ -60,6 +60,14 @@ const props = defineProps<{
 }>();
 
 const showCurriculum = ref(false);
+const contentPane = ref<'pdf' | 'markdown'>(props.currentChapter?.content_type === 'pdf' ? 'pdf' : 'markdown');
+
+watch(
+    () => [props.currentChapter?.id, props.currentChapter?.content_type],
+    ([, contentType]) => {
+        contentPane.value = contentType === 'pdf' ? 'pdf' : 'markdown';
+    },
+);
 
 const currentSectionState = computed(
     () => props.sections.find((section) => section.id === props.currentChapter?.section_id) ?? null,
@@ -121,6 +129,14 @@ function mediaUrl(url: string | null): string {
     }
 
     return url.startsWith('http') ? url : `/storage/${url}`;
+}
+
+function protectedMediaUrl(chapterId: number, type: 'video' | 'pdf'): string {
+    return route('media.stream', {chapter: chapterId, type});
+}
+
+function disableContextMenu(event: MouseEvent): void {
+    event.preventDefault();
 }
 
 function contentTypeLabel(contentType: string | null): string {
@@ -208,41 +224,78 @@ function contentTypeLabel(contentType: string | null): string {
                         <div
                             v-if="currentChapter.content_type === 'video' && currentChapter.video_url"
                             class="mt-6 aspect-video overflow-hidden border border-white/10 bg-black"
+                            @contextmenu.prevent="disableContextMenu"
                         >
-                            <video class="size-full" controls controlslist="nodownload">
-                                <source :src="mediaUrl(currentChapter.video_url)" type="video/mp4"/>
+                            <video class="size-full" controls controlslist="nodownload" disablePictureInPicture>
+                                <source :src="protectedMediaUrl(currentChapter.id, 'video')" type="video/mp4"/>
                                 Votre navigateur ne supporte pas la lecture de vidéos.
                             </video>
                         </div>
 
-                        <div
-                            v-else-if="currentChapter.content_type === 'pdf' && currentChapter.media_url"
-                            class="mt-6 overflow-hidden border border-white/10 bg-[#101d2d]"
-                        >
-                            <div class="flex items-center justify-between border-b border-white/10 px-4 py-3">
-                                <div class="flex items-center gap-2 text-sm font-medium text-white">
+                        <div v-else-if="currentChapter.content_type === 'pdf'" class="mt-6">
+                            <div
+                                v-if="currentChapter.media_url && htmlContent"
+                                aria-label="Choix du contenu du chapitre"
+                                class="mb-4 inline-flex border border-white/10 bg-[#0b1929] p-1"
+                                role="tablist"
+                            >
+                                <button
+                                    aria-controls="chapter-pdf-panel"
+                                    :aria-selected="contentPane === 'pdf'"
+                                    :class="contentPane === 'pdf' ? 'bg-[#a72f5d] text-white' : 'text-slate-400 hover:text-white'"
+                                    class="px-4 py-2 text-sm font-semibold transition"
+                                    role="tab"
+                                    type="button"
+                                    @click="contentPane = 'pdf'"
+                                >
+                                    Document PDF
+                                </button>
+                                <button
+                                    aria-controls="chapter-markdown-panel"
+                                    :aria-selected="contentPane === 'markdown'"
+                                    :class="contentPane === 'markdown' ? 'bg-[#a72f5d] text-white' : 'text-slate-400 hover:text-white'"
+                                    class="px-4 py-2 text-sm font-semibold transition"
+                                    role="tab"
+                                    type="button"
+                                    @click="contentPane = 'markdown'"
+                                >
+                                    Version texte
+                                </button>
+                            </div>
+
+                            <div
+                                id="chapter-pdf-panel"
+                                v-if="contentPane === 'pdf' && currentChapter.media_url"
+                                class="overflow-hidden border border-white/10 bg-[#101d2d]"
+                                role="tabpanel"
+                                @contextmenu.prevent="disableContextMenu"
+                            >
+                                <div class="flex items-center gap-2 border-b border-white/10 px-4 py-3 text-sm font-medium text-white">
                                     <LearningIcon class="size-4 brightness-0 invert" name="document"/>
                                     Support PDF du chapitre
                                 </div>
-                                <a
-                                    :href="mediaUrl(currentChapter.media_url)"
-                                    class="text-xs font-semibold text-[#ff79a5] hover:text-white"
-                                    rel="noopener noreferrer"
-                                    target="_blank"
-                                >
-                                    Ouvrir le document
-                                </a>
+                                <iframe
+                                    :src="protectedMediaUrl(currentChapter.id, 'pdf')"
+                                    :title="currentChapter.title"
+                                    class="h-[68vh] min-h-[520px] w-full bg-white"
+                                />
                             </div>
-                            <iframe
-                                :src="mediaUrl(currentChapter.media_url)"
-                                :title="currentChapter.title"
-                                class="h-[68vh] min-h-[520px] w-full bg-white"
+
+                            <div
+                                id="chapter-markdown-panel"
+                                v-else-if="htmlContent"
+                                class="rich-markdown border border-white/10 bg-[#101d2d] p-5 text-slate-200 sm:p-7"
+                                role="tabpanel"
+                                v-html="htmlContent"
                             />
+                            <p v-else class="border border-white/10 bg-[#101d2d] p-5 text-sm text-slate-400">
+                                Aucune version texte n’est disponible pour ce document.
+                            </p>
                         </div>
 
                         <div
-                            v-if="htmlContent && currentChapter.content_type !== 'video'"
-                            class="mt-6 border border-white/10 bg-[#101d2d] p-5 text-slate-200 sm:p-7"
+                            v-if="htmlContent && currentChapter.content_type === 'text'"
+                            class="rich-markdown mt-6 border border-white/10 bg-[#101d2d] p-5 text-slate-200 sm:p-7"
                             v-html="htmlContent"
                         />
 

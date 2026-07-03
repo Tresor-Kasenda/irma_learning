@@ -1,14 +1,17 @@
-<?php
-/** @var Enrollment $enrollment */
-?>
-    <!DOCTYPE html>
+@php
+    $currency = $enrollment->currency ?? \App\Models\Setting::get('default_currency', 'XAF');
+    $isXaf = $currency === 'XAF';
+    $companyName = \App\Models\Setting::get('app_name', 'IRMA Learning');
+    $contactEmail = \App\Models\Setting::get('contact_email', 'contact@irmalearning.com');
+@endphp
+<!DOCTYPE html>
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
     <title>Facture #{{ $enrollment->id }}</title>
     <style>
         body {
-            font-family: 'Arial', sans-serif;
+            font-family: 'DejaVu Sans', 'Arial', sans-serif;
             line-height: 1.6;
             margin: 0;
             padding: 20px;
@@ -19,7 +22,6 @@
             max-width: 100%;
             margin: 0 auto;
             background: white;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
             padding: 40px;
         }
 
@@ -28,7 +30,7 @@
             justify-content: space-between;
             align-items: center;
             margin-bottom: 40px;
-            border-bottom: 3px solid #2563eb;
+            border-bottom: 3px solid #bf045b;
             padding-bottom: 20px;
         }
 
@@ -39,12 +41,12 @@
         .company-name {
             font-size: 24px;
             font-weight: bold;
-            color: #2563eb;
+            color: #bf045b;
             margin-bottom: 5px;
         }
 
         .company-details {
-            font-size: 12px;
+            font-size: 11px;
             color: #666;
             line-height: 1.4;
         }
@@ -56,13 +58,12 @@
 
         .invoice-title h1 {
             font-size: 36px;
-            color: #2563eb;
+            color: #bf045b;
             margin: 0;
         }
 
         .invoice-meta {
             display: flex;
-            justify-items: center;
             justify-content: space-between;
             margin-bottom: 30px;
         }
@@ -73,7 +74,7 @@
 
         .section-title {
             font-weight: bold;
-            color: #2563eb;
+            color: #bf045b;
             margin-bottom: 10px;
             border-bottom: 1px solid #e5e7eb;
             padding-bottom: 5px;
@@ -99,13 +100,9 @@
         }
 
         .items-table th {
-            background: #2563eb;
+            background: #bf045b;
             color: white;
             font-weight: bold;
-        }
-
-        .items-table tr:hover {
-            background: #f8fafc;
         }
 
         .total-section {
@@ -127,7 +124,7 @@
         }
 
         .total-amount {
-            width: 100px;
+            width: 120px;
             text-align: right;
             font-size: 18px;
             color: #059669;
@@ -147,7 +144,7 @@
             padding-top: 20px;
             border-top: 1px solid #e5e7eb;
             text-align: center;
-            font-size: 12px;
+            font-size: 11px;
             color: #666;
         }
 
@@ -181,7 +178,7 @@
             left: 50%;
             transform: translate(-50%, -50%) rotate(-45deg);
             font-size: 120px;
-            color: rgba(37, 99, 235, 0.1);
+            color: rgba(191, 4, 91, 0.08);
             font-weight: bold;
             z-index: -1;
         }
@@ -191,17 +188,19 @@
 <div class="watermark">PAYÉ</div>
 
 <div class="invoice-container">
-    <!-- En-tête -->
     <div class="header">
         <div class="company-info">
-            <div class="company-name">{{ config('app.name', 'Formation Academy') }}</div>
+            <div class="company-name">{{ $companyName }}</div>
             <div class="company-details">
-                123 Rue de la Formation<br>
-                75001 Paris, France<br>
-                Tél: +33 1 23 45 67 89<br>
-                Email: contact@formation-academy.fr<br>
-                SIRET: 123 456 789 00010<br>
-                TVA: FR12345678901
+                {{ \App\Models\Setting::get('company_address', 'Douala, Cameroun') }}<br>
+                {{ \App\Models\Setting::get('company_phone', '') }}<br>
+                Email: {{ $contactEmail }}<br>
+                @if($rccm = \App\Models\Setting::get('company_rccm'))
+                    RCCM: {{ $rccm }}<br>
+                @endif
+                @if($niu = \App\Models\Setting::get('company_niu'))
+                    NIU: {{ $niu }}<br>
+                @endif
             </div>
         </div>
         <div class="invoice-title">
@@ -210,18 +209,12 @@
         </div>
     </div>
 
-    <!-- Informations facture et client -->
     <div class="invoice-meta">
         <div class="invoice-details">
             <div class="section-title">DÉTAILS DE LA FACTURE</div>
             <div class="details-content">
-                <strong>Numéro:</strong> FA-{{ str_pad($enrollment->id, 6, '0', STR_PAD_LEFT) }}<br>
-                <strong>Date
-                    d'émission:</strong> {{ $enrollment->payment_processed_at?->format('d/m/Y') ?? now()->format('d/m/Y') }}
-                <br>
-                <strong>Date
-                    d'échéance:</strong> {{ $enrollment->payment_processed_at?->format('d/m/Y') ?? now()->format('d/m/Y') }}
-                <br>
+                <strong>Numéro:</strong> INV-{{ str_pad($enrollment->id, 6, '0', STR_PAD_LEFT) }}<br>
+                <strong>Date d'émission:</strong> {{ $enrollment->payment_processed_at?->format('d/m/Y') ?? now()->format('d/m/Y') }}<br>
                 <strong>Statut:</strong> <span style="color: #059669; font-weight: bold;">Payée</span>
             </div>
         </div>
@@ -231,63 +224,41 @@
             <div class="details-content">
                 <strong>{{ $enrollment->user->name }}</strong><br>
                 {{ $enrollment->user->email }}<br>
-                {{--                @if($enrollment->user->address)--}}
-                {{--                    {{ $enrollment->user->address }}<br>--}}
-                {{--                @endif--}}
-                {{--                @if($enrollment->user->city && $enrollment->user->postal_code)--}}
-                {{--                    {{ $enrollment->user->postal_code }} {{ $enrollment->user->city }}<br>--}}
-                {{--                @endif--}}
-                {{--                @if($enrollment->user->phone)--}}
-                {{--                    Tél: {{ $enrollment->user->phone }}--}}
-                {{--                @endif--}}
             </div>
         </div>
     </div>
 
-    <!-- Tableau des articles -->
     <table class="items-table">
         <thead>
         <tr>
             <th>Description</th>
             <th>Quantité</th>
             <th>Prix unitaire</th>
-            <th>Total HT</th>
+            <th>Total</th>
         </tr>
         </thead>
         <tbody>
         <tr>
             <td>
                 <strong>{{ $enrollment->formation->title }}</strong><br>
-                <small>Formation en ligne - Accès à vie</small><br>
-                <small>Période: {{ $enrollment->created_at->format('d/m/Y') }}
-                    - {{ $enrollment->created_at->addMonths(12)->format('d/m/Y') }}</small>
+                <small>Formation en ligne</small>
             </td>
             <td>1</td>
-            <td>€{{ number_format($enrollment->amount_paid / 1.2, 2, ',', ' ') }}</td>
-            <td>€{{ number_format($enrollment->amount_paid / 1.2, 2, ',', ' ') }}</td>
+            <td>{{ number_format($enrollment->amount_paid, 0, ',', ' ') }} {{ $currency }}</td>
+            <td>{{ number_format($enrollment->amount_paid, 0, ',', ' ') }} {{ $currency }}</td>
         </tr>
         </tbody>
     </table>
 
-    <!-- Totaux -->
     <div class="total-section">
         <div class="total-row">
-            <div class="total-label">Sous-total HT:</div>
-            <div class="total-amount">€{{ number_format($enrollment->amount_paid / 1.2, 2, ',', ' ') }}</div>
-        </div>
-        <div class="total-row">
-            <div class="total-label">TVA (20%):</div>
-            <div class="total-amount">
-                €{{ number_format($enrollment->amount_paid - ($enrollment->amount_paid / 1.2), 2, ',', ' ') }}</div>
-        </div>
-        <div class="total-row" style="border-top: 2px solid #2563eb; padding-top: 10px;">
-            <div class="total-label">TOTAL TTC:</div>
+            <div class="total-label">Total à payer:</div>
             <div class="total-amount" style="font-size: 24px;">
-                €{{ number_format($enrollment->amount_paid, 2, ',', ' ') }}</div>
+                {{ number_format($enrollment->amount_paid, 0, ',', ' ') }} {{ $currency }}
+            </div>
         </div>
     </div>
 
-    <!-- Informations de paiement -->
     <div class="payment-info">
         <div class="section-title">INFORMATIONS DE PAIEMENT</div>
         <strong>Méthode de paiement:</strong> {{ ucfirst($enrollment->payment_method) }}<br>
@@ -296,25 +267,22 @@
         <strong>Statut:</strong> <span style="color: #059669; font-weight: bold;">Paiement confirmé</span>
     </div>
 
-    <!-- Section signature -->
     <div class="signature-section">
         <div class="signature-box">
             <strong>Signature du client</strong><br>
             <small>(Bon pour accord)</small>
         </div>
         <div class="signature-box">
-            <strong>Formation Academy</strong><br>
+            <strong>{{ $companyName }}</strong><br>
             <small>Représentant légal</small>
         </div>
     </div>
 
-    <!-- Pied de page -->
     <div class="footer">
-        <p><strong>Conditions de paiement:</strong> Paiement immédiat par carte bancaire ou PayPal</p>
-        <p><strong>Mentions légales:</strong> Formation Academy - SARL au capital de 10 000€ - RCS Paris 123 456 789</p>
-        <p>En cas de retard de paiement, des pénalités au taux de 3 fois le taux d'intérêt légal seront applicables.</p>
+        <p><strong>{{ $companyName }}</strong> — {{ \App\Models\Setting::get('company_address', 'Douala, Cameroun') }}</p>
+        <p>Contact : {{ $contactEmail }}</p>
         <hr style="margin: 20px 0;">
-        <p>Merci pour votre confiance ! Pour toute question : contact@formation-academy.fr</p>
+        <p>Merci pour votre confiance !</p>
     </div>
 </div>
 </body>

@@ -30,6 +30,10 @@ final class SettingSeeder extends Seeder
             ['key' => 'about_us', 'value' => 'IRMA Learning est une plateforme de formation en ligne dédiée à l\'apprentissage des compétences numériques au Cameroun et en Afrique.'],
             ['key' => 'registration_open', 'value' => 'true'],
             ['key' => 'instructor_commission', 'value' => '70'],
+            ['key' => 'company_address', 'value' => 'Douala, Cameroun'],
+            ['key' => 'company_phone', 'value' => '+237 6XX XXX XXX'],
+            ['key' => 'company_rccm', 'value' => 'RC/DLA/XXXX/XXXX'],
+            ['key' => 'company_niu', 'value' => 'MXXXXXXXXX'],
         ];
 
         foreach ($settings as $setting) {

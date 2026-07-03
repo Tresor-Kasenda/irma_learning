@@ -39,12 +39,12 @@ final class Certificate extends Model
 
     public function scopeActive($query)
     {
-        return $query->where('status', 'active');
+        return $query->where('status', CertificateStatusEnum::ACTIVE);
     }
 
     public function scopeValid($query)
     {
-        return $query->where('status', 'active')
+        return $query->where('status', CertificateStatusEnum::ACTIVE)
             ->where(function ($q) {
                 $q->whereNull('expiry_date')
                     ->orWhere('expiry_date', '>', now());
@@ -53,20 +53,29 @@ final class Certificate extends Model
 
     public function isValid(): bool
     {
-        return $this->status === 'active' &&
+        return $this->status === CertificateStatusEnum::ACTIVE &&
             ($this->expiry_date === null || $this->expiry_date->isFuture());
     }
 
     public function getDownloadUrlAttribute(): string
     {
-        return 'new';
-        // return route('certificates.download', ['certificate' => $this->certificate_number]);
+        return route('certificates.download', ['certificate' => $this]);
     }
 
     public function getVerificationUrlAttribute(): string
     {
-        return 'new';
-        // return route('certificates.verify', ['hash' => $this->verification_hash]);
+        return route('certificates.verify', ['hash' => $this->verification_hash]);
+    }
+
+    public function revoke(string $reason = ''): void
+    {
+        $this->update([
+            'status' => CertificateStatusEnum::REVOKED,
+            'metadata' => array_merge($this->metadata ?? [], [
+                'revoked_at' => now()->toIso8601String(),
+                'revoke_reason' => $reason,
+            ]),
+        ]);
     }
 
     protected static function boot(): void

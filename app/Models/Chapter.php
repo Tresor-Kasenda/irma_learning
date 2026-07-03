@@ -31,6 +31,11 @@ final class Chapter extends Model
         'video_url',
         'cover_image',
         'markdown_file',
+        'processing_status',
+        'processing_error',
+        'processing_metadata',
+        'processing_started_at',
+        'processed_at',
         'duration_minutes',
         'order_position',
         'is_free',
@@ -159,7 +164,9 @@ final class Chapter extends Model
         return [
             'is_free' => 'boolean',
             'is_active' => 'boolean',
-            'metadata' => 'array',
+            'processing_metadata' => 'array',
+            'processing_started_at' => 'datetime',
+            'processed_at' => 'datetime',
             'content_type' => ChapterTypeEnum::class,
         ];
     }

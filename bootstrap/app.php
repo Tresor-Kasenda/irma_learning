@@ -30,6 +30,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'force.password.change' => ForcePasswordChange::class,
             'check.status' => CheckUserStatus::class,
             'admin.access' => EnsureUserIsAdmin::class,
+            'paid.access' => App\Http\Middleware\EnsurePaidCourseAccess::class,
         ]);
 
         $middleware->appendToGroup('web', WebRequestMonitoring::class)

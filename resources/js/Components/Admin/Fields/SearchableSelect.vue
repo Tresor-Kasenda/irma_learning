@@ -20,9 +20,12 @@ const props = withDefaults(
         clearable?: boolean;
         taggable?: boolean;
         placeholder?: string;
+        id?: string;
         error?: string;
         hint?: string;
         required?: boolean;
+        compact?: boolean;
+        hideLabel?: boolean;
     }>(),
     {
         options: () => [],
@@ -31,6 +34,8 @@ const props = withDefaults(
         clearable: true,
         taggable: false,
         placeholder: 'Sélectionner…',
+        compact: false,
+        hideLabel: false,
     },
 );
 
@@ -124,13 +129,24 @@ onBeforeUnmount(() => document.removeEventListener('mousedown', onClickOutside))
 </script>
 
 <template>
-    <FieldWrapper :error="error" :hint="hint" :label="label" :required="required">
+    <FieldWrapper
+        :error="error"
+        :for-id="id"
+        :hint="hint"
+        :label="hideLabel ? undefined : label"
+        :required="required"
+    >
         <div ref="root" class="relative">
             <div
+                :id="id"
+                :aria-label="label"
                 :aria-expanded="open"
                 aria-haspopup="listbox"
-                :class="open ? 'border-[#c23a72]' : ''"
-                class="admin-field flex min-h-11 w-full cursor-pointer flex-wrap items-center gap-1.5 border px-3 py-2 text-sm transition"
+                :class="[
+                    open ? 'border-[#c23a72]' : '',
+                    compact ? 'min-h-10 py-1.5' : 'min-h-11 py-2',
+                ]"
+                class="admin-field flex w-full cursor-pointer flex-wrap items-center gap-1.5 border px-3 text-sm transition"
                 role="combobox"
                 tabindex="0"
                 @click="toggle"

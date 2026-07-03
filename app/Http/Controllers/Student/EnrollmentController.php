@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Student;
 
 use App\Http\Controllers\Controller;
-
 use App\Models\Enrollment;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Exception;
@@ -19,6 +18,8 @@ final class EnrollmentController extends Controller
      */
     public function __invoke(Enrollment $enrollment, Request $request)
     {
+        $this->authorize('view', $enrollment);
+
         $enrollment->load(['user', 'formation']);
 
         if (! $enrollment->payment_processed_at) {
@@ -54,6 +55,8 @@ final class EnrollmentController extends Controller
      */
     public function sendByEmail(Enrollment $enrollment, Request $request)
     {
+        $this->authorize('view', $enrollment);
+
         $request->validate([
             'email' => 'required|email',
             'message' => 'nullable|string|max:1000',
@@ -111,9 +114,7 @@ final class EnrollmentController extends Controller
      */
     public function refund(Enrollment $enrollment, Request $request)
     {
-        if (! auth()->user()->isAdmin() && ! auth()->user()->isSuperAdmin()) {
-            abort(403, 'Unauthorized action.');
-        }
+        $this->authorize('update', $enrollment);
 
         $request->validate([
             'reason' => 'required|string|max:500',

@@ -1,1 +1,0 @@
-import{c as r,C as n,o as a}from"./app-CmZ7QDAM.js";const f=(e,t)=>{const c=e.__vccOpts||e;for(const[s,o]of t)c[s]=o;return c},l={},_={class:"flex min-h-screen flex-col items-center justify-center bg-irma-surface px-4 py-10"};function i(e,t){return a(),r("div",_,[n(e.$slots,"default")])}const m=f(l,[["render",i]]);export{m as G};

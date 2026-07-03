@@ -36,11 +36,11 @@ final class UserFactory extends Factory
             'email_verified_at' => now(),
             'phone' => $this->faker->phoneNumber,
             'avatar' => $this->faker->imageUrl(),
-            'status' => $this->faker->randomElement(UserStatusEnum::cases()),
-            'role' => $this->faker->randomElement(UserRoleEnum::cases()),
+            'status' => UserStatusEnum::ACTIVE,
+            'role' => $this->faker->randomElement([UserRoleEnum::STUDENT, UserRoleEnum::STUDENT, UserRoleEnum::STUDENT, UserRoleEnum::ADMIN]),
             'password' => self::$password ??= Hash::make('password'),
             'remember_token' => Str::random(10),
-            'must_change_password' => fake()->boolean,
+            'must_change_password' => false,
         ];
     }
 

@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import {router} from '@inertiajs/vue3';
-import SelectField from '@/Components/Admin/Fields/SelectField.vue';
+import SearchableSelect from '@/Components/Admin/Fields/SearchableSelect.vue';
 
 export interface FilterDef {
     key: string;
@@ -37,8 +37,10 @@ function filterOptions(definition: FilterDef): { value: string; label: string }[
     ];
 }
 
-function onChange(key: string, value: string): void {
-    router.get(props.indexRoute, clean({...props.filters, [key]: value, page: undefined}), {
+function onChange(key: string, value: string | number | (string | number)[] | null): void {
+    const normalizedValue = Array.isArray(value) ? value.join(',') : value == null ? '' : String(value);
+
+    router.get(props.indexRoute, clean({...props.filters, [key]: normalizedValue, page: undefined}), {
         preserveState: true,
         preserveScroll: true,
         replace: true,
@@ -47,13 +49,16 @@ function onChange(key: string, value: string): void {
 </script>
 
 <template>
-    <SelectField
+    <SearchableSelect
         v-for="def in definitions"
         :id="`admin-filter-${def.key}`"
         :key="def.key"
+        :clearable="false"
         :label="def.label"
         :model-value="filters[def.key] ?? def.defaultValue ?? ''"
         :options="filterOptions(def)"
+        :searchable="false"
+        class="min-w-36 flex-1 sm:flex-none"
         compact
         hide-label
         @update:model-value="onChange(def.key, $event)"

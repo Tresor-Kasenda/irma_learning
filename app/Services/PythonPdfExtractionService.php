@@ -1,0 +1,106 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Services;
+
+use Illuminate\Support\Facades\Storage;
+use JsonException;
+use RuntimeException;
+use Symfony\Component\Process\Process;
+
+final class PythonPdfExtractionService
+{
+    /**
+     * @return array{markdown: string, page_count: int, word_count: int, image_count: int, cover_file: string, visual_pages: array<int, int>, ocr_pages: array<int, int>, ocr_required_pages: array<int, int>, warnings: array<int, string>, asset_directory: string}
+     */
+    public function extract(string $pdfPath, string $assetDirectory): array
+    {
+        $pythonBinary = mb_trim((string) config('learning.pdf_extraction.python_binary'));
+        $pythonBinary = $pythonBinary !== '' ? $pythonBinary : 'python3';
+        $scriptPath = (string) config('learning.pdf_extraction.script_path');
+
+        if (! is_file($pdfPath)) {
+            throw new RuntimeException("Le PDF est introuvable : {$pdfPath}");
+        }
+        if (! is_file($scriptPath)) {
+            throw new RuntimeException("Le script Python est introuvable : {$scriptPath}");
+        }
+
+        Storage::disk('public')->deleteDirectory($assetDirectory);
+        Storage::disk('public')->makeDirectory($assetDirectory);
+
+        $process = new Process([
+            $pythonBinary,
+            $scriptPath,
+            '--input',
+            $pdfPath,
+            '--output-dir',
+            Storage::disk('public')->path($assetDirectory),
+            '--public-prefix',
+            '/storage/'.mb_ltrim($assetDirectory, '/'),
+            '--max-pages',
+            (string) config('learning.pdf_extraction.max_pages', 300),
+            '--image-dpi',
+            (string) config('learning.pdf_extraction.image_dpi', 144),
+            '--visual-dpi',
+            (string) config('learning.pdf_extraction.visual_dpi', 110),
+            '--ocr-language',
+            (string) config('learning.pdf_extraction.ocr_language', 'fra+eng'),
+        ], base_path());
+        $process->setTimeout((float) config('learning.pdf_extraction.timeout', 300));
+        $process->run();
+
+        if (! $process->isSuccessful()) {
+            $message = $this->extractErrorMessage($process->getErrorOutput());
+            Storage::disk('public')->deleteDirectory($assetDirectory);
+
+            throw new RuntimeException($message);
+        }
+
+        try {
+            $result = json_decode($process->getOutput(), true, flags: JSON_THROW_ON_ERROR);
+        } catch (JsonException $exception) {
+            Storage::disk('public')->deleteDirectory($assetDirectory);
+
+            throw new RuntimeException('La réponse du convertisseur Python est invalide.', previous: $exception);
+        }
+
+        if (! is_array($result) || ! isset($result['markdown'], $result['cover_file'])) {
+            Storage::disk('public')->deleteDirectory($assetDirectory);
+
+            throw new RuntimeException('Le convertisseur Python n’a pas retourné le contenu attendu.');
+        }
+
+        return [
+            'markdown' => (string) $result['markdown'],
+            'page_count' => (int) ($result['page_count'] ?? 0),
+            'word_count' => (int) ($result['word_count'] ?? 0),
+            'image_count' => (int) ($result['image_count'] ?? 0),
+            'cover_file' => (string) $result['cover_file'],
+            'visual_pages' => array_values(array_map('intval', $result['visual_pages'] ?? [])),
+            'ocr_pages' => array_values(array_map('intval', $result['ocr_pages'] ?? [])),
+            'ocr_required_pages' => array_values(array_map('intval', $result['ocr_required_pages'] ?? [])),
+            'warnings' => array_values(array_map('strval', $result['warnings'] ?? [])),
+            'asset_directory' => $assetDirectory,
+        ];
+    }
+
+    private function extractErrorMessage(string $errorOutput): string
+    {
+        $errorOutput = mb_trim($errorOutput);
+        if ($errorOutput === '') {
+            return 'La conversion Python du PDF a échoué.';
+        }
+
+        try {
+            $error = json_decode($errorOutput, true, flags: JSON_THROW_ON_ERROR);
+
+            return is_array($error) && is_string($error['error'] ?? null)
+                ? $error['error']
+                : $errorOutput;
+        } catch (JsonException) {
+            return $errorOutput;
+        }
+    }
+}

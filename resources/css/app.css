@@ -117,4 +117,157 @@
         background-color: var(--admin-hover);
         color: var(--admin-heading);
     }
+
+    .rich-markdown {
+        min-width: 0;
+        max-width: 100%;
+        color: inherit;
+        line-height: 1.75;
+        overflow-wrap: anywhere;
+    }
+
+    .rich-markdown > :first-child {
+        margin-top: 0;
+    }
+
+    .rich-markdown > :last-child {
+        margin-bottom: 0;
+    }
+
+    .rich-markdown h1,
+    .rich-markdown h2,
+    .rich-markdown h3,
+    .rich-markdown h4,
+    .rich-markdown h5,
+    .rich-markdown h6 {
+        margin-block: 1.5em 0.65em;
+        color: inherit;
+        font-weight: 700;
+        line-height: 1.25;
+    }
+
+    .rich-markdown h1 {
+        font-size: clamp(1.75rem, 4vw, 2.25rem);
+    }
+
+    .rich-markdown h2 {
+        border-bottom: 1px solid currentColor;
+        padding-bottom: 0.35em;
+        font-size: clamp(1.4rem, 3vw, 1.75rem);
+        border-color: color-mix(in srgb, currentColor 20%, transparent);
+    }
+
+    .rich-markdown h3 {
+        font-size: 1.25rem;
+    }
+
+    .rich-markdown h4,
+    .rich-markdown h5,
+    .rich-markdown h6 {
+        font-size: 1rem;
+    }
+
+    .rich-markdown p,
+    .rich-markdown ul,
+    .rich-markdown ol,
+    .rich-markdown blockquote,
+    .rich-markdown pre,
+    .rich-markdown .table-responsive,
+    .rich-markdown hr {
+        margin-block: 1em;
+    }
+
+    .rich-markdown ul,
+    .rich-markdown ol {
+        padding-left: 1.5rem;
+    }
+
+    .rich-markdown ul {
+        list-style: disc;
+    }
+
+    .rich-markdown ol {
+        list-style: decimal;
+    }
+
+    .rich-markdown li + li {
+        margin-top: 0.35em;
+    }
+
+    .rich-markdown a {
+        color: #f36c9b;
+        text-decoration: underline;
+        text-underline-offset: 0.2em;
+    }
+
+    .rich-markdown strong {
+        color: inherit;
+        font-weight: 700;
+    }
+
+    .rich-markdown code {
+        border-radius: 0.25rem;
+        background: color-mix(in srgb, currentColor 10%, transparent);
+        padding: 0.1rem 0.35rem;
+        font-size: 0.9em;
+    }
+
+    .rich-markdown pre {
+        max-width: 100%;
+        overflow-x: auto;
+        border: 1px solid color-mix(in srgb, currentColor 15%, transparent);
+        background: #06111f;
+        padding: 1rem;
+        color: #e2e8f0;
+    }
+
+    .rich-markdown pre code {
+        background: transparent;
+        padding: 0;
+        color: inherit;
+    }
+
+    .rich-markdown blockquote {
+        border-left: 3px solid #df3e75;
+        padding: 0.25rem 0 0.25rem 1rem;
+        color: color-mix(in srgb, currentColor 75%, transparent);
+    }
+
+    .rich-markdown .table-responsive {
+        max-width: 100%;
+        overflow-x: auto;
+    }
+
+    .rich-markdown table {
+        width: 100%;
+        min-width: 32rem;
+        border-collapse: collapse;
+    }
+
+    .rich-markdown th,
+    .rich-markdown td {
+        border: 1px solid color-mix(in srgb, currentColor 18%, transparent);
+        padding: 0.65rem 0.8rem;
+        text-align: left;
+        vertical-align: top;
+    }
+
+    .rich-markdown th {
+        background: color-mix(in srgb, currentColor 8%, transparent);
+        color: inherit;
+        font-weight: 700;
+    }
+
+    .rich-markdown img {
+        display: block;
+        max-width: 100%;
+        height: auto;
+        margin-block: 1rem;
+        object-fit: contain;
+    }
+
+    .rich-markdown hr {
+        border: 0;
+        border-top: 1px solid color-mix(in srgb, currentColor 20%, transparent);
+    }
 }

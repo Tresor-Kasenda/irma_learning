@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import {Head, Link} from '@inertiajs/vue3';
+import {Head, Link, router} from '@inertiajs/vue3';
 import {computed} from 'vue';
 import LearningLayout from '@/Layouts/LearningLayout.vue';
 import LearningIcon from '@/Components/Learning/LearningIcon.vue';
@@ -12,6 +12,8 @@ interface CertificateShow {
     issue_date?: string | null;
     expiry_date?: string | null;
     verification_hash: string;
+    download_url: string;
+    verification_url: string;
     status: string;
     formation: { id: number; title: string; slug: string } | null;
     user: { id: number; name: string } | null;
@@ -38,6 +40,10 @@ function formatDate(value?: string | null): string {
 function printCertificate(): void {
     window.print();
 }
+
+function downloadCertificate(): void {
+    router.post(props.certificate.download_url);
+}
 </script>
 
 <template>
@@ -61,14 +67,24 @@ function printCertificate(): void {
                     <LearningIcon class="size-4 brightness-0 invert opacity-70" name="arrow-left"/>
                     Retour aux certifications
                 </Link>
-                <button
-                    class="inline-flex h-10 items-center gap-2 border border-white/15 px-4 text-sm font-semibold text-white transition hover:bg-white/5"
-                    type="button"
-                    @click="printCertificate"
-                >
-                    <LearningIcon class="size-4 brightness-0 invert opacity-80" name="document-text"/>
-                    Imprimer
-                </button>
+                <div class="flex gap-2">
+                    <button
+                        class="inline-flex h-10 items-center gap-2 border border-white/15 px-4 text-sm font-semibold text-white transition hover:bg-white/5"
+                        type="button"
+                        @click="printCertificate"
+                    >
+                        <LearningIcon class="size-4 brightness-0 invert opacity-80" name="document-text"/>
+                        Imprimer
+                    </button>
+                    <button
+                        class="inline-flex h-10 items-center gap-2 bg-irma-primary px-4 text-sm font-semibold text-white transition hover:opacity-90"
+                        type="button"
+                        @click="downloadCertificate"
+                    >
+                        <LearningIcon class="size-4 brightness-0 invert opacity-80" name="arrow-down-tray"/>
+                        Télécharger
+                    </button>
+                </div>
             </div>
 
             <!-- Certificat -->

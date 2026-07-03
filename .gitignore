@@ -23,5 +23,6 @@ yarn-error.log
 /.junie
 /.github
 /.ai
+/.venv-pdf
 
 .DS_Store

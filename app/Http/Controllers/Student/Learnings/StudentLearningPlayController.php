@@ -109,7 +109,7 @@ final class StudentLearningPlayController extends Controller
             'currentChapterIndex' => $currentChapterIndex,
             'completedChapters' => $completedChapters,
             'sections' => $sectionStates->values(),
-            'htmlContent' => $currentChapter?->getHtmlContent() ?? '',
+            'htmlContent' => $currentChapter?->getHtmlContentRaw() ?? '',
         ]);
     }
 
