@@ -30,6 +30,13 @@ final class PythonPdfExtractionService
         Storage::disk('public')->deleteDirectory($assetDirectory);
         Storage::disk('public')->makeDirectory($assetDirectory);
 
+        $maxPages = (int) config('learning.pdf_extraction.max_pages', 0);
+        $batchSize = (int) config('learning.pdf_extraction.batch_size', 50);
+        $parallel = (int) config('learning.pdf_extraction.parallel', 0);
+        $imageDpi = (int) config('learning.pdf_extraction.image_dpi', 144);
+        $visualDpi = (int) config('learning.pdf_extraction.visual_dpi', 110);
+        $ocrLanguage = (string) config('learning.pdf_extraction.ocr_language', 'fra+eng');
+
         $process = new Process([
             $pythonBinary,
             $scriptPath,
@@ -40,15 +47,19 @@ final class PythonPdfExtractionService
             '--public-prefix',
             '/storage/'.mb_ltrim($assetDirectory, '/'),
             '--max-pages',
-            (string) config('learning.pdf_extraction.max_pages', 300),
+            (string) $maxPages,
             '--image-dpi',
-            (string) config('learning.pdf_extraction.image_dpi', 144),
+            (string) $imageDpi,
             '--visual-dpi',
-            (string) config('learning.pdf_extraction.visual_dpi', 110),
+            (string) $visualDpi,
             '--ocr-language',
-            (string) config('learning.pdf_extraction.ocr_language', 'fra+eng'),
+            $ocrLanguage,
+            '--batch-size',
+            (string) $batchSize,
+            '--parallel',
+            (string) $parallel,
         ], base_path());
-        $process->setTimeout((float) config('learning.pdf_extraction.timeout', 300));
+        $process->setTimeout((float) config('learning.pdf_extraction.timeout', 600));
         $process->run();
 
         if (! $process->isSuccessful()) {
