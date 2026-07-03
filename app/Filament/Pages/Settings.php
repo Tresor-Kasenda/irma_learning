@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Filament\Pages;
 
 use App\Models\Setting;
@@ -10,13 +12,18 @@ use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use UnitEnum;
 
-class Settings extends Page
+final class Settings extends Page
 {
-    protected static BackedEnum|string|null $navigationIcon = 'heroicon-o-cog-6-tooth';
-    protected static string|UnitEnum|null $navigationGroup = 'Administration';
-    protected static ?string $navigationLabel = 'Paramètres';
-    protected static ?int $navigationSort = 5;
     public ?array $data = [];
+
+    protected static BackedEnum|string|null $navigationIcon = 'heroicon-o-cog-6-tooth';
+
+    protected static string|UnitEnum|null $navigationGroup = 'Administration';
+
+    protected static ?string $navigationLabel = 'Paramètres';
+
+    protected static ?int $navigationSort = 5;
+
     protected string $view = 'filament.pages.settings';
 
     public function mount(): void

@@ -4,13 +4,12 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Student;
 
-use App\Http\Controllers\Controller;
-
 use App\Enums\CertificateStatusEnum;
 use App\Enums\EnrollmentPaymentEnum;
 use App\Enums\EnrollmentStatusEnum;
 use App\Enums\ExamAttemptEnum;
 use App\Enums\QuestionTypeEnum;
+use App\Http\Controllers\Controller;
 use App\Models\Certificate;
 use App\Models\Chapter;
 use App\Models\Enrollment;

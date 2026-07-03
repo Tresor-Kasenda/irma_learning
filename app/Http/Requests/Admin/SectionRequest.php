@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Requests\Admin;
 
 use App\Enums\ChapterTypeEnum;
+use App\Enums\QuestionTypeEnum;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -32,6 +33,26 @@ abstract class SectionRequest extends FormRequest
             'chapters.*.duration_minutes' => ['nullable', 'integer', 'min:0'],
             'chapters.*.is_free' => ['boolean'],
             'chapters.*.is_active' => ['boolean'],
+            'exam' => ['nullable', 'array'],
+            'exam.title' => ['nullable', 'string', 'max:255'],
+            'exam.description' => ['nullable', 'string'],
+            'exam.instructions' => ['nullable', 'string'],
+            'exam.duration_minutes' => ['nullable', 'integer', 'min:1', 'max:600'],
+            'exam.passing_score' => ['nullable', 'integer', 'min:0', 'max:100'],
+            'exam.max_attempts' => ['nullable', 'integer', 'min:0', 'max:100'],
+            'exam.randomize_questions' => ['boolean'],
+            'exam.show_results_immediately' => ['boolean'],
+            'exam.is_active' => ['boolean'],
+            'exam.questions' => ['nullable', 'array'],
+            'exam.questions.*.id' => ['nullable', 'integer'],
+            'exam.questions.*.question_text' => ['required_with:exam.title', 'string'],
+            'exam.questions.*.question_type' => ['required_with:exam.title', Rule::enum(QuestionTypeEnum::class)],
+            'exam.questions.*.points' => ['required_with:exam.title', 'integer', 'min:1', 'max:100'],
+            'exam.questions.*.is_required' => ['boolean'],
+            'exam.questions.*.explanation' => ['nullable', 'string'],
+            'exam.questions.*.options' => ['required_with:exam.title', 'array', 'min:4', 'max:5'],
+            'exam.questions.*.options.*.option_text' => ['required_with:exam.title', 'string', 'max:500'],
+            'exam.questions.*.options.*.is_correct' => ['required', 'boolean'],
         ];
     }
 
@@ -51,6 +72,12 @@ abstract class SectionRequest extends FormRequest
             'chapters.*.media.max' => 'Le PDF ne doit pas dépasser 50 Mo.',
             'chapters.*.video.mimetypes' => 'Le fichier doit être une vidéo (mp4, webm, ogg, mov).',
             'chapters.*.video.max' => 'La vidéo ne doit pas dépasser 500 Mo.',
+            'exam.questions.*.question_text.required_with' => 'Le texte de la question est obligatoire.',
+            'exam.questions.*.question_type.required_with' => 'Le type de question est obligatoire.',
+            'exam.questions.*.points.required_with' => 'Les points sont obligatoires.',
+            'exam.questions.*.options.required_with' => 'Au moins 4 options sont requises.',
+            'exam.questions.*.options.min' => 'Au moins 4 options sont requises.',
+            'exam.questions.*.options.max' => 'Maximum 5 options autorisées.',
         ];
     }
 }

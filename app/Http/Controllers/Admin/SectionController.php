@@ -9,6 +9,7 @@ use App\Http\Requests\Admin\StoreSectionRequest;
 use App\Http\Requests\Admin\UpdateSectionRequest;
 use App\Jobs\ExtractChapterPdf;
 use App\Models\Formation;
+use App\Models\Question;
 use App\Models\Section;
 use App\Services\ChapterMediaService;
 use Illuminate\Database\Eloquent\Builder;
@@ -66,6 +67,7 @@ final class SectionController extends Controller
     public function edit(Section $section): Response
     {
         $section->load(['chapters' => fn ($query) => $query->orderBy('order_position')]);
+        $exam = $section->exam()->with(['questions' => fn ($q) => $q->with('options')->orderBy('order_position')])->first();
 
         return Inertia::render('Admin/Sections/Form', [
             'section' => [
@@ -85,6 +87,33 @@ final class SectionController extends Controller
                     'is_free' => $chapter->is_free,
                     'is_active' => $chapter->is_active,
                 ]),
+                'exam' => $exam ? [
+                    'id' => $exam->id,
+                    'title' => $exam->title,
+                    'description' => $exam->description,
+                    'instructions' => $exam->instructions,
+                    'duration_minutes' => $exam->duration_minutes,
+                    'passing_score' => $exam->passing_score,
+                    'max_attempts' => $exam->max_attempts,
+                    'randomize_questions' => $exam->randomize_questions,
+                    'show_results_immediately' => $exam->show_results_immediately,
+                    'is_active' => $exam->is_active,
+                    'questions' => $exam->questions->map(fn ($q): array => [
+                        'id' => $q->id,
+                        'question_text' => $q->question_text,
+                        'question_type' => $q->question_type->value,
+                        'points' => $q->points,
+                        'is_required' => $q->is_required,
+                        'explanation' => $q->explanation,
+                        'order_position' => $q->order_position,
+                        'options' => $q->options->map(fn ($opt): array => [
+                            'id' => $opt->id,
+                            'option_text' => $opt->option_text,
+                            'is_correct' => $opt->is_correct,
+                            'order_position' => $opt->order_position,
+                        ]),
+                    ]),
+                ] : null,
             ],
             'formations' => $this->formationOptions(),
             'preselectedFormationId' => null,
@@ -94,6 +123,7 @@ final class SectionController extends Controller
     public function show(Section $section): Response
     {
         $section->load(['formation:id,title', 'chapters' => fn ($query) => $query->orderBy('order_position')]);
+        $exam = $section->exam()->first(['id', 'title']);
 
         return Inertia::render('Admin/Sections/Show', [
             'section' => [
@@ -102,7 +132,8 @@ final class SectionController extends Controller
                     'id' => $section->formation->id,
                     'title' => $section->formation->title,
                 ],
-                'has_exam' => $section->exam()->exists(),
+                'has_exam' => $exam !== null,
+                'exam' => $exam ? ['id' => $exam->id, 'title' => $exam->title] : null,
                 'chapters_count' => $section->chapters->count(),
                 'chapters' => $section->chapters->map(fn ($chapter): array => [
                     'id' => $chapter->id,
@@ -118,19 +149,22 @@ final class SectionController extends Controller
 
     public function store(StoreSectionRequest $request): RedirectResponse
     {
-        $section = Section::query()->create($request->safe()->except('chapters'));
+        $section = Section::query()->create($request->safe()->except('chapters', 'exam'));
         $this->syncChapters($section, $request->validated('chapters') ?? []);
+        $this->syncExam($section, $request->validated('exam'));
 
         return redirect()->route('admin.sections.index')->with('success', 'Section créée avec succès.');
     }
 
     public function update(UpdateSectionRequest $request, Section $section): RedirectResponse
     {
-        $section->update($request->safe()->except('chapters'));
+        $section->update($request->safe()->except('chapters', 'exam'));
 
         if ($request->has('chapters')) {
             $this->syncChapters($section, $request->validated('chapters') ?? []);
         }
+
+        $this->syncExam($section, $request->validated('exam'));
 
         return redirect()->route('admin.sections.index')->with('success', 'Section mise à jour.');
     }
@@ -141,6 +175,13 @@ final class SectionController extends Controller
             $this->mediaService->deleteChapterFiles($chapter);
             $chapter->delete();
         });
+
+        if ($section->exam()->exists()) {
+            $section->exam->questions()->each(fn ($q) => $q->options()->delete());
+            $section->exam->questions()->delete();
+            $section->exam()->delete();
+        }
+
         $section->delete();
 
         return back()->with('success', 'Section supprimée.');
@@ -154,8 +195,110 @@ final class SectionController extends Controller
     }
 
     /**
-     * Crée, met à jour et supprime les chapitres d'une section à partir du formulaire.
-     *
+     * @param  array{title?: string, description?: string|null, instructions?: string|null, duration_minutes?: int, passing_score?: int, max_attempts?: int, randomize_questions?: bool, show_results_immediately?: bool, is_active?: bool, questions?: array<int, array{id?: int|null, question_text: string, question_type: string, points: int, is_required?: bool, explanation?: string|null, options: array<int, array{id?: int|null, option_text: string, is_correct: bool}>}>}|null  $examData
+     */
+    private function syncExam(Section $section, ?array $examData): void
+    {
+        if ($examData === null || empty($examData['title'])) {
+            if ($section->exam()->exists()) {
+                $section->exam->questions()->each(fn ($q) => $q->options()->delete());
+                $section->exam->questions()->delete();
+                $section->exam()->delete();
+            }
+
+            return;
+        }
+
+        $examPayload = [
+            'title' => $examData['title'],
+            'description' => $examData['description'] ?? null,
+            'instructions' => $examData['instructions'] ?? null,
+            'duration_minutes' => $examData['duration_minutes'] ?? 60,
+            'passing_score' => $examData['passing_score'] ?? 70,
+            'max_attempts' => $examData['max_attempts'] ?? 3,
+            'randomize_questions' => $examData['randomize_questions'] ?? false,
+            'show_results_immediately' => $examData['show_results_immediately'] ?? true,
+            'is_active' => $examData['is_active'] ?? true,
+        ];
+
+        $exam = $section->exam()->first();
+
+        if ($exam) {
+            $exam->update($examPayload);
+        } else {
+            $exam = $section->exam()->create($examPayload);
+        }
+
+        // Sync questions
+        $questionsData = $examData['questions'] ?? [];
+        $keepQuestionIds = [];
+
+        foreach (array_values($questionsData) as $qIndex => $qData) {
+            if (empty($qData['question_text'])) {
+                continue;
+            }
+
+            $questionPayload = [
+                'question_text' => $qData['question_text'],
+                'question_type' => $qData['question_type'] ?? 'single_choice',
+                'points' => $qData['points'] ?? 1,
+                'is_required' => $qData['is_required'] ?? true,
+                'explanation' => $qData['explanation'] ?? null,
+                'order_position' => $qIndex + 1,
+            ];
+
+            $existingQuestion = empty($qData['id'])
+                ? null
+                : $exam->questions()->whereKey($qData['id'])->first();
+
+            if ($existingQuestion) {
+                $existingQuestion->update($questionPayload);
+                $savedQuestion = $existingQuestion;
+            } else {
+                $savedQuestion = $exam->questions()->create($questionPayload);
+            }
+
+            $keepQuestionIds[] = $savedQuestion->id;
+
+            // Sync options for this question
+            $optionsData = $qData['options'] ?? [];
+            $keepOptionIds = [];
+
+            foreach (array_values($optionsData) as $oIndex => $oData) {
+                if (empty($oData['option_text'])) {
+                    continue;
+                }
+
+                $optionPayload = [
+                    'option_text' => $oData['option_text'],
+                    'is_correct' => $oData['is_correct'] ?? false,
+                    'order_position' => $oIndex + 1,
+                ];
+
+                $existingOption = empty($oData['id'])
+                    ? null
+                    : $savedQuestion->options()->whereKey($oData['id'])->first();
+
+                if ($existingOption) {
+                    $existingOption->update($optionPayload);
+                    $keepOptionIds[] = $existingOption->id;
+                } else {
+                    $keepOptionIds[] = $savedQuestion->options()->create($optionPayload)->id;
+                }
+            }
+
+            // Remove deleted options
+            $savedQuestion->options()->whereKeyNot($keepOptionIds)->delete();
+        }
+
+        // Remove deleted questions
+        $exam->questions()->whereKeyNot($keepQuestionIds)->each(function ($q): void {
+            $q->options()->delete();
+            $q->delete();
+        });
+    }
+
+    /**
      * @param  array<int, array{id?: int|null, title: string, content_type: string, content?: string|null, video?: UploadedFile|null, media?: UploadedFile|null, duration_minutes?: int|null, is_free?: bool, is_active?: bool}>  $chapters
      */
     private function syncChapters(Section $section, array $chapters): void

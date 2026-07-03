@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Filament\Widgets;
 
 use App\Enums\FormationLevelEnum;
@@ -7,10 +9,12 @@ use App\Models\Formation;
 use Filament\Widgets\ChartWidget;
 use Illuminate\Support\Facades\DB;
 
-class FormationStatsChart extends ChartWidget
+final class FormationStatsChart extends ChartWidget
 {
     protected static ?int $sort = 2;
+
     protected ?string $heading = 'Formations Statistics';
+
     protected ?string $maxHeight = '300px';
 
     protected function getData(): array
@@ -55,7 +59,7 @@ class FormationStatsChart extends ChartWidget
                         'rgba(255, 206, 86, 1)',
                         'rgba(255, 99, 132, 1)',
                     ],
-                    'borderWidth' => 1
+                    'borderWidth' => 1,
                 ],
                 [
                     'label' => 'Formation Status',
@@ -70,7 +74,7 @@ class FormationStatsChart extends ChartWidget
                         'rgba(153, 102, 255, 1)',
                         'rgba(255, 159, 64, 1)',
                     ],
-                    'borderWidth' => 1
+                    'borderWidth' => 1,
                 ],
             ],
             'labels' => array_merge($labels, ['Active', 'Inactive', 'Featured']),

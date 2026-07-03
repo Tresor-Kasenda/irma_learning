@@ -39,7 +39,7 @@ final class ViewFormation extends ViewRecord
                         ImageEntry::make('image')
                             ->label('Photo de profil')
                             ->circular()
-                            ->defaultImageUrl(fn($record) => 'https://ui-avatars.com/api/?name=' . urlencode($record->title) . '&color=7F9CF5&background=EBF4FF'),
+                            ->defaultImageUrl(fn ($record) => 'https://ui-avatars.com/api/?name='.urlencode($record->title).'&color=7F9CF5&background=EBF4FF'),
                         TextEntry::make('title')
                             ->label('Titre'),
                         TextEntry::make('short_description')
@@ -63,8 +63,8 @@ final class ViewFormation extends ViewRecord
                         TextEntry::make('difficulty_level')
                             ->label('Niveau de difficulté')
                             ->badge()
-                            ->formatStateUsing(fn(FormationLevelEnum $state): string => $state->getLabel())
-                            ->color(fn(FormationLevelEnum $state): string => match ($state) {
+                            ->formatStateUsing(fn (FormationLevelEnum $state): string => $state->getLabel())
+                            ->color(fn (FormationLevelEnum $state): string => match ($state) {
                                 FormationLevelEnum::BEGINNER => 'success',
                                 FormationLevelEnum::INTERMEDIATE => 'warning',
                                 FormationLevelEnum::ADVANCED => 'danger',
@@ -79,7 +79,7 @@ final class ViewFormation extends ViewRecord
                             ->badge()
                             ->separator(',')
                             ->getStateUsing(
-                                fn(Formation $record): array => is_string($record->tags) ? json_decode($record->tags, true) ?? [] : ($record->tags ?? [])
+                                fn (Formation $record): array => is_string($record->tags) ? json_decode($record->tags, true) ?? [] : ($record->tags ?? [])
                             ),
                     ])
                     ->columns(3),
@@ -89,13 +89,13 @@ final class ViewFormation extends ViewRecord
                         TextEntry::make('is_active')
                             ->label('Actif')
                             ->badge()
-                            ->formatStateUsing(fn(bool $state): string => $state ? 'Actif' : 'Inactif')
-                            ->color(fn(bool $state): string => $state ? 'success' : 'danger'),
+                            ->formatStateUsing(fn (bool $state): string => $state ? 'Actif' : 'Inactif')
+                            ->color(fn (bool $state): string => $state ? 'success' : 'danger'),
                         TextEntry::make('is_featured')
                             ->label('Mis en avant')
                             ->badge()
-                            ->formatStateUsing(fn(bool $state): string => $state ? 'Oui' : 'Non')
-                            ->color(fn(bool $state): string => $state ? 'warning' : 'gray'),
+                            ->formatStateUsing(fn (bool $state): string => $state ? 'Oui' : 'Non')
+                            ->color(fn (bool $state): string => $state ? 'warning' : 'gray'),
                     ])
                     ->columns(3),
             ]);
@@ -140,7 +140,7 @@ final class ViewFormation extends ViewRecord
                                 ->numeric()
                                 ->disabled()
                                 ->dehydrated(false)
-                                ->default(fn() => ($this->record->sections()->max('order_position') ?? 0) + 1)
+                                ->default(fn () => ($this->record->sections()->max('order_position') ?? 0) + 1)
                                 ->helperText('Position automatique (prochaine disponible)'),
 
                             TextInput::make('duration')
@@ -148,7 +148,7 @@ final class ViewFormation extends ViewRecord
                                 ->numeric()
                                 ->disabled()
                                 ->dehydrated(false)
-                                ->default(fn() => $this->calculateSectionDuration())
+                                ->default(fn () => $this->calculateSectionDuration())
                                 ->helperText('Durée calculée automatiquement selon la formation'),
                         ]),
 
@@ -167,7 +167,7 @@ final class ViewFormation extends ViewRecord
                             'description' => $data['description'] ?? null,
                             'order_position' => $nextPosition,
                             'duration' => $calculatedDuration,
-                            'is_active' => !empty($data['is_active']),
+                            'is_active' => ! empty($data['is_active']),
                         ];
 
                         $this->record->sections()->create($payload);
@@ -186,7 +186,7 @@ final class ViewFormation extends ViewRecord
                 ->label('Ajouter un examen')
                 ->icon('heroicon-o-plus-circle')
                 ->slideOver()
-                ->visible(fn() => $this->record->exams()->doesntExist())
+                ->visible(fn () => $this->record->exams()->doesntExist())
                 ->form([
                     TextInput::make('title')
                         ->label('Titre de l\'examen')
@@ -320,6 +320,6 @@ final class ViewFormation extends ViewRecord
         }
 
         // Calculate average duration per section
-        return (int)round($formationDurationMinutes / $totalSections);
+        return (int) round($formationDurationMinutes / $totalSections);
     }
 }

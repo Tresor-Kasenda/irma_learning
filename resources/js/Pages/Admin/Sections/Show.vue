@@ -38,6 +38,7 @@ interface SectionDetail {
     created_at: string;
     formation: { id: number; title: string };
     has_exam: boolean;
+    exam: { id: number; title: string } | null;
     chapters_count: number;
     chapters: Chapter[];
 }
@@ -219,6 +220,31 @@ function formatDate(value: string): string {
                                 <dd class="admin-heading text-sm font-medium">{{ formatDate(section.created_at) }}</dd>
                             </div>
                         </dl>
+                    </section>
+
+                    <section v-if="section.exam" class="admin-panel border">
+                        <div class="admin-divider flex items-center gap-3 border-b px-5 py-4">
+                            <GraduationCap class="size-5 text-violet-300" :stroke-width="1.7"/>
+                            <h2 class="admin-heading font-semibold">Examen</h2>
+                        </div>
+                        <div class="p-5">
+                            <Link :href="safeRoute('admin.exams.show', section.exam.id)" class="block text-sm font-medium text-[#ef477d] transition hover:text-rose-300">
+                                {{ section.exam.title }}
+                            </Link>
+                            <Link :href="safeRoute('admin.exams.show', section.exam.id)" class="admin-muted mt-1 block text-xs transition hover:text-[#a23362]">
+                                Gérer les questions →
+                            </Link>
+                        </div>
+                    </section>
+                    <section v-else class="admin-panel border">
+                        <div class="p-5 text-center">
+                            <GraduationCap class="mx-auto size-6 text-slate-600" :stroke-width="1.5"/>
+                            <p class="admin-heading mt-2 text-sm font-medium">Aucun examen</p>
+                            <p class="admin-muted mt-1 text-xs">Créez un examen pour cette section.</p>
+                            <Link :href="safeRoute('admin.exams.create')" class="mt-3 inline-block text-xs font-semibold text-[#ef477d] hover:text-rose-300">
+                                Créer un examen →
+                            </Link>
+                        </div>
                     </section>
                 </aside>
             </div>

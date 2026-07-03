@@ -1,12 +1,14 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Filament\Resources\EnrollmentResource\Pages;
 
 use App\Filament\Resources\EnrollmentResource;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\CreateRecord;
 
-class CreateEnrollment extends CreateRecord
+final class CreateEnrollment extends CreateRecord
 {
     protected static string $resource = EnrollmentResource::class;
 

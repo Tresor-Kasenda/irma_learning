@@ -4,7 +4,10 @@ declare(strict_types=1);
 
 use App\Http\Controllers\Admin\ChapterController;
 use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\ExamAttemptController;
+use App\Http\Controllers\Admin\ExamController;
 use App\Http\Controllers\Admin\FormationController;
+use App\Http\Controllers\Admin\QuestionController;
 use App\Http\Controllers\Admin\SectionController;
 use Illuminate\Support\Facades\Route;
 
@@ -51,4 +54,26 @@ Route::middleware(['auth', 'admin.access'])
         Route::post('chapters/{chapter}/extract-pdf', [ChapterController::class, 'extractPdf'])->name('chapters.extract-pdf');
         Route::delete('chapters/{chapter}', [ChapterController::class, 'destroy'])->name('chapters.destroy');
         Route::patch('chapters/{chapter}/toggle-active', [ChapterController::class, 'toggleActive'])->name('chapters.toggle-active');
+
+        Route::get('exams', [ExamController::class, 'index'])->name('exams.index');
+        Route::get('exams/create', [ExamController::class, 'create'])->name('exams.create');
+        Route::post('exams', [ExamController::class, 'store'])->name('exams.store');
+        Route::get('exams/{exam:id}', [ExamController::class, 'show'])->name('exams.show');
+        Route::get('exams/{exam:id}/edit', [ExamController::class, 'edit'])->name('exams.edit');
+        Route::post('exams/{exam:id}', [ExamController::class, 'update'])->name('exams.update');
+        Route::delete('exams/{exam:id}', [ExamController::class, 'destroy'])->name('exams.destroy');
+        Route::patch('exams/{exam:id}/toggle-active', [ExamController::class, 'toggleActive'])->name('exams.toggle-active');
+        Route::post('exams/{exam:id}/duplicate', [ExamController::class, 'duplicate'])->name('exams.duplicate');
+        Route::post('exams/bulk/activate', [ExamController::class, 'bulkActivate'])->name('exams.bulk.activate');
+        Route::post('exams/bulk/deactivate', [ExamController::class, 'bulkDeactivate'])->name('exams.bulk.deactivate');
+        Route::post('exams/bulk/duplicate', [ExamController::class, 'bulkDuplicate'])->name('exams.bulk.duplicate');
+
+        Route::post('exams/{exam:id}/questions', [QuestionController::class, 'store'])->name('exams.questions.store');
+        Route::post('exams/{exam:id}/questions/reorder', [QuestionController::class, 'reorder'])->name('exams.questions.reorder');
+        Route::post('exams/{exam:id}/questions/{question}', [QuestionController::class, 'update'])->name('exams.questions.update');
+        Route::delete('exams/{exam:id}/questions/{question}', [QuestionController::class, 'destroy'])->name('exams.questions.destroy');
+
+        Route::get('attempts', [ExamAttemptController::class, 'index'])->name('attempts.index');
+        Route::get('attempts/{attempt}', [ExamAttemptController::class, 'show'])->name('attempts.show');
+        Route::post('attempts/{attempt}/complete', [ExamAttemptController::class, 'complete'])->name('attempts.complete');
     });

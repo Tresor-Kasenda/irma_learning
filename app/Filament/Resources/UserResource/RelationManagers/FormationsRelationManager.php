@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Filament\Resources\UserResource\RelationManagers;
 
 use App\Enums\EnrollmentPaymentEnum;
@@ -11,7 +13,7 @@ use Filament\Tables;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 
-class FormationsRelationManager extends RelationManager
+final class FormationsRelationManager extends RelationManager
 {
     protected static string $relationship = 'formations';
 
@@ -31,24 +33,25 @@ class FormationsRelationManager extends RelationManager
                     ->circular()
                     ->defaultImageUrl('https://via.placeholder.com/40x40?text=F'),
 
-                Tables\Columns\TextColumn::make('title')
+                TextColumn::make('title')
                     ->label('Formation')
                     ->searchable()
                     ->limit(40)
                     ->tooltip(function (TextColumn $column): ?string {
                         $state = $column->getState();
-                        if (strlen($state) <= $column->getCharacterLimit()) {
+                        if (mb_strlen($state) <= $column->getCharacterLimit()) {
                             return null;
                         }
+
                         return $state;
                     })
                     ->sortable()
                     ->limit(50),
 
-                Tables\Columns\TextColumn::make('difficulty_level')
+                TextColumn::make('difficulty_level')
                     ->label('Niveau')
                     ->badge()
-                    ->color(fn($state) => match ($state) {
+                    ->color(fn ($state) => match ($state) {
                         FormationLevelEnum::BEGINNER => 'success',
                         FormationLevelEnum::INTERMEDIATE => 'warning',
                         FormationLevelEnum::ADVANCED => 'danger',
@@ -65,22 +68,22 @@ class FormationsRelationManager extends RelationManager
                     ->options(EnrollmentPaymentEnum::class)
                     ->selectablePlaceholder(false),
 
-                Tables\Columns\TextColumn::make('pivot.progress_percentage')
+                TextColumn::make('pivot.progress_percentage')
                     ->label('Progression')
                     ->suffix('%')
                     ->alignCenter()
-                    ->color(fn($state) => match (true) {
+                    ->color(fn ($state) => match (true) {
                         $state >= 100 => 'success',
                         $state >= 50 => 'warning',
                         default => 'danger',
                     }),
 
-                Tables\Columns\TextColumn::make('price')
+                TextColumn::make('price')
                     ->label('Prix')
                     ->money('EUR')
                     ->alignCenter(),
 
-                Tables\Columns\TextColumn::make('pivot.enrollment_date')
+                TextColumn::make('pivot.enrollment_date')
                     ->label('Inscrit le')
                     ->date()
                     ->sortable(),
@@ -111,9 +114,9 @@ class FormationsRelationManager extends RelationManager
                         ->label('Voir formation')
                         ->icon('heroicon-o-eye')
                         ->color('info')
-                        //->url(fn($record) => route('filament.admin.resources.formations.view', $record))
+                        // ->url(fn($record) => route('filament.admin.resources.formations.view', $record))
                         ->openUrlInNewTab(),
-                ])
+                ]),
             ])
             ->bulkActions([
                 \Filament\Actions\BulkActionGroup::make([
@@ -126,7 +129,7 @@ class FormationsRelationManager extends RelationManager
                         ->icon('heroicon-o-power')
                         ->action(function ($records) {
                             foreach ($records as $record) {
-                                $record->update(['is_active' => !$record->is_active]);
+                                $record->update(['is_active' => ! $record->is_active]);
                             }
                         }),
                 ]),

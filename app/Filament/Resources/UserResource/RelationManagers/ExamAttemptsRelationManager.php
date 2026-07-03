@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Filament\Resources\UserResource\RelationManagers;
 
 use App\Enums\ExamAttemptEnum;
@@ -10,7 +12,7 @@ use Filament\Schemas\Schema;
 use Filament\Tables;
 use Filament\Tables\Table;
 
-class ExamAttemptsRelationManager extends RelationManager
+final class ExamAttemptsRelationManager extends RelationManager
 {
     protected static string $relationship = 'examAttempts';
 
@@ -44,7 +46,7 @@ class ExamAttemptsRelationManager extends RelationManager
 
                 Tables\Columns\TextColumn::make('exam.examable_type')
                     ->label('Type')
-                    ->getStateUsing(fn($record) => match ($record->exam->examable_type) {
+                    ->getStateUsing(fn ($record) => match ($record->exam->examable_type) {
                         'App\Models\Formation' => 'Formation',
                         'App\Models\Module' => 'Module',
                         'App\Models\Section' => 'Section',
@@ -61,7 +63,7 @@ class ExamAttemptsRelationManager extends RelationManager
                 Tables\Columns\TextColumn::make('status')
                     ->label('Statut')
                     ->badge()
-                    ->color(fn($state) => match ($state) {
+                    ->color(fn ($state) => match ($state) {
                         ExamAttemptEnum::COMPLETED => 'success',
                         ExamAttemptEnum::IN_PROGRESS => 'warning',
                         ExamAttemptEnum::FAILED => 'danger',
@@ -70,25 +72,25 @@ class ExamAttemptsRelationManager extends RelationManager
 
                 Tables\Columns\TextColumn::make('score')
                     ->label('Score')
-                    ->getStateUsing(fn(ExamAttempt $record) => $record->score . '/' . $record->max_score)
+                    ->getStateUsing(fn (ExamAttempt $record) => $record->score.'/'.$record->max_score)
                     ->alignCenter(),
 
                 Tables\Columns\TextColumn::make('percentage')
                     ->label('Pourcentage')
                     ->suffix('%')
                     ->alignCenter()
-                    ->color(fn($state, ExamAttempt $record) => $state >= $record->exam->passing_score ? 'success' : 'danger')
-                    ->weight(fn($state, ExamAttempt $record) => $state >= $record->exam->passing_score ? 'bold' : 'normal'),
+                    ->color(fn ($state, ExamAttempt $record) => $state >= $record->exam->passing_score ? 'success' : 'danger')
+                    ->weight(fn ($state, ExamAttempt $record) => $state >= $record->exam->passing_score ? 'bold' : 'normal'),
 
                 Tables\Columns\IconColumn::make('is_passed')
                     ->label('Réussi')
-                    ->getStateUsing(fn(ExamAttempt $record) => $record->isPassed())
+                    ->getStateUsing(fn (ExamAttempt $record) => $record->isPassed())
                     ->boolean()
                     ->alignCenter(),
 
                 Tables\Columns\TextColumn::make('time_taken')
                     ->label('Durée')
-                    ->getStateUsing(fn($state) => $state ? gmdate('H:i:s', $state) : '-')
+                    ->getStateUsing(fn ($state) => $state ? gmdate('H:i:s', $state) : '-')
                     ->alignCenter(),
 
                 Tables\Columns\TextColumn::make('started_at')
@@ -110,12 +112,12 @@ class ExamAttemptsRelationManager extends RelationManager
 
                 Tables\Filters\Filter::make('passed')
                     ->label('Réussi')
-                    ->query(fn($query) => $query->whereColumn('percentage', '>=', 'exams.passing_score'))
+                    ->query(fn ($query) => $query->whereColumn('percentage', '>=', 'exams.passing_score'))
                     ->toggle(),
 
                 Tables\Filters\Filter::make('failed')
                     ->label('Échoué')
-                    ->query(fn($query) => $query->where('status', 'completed')
+                    ->query(fn ($query) => $query->where('status', 'completed')
                         ->whereColumn('percentage', '<', 'exams.passing_score'))
                     ->toggle(),
             ])
@@ -138,15 +140,15 @@ class ExamAttemptsRelationManager extends RelationManager
                         ->label('Voir réponses')
                         ->icon('heroicon-o-document-text')
                         ->color('info')
-                        ->visible(fn(ExamAttempt $record) => $record->status === ExamAttemptEnum::COMPLETED)
-                        //->url(fn(ExamAttempt $record) => route('filament.admin.resources.exam-attempts.view', $record))
+                        ->visible(fn (ExamAttempt $record) => $record->status === ExamAttemptEnum::COMPLETED)
+                        // ->url(fn(ExamAttempt $record) => route('filament.admin.resources.exam-attempts.view', $record))
                         ->openUrlInNewTab(),
 
                     \Filament\Actions\Action::make('reset_attempt')
                         ->label('Réinitialiser')
                         ->icon('heroicon-o-arrow-path')
                         ->color('warning')
-                        ->visible(fn(ExamAttempt $record) => $record->status === ExamAttemptEnum::COMPLETED)
+                        ->visible(fn (ExamAttempt $record) => $record->status === ExamAttemptEnum::COMPLETED)
                         ->requiresConfirmation()
                         ->action(function (ExamAttempt $record) {
                             $record->update([
@@ -159,7 +161,7 @@ class ExamAttemptsRelationManager extends RelationManager
                             $record->userAnswers()->delete();
                         })
                         ->successNotificationTitle('Tentative réinitialisée'),
-                ])
+                ]),
             ])
             ->bulkActions([
                 \Filament\Actions\BulkActionGroup::make([

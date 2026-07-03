@@ -1,12 +1,14 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Filament\Resources\FormationResource\Pages;
 
 use App\Filament\Resources\FormationResource;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\CreateRecord;
 
-class CreateFormation extends CreateRecord
+final class CreateFormation extends CreateRecord
 {
     protected static string $resource = FormationResource::class;
 

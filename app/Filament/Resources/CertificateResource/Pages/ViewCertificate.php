@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Filament\Resources\CertificateResource\Pages;
 
 use App\Filament\Resources\CertificateResource;
@@ -10,7 +12,7 @@ use Filament\Resources\Pages\ViewRecord;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 
-class ViewCertificate extends ViewRecord
+final class ViewCertificate extends ViewRecord
 {
     protected static string $resource = CertificateResource::class;
 
@@ -30,7 +32,7 @@ class ViewCertificate extends ViewRecord
                         TextEntry::make('status')
                             ->label('Statut')
                             ->badge()
-                            ->color(fn($state): string => match ($state) {
+                            ->color(fn ($state): string => match ($state) {
                                 'active' => 'success',
                                 'revoked' => 'danger',
                                 'suspended' => 'warning',
@@ -38,8 +40,8 @@ class ViewCertificate extends ViewRecord
                             }),
                         TextEntry::make('is_valid')
                             ->label('Valide')
-                            ->getStateUsing(fn(Certificate $record) => $record->isValid() ? 'Oui' : 'Non')
-                            ->color(fn(Certificate $record) => $record->isValid() ? 'success' : 'danger'),
+                            ->getStateUsing(fn (Certificate $record) => $record->isValid() ? 'Oui' : 'Non')
+                            ->color(fn (Certificate $record) => $record->isValid() ? 'success' : 'danger'),
                     ])
                     ->columns(2),
 
@@ -61,7 +63,7 @@ class ViewCertificate extends ViewRecord
                         TextEntry::make('final_score')
                             ->label('Score final')
                             ->suffix('%')
-                            ->color(fn($state) => $state >= 80 ? 'success' : ($state >= 60 ? 'warning' : 'danger')),
+                            ->color(fn ($state) => $state >= 80 ? 'success' : ($state >= 60 ? 'warning' : 'danger')),
                         TextEntry::make('issue_date')
                             ->label('Date d\'émission')
                             ->dateTime(),
@@ -79,7 +81,7 @@ class ViewCertificate extends ViewRecord
                             ->listWithLineBreaks()
                             ->columnSpanFull(),
                     ])
-                    ->visible(fn(Certificate $record) => !empty($record->metadata)),
+                    ->visible(fn (Certificate $record) => ! empty($record->metadata)),
             ]);
     }
 

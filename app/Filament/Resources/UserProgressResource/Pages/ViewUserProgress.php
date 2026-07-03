@@ -28,7 +28,7 @@ final class ViewUserProgress extends ViewRecord
                             ->label('Email'),
                         TextEntry::make('trackable_type')
                             ->label('Type d\'élément')
-                            ->formatStateUsing(fn(string $state): string => match ($state) {
+                            ->formatStateUsing(fn (string $state): string => match ($state) {
                                 'App\\Models\\Chapter' => 'Chapitre',
                                 'App\\Models\\Section' => 'Section',
                                 default => $state,
@@ -43,12 +43,12 @@ final class ViewUserProgress extends ViewRecord
                         TextEntry::make('status')
                             ->label('Statut')
                             ->badge()
-                            ->color(fn(string $state): string => match ($state) {
+                            ->color(fn (string $state): string => match ($state) {
                                 'not_started' => 'secondary',
                                 'in_progress' => 'warning',
                                 'completed' => 'success',
                             })
-                            ->formatStateUsing(fn(string $state): string => match ($state) {
+                            ->formatStateUsing(fn (string $state): string => match ($state) {
                                 'not_started' => 'Non commencé',
                                 'in_progress' => 'En cours',
                                 'completed' => 'Complété',
@@ -110,7 +110,7 @@ final class ViewUserProgress extends ViewRecord
 
                                 return 'N/A';
                             })
-                            ->visible(fn($record) => $record->trackable instanceof Chapter),
+                            ->visible(fn ($record) => $record->trackable instanceof Chapter),
                     ])
                     ->columns(2),
             ]);

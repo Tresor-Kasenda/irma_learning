@@ -1,18 +1,20 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Filament\Resources\ExamResource\RelationManagers;
 
 use App\Enums\ExamAttemptEnum;
 use App\Models\ExamAttempt;
 use Filament\Forms;
-use Filament\Schemas\Schema;
 use Filament\Resources\RelationManagers\RelationManager;
+use Filament\Schemas\Schema;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 
-class AttemptsRelationManager extends RelationManager
+final class AttemptsRelationManager extends RelationManager
 {
     protected static string $relationship = 'attempts';
 
@@ -82,7 +84,6 @@ class AttemptsRelationManager extends RelationManager
             ]);
     }
 
-
     public function table(Table $table): Table
     {
         return $table
@@ -110,7 +111,7 @@ class AttemptsRelationManager extends RelationManager
                 Tables\Columns\TextColumn::make('status')
                     ->label('Statut')
                     ->badge()
-                    ->color(fn($state) => match ($state) {
+                    ->color(fn ($state) => match ($state) {
                         ExamAttemptEnum::COMPLETED => 'success',
                         ExamAttemptEnum::IN_PROGRESS => 'warning',
                         ExamAttemptEnum::FAILED => 'danger',
@@ -119,30 +120,30 @@ class AttemptsRelationManager extends RelationManager
 
                 Tables\Columns\TextColumn::make('score')
                     ->label('Score')
-                    ->getStateUsing(fn(ExamAttempt $record) => $record->score ? $record->score . '/' . $record->max_score : '-')
+                    ->getStateUsing(fn (ExamAttempt $record) => $record->score ? $record->score.'/'.$record->max_score : '-')
                     ->alignCenter(),
 
                 Tables\Columns\TextColumn::make('percentage')
                     ->label('Pourcentage')
                     ->suffix('%')
                     ->alignCenter()
-                    ->color(fn($state, ExamAttempt $record) => $state && $record->exam ?
+                    ->color(fn ($state, ExamAttempt $record) => $state && $record->exam ?
                         ($state >= $record->exam->passing_score ? 'success' : 'danger') :
                         'gray'
                     )
                     ->weight(
-                        fn($state, ExamAttempt $record) => $state && $record->exam && $state >= $record->exam->passing_score ? 'bold' : 'normal'
+                        fn ($state, ExamAttempt $record) => $state && $record->exam && $state >= $record->exam->passing_score ? 'bold' : 'normal'
                     ),
 
                 Tables\Columns\IconColumn::make('is_passed')
                     ->label('Réussi')
-                    ->getStateUsing(fn(ExamAttempt $record) => $record->isPassed())
+                    ->getStateUsing(fn (ExamAttempt $record) => $record->isPassed())
                     ->boolean()
                     ->alignCenter(),
 
                 Tables\Columns\TextColumn::make('time_taken')
                     ->label('Durée')
-                    ->getStateUsing(fn($state) => $state ? gmdate('H:i:s', $state) : '-')
+                    ->getStateUsing(fn ($state) => $state ? gmdate('H:i:s', $state) : '-')
                     ->alignCenter(),
 
                 Tables\Columns\TextColumn::make('started_at')
@@ -176,19 +177,19 @@ class AttemptsRelationManager extends RelationManager
 
                 Tables\Filters\Filter::make('passed')
                     ->label('Réussi')
-                    ->query(fn(Builder $query) => $query->whereColumn('percentage', '>=', 'exams.passing_score'))
+                    ->query(fn (Builder $query) => $query->whereColumn('percentage', '>=', 'exams.passing_score'))
                     ->toggle(),
 
                 Tables\Filters\Filter::make('failed')
                     ->label('Échoué')
-                    ->query(fn(Builder $query) => $query->where('status', 'completed')
+                    ->query(fn (Builder $query) => $query->where('status', 'completed')
                         ->whereColumn('percentage', '<', 'exams.passing_score')
                     )
                     ->toggle(),
 
                 Tables\Filters\Filter::make('in_progress')
                     ->label('En cours')
-                    ->query(fn(Builder $query) => $query->where('status', 'in_progress'))
+                    ->query(fn (Builder $query) => $query->where('status', 'in_progress'))
                     ->toggle(),
             ])
             ->headerActions([
@@ -216,15 +217,15 @@ class AttemptsRelationManager extends RelationManager
                         ->label('Voir réponses')
                         ->icon('heroicon-o-document-text')
                         ->color('info')
-                        ->visible(fn(ExamAttempt $record) => $record->userAnswers()->exists())
-                        ->url(fn(ExamAttempt $record) => route('filament.admin.resources.exam-attempts.view', $record))
+                        ->visible(fn (ExamAttempt $record) => $record->userAnswers()->exists())
+                        ->url(fn (ExamAttempt $record) => route('filament.admin.resources.exam-attempts.view', $record))
                         ->openUrlInNewTab(),
 
                     \Filament\Actions\Action::make('complete_attempt')
                         ->label('Terminer tentative')
                         ->icon('heroicon-o-check-circle')
                         ->color('success')
-                        ->visible(fn(ExamAttempt $record) => $record->status === ExamAttemptEnum::IN_PROGRESS)
+                        ->visible(fn (ExamAttempt $record) => $record->status === ExamAttemptEnum::IN_PROGRESS)
                         ->requiresConfirmation()
                         ->modalDescription('Cette action va calculer le score final et marquer la tentative comme terminée.')
                         ->action(function (ExamAttempt $record) {
@@ -236,7 +237,7 @@ class AttemptsRelationManager extends RelationManager
                         ->label('Réinitialiser')
                         ->icon('heroicon-o-arrow-path')
                         ->color('warning')
-                        ->visible(fn(ExamAttempt $record) => $record->status === ExamAttemptEnum::COMPLETED)
+                        ->visible(fn (ExamAttempt $record) => $record->status === ExamAttemptEnum::COMPLETED)
                         ->requiresConfirmation()
                         ->modalDescription('Cette action va supprimer toutes les réponses et remettre la tentative en cours.')
                         ->action(function (ExamAttempt $record) {
@@ -250,7 +251,7 @@ class AttemptsRelationManager extends RelationManager
                             $record->userAnswers()->delete();
                         })
                         ->successNotificationTitle('Tentative réinitialisée'),
-                ])
+                ]),
             ])
             ->bulkActions([
                 \Filament\Actions\BulkActionGroup::make([
@@ -263,7 +264,7 @@ class AttemptsRelationManager extends RelationManager
                         ->requiresConfirmation()
                         ->action(function (Collection $records) {
                             $records->where('status', ExamAttemptEnum::IN_PROGRESS)
-                                ->each(fn(ExamAttempt $attempt) => $attempt->complete());
+                                ->each(fn (ExamAttempt $attempt) => $attempt->complete());
                         })
                         ->deselectRecordsAfterCompletion(),
 
@@ -277,19 +278,19 @@ class AttemptsRelationManager extends RelationManager
                                 $csv = "ID,Utilisateur,Email,Tentative,Statut,Score,Pourcentage,Commencé,Terminé\n";
                                 foreach ($records as $record) {
                                     $csv .= implode(',', [
-                                            $record->id,
-                                            $record->user->name,
-                                            $record->user->email,
-                                            $record->attempt_number,
-                                            $record->status->value,
-                                            $record->score . '/' . $record->max_score,
-                                            $record->percentage . '%',
-                                            $record->started_at?->format('Y-m-d H:i:s'),
-                                            $record->completed_at?->format('Y-m-d H:i:s') ?? 'En cours',
-                                        ]) . "\n";
+                                        $record->id,
+                                        $record->user->name,
+                                        $record->user->email,
+                                        $record->attempt_number,
+                                        $record->status->value,
+                                        $record->score.'/'.$record->max_score,
+                                        $record->percentage.'%',
+                                        $record->started_at?->format('Y-m-d H:i:s'),
+                                        $record->completed_at?->format('Y-m-d H:i:s') ?? 'En cours',
+                                    ])."\n";
                                 }
                                 echo $csv;
-                            }, 'exam-attempts-' . now()->format('Y-m-d') . '.csv');
+                            }, 'exam-attempts-'.now()->format('Y-m-d').'.csv');
                         }),
                 ]),
             ])

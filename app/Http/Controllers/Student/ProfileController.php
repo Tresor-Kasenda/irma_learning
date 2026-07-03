@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Student;
 
 use App\Http\Controllers\Controller;
-
 use App\Http\Requests\ProfileUpdateRequest;
 use App\Http\Requests\UpdateAvatarRequest;
 use Illuminate\Contracts\Auth\MustVerifyEmail;

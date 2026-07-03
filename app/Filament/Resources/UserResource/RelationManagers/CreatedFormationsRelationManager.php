@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Filament\Resources\UserResource\RelationManagers;
 
 use App\Enums\FormationLevelEnum;
@@ -14,7 +16,7 @@ use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Str;
 
-class CreatedFormationsRelationManager extends RelationManager
+final class CreatedFormationsRelationManager extends RelationManager
 {
     protected static string $relationship = 'formations';
 
@@ -37,7 +39,7 @@ class CreatedFormationsRelationManager extends RelationManager
                             ->live(onBlur: true)
                             ->helperText('Le titre principal qui apparaîtra aux étudiants')
                             ->afterStateUpdated(
-                                fn(string $context, $state, Forms\Set $set) => $context === 'create' ? $set('slug', Str::slug($state)) : null
+                                fn (string $context, $state, Forms\Set $set) => $context === 'create' ? $set('slug', Str::slug($state)) : null
                             ),
 
                         Forms\Components\TextInput::make('slug')
@@ -52,7 +54,6 @@ class CreatedFormationsRelationManager extends RelationManager
                         Forms\Components\Textarea::make('short_description')
                             ->label('Description courte')
                             ->columnSpanFull(),
-
 
                         Forms\Components\RichEditor::make('description')
                             ->label('Description complète')
@@ -105,7 +106,7 @@ class CreatedFormationsRelationManager extends RelationManager
                                 'it' => 'Italien',
                                 'pt' => 'Portugais',
                                 'ru' => 'Russe',
-                            ])
+                            ]),
                     ])
                     ->columns(2),
 
@@ -160,7 +161,7 @@ class CreatedFormationsRelationManager extends RelationManager
                 Tables\Columns\TextColumn::make('difficulty_level')
                     ->label('Niveau')
                     ->badge()
-                    ->color(fn($state) => match ($state) {
+                    ->color(fn ($state) => match ($state) {
                         FormationLevelEnum::BEGINNER => 'success',
                         FormationLevelEnum::INTERMEDIATE => 'warning',
                         FormationLevelEnum::ADVANCED => 'danger',
@@ -175,7 +176,7 @@ class CreatedFormationsRelationManager extends RelationManager
 
                 Tables\Columns\TextColumn::make('students_count')
                     ->label('Étudiants')
-                    ->getStateUsing(fn(Formation $record) => $record->getEnrollmentCount())
+                    ->getStateUsing(fn (Formation $record) => $record->getEnrollmentCount())
                     ->alignCenter(),
 
                 Tables\Columns\TextColumn::make('modules_count')
@@ -241,7 +242,7 @@ class CreatedFormationsRelationManager extends RelationManager
                         ->label('Voir')
                         ->icon('heroicon-o-eye')
                         ->color('info')
-                        //->url(fn(Formation $record) => route('filament.admin.resources.formations.view', $record))
+                        // ->url(fn(Formation $record) => route('filament.admin.resources.formations.view', $record))
                         ->openUrlInNewTab(),
 
                     \Filament\Actions\Action::make('duplicate')
@@ -250,14 +251,14 @@ class CreatedFormationsRelationManager extends RelationManager
                         ->color('warning')
                         ->action(function (Formation $record) {
                             $newFormation = $record->replicate();
-                            $newFormation->title = $record->title . ' (Copie)';
+                            $newFormation->title = $record->title.' (Copie)';
                             $newFormation->slug = null;
                             $newFormation->save();
 
                             $this->mountedTableActionRecord = $newFormation->getKey();
                         })
                         ->successNotificationTitle('Formation dupliquée avec succès'),
-                ])
+                ]),
             ])
             ->bulkActions([
                 \Filament\Actions\BulkActionGroup::make([
@@ -270,12 +271,12 @@ class CreatedFormationsRelationManager extends RelationManager
                         ->label('Activer')
                         ->icon('heroicon-o-check-circle')
                         ->color('success')
-                        ->action(fn(Collection $records) => $records->each->update(['is_active' => true])),
+                        ->action(fn (Collection $records) => $records->each->update(['is_active' => true])),
                     \Filament\Actions\BulkAction::make('deactivate')
                         ->label('Désactiver')
                         ->icon('heroicon-o-x-circle')
                         ->color('danger')
-                        ->action(fn(Collection $records) => $records->each->update(['is_active' => false])),
+                        ->action(fn (Collection $records) => $records->each->update(['is_active' => false])),
                 ]),
             ])
             ->defaultSort('created_at', 'desc');

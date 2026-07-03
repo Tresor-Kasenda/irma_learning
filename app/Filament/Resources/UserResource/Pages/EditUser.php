@@ -9,7 +9,7 @@ use Filament\Actions;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\EditRecord;
 
-class EditUser extends EditRecord
+final class EditUser extends EditRecord
 {
     protected static string $resource = UserResource::class;
 

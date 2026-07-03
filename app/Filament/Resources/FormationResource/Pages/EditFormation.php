@@ -38,7 +38,7 @@ final class EditFormation extends EditRecord
             Actions\Action::make('add_exam')
                 ->label('Ajouter un examen')
                 ->icon('heroicon-o-plus-circle')
-                ->visible(fn() => $this->record->exams()->doesntExist())
+                ->visible(fn () => $this->record->exams()->doesntExist())
                 ->slideOver()
                 ->form([
                     TextInput::make('title')

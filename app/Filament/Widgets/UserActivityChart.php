@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Filament\Widgets;
 
 use App\Enums\UserRoleEnum;
@@ -7,9 +9,10 @@ use App\Models\User;
 use Carbon\Carbon;
 use Filament\Widgets\ChartWidget;
 
-class UserActivityChart extends ChartWidget
+final class UserActivityChart extends ChartWidget
 {
     protected static ?int $sort = 3;
+
     protected ?string $heading = 'User Activity Analytics';
 
     protected function getData(): array

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Filament\Resources\ExamResource\Pages;
 
 use App\Filament\Resources\ExamResource;
@@ -7,7 +9,7 @@ use Filament\Actions;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\EditRecord;
 
-class EditExam extends EditRecord
+final class EditExam extends EditRecord
 {
     protected static string $resource = ExamResource::class;
 
@@ -29,6 +31,7 @@ class EditExam extends EditRecord
             $data['module_id'],
             $data['section_id']
         );
+
         return $data;
     }
 

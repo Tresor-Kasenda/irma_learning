@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Filament\Resources\EnrollmentResource\Pages;
 
 use App\Enums\EnrollmentPaymentEnum;
@@ -11,7 +13,7 @@ use Filament\Resources\Pages\ViewRecord;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 
-class ViewEnrollment extends ViewRecord
+final class ViewEnrollment extends ViewRecord
 {
     protected static string $resource = EnrollmentResource::class;
 
@@ -33,8 +35,8 @@ class ViewEnrollment extends ViewRecord
                         TextEntry::make('status')
                             ->label('Statut')
                             ->badge()
-                            ->formatStateUsing(fn($state) => $state->getLabel())
-                            ->color(fn(EnrollmentStatusEnum $state): string => match ($state) {
+                            ->formatStateUsing(fn ($state) => $state->getLabel())
+                            ->color(fn (EnrollmentStatusEnum $state): string => match ($state) {
                                 EnrollmentStatusEnum::SUSPENDED => 'warning',
                                 EnrollmentStatusEnum::ACTIVE => 'primary',
                                 EnrollmentStatusEnum::COMPLETED => 'success',
@@ -44,8 +46,8 @@ class ViewEnrollment extends ViewRecord
                         TextEntry::make('payment_status')
                             ->label('Statut de paiement')
                             ->badge()
-                            ->formatStateUsing(fn($state) => $state->getLabel())
-                            ->color(fn(EnrollmentPaymentEnum $state): string => match ($state) {
+                            ->formatStateUsing(fn ($state) => $state->getLabel())
+                            ->color(fn (EnrollmentPaymentEnum $state): string => match ($state) {
                                 EnrollmentPaymentEnum::PENDING => 'warning',
                                 EnrollmentPaymentEnum::PAID => 'success',
                                 EnrollmentPaymentEnum::FAILED => 'danger',

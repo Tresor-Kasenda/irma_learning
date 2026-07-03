@@ -1,12 +1,14 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Filament\Resources\ExamResource\Pages;
 
 use App\Filament\Resources\ExamResource;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\CreateRecord;
 
-class CreateExam extends CreateRecord
+final class CreateExam extends CreateRecord
 {
     protected static string $resource = ExamResource::class;
 
@@ -30,6 +32,7 @@ class CreateExam extends CreateRecord
             $data['module_id'],
             $data['section_id']
         );
+
         return $data;
     }
 }

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Filament\Widgets;
 
 use App\Enums\UserRoleEnum;
@@ -10,7 +12,7 @@ use App\Models\User;
 use Filament\Widgets\StatsOverviewWidget as BaseWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
 
-class StatsOverview extends BaseWidget
+final class StatsOverview extends BaseWidget
 {
     protected static ?int $sort = 1;
 
@@ -20,6 +22,7 @@ class StatsOverview extends BaseWidget
         $formations = Formation::query();
         $enrollents = Enrollment::query();
         $certificates = Certificate::query();
+
         return [
             Stat::make(
                 'Total Users',

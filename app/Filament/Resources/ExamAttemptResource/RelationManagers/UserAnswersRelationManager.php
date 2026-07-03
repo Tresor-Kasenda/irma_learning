@@ -1,16 +1,18 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Filament\Resources\ExamAttemptResource\RelationManagers;
 
 use App\Models\UserAnswer;
 use Filament\Forms;
-use Filament\Schemas\Schema;
 use Filament\Resources\RelationManagers\RelationManager;
+use Filament\Schemas\Schema;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Collection;
 
-class UserAnswersRelationManager extends RelationManager
+final class UserAnswersRelationManager extends RelationManager
 {
     protected static string $relationship = 'userAnswers';
 
@@ -24,12 +26,12 @@ class UserAnswersRelationManager extends RelationManager
                 Tables\Columns\TextColumn::make('question.question_text')
                     ->label('Question')
                     ->limit(40)
-                    ->tooltip(fn($record) => $record->question->question_text),
+                    ->tooltip(fn ($record) => $record->question->question_text),
 
                 Tables\Columns\TextColumn::make('question.question_type')
                     ->label('Type')
                     ->badge()
-                    ->color(fn($state) => match ($state) {
+                    ->color(fn ($state) => match ($state) {
                         'single_choice' => 'success',
                         'multiple_choice' => 'info',
                         'true_false' => 'warning',
@@ -41,13 +43,13 @@ class UserAnswersRelationManager extends RelationManager
                     ->label('Réponse choisie')
                     ->limit(30)
                     ->placeholder('Réponse libre')
-                    ->tooltip(fn($record) => $record->selectedOption?->option_text ?? $record->answer_text),
+                    ->tooltip(fn ($record) => $record->selectedOption?->option_text ?? $record->answer_text),
 
                 Tables\Columns\TextColumn::make('answer_text')
                     ->label('Réponse texte')
                     ->limit(30)
                     ->placeholder('Pas de réponse texte')
-                    ->tooltip(fn($record) => $record->answer_text)
+                    ->tooltip(fn ($record) => $record->answer_text)
                     ->toggleable(isToggledHiddenByDefault: true),
 
                 Tables\Columns\IconColumn::make('is_correct')
@@ -61,9 +63,9 @@ class UserAnswersRelationManager extends RelationManager
 
                 Tables\Columns\TextColumn::make('points_earned')
                     ->label('Points')
-                    ->getStateUsing(fn(UserAnswer $record) => $record->points_earned . '/' . $record->question->points)
+                    ->getStateUsing(fn (UserAnswer $record) => $record->points_earned.'/'.$record->question->points)
                     ->alignCenter()
-                    ->color(fn(UserAnswer $record) => $record->is_correct ? 'success' : 'danger'),
+                    ->color(fn (UserAnswer $record) => $record->is_correct ? 'success' : 'danger'),
 
                 Tables\Columns\TextColumn::make('question.points')
                     ->label('Points max')
@@ -102,7 +104,7 @@ class UserAnswersRelationManager extends RelationManager
 
                 Tables\Filters\Filter::make('has_feedback')
                     ->label('Avec feedback')
-                    ->query(fn($query) => $query->whereNotNull('feedback'))
+                    ->query(fn ($query) => $query->whereNotNull('feedback'))
                     ->toggle(),
             ])
             ->headerActions([
@@ -175,7 +177,7 @@ class UserAnswersRelationManager extends RelationManager
                         ->color('warning')
                         ->requiresConfirmation()
                         ->action(function (Collection $records) {
-                            $records->each(fn(UserAnswer $answer) => $answer->checkCorrectness());
+                            $records->each(fn (UserAnswer $answer) => $answer->checkCorrectness());
                         })
                         ->deselectRecordsAfterCompletion(),
 
@@ -188,18 +190,18 @@ class UserAnswersRelationManager extends RelationManager
                                 $csv = "Question,Type,Réponse choisie,Réponse texte,Correct,Points obtenus,Points max,Feedback\n";
                                 foreach ($records as $record) {
                                     $csv .= implode(',', [
-                                            '"' . str_replace('"', '""', $record->question->question_text) . '"',
-                                            $record->question->question_type,
-                                            '"' . str_replace('"', '""', $record->selectedOption?->option_text ?? '') . '"',
-                                            '"' . str_replace('"', '""', $record->answer_text ?? '') . '"',
-                                            $record->is_correct ? 'Oui' : 'Non',
-                                            $record->points_earned,
-                                            $record->question->points,
-                                            '"' . str_replace('"', '""', $record->feedback ?? '') . '"',
-                                        ]) . "\n";
+                                        '"'.str_replace('"', '""', $record->question->question_text).'"',
+                                        $record->question->question_type,
+                                        '"'.str_replace('"', '""', $record->selectedOption?->option_text ?? '').'"',
+                                        '"'.str_replace('"', '""', $record->answer_text ?? '').'"',
+                                        $record->is_correct ? 'Oui' : 'Non',
+                                        $record->points_earned,
+                                        $record->question->points,
+                                        '"'.str_replace('"', '""', $record->feedback ?? '').'"',
+                                    ])."\n";
                                 }
                                 echo $csv;
-                            }, 'user-answers-' . now()->format('Y-m-d') . '.csv');
+                            }, 'user-answers-'.now()->format('Y-m-d').'.csv');
                         }),
                 ]),
             ])

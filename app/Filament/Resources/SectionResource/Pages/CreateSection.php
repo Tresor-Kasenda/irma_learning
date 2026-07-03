@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Filament\Resources\SectionResource\Pages;
 
 use App\Filament\Resources\SectionResource;
@@ -7,7 +9,7 @@ use Filament\Actions;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\CreateRecord;
 
-class CreateSection extends CreateRecord
+final class CreateSection extends CreateRecord
 {
     protected static string $resource = SectionResource::class;
 
@@ -19,7 +21,7 @@ class CreateSection extends CreateRecord
             Actions\Action::make('back')
                 ->label('Retour')
                 ->url(SectionResource::getUrl('index'))
-                ->icon('heroicon-o-arrow-left')
+                ->icon('heroicon-o-arrow-left'),
         ];
     }
 

@@ -1,18 +1,20 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Filament\Resources\FormationResource\RelationManagers;
 
 use App\Enums\EnrollmentPaymentEnum;
 use App\Enums\EnrollmentStatusEnum;
 use App\Enums\UserRoleEnum;
 use Filament\Forms;
-use Filament\Schemas\Schema;
 use Filament\Resources\RelationManagers\RelationManager;
+use Filament\Schemas\Schema;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 
-class StudentsRelationManager extends RelationManager
+final class StudentsRelationManager extends RelationManager
 {
     protected static string $relationship = 'students';
 
@@ -26,7 +28,7 @@ class StudentsRelationManager extends RelationManager
                 Tables\Columns\ImageColumn::make('avatar')
                     ->label('Avatar')
                     ->circular()
-                    ->defaultImageUrl(fn($record) => 'https://ui-avatars.com/api/?name=' . urlencode($record->name)),
+                    ->defaultImageUrl(fn ($record) => 'https://ui-avatars.com/api/?name='.urlencode($record->name)),
 
                 Tables\Columns\TextColumn::make('name')
                     ->label('Nom')
@@ -52,7 +54,7 @@ class StudentsRelationManager extends RelationManager
                     ->label('Progression')
                     ->suffix('%')
                     ->alignCenter()
-                    ->color(fn($state) => match (true) {
+                    ->color(fn ($state) => match (true) {
                         $state >= 100 => 'success',
                         $state >= 50 => 'warning',
                         default => 'danger',
@@ -81,7 +83,7 @@ class StudentsRelationManager extends RelationManager
                     ->multiple(),
 
                 Tables\Filters\Filter::make('completed')
-                    ->query(fn(Builder $query) => $query->wherePivot('progress_percentage', '>=', 100))
+                    ->query(fn (Builder $query) => $query->wherePivot('progress_percentage', '>=', 100))
                     ->toggle(),
             ])
             ->actions([
@@ -95,9 +97,9 @@ class StudentsRelationManager extends RelationManager
                         ->label('Voir progression')
                         ->icon('heroicon-o-chart-bar')
                         ->color('info')
-                        ->url(fn($record) => route('filament.admin.resources.users.view', $record))
+                        ->url(fn ($record) => route('filament.admin.resources.users.view', $record))
                         ->openUrlInNewTab(),
-                ])
+                ]),
             ])
             ->bulkActions([
                 \Filament\Actions\BulkActionGroup::make([
@@ -130,7 +132,7 @@ class StudentsRelationManager extends RelationManager
                             ->options(
                                 collect(EnrollmentStatusEnum::cases())
                                     ->take(7)
-                                    ->mapWithKeys(fn($role) => [$role->value => $role->getLabel()])
+                                    ->mapWithKeys(fn ($role) => [$role->value => $role->getLabel()])
                             )
                             ->required()
                             ->default('active'),
@@ -140,7 +142,7 @@ class StudentsRelationManager extends RelationManager
                             ->options(
                                 collect(EnrollmentPaymentEnum::cases())
                                     ->take(7)
-                                    ->mapWithKeys(fn($role) => [$role->value => $role->getLabel()])
+                                    ->mapWithKeys(fn ($role) => [$role->value => $role->getLabel()])
                             )
                             ->required()
                             ->default('pending'),

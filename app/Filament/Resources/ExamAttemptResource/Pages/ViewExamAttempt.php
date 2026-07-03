@@ -1,15 +1,17 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Filament\Resources\ExamAttemptResource\Pages;
 
 use App\Filament\Resources\ExamAttemptResource;
 use App\Models\ExamAttempt;
 use Filament\Actions;
 use Filament\Infolists;
-use Filament\Schemas\Schema;
 use Filament\Resources\Pages\ViewRecord;
+use Filament\Schemas\Schema;
 
-class ViewExamAttempt extends ViewRecord
+final class ViewExamAttempt extends ViewRecord
 {
     protected static string $resource = ExamAttemptResource::class;
 
@@ -42,14 +44,14 @@ class ViewExamAttempt extends ViewRecord
                             ->numeric(decimalPlaces: 2),
                         Infolists\Components\TextEntry::make('passing_status')
                             ->label('Résultat')
-                            ->getStateUsing(fn(ExamAttempt $record): string => $record->isPassed() ? 'Réussi' : 'Échoué'
+                            ->getStateUsing(fn (ExamAttempt $record): string => $record->isPassed() ? 'Réussi' : 'Échoué'
                             )
                             ->badge()
-                            ->color(fn(ExamAttempt $record): string => $record->isPassed() ? 'success' : 'danger'
+                            ->color(fn (ExamAttempt $record): string => $record->isPassed() ? 'success' : 'danger'
                             ),
                         Infolists\Components\TextEntry::make('time_taken')
                             ->label('Temps pris')
-                            ->getStateUsing(fn($record): string => $record->time_taken ? gmdate('H:i:s', $record->time_taken) : 'N/A'
+                            ->getStateUsing(fn ($record): string => $record->time_taken ? gmdate('H:i:s', $record->time_taken) : 'N/A'
                             ),
                     ])
                     ->columns(3),
@@ -65,10 +67,11 @@ class ViewExamAttempt extends ViewRecord
                         Infolists\Components\TextEntry::make('duration')
                             ->label('Durée totale')
                             ->getStateUsing(function (ExamAttempt $record): string {
-                                if (!$record->started_at || !$record->completed_at) {
+                                if (! $record->started_at || ! $record->completed_at) {
                                     return 'N/A';
                                 }
                                 $duration = $record->started_at->diffInSeconds($record->completed_at);
+
                                 return gmdate('H:i:s', $duration);
                             }),
                     ])

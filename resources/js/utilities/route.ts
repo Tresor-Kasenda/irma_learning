@@ -1,4 +1,4 @@
-type RouteParams = Record<string, unknown> | string | number | undefined;
+type RouteParams = Record<string, unknown> | string | number | unknown[] | undefined;
 
 /**
  * Resolve a named route to a URL without ever throwing.
