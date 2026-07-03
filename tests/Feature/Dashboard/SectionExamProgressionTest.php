@@ -193,12 +193,20 @@ test('the player exposes section locking state', function () {
     [$formation, $built] = buildSectionedFormation();
     $user = User::factory()->create();
     enrolStudent($user, $formation);
+    $built[0]['chapter']->update([
+        'content_type' => 'pdf',
+        'content' => "# Support PDF\n\nContenu **lisible**.",
+        'media_url' => 'chapters/support.pdf',
+    ]);
 
     $this->actingAs($user)
         ->get(route('course.player', $formation->id))
         ->assertSuccessful()
         ->assertInertia(fn (Assert $page) => $page
             ->component('Student/Learnings/StudentLearningPlay')
+            ->where('htmlContent', fn (string $html): bool => str_contains($html, '<h1>Support PDF</h1>')
+                && str_contains($html, '<strong>lisible</strong>')
+                && ! str_contains($html, '<style>'))
             ->where('sections.0.unlocked', true)
             ->where('sections.1.unlocked', false)
             ->etc());

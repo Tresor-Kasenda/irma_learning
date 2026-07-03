@@ -64,7 +64,7 @@ const submit = () => {
                         <label for="name" class="text-sm font-medium text-gray-700">Nom complet</label>
                         <input id="name" v-model="form.name" type="text" name="name" placeholder="Votre nom"
                             required autofocus autocomplete="name"
-                            class="block w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm placeholder:text-gray-400 focus:border-irma-primary focus:outline-none focus:ring-1 focus:ring-irma-primary" />
+                            class="block w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 caret-irma-primary shadow-sm placeholder:text-gray-400 focus:border-irma-primary focus:outline-none focus:ring-1 focus:ring-irma-primary" />
                         <InputError :message="form.errors.name" />
                     </div>
 
@@ -72,7 +72,7 @@ const submit = () => {
                         <label for="username" class="text-sm font-medium text-gray-700">Nom d'utilisateur</label>
                         <input id="username" v-model="form.username" type="text" name="username"
                             placeholder="Votre nom d'utilisateur" required autocomplete="username"
-                            class="block w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm placeholder:text-gray-400 focus:border-irma-primary focus:outline-none focus:ring-1 focus:ring-irma-primary" />
+                            class="block w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 caret-irma-primary shadow-sm placeholder:text-gray-400 focus:border-irma-primary focus:outline-none focus:ring-1 focus:ring-irma-primary" />
                         <InputError :message="form.errors.username" />
                     </div>
 
@@ -80,7 +80,7 @@ const submit = () => {
                         <label for="email" class="text-sm font-medium text-gray-700">Email</label>
                         <input id="email" v-model="form.email" type="email" name="email"
                             placeholder="Ex: users@example.com" required autocomplete="email"
-                            class="block w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm placeholder:text-gray-400 focus:border-irma-primary focus:outline-none focus:ring-1 focus:ring-irma-primary" />
+                            class="block w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 caret-irma-primary shadow-sm placeholder:text-gray-400 focus:border-irma-primary focus:outline-none focus:ring-1 focus:ring-irma-primary" />
                         <InputError :message="form.errors.email" />
                     </div>
 
@@ -89,7 +89,7 @@ const submit = () => {
                         <div class="relative">
                             <input id="password" v-model="form.password" :type="showPassword ? 'text' : 'password'"
                                 name="password" placeholder="Entrez votre mot de passe" required autocomplete="new-password"
-                                class="block w-full rounded-md border border-gray-300 px-3 py-2 pr-10 text-sm shadow-sm placeholder:text-gray-400 focus:border-irma-primary focus:outline-none focus:ring-1 focus:ring-irma-primary" />
+                                class="block w-full rounded-md border border-gray-300 bg-white px-3 py-2 pr-10 text-sm text-gray-900 caret-irma-primary shadow-sm placeholder:text-gray-400 focus:border-irma-primary focus:outline-none focus:ring-1 focus:ring-irma-primary" />
                             <button type="button" tabindex="-1" @click="showPassword = !showPassword"
                                 class="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-600">
                                 <svg v-if="!showPassword" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -115,7 +115,7 @@ const submit = () => {
                             <input id="password_confirmation" v-model="form.password_confirmation"
                                 :type="showConfirmPassword ? 'text' : 'password'" name="password_confirmation"
                                 placeholder="Confirmez votre mot de passe" required autocomplete="new-password"
-                                class="block w-full rounded-md border border-gray-300 px-3 py-2 pr-10 text-sm shadow-sm placeholder:text-gray-400 focus:border-irma-primary focus:outline-none focus:ring-1 focus:ring-irma-primary" />
+                                class="block w-full rounded-md border border-gray-300 bg-white px-3 py-2 pr-10 text-sm text-gray-900 caret-irma-primary shadow-sm placeholder:text-gray-400 focus:border-irma-primary focus:outline-none focus:ring-1 focus:ring-irma-primary" />
                             <button type="button" tabindex="-1" @click="showConfirmPassword = !showConfirmPassword"
                                 class="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-600">
                                 <svg v-if="!showConfirmPassword" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
