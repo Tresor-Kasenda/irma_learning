@@ -3,12 +3,10 @@ import {Link} from '@inertiajs/vue3';
 import {
     Award,
     BookOpen,
-    ChartNoAxesColumnIncreasing,
     ClipboardCheck,
     Clock3,
     FileText,
     Home,
-    KeyRound,
     Layers3,
     Settings,
     Users,
@@ -55,9 +53,7 @@ const groups = computed<NavGroup[]>(() => [
         label: 'Apprenants',
         items: [
             {label: 'Inscriptions', route: 'admin.enrollments.index', icon: Users},
-            {label: 'Progression', route: 'admin.progress.index', icon: ChartNoAxesColumnIncreasing},
             {label: 'Certificats', route: 'admin.certificates.index', icon: Award},
-            {label: 'Codes d\'accès', route: 'admin.access-codes.index', icon: KeyRound},
         ],
     },
     {

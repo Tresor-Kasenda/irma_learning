@@ -136,7 +136,7 @@ onBeforeUnmount(() => document.removeEventListener('mousedown', onClickOutside))
         :label="hideLabel ? undefined : label"
         :required="required"
     >
-        <div ref="root" class="relative">
+        <div ref="root" class="relative min-w-0 max-w-full">
             <div
                 :id="id"
                 :aria-label="label"

@@ -51,6 +51,7 @@ markdown.use(katexExtension({
 
 const textareaRef = ref<HTMLTextAreaElement | null>(null);
 const previewRef = ref<HTMLElement | null>(null);
+const editorHeight = ref(320);
 const mobilePane = ref<'editor' | 'preview'>('editor');
 const themeVersion = ref(0);
 let diagramId = 0;
@@ -119,8 +120,25 @@ async function renderMermaidDiagrams(): Promise<void> {
 }
 
 watch(renderedHtml, () => void renderMermaidDiagrams(), {immediate: true});
+watch(() => props.modelValue, () => nextTick(resizeEditor));
+
+function resizeEditor(): void {
+    const textarea = textareaRef.value;
+    if (! textarea) {
+        return;
+    }
+
+    textarea.style.height = 'auto';
+    editorHeight.value = Math.min(640, Math.max(240, textarea.scrollHeight));
+}
+
+function updateValue(event: Event): void {
+    emit('update:modelValue', (event.target as HTMLTextAreaElement).value);
+    void nextTick(resizeEditor);
+}
 
 onMounted(() => {
+    resizeEditor();
     void renderMermaidDiagrams();
     themeObserver = new MutationObserver(() => {
         themeVersion.value += 1;
@@ -225,10 +243,11 @@ const toolbarActions = [
                         :id="id"
                         ref="textareaRef"
                         :placeholder="placeholder"
+                        :style="{height: `${editorHeight}px`}"
                         :value="modelValue"
-                        class="admin-field min-h-80 w-full resize-y border-0 bg-transparent p-4 font-mono text-sm leading-6 outline-none"
+                        class="admin-field w-full resize-none overflow-y-auto border-0 bg-transparent p-4 font-mono text-sm leading-6 outline-none"
                         spellcheck="true"
-                        @input="$emit('update:modelValue', ($event.target as HTMLTextAreaElement).value)"
+                        @input="updateValue"
                     />
                 </section>
 
@@ -240,10 +259,11 @@ const toolbarActions = [
                         v-if="modelValue.trim()"
                         ref="previewRef"
                         :key="themeVersion"
-                        class="markdown-preview admin-text min-h-80 min-w-0 overflow-x-auto p-5 text-sm"
+                        :style="{height: `${editorHeight}px`}"
+                        class="markdown-preview admin-text min-w-0 overflow-auto p-5 text-sm"
                         v-html="renderedHtml"
                     />
-                    <div v-else class="admin-faint grid min-h-80 place-items-center p-5 text-center text-sm">
+                    <div v-else :style="{height: `${editorHeight}px`}" class="admin-faint grid place-items-center overflow-auto p-5 text-center text-sm">
                         L’aperçu apparaîtra ici pendant la rédaction.
                     </div>
                 </section>

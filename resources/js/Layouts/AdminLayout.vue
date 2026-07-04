@@ -64,7 +64,7 @@ onBeforeUnmount(() => {
 
         <div
             :class="uiStore.sidebarCollapsed ? 'lg:pl-20' : 'lg:pl-64'"
-            class="min-h-screen transition-[padding] duration-200"
+            class="min-h-screen min-w-0 max-w-full overflow-x-hidden transition-[padding] duration-200"
         >
             <AdminTopbar @toggle="sidebarOpen = !sidebarOpen">
                 <template #breadcrumb>
@@ -77,7 +77,7 @@ onBeforeUnmount(() => {
 
             <AdminToasts :toasts="toasts" @dismiss="dismissToast"/>
 
-            <main class="px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
+            <main class="min-w-0 max-w-full overflow-x-hidden px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
                 <slot/>
             </main>
         </div>

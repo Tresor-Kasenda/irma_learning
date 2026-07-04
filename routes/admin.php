@@ -2,8 +2,10 @@
 
 declare(strict_types=1);
 
+use App\Http\Controllers\Admin\CertificateStudentController;
 use App\Http\Controllers\Admin\ChapterController;
 use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\EnrollmentController;
 use App\Http\Controllers\Admin\ExamAttemptController;
 use App\Http\Controllers\Admin\ExamController;
 use App\Http\Controllers\Admin\FormationController;
@@ -76,4 +78,8 @@ Route::middleware(['auth', 'admin.access'])
         Route::get('attempts', [ExamAttemptController::class, 'index'])->name('attempts.index');
         Route::get('attempts/{attempt}', [ExamAttemptController::class, 'show'])->name('attempts.show');
         Route::post('attempts/{attempt}/complete', [ExamAttemptController::class, 'complete'])->name('attempts.complete');
+
+        Route::get('enrollments', [EnrollmentController::class, 'index'])->name('enrollments.index');
+        Route::get('certificates', [CertificateStudentController::class, 'index'])->name('certificates.index');
+        Route::get('certificates/{user}', [CertificateStudentController::class, 'show'])->name('certificates.show');
     });

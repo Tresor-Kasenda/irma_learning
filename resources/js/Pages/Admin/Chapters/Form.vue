@@ -160,8 +160,8 @@ function submit(): void {
             <span class="admin-text font-medium">{{ isEdit ? 'Modifier' : 'Nouveau' }}</span>
         </template>
 
-        <form class="mx-auto max-w-7xl" @submit.prevent="submit">
-            <div class="mb-7 flex items-start gap-4">
+        <form class="mx-auto min-w-0 max-w-7xl overflow-x-clip" @submit.prevent="submit">
+            <div class="mb-7 flex min-w-0 items-start gap-4">
                 <Link
                     :href="safeRoute('admin.chapters.index')"
                     aria-label="Retour aux chapitres"
@@ -169,7 +169,7 @@ function submit(): void {
                 >
                     <ArrowLeft class="size-5" :stroke-width="1.7"/>
                 </Link>
-                <div>
+                <div class="min-w-0">
                     <div class="mb-2 flex items-center gap-2">
                         <span class="bg-[#7d254a]/10 px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-[#7d254a] dark:bg-[#7d254a]/50 dark:text-rose-200">
                             {{ isEdit ? 'Modification' : 'Création' }}
@@ -182,9 +182,9 @@ function submit(): void {
                 </div>
             </div>
 
-            <div class="grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
-                <div class="grid gap-6">
-                    <section class="admin-panel border">
+            <div class="grid min-w-0 items-start gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
+                <div class="grid min-w-0 gap-6">
+                    <section class="admin-panel min-w-0 overflow-hidden border">
                         <div class="admin-divider flex items-center gap-3 border-b px-5 py-4 sm:px-6">
                             <span class="grid size-10 shrink-0 place-items-center bg-[#7d254a]/35 text-[#ef477d]">
                                 <FileText class="size-5" :stroke-width="1.7"/>
@@ -285,8 +285,8 @@ function submit(): void {
                     </section>
                 </div>
 
-                <aside class="grid gap-6 xl:sticky xl:top-24">
-                    <section class="admin-panel border">
+                <aside class="grid min-w-0 gap-6 xl:sticky xl:top-24">
+                    <section class="admin-panel min-w-0 overflow-hidden border">
                         <div class="admin-divider flex items-center gap-3 border-b px-5 py-4">
                             <Layers3 class="size-5 text-[#ef477d]" :stroke-width="1.7"/>
                             <div>
@@ -308,7 +308,7 @@ function submit(): void {
                         </div>
                     </section>
 
-                    <section class="admin-panel border">
+                    <section class="admin-panel min-w-0 overflow-hidden border">
                         <div class="admin-divider flex items-center gap-3 border-b px-5 py-4">
                             <Settings2 class="size-5 text-amber-300" :stroke-width="1.7"/>
                             <div>

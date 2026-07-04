@@ -1,9 +1,10 @@
 <script lang="ts" setup>
-import {Head, Link} from '@inertiajs/vue3';
+import {Head, Link, useForm} from '@inertiajs/vue3';
 import {
     ArrowLeft,
     BookOpen,
     Calendar,
+    ClipboardCheck,
     Clock3,
     FileText,
     GraduationCap,
@@ -14,9 +15,12 @@ import {
     Video,
 } from '@lucide/vue';
 import type {Component} from 'vue';
-import {computed} from 'vue';
+import {computed, ref} from 'vue';
 import ConfirmAction from '@/Components/Admin/ConfirmAction.vue';
+import ExamEditor from '@/Components/Admin/ExamEditor.vue';
+import ResourceFormModal from '@/Components/Admin/ResourceFormModal.vue';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
+import {createEmptyExam, type ExamEditorData} from '@/types/admin-exam';
 import {safeRoute} from '@/utilities/route';
 
 interface Chapter {
@@ -46,6 +50,21 @@ interface SectionDetail {
 const props = defineProps<{
     section: SectionDetail;
 }>();
+
+const examModalOpen = ref(false);
+const examForm = useForm<ExamEditorData & {examable_type: string; examable_id: number}>({
+    ...createEmptyExam(),
+    examable_type: 'App\\Models\\Section',
+    examable_id: props.section.id,
+});
+
+function createExam(): void {
+    examForm.post(safeRoute('admin.exams.store'), {
+        onSuccess: () => {
+            examModalOpen.value = false;
+        },
+    });
+}
 
 const stats = computed(() => [
     {label: 'Chapitres', value: props.section.chapters_count, icon: BookOpen, tint: 'text-[#ef477d] bg-[#7d254a]/35'},
@@ -115,7 +134,24 @@ function formatDate(value: string): string {
                     </div>
                 </div>
 
-                <div class="flex shrink-0 items-center gap-2">
+                <div class="flex shrink-0 flex-wrap items-center gap-2">
+                    <Link
+                        v-if="section.exam"
+                        :href="safeRoute('admin.exams.show', section.exam.id)"
+                        class="admin-divider admin-text admin-hover inline-flex h-11 items-center gap-2 border px-4 text-sm font-medium transition"
+                    >
+                        <ClipboardCheck class="size-4" :stroke-width="1.7"/>
+                        Gérer l’examen
+                    </Link>
+                    <button
+                        v-else
+                        class="admin-divider admin-text admin-hover inline-flex h-11 items-center gap-2 border px-4 text-sm font-medium transition"
+                        type="button"
+                        @click="examModalOpen = true"
+                    >
+                        <ClipboardCheck class="size-4" :stroke-width="1.7"/>
+                        Créer l’examen
+                    </button>
                     <ConfirmAction
                         :href="safeRoute('admin.sections.toggle-active', section.id)"
                         :message="section.is_active ? 'Désactiver cette section ?' : 'Activer cette section ?'"
@@ -149,9 +185,9 @@ function formatDate(value: string): string {
                 </div>
             </div>
 
-            <div class="grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_340px]">
-                <div class="grid gap-6">
-                    <section v-if="section.description" class="admin-panel border">
+            <div class="grid min-w-0 items-start gap-6 xl:grid-cols-[minmax(0,1fr)_340px]">
+                <div class="grid min-w-0 gap-6">
+                    <section v-if="section.description" class="admin-panel min-w-0 overflow-hidden border">
                         <div class="admin-divider flex items-center gap-3 border-b px-5 py-4 sm:px-6">
                             <span class="grid size-10 shrink-0 place-items-center bg-[#7d254a]/35 text-[#ef477d]">
                                 <BookOpen class="size-5" :stroke-width="1.7"/>
@@ -163,7 +199,7 @@ function formatDate(value: string): string {
                         </div>
                     </section>
 
-                    <section class="admin-panel border">
+                    <section class="admin-panel min-w-0 overflow-hidden border">
                         <div class="admin-divider flex items-center gap-3 border-b px-5 py-4 sm:px-6">
                             <span class="grid size-10 shrink-0 place-items-center bg-sky-400/10 text-sky-300">
                                 <BookOpen class="size-5" :stroke-width="1.7"/>
@@ -196,8 +232,8 @@ function formatDate(value: string): string {
                     </section>
                 </div>
 
-                <aside class="grid gap-6 xl:sticky xl:top-24">
-                    <section class="admin-panel border">
+                <aside class="grid min-w-0 gap-6 xl:sticky xl:top-24">
+                    <section class="admin-panel min-w-0 overflow-hidden border">
                         <div class="admin-divider flex items-center gap-3 border-b px-5 py-4">
                             <Settings2 class="size-5 text-amber-300" :stroke-width="1.7"/>
                             <h2 class="admin-heading font-semibold">Détails</h2>
@@ -222,32 +258,21 @@ function formatDate(value: string): string {
                         </dl>
                     </section>
 
-                    <section v-if="section.exam" class="admin-panel border">
-                        <div class="admin-divider flex items-center gap-3 border-b px-5 py-4">
-                            <GraduationCap class="size-5 text-violet-300" :stroke-width="1.7"/>
-                            <h2 class="admin-heading font-semibold">Examen</h2>
-                        </div>
-                        <div class="p-5">
-                            <Link :href="safeRoute('admin.exams.show', section.exam.id)" class="block text-sm font-medium text-[#ef477d] transition hover:text-rose-300">
-                                {{ section.exam.title }}
-                            </Link>
-                            <Link :href="safeRoute('admin.exams.show', section.exam.id)" class="admin-muted mt-1 block text-xs transition hover:text-[#a23362]">
-                                Gérer les questions →
-                            </Link>
-                        </div>
-                    </section>
-                    <section v-else class="admin-panel border">
-                        <div class="p-5 text-center">
-                            <GraduationCap class="mx-auto size-6 text-slate-600" :stroke-width="1.5"/>
-                            <p class="admin-heading mt-2 text-sm font-medium">Aucun examen</p>
-                            <p class="admin-muted mt-1 text-xs">Créez un examen pour cette section.</p>
-                            <Link :href="safeRoute('admin.exams.create')" class="mt-3 inline-block text-xs font-semibold text-[#ef477d] hover:text-rose-300">
-                                Créer un examen →
-                            </Link>
-                        </div>
-                    </section>
                 </aside>
             </div>
         </div>
+
+        <ResourceFormModal
+            :show="examModalOpen"
+            :processing="examForm.processing"
+            title="Créer l’examen de la section"
+            size="xl"
+            :slide-over="false"
+            submit-label="Créer l’examen"
+            @close="examModalOpen = false"
+            @submit="createExam"
+        >
+            <ExamEditor v-model="examForm" :errors="examForm.errors"/>
+        </ResourceFormModal>
     </AdminLayout>
 </template>
