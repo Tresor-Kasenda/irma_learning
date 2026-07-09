@@ -18,6 +18,11 @@ interface SectionData {
     id: number;
     title: string;
     chapters: ChapterData[];
+    exam?: {
+        id: number;
+        title: string;
+        is_active: boolean;
+    } | null;
 }
 
 interface FormationDetail extends LearningFormation {
@@ -43,16 +48,27 @@ const props = defineProps<{
     chapterCount: number;
     enrollment: EnrollmentData | null;
     completedChapterIds: number[];
+    continueChapterId: number | null;
+    learningProgress: number | string;
     certificate: CertificateData | null;
 }>();
 
 const isEnrolled = computed(() => Boolean(props.enrollment));
-const progress = computed(() => Math.round(Number(props.enrollment?.progress_percentage ?? 0)));
+const progress = computed(() => Math.round(Number(props.learningProgress ?? props.enrollment?.progress_percentage ?? 0)));
 const isCompleted = computed(
     () => props.enrollment?.status === 'completed' || progress.value >= 100,
 );
 
 const sections = computed(() => props.formation.sections ?? []);
+const continueHref = computed(() => {
+    const params: Record<string, number> = {formation: props.formation.id};
+
+    if (props.continueChapterId) {
+        params.chapterId = props.continueChapterId;
+    }
+
+    return safeRoute('course.player', params);
+});
 
 const enrollForm = useForm({});
 
@@ -250,6 +266,30 @@ function isChapterDone(id: number): boolean {
                                             {{ chapter.duration_minutes }} min
                                         </span>
                                     </li>
+                                    <li
+                                        class="flex items-center gap-3 bg-amber-400/5 px-4 py-3 text-amber-100"
+                                    >
+                                        <span class="grid size-6 shrink-0 place-items-center bg-amber-400/15">
+                                            <LearningIcon
+                                                class="size-3.5 brightness-0 invert"
+                                                name="academic-cap"
+                                            />
+                                        </span>
+                                        <span class="min-w-0 flex-1">
+                                            <span class="block text-sm font-semibold">
+                                                {{ section.exam?.title ?? 'Évaluation de la section' }}
+                                            </span>
+                                            <span class="mt-1 block text-[11px] text-amber-100/70">
+                                                Obligatoire pour débloquer la section suivante.
+                                            </span>
+                                        </span>
+                                        <span
+                                            :class="section.exam?.is_active ? 'border-amber-300/30 text-amber-100' : 'border-rose-300/30 text-rose-200'"
+                                            class="shrink-0 border px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.08em]"
+                                        >
+                                            {{ section.exam?.is_active ? 'Prévue' : 'À configurer' }}
+                                        </span>
+                                    </li>
                                 </ul>
                             </div>
                         </div>
@@ -292,7 +332,7 @@ function isChapterDone(id: number): boolean {
                         <!-- En cours -->
                         <Link
                             v-else-if="!isCompleted"
-                            :href="safeRoute('course.player', formation.id)"
+                            :href="continueHref"
                             class="mt-5 inline-flex h-11 w-full items-center justify-center gap-2 bg-[#a72f5d] px-5 text-sm font-semibold text-white transition hover:bg-[#c43b6d]"
                         >
                             <LearningIcon class="size-4 brightness-0 invert" name="play"/>

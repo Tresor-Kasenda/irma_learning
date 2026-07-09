@@ -41,6 +41,37 @@ test('an administrator can view and update system settings', function () {
     Storage::disk('public')->assertExists($settings->logo_path);
 });
 
+test('uploading a logo twice keeps a single settings row and the latest logo visible after refresh', function () {
+    Storage::fake('public');
+    $admin = User::factory()->create(['role' => UserRoleEnum::ADMIN]);
+
+    $this->actingAs($admin)->post(route('admin.settings.update'), [
+        'app_name' => 'IRMA Learning',
+        'primary_color' => '#a23362',
+        'default_currency' => 'USD',
+        'allow_registration' => true,
+        'logo' => UploadedFile::fake()->image('logo1.png'),
+    ])->assertRedirect();
+
+    $this->actingAs($admin)->post(route('admin.settings.update'), [
+        'app_name' => 'IRMA Learning',
+        'primary_color' => '#a23362',
+        'default_currency' => 'USD',
+        'allow_registration' => true,
+        'logo' => UploadedFile::fake()->image('logo2.png'),
+    ])->assertRedirect();
+
+    expect(ApplicationSetting::query()->count())->toBe(1);
+
+    $settings = ApplicationSetting::query()->firstOrFail();
+    Storage::disk('public')->assertExists($settings->logo_path);
+
+    $this->actingAs($admin)
+        ->get(route('admin.settings.edit'))
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('settings.logo_url', fn (string $url): bool => str_contains($url, $settings->logo_path)));
+});
+
 test('a student cannot access system settings', function () {
     $student = User::factory()->create(['role' => UserRoleEnum::STUDENT]);
 

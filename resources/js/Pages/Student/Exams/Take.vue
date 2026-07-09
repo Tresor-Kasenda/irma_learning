@@ -1,6 +1,8 @@
 <script setup lang="ts">
-import { Head, router } from '@inertiajs/vue3';
-import { ref, computed, onMounted, onUnmounted } from 'vue';
+import {Head, Link, router} from '@inertiajs/vue3';
+import {computed, onMounted, onUnmounted, ref} from 'vue';
+import LearningIcon from '@/Components/Learning/LearningIcon.vue';
+import {safeRoute} from '@/utilities/route';
 
 interface Exam {
     id: number;
@@ -11,6 +13,18 @@ interface Exam {
     passing_score: number;
     examable_type: string | null;
     show_results_immediately: boolean | null;
+}
+
+interface FormationContext {
+    id: number;
+    title: string;
+    slug: string;
+}
+
+interface ExamContext {
+    type: string;
+    label: string;
+    parent_title: string | null;
 }
 
 interface QuestionOption {
@@ -32,6 +46,8 @@ interface Question {
 
 const props = defineProps<{
     exam: Exam;
+    formation: FormationContext | null;
+    examContext: ExamContext;
     questions: Question[];
     attempt: { id: number; started_at: string; status: string };
     existingAnswers: Record<number, unknown>;
@@ -42,8 +58,11 @@ const answers = ref<Record<number, any>>({ ...props.existingAnswers });
 const currentQuestionIndex = ref(0);
 const remaining = ref(props.timeRemaining);
 const isSubmitting = ref(false);
+const showSubmitConfirm = ref(false);
+const notice = ref<{type: 'info' | 'warning'; message: string} | null>(null);
 
 const currentQuestion = computed(() => props.questions[currentQuestionIndex.value] ?? null);
+const backHref = computed(() => props.formation ? safeRoute('course.player', props.formation.id) : safeRoute('dashboard'));
 
 const progress = computed(() => {
     const answered = Object.values(answers.value).filter(v => {
@@ -72,6 +91,10 @@ function isAnswered(questionId: number): boolean {
     return true;
 }
 
+const currentQuestionAnswered = computed(() => {
+    return currentQuestion.value ? isAnswered(currentQuestion.value.id) : false;
+});
+
 let timerInterval: ReturnType<typeof setInterval> | null = null;
 
 onMounted(() => {
@@ -82,11 +105,12 @@ onMounted(() => {
 
                 if (remaining.value <= 0) {
                     if (timerInterval) clearInterval(timerInterval);
-                    submitExam();
+                    notice.value = {type: 'warning', message: 'Temps écoulé. Soumission automatique en cours.'};
+                    submitExam(true);
                 } else if (remaining.value === 300) {
-                    alert('Il vous reste 5 minutes !');
+                    notice.value = {type: 'info', message: 'Il vous reste 5 minutes.'};
                 } else if (remaining.value === 60) {
-                    alert('Il vous reste 1 minute !');
+                    notice.value = {type: 'warning', message: 'Il vous reste 1 minute.'};
                 }
             }
         }, 1000);
@@ -136,11 +160,21 @@ function goToQuestion(index: number) {
     currentQuestionIndex.value = index;
 }
 
-function submitExam() {
+function requestSubmit(): void {
+    showSubmitConfirm.value = true;
+}
+
+function submitExam(skipConfirmation = false) {
     if (isSubmitting.value) return;
-    if (!confirm('Êtes-vous sûr de vouloir soumettre votre examen ? Vous ne pourrez plus modifier vos réponses.')) return;
+
+    if (!skipConfirmation && !showSubmitConfirm.value) {
+        requestSubmit();
+        return;
+    }
 
     isSubmitting.value = true;
+    showSubmitConfirm.value = false;
+
     if (timerInterval) clearInterval(timerInterval);
 
     saveCurrentAnswer();
@@ -173,188 +207,295 @@ function getMediaUrl(url: string | null): string {
     if (url.startsWith('http')) return url;
     return '/storage/' + url;
 }
+
+function questionTypeLabel(type: string): string {
+    const labels: Record<string, string> = {
+        single_choice: 'Choix unique',
+        multiple_choice: 'Choix multiple',
+        true_false: 'Vrai / Faux',
+    };
+
+    return labels[type] ?? 'Question';
+}
 </script>
 
 <template>
-    <Head title="Passer l'examen" />
+    <Head title="Passer l'examen"/>
 
-    <div class="min-h-screen bg-gray-900">
-        <header class="bg-gray-950 border-b border-gray-800 sticky top-0 z-50">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <h1 class="text-lg font-semibold text-white">{{ exam.title }}</h1>
-                        <p v-if="exam.description" class="text-sm text-gray-400">{{ exam.description }}</p>
+    <div class="flex h-screen min-h-0 flex-col overflow-hidden bg-[#071525] text-slate-100">
+        <header class="sticky top-0 z-40 border-b border-white/10 bg-[#081524]">
+            <div class="flex min-h-16 items-center justify-between gap-4 px-4 sm:px-6">
+                <div class="flex min-w-0 items-center gap-3">
+                    <Link
+                        :href="backHref"
+                        class="grid size-10 shrink-0 place-items-center border border-white/10 transition hover:bg-white/5"
+                        title="Retour à la formation"
+                    >
+                        <LearningIcon class="size-5 brightness-0 invert" name="arrow-left"/>
+                    </Link>
+                    <div class="min-w-0">
+                        <p class="text-[11px] font-semibold uppercase tracking-[0.08em] text-[#ff79a5]">
+                            {{ examContext.label }}
+                        </p>
+                        <h1 class="truncate text-sm font-semibold text-white sm:text-base">{{ exam.title }}</h1>
+                        <p v-if="formation" class="mt-0.5 truncate text-xs text-slate-500">{{ formation.title }}</p>
                     </div>
-                    <div class="flex items-center gap-4">
-                        <div v-if="remaining !== null"
-                             class="flex items-center gap-2 px-4 py-2 bg-gray-800 rounded-lg"
-                        >
-                            <svg class="w-5 h-5 text-primary-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                            </svg>
-                            <span class="text-white font-mono">{{ formatTime(remaining) }}</span>
-                        </div>
+                </div>
 
-                        <div class="flex items-center gap-2">
-                            <span class="text-sm text-gray-400">Progression:</span>
-                            <div class="w-32 bg-gray-800 rounded-full h-2">
-                                <div class="bg-primary-600 h-full rounded-full transition-all duration-500"
-                                     :style="{ width: progress + '%' }"
-                                />
-                            </div>
-                            <span class="text-sm text-white">{{ Math.round(progress) }}%</span>
+                <div class="flex shrink-0 items-center gap-3">
+                    <div
+                        v-if="remaining !== null"
+                        class="hidden items-center gap-2 border border-white/10 bg-white/5 px-3 py-2 text-sm font-semibold text-white sm:flex"
+                    >
+                        <LearningIcon class="size-4 brightness-0 invert" name="clock"/>
+                        <span class="font-mono">{{ formatTime(remaining) }}</span>
+                    </div>
+                    <div class="hidden items-center gap-2 md:flex">
+                        <span class="text-xs text-slate-400">{{ answeredCount }} / {{ questions.length }} répondues</span>
+                        <div class="h-1.5 w-32 bg-white/10">
+                            <div class="h-full bg-[#df3e75] transition-all duration-500" :style="{width: `${progress}%`}"/>
                         </div>
+                        <span class="w-9 text-right text-xs font-semibold text-white">{{ Math.round(progress) }}%</span>
                     </div>
                 </div>
             </div>
         </header>
 
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-            <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
-                <div class="lg:col-span-1">
-                    <div class="bg-gray-800 rounded-lg p-4 sticky top-24">
-                        <h3 class="text-sm font-semibold text-white mb-4">Navigation</h3>
-                        <div class="grid grid-cols-5 lg:grid-cols-4 gap-2">
-                            <button v-for="(question, index) in questions" :key="question.id"
-                                    @click="goToQuestion(index)"
-                                    class="w-10 h-10 rounded-lg text-sm font-medium transition-all"
-                                    :class="{
-                                        'bg-primary-600 text-white': index === currentQuestionIndex,
-                                        'bg-green-600 text-white': index !== currentQuestionIndex && isAnswered(question.id),
-                                        'bg-gray-700 text-gray-300 hover:bg-gray-600': index !== currentQuestionIndex && !isAnswered(question.id),
-                                    }"
-                            >
-                                {{ index + 1 }}
-                            </button>
-                        </div>
-                        <div class="mt-4 space-y-2 text-xs text-gray-400">
-                            <div class="flex items-center gap-2">
-                                <div class="w-4 h-4 bg-primary-600 rounded" />
-                                <span>Question actuelle</span>
-                            </div>
-                            <div class="flex items-center gap-2">
-                                <div class="w-4 h-4 bg-green-600 rounded" />
-                                <span>Répondue</span>
-                            </div>
-                            <div class="flex items-center gap-2">
-                                <div class="w-4 h-4 bg-gray-700 rounded" />
-                                <span>Non répondue</span>
-                            </div>
-                        </div>
+        <div class="flex min-h-0 flex-1">
+            <main class="min-w-0 flex-1 overflow-y-auto">
+                <div class="mx-auto max-w-5xl px-4 py-7 sm:px-6 lg:px-8">
+                    <div
+                        v-if="notice"
+                        :class="notice.type === 'warning' ? 'border-amber-400/30 bg-amber-400/10 text-amber-100' : 'border-sky-400/30 bg-sky-400/10 text-sky-100'"
+                        class="mb-5 flex items-start gap-3 border p-4 text-sm"
+                    >
+                        <LearningIcon class="mt-0.5 size-5 shrink-0 brightness-0 invert" name="clock"/>
+                        <p class="leading-6">{{ notice.message }}</p>
                     </div>
-                </div>
 
-                <div class="lg:col-span-3">
-                    <div v-if="currentQuestion" class="bg-gray-800 rounded-lg p-6 mb-6">
-                        <div class="flex items-center justify-between mb-4">
-                            <span class="text-sm font-medium text-primary-400">
-                                Question {{ currentQuestionIndex + 1 }} sur {{ questions.length }}
-                            </span>
-                            <span class="px-3 py-1 bg-gray-700 rounded-full text-xs text-gray-300">
-                                {{ currentQuestion.points }} {{ currentQuestion.points > 1 ? 'points' : 'point' }}
-                            </span>
-                        </div>
+                    <section v-if="exam.description || exam.instructions" class="mb-6 border border-white/10 bg-[#101d2d] p-5">
+                        <p v-if="examContext.parent_title" class="text-xs font-semibold uppercase tracking-[0.08em] text-slate-500">
+                            {{ examContext.parent_title }}
+                        </p>
+                        <p v-if="exam.description" class="mt-2 text-sm leading-6 text-slate-300">{{ exam.description }}</p>
+                        <p v-if="exam.instructions" class="mt-3 border-t border-white/10 pt-3 text-sm leading-6 text-slate-400">
+                            {{ exam.instructions }}
+                        </p>
+                    </section>
 
-                        <div class="mb-6">
-                            <h3 class="text-white text-lg font-medium">{{ currentQuestion.question_text }}</h3>
-                        </div>
-
-                        <div v-if="currentQuestion.image" class="mb-6">
-                            <img :src="getMediaUrl(currentQuestion.image)"
-                                 alt="Question image"
-                                 class="rounded-lg max-w-full h-auto"
-                            >
-                        </div>
-
-                        <div v-if="exam.instructions" class="mb-6 p-4 bg-gray-700 rounded-lg">
-                            <p class="text-sm text-gray-300">{{ exam.instructions }}</p>
-                        </div>
-
-                        <div class="space-y-3">
-                            <template v-if="currentQuestion.question_type === 'single_choice'">
-                                <label v-for="option in currentQuestion.options" :key="option.id"
-                                       class="flex items-start gap-3 p-4 bg-gray-700 rounded-lg cursor-pointer hover:bg-gray-600 transition-colors"
-                                >
-                                    <input type="radio"
-                                           :name="'q_' + currentQuestion.id"
-                                           :value="option.id"
-                                           :checked="answers[currentQuestion.id] === option.id"
-                                           @change="answers[currentQuestion.id] = option.id"
-                                           class="mt-1 w-4 h-4 text-primary-600 bg-gray-900 border-gray-600 focus:ring-primary-500"
+                    <section v-if="currentQuestion" class="border border-white/10 bg-[#101d2d]">
+                        <div class="border-b border-white/10 p-5 sm:p-6">
+                            <div class="flex flex-wrap items-center justify-between gap-3">
+                                <div>
+                                    <p class="text-xs font-semibold uppercase tracking-[0.08em] text-[#ff79a5]">
+                                        Question {{ currentQuestionIndex + 1 }} sur {{ questions.length }}
+                                    </p>
+                                    <p class="mt-2 text-sm text-slate-500">{{ questionTypeLabel(currentQuestion.question_type) }}</p>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <span
+                                        :class="currentQuestionAnswered ? 'border-emerald-400/30 text-emerald-200' : 'border-white/10 text-slate-400'"
+                                        class="border px-3 py-1 text-xs font-semibold"
                                     >
-                                    <div class="flex-1">
-                                        <span class="text-white">{{ option.option_text }}</span>
-                                        <img v-if="option.image" :src="getMediaUrl(option.image)" alt="Option image" class="mt-2 rounded max-w-sm h-auto">
-                                    </div>
-                                </label>
-                            </template>
+                                        {{ currentQuestionAnswered ? 'Répondue' : 'Non répondue' }}
+                                    </span>
+                                    <span class="border border-white/10 px-3 py-1 text-xs font-semibold text-slate-300">
+                                        {{ currentQuestion.points }} {{ currentQuestion.points > 1 ? 'points' : 'point' }}
+                                    </span>
+                                </div>
+                            </div>
+                            <h2 class="mt-5 text-xl font-semibold leading-8 text-white">{{ currentQuestion.question_text }}</h2>
+                        </div>
 
-                            <template v-else-if="currentQuestion.question_type === 'true_false'">
-                                <label v-for="option in currentQuestion.options" :key="option.id"
-                                       class="flex items-start gap-3 p-4 bg-gray-700 rounded-lg cursor-pointer hover:bg-gray-600 transition-colors"
+                        <div class="grid gap-4 p-5 sm:p-6">
+                            <img
+                                v-if="currentQuestion.image"
+                                :src="getMediaUrl(currentQuestion.image)"
+                                alt="Illustration de la question"
+                                class="max-h-80 w-full border border-white/10 object-contain"
+                            />
+
+                            <template v-if="currentQuestion.question_type === 'single_choice' || currentQuestion.question_type === 'true_false'">
+                                <label
+                                    v-for="option in currentQuestion.options"
+                                    :key="option.id"
+                                    :class="answers[currentQuestion.id] === option.id ? 'border-[#df3e75] bg-[#7d254a]/35' : 'border-white/10 bg-[#0b1929] hover:border-white/20 hover:bg-white/5'"
+                                    class="flex cursor-pointer items-start gap-3 border p-4 transition"
                                 >
-                                    <input type="radio"
-                                           :name="'q_' + currentQuestion.id"
-                                           :value="option.id"
-                                           :checked="answers[currentQuestion.id] === option.id"
-                                           @change="answers[currentQuestion.id] = option.id"
-                                           class="mt-1 w-4 h-4 text-primary-600 bg-gray-900 border-gray-600 focus:ring-primary-500"
-                                    >
-                                    <span class="text-white">{{ option.option_text }}</span>
+                                    <input
+                                        :checked="answers[currentQuestion.id] === option.id"
+                                        :name="'q_' + currentQuestion.id"
+                                        :value="option.id"
+                                        class="mt-1 size-4 border-white/30 bg-[#071525] text-[#df3e75] focus:ring-[#df3e75]"
+                                        type="radio"
+                                        @change="answers[currentQuestion.id] = option.id"
+                                    />
+                                    <span class="min-w-0 flex-1">
+                                        <span class="block text-sm leading-6 text-white">{{ option.option_text }}</span>
+                                        <img
+                                            v-if="option.image"
+                                            :src="getMediaUrl(option.image)"
+                                            alt="Illustration de l’option"
+                                            class="mt-3 max-h-56 w-full border border-white/10 object-contain"
+                                        />
+                                    </span>
                                 </label>
                             </template>
 
                             <template v-else-if="currentQuestion.question_type === 'multiple_choice'">
-                                <p class="text-sm text-gray-400 mb-2">Sélectionnez toutes les réponses correctes</p>
-                                <label v-for="option in currentQuestion.options" :key="option.id"
-                                       class="flex items-start gap-3 p-4 bg-gray-700 rounded-lg cursor-pointer hover:bg-gray-600 transition-colors"
+                                <p class="text-sm text-slate-400">Sélectionnez toutes les réponses correctes.</p>
+                                <label
+                                    v-for="option in currentQuestion.options"
+                                    :key="option.id"
+                                    :class="Array.isArray(answers[currentQuestion.id]) && (answers[currentQuestion.id] as number[]).includes(option.id) ? 'border-[#df3e75] bg-[#7d254a]/35' : 'border-white/10 bg-[#0b1929] hover:border-white/20 hover:bg-white/5'"
+                                    class="flex cursor-pointer items-start gap-3 border p-4 transition"
                                 >
-                                    <input type="checkbox"
-                                           :checked="Array.isArray(answers[currentQuestion.id]) && (answers[currentQuestion.id] as number[]).includes(option.id)"
-                                           @change="toggleMultipleChoice(option.id)"
-                                           class="mt-1 w-4 h-4 text-primary-600 bg-gray-900 border-gray-600 rounded focus:ring-primary-500"
-                                    >
-                                    <div class="flex-1">
-                                        <span class="text-white">{{ option.option_text }}</span>
-                                        <img v-if="option.image" :src="getMediaUrl(option.image)" alt="Option image" class="mt-2 rounded max-w-sm h-auto">
-                                    </div>
+                                    <input
+                                        :checked="Array.isArray(answers[currentQuestion.id]) && (answers[currentQuestion.id] as number[]).includes(option.id)"
+                                        class="mt-1 size-4 border-white/30 bg-[#071525] text-[#df3e75] focus:ring-[#df3e75]"
+                                        type="checkbox"
+                                        @change="toggleMultipleChoice(option.id)"
+                                    />
+                                    <span class="min-w-0 flex-1">
+                                        <span class="block text-sm leading-6 text-white">{{ option.option_text }}</span>
+                                        <img
+                                            v-if="option.image"
+                                            :src="getMediaUrl(option.image)"
+                                            alt="Illustration de l’option"
+                                            class="mt-3 max-h-56 w-full border border-white/10 object-contain"
+                                        />
+                                    </span>
                                 </label>
                             </template>
                         </div>
+                    </section>
+
+                    <div v-else class="border border-dashed border-white/15 p-8 text-center">
+                        <h2 class="text-lg font-semibold text-white">Aucune question disponible</h2>
+                        <p class="mt-2 text-sm text-slate-400">Contactez l’administration pour configurer cet examen.</p>
                     </div>
 
-                    <div v-else class="bg-gray-800 rounded-lg p-6 text-center">
-                        <p class="text-gray-400">Aucune question disponible</p>
-                    </div>
-
-                    <div class="flex items-center justify-between">
-                        <button @click="previousQuestion"
-                                :disabled="currentQuestionIndex === 0"
-                                class="px-6 py-3 rounded-lg font-medium transition-colors"
-                                :class="currentQuestionIndex > 0
-                                    ? 'bg-gray-700 text-white hover:bg-gray-600'
-                                    : 'bg-gray-800 text-gray-500 cursor-not-allowed'"
+                    <div class="mt-6 flex items-center justify-between gap-3 border-t border-white/10 pt-5">
+                        <button
+                            :disabled="currentQuestionIndex === 0"
+                            class="inline-flex h-11 items-center gap-2 border border-white/10 px-4 text-sm font-semibold text-white transition hover:bg-white/5 disabled:cursor-not-allowed disabled:opacity-35"
+                            type="button"
+                            @click="previousQuestion"
                         >
-                            ← Précédent
+                            <LearningIcon class="size-4 brightness-0 invert" name="arrow-left"/>
+                            Précédent
                         </button>
 
-                        <template v-if="currentQuestionIndex === questions.length - 1">
-                            <button @click="submitExam"
-                                    :disabled="isSubmitting"
-                                    class="px-8 py-3 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 transition-colors disabled:opacity-50"
-                            >
-                                {{ isSubmitting ? 'Soumission...' : "Soumettre l'examen" }}
-                            </button>
-                        </template>
-                        <button v-else @click="nextQuestion"
-                                class="px-6 py-3 bg-primary-600 text-white rounded-lg font-medium hover:bg-primary-700 transition-colors"
+                        <button
+                            v-if="currentQuestionIndex === questions.length - 1"
+                            :disabled="isSubmitting"
+                            class="inline-flex h-11 items-center gap-2 bg-emerald-500 px-5 text-sm font-semibold text-white transition hover:bg-emerald-400 disabled:opacity-55"
+                            type="button"
+                            @click="requestSubmit"
                         >
-                            Suivant →
+                            {{ isSubmitting ? 'Soumission…' : "Soumettre l'examen" }}
+                            <LearningIcon class="size-4 brightness-0 invert" name="check"/>
+                        </button>
+                        <button
+                            v-else
+                            class="inline-flex h-11 items-center gap-2 bg-[#a72f5d] px-5 text-sm font-semibold text-white transition hover:bg-[#c43b6d]"
+                            type="button"
+                            @click="nextQuestion"
+                        >
+                            Suivant
+                            <LearningIcon class="size-4 brightness-0 invert" name="arrow-right"/>
                         </button>
                     </div>
                 </div>
-            </div>
+            </main>
+
+            <aside class="sticky top-0 hidden h-full w-80 shrink-0 self-start overflow-y-auto border-l border-white/10 bg-[#081524] md:block lg:w-96">
+                <div class="sticky top-0 z-10 border-b border-white/10 bg-[#081524] p-4">
+                    <h3 class="font-semibold text-white">Navigation de l’examen</h3>
+                    <p class="mt-1 text-xs text-slate-500">{{ answeredCount }} / {{ questions.length }} réponse(s)</p>
+                </div>
+                <div class="grid gap-5 p-4">
+                    <div v-if="remaining !== null" class="border border-white/10 bg-white/5 p-4">
+                        <p class="text-xs font-semibold uppercase tracking-[0.08em] text-slate-500">Temps restant</p>
+                        <p class="mt-2 flex items-center gap-2 text-2xl font-semibold text-white">
+                            <LearningIcon class="size-5 brightness-0 invert" name="clock"/>
+                            <span class="font-mono">{{ formatTime(remaining) }}</span>
+                        </p>
+                    </div>
+
+                    <div class="border border-white/10 p-4">
+                        <div class="mb-3 flex items-center justify-between text-xs">
+                            <span class="text-slate-500">Progression</span>
+                            <span class="font-semibold text-[#ff79a5]">{{ Math.round(progress) }}%</span>
+                        </div>
+                        <div class="h-1.5 bg-white/10">
+                            <div class="h-full bg-[#df3e75]" :style="{width: `${progress}%`}"/>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-5 gap-2">
+                        <button
+                            v-for="(question, index) in questions"
+                            :key="question.id"
+                            :class="[
+                                index === currentQuestionIndex
+                                    ? 'border-[#df3e75] bg-[#7d254a]/40 text-white'
+                                    : isAnswered(question.id)
+                                        ? 'border-emerald-400/30 bg-emerald-400/10 text-emerald-200'
+                                        : 'border-white/10 text-slate-400 hover:border-white/25 hover:text-white',
+                            ]"
+                            class="grid h-10 place-items-center border text-sm font-semibold transition"
+                            type="button"
+                            @click="goToQuestion(index)"
+                        >
+                            {{ index + 1 }}
+                        </button>
+                    </div>
+
+                    <div class="grid gap-2 border border-white/10 p-4 text-xs text-slate-400">
+                        <div class="flex items-center gap-2">
+                            <span class="size-3 border border-[#df3e75] bg-[#7d254a]/40"/>
+                            Question actuelle
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span class="size-3 border border-emerald-400/30 bg-emerald-400/10"/>
+                            Répondue
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span class="size-3 border border-white/10"/>
+                            Non répondue
+                        </div>
+                    </div>
+                </div>
+            </aside>
         </div>
+
+        <Teleport to="body">
+            <div v-if="showSubmitConfirm" class="fixed inset-0 z-[90] grid place-items-center bg-black/70 px-4">
+                <section class="w-full max-w-md border border-white/10 bg-[#101d2d] p-6 shadow-2xl shadow-black/40">
+                    <p class="text-xs font-semibold uppercase tracking-[0.08em] text-[#ff79a5]">Confirmation</p>
+                    <h2 class="mt-2 text-xl font-semibold text-white">Soumettre l’examen ?</h2>
+                    <p class="mt-3 text-sm leading-6 text-slate-400">
+                        Vos réponses seront verrouillées et vous ne pourrez plus les modifier après la soumission.
+                    </p>
+                    <div class="mt-6 flex justify-end gap-3">
+                        <button
+                            class="h-10 border border-white/10 px-4 text-sm font-semibold text-white transition hover:bg-white/5"
+                            type="button"
+                            @click="showSubmitConfirm = false"
+                        >
+                            Annuler
+                        </button>
+                        <button
+                            class="h-10 bg-emerald-500 px-4 text-sm font-semibold text-white transition hover:bg-emerald-400"
+                            type="button"
+                            @click="submitExam()"
+                        >
+                            Confirmer
+                        </button>
+                    </div>
+                </section>
+            </div>
+        </Teleport>
     </div>
 </template>

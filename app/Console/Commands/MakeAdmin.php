@@ -5,35 +5,37 @@ declare(strict_types=1);
 namespace App\Console\Commands;
 
 use App\Models\User;
-use Filament\Commands\MakeUserCommand;
-use Illuminate\Contracts\Auth\Authenticatable;
-use Illuminate\Database\Eloquent\Model;
+use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Hash;
 
 use function Laravel\Prompts\password;
 use function Laravel\Prompts\select;
 use function Laravel\Prompts\text;
 
-final class MakeAdmin extends MakeUserCommand
+final class MakeAdmin extends Command
 {
     protected $signature = 'make:admin
                             {--name= : The name of the user}
                             {--username= : The username of the user}
                             {--email= : A valid and unique email address}
                             {--password= : The password for the user (min. 8 characters)}
-                            {--role= : The role of the user}
-                            {--panel= : The panel to create the user in}';
+                            {--role= : The role of the user}';
 
     protected $description = 'Create admin user for application';
 
     public function handle(): int
     {
-        parent::handle();
+        $user = User::create($this->getUserData());
+
+        $this->components->info("Success! {$user->email} may now log in.");
 
         return self::SUCCESS;
     }
 
-    public function roles(): array
+    /**
+     * @return array<string, string>
+     */
+    private function roles(): array
     {
         return [
             'admin' => 'Admin',
@@ -43,25 +45,20 @@ final class MakeAdmin extends MakeUserCommand
     }
 
     /**
-     * Create admin user and assign admin role
+     * @return array<string, mixed>
      */
-    protected function createUser(): Model&Authenticatable
-    {
-        return $this->getUserModel()::create($this->getUserData());
-    }
-
-    protected function getUserData(): array
+    private function getUserData(): array
     {
         return [
-            'name' => $this->options['name'] ?? text(
+            'name' => $this->option('name') ?? text(
                 label: 'Name',
                 required: true,
             ),
-            'username' => $this->options['username'] ?? text(
+            'username' => $this->option('username') ?? text(
                 label: 'Username',
                 required: true,
             ),
-            'email' => $this->options['email'] ?? text(
+            'email' => $this->option('email') ?? text(
                 label: 'Email address',
                 required: true,
                 validate: fn (string $email): ?string => match (true) {
@@ -70,13 +67,13 @@ final class MakeAdmin extends MakeUserCommand
                     default => null,
                 },
             ),
-            'role' => $this->options['role'] ?? select(
+            'role' => $this->option('role') ?? select(
                 label: 'Role',
                 options: $this->roles(),
                 hint: 'Select role of user',
                 required: true
             ),
-            'password' => Hash::make($this->options['password'] ?? password(
+            'password' => Hash::make($this->option('password') ?? password(
                 label: 'Password',
                 required: true,
             )),

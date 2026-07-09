@@ -20,6 +20,7 @@ use App\Models\Section;
 use App\Models\User;
 use App\Models\UserAnswer;
 use App\Services\CourseProgressionService;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
@@ -29,25 +30,24 @@ final class ExamController extends Controller
     public function take(Exam $exam, CourseProgressionService $progression)
     {
         $user = auth()->user();
+        $formation = $this->resolveFormation($exam);
 
         if (! $exam->is_active) {
-            abort(403, 'Cet examen n\'est pas disponible.');
+            return $this->redirectToLearning($user, $formation, $progression, 'Cet examen n\'est pas disponible.');
         }
         if ($exam->available_from && now()->isBefore($exam->available_from)) {
-            abort(403, 'Cet examen n\'est pas encore disponible.');
+            return $this->redirectToLearning($user, $formation, $progression, 'Cet examen n\'est pas encore disponible.');
         }
         if ($exam->available_until && now()->isAfter($exam->available_until)) {
-            abort(403, 'Cet examen n\'est plus disponible.');
-        }
-        if (! $exam->canUserAttempt($user)) {
-            abort(403, 'Vous avez atteint le nombre maximum de tentatives pour cet examen.');
+            return $this->redirectToLearning($user, $formation, $progression, 'Cet examen n\'est plus disponible.');
         }
 
         if ($exam->examable_type === Section::class) {
             $section = $exam->examable;
-            $formation = $this->resolveFormation($exam);
 
-            abort_unless($formation && $this->isEnrolled($user, $formation), 403, 'Vous devez être inscrit à cette formation.');
+            if (! $formation || ! $this->isEnrolled($user, $formation)) {
+                return $this->redirectToLearning($user, $formation, $progression, 'Vous devez être inscrit à cette formation.');
+            }
 
             if (! $progression->hasCompletedSectionChapters($user, $section)) {
                 return redirect()->route('course.player', $formation->id)
@@ -56,8 +56,13 @@ final class ExamController extends Controller
         } elseif ($exam->examable_type === Formation::class) {
             $formation = $exam->examable;
 
-            abort_unless($formation->is_certifying, 403, 'Cette formation ne prévoit pas d’examen final.');
-            abort_unless($this->isEnrolled($user, $formation), 403, 'Vous devez être inscrit à cette formation.');
+            if (! $formation->is_certifying) {
+                return $this->redirectToLearning($user, $formation, $progression, 'Cette formation ne prévoit pas d’examen final.');
+            }
+
+            if (! $this->isEnrolled($user, $formation)) {
+                return $this->redirectToLearning($user, $formation, $progression, 'Vous devez être inscrit à cette formation.');
+            }
 
             if (! $progression->areSectionsComplete($user, $formation)) {
                 return redirect()->route('course.player', $formation->id)
@@ -65,7 +70,17 @@ final class ExamController extends Controller
             }
         }
 
-        $attempt = ExamAttempt::firstOrCreate(
+        $inProgressAttempt = ExamAttempt::query()
+            ->where('exam_id', $exam->id)
+            ->where('user_id', $user->id)
+            ->where('status', ExamAttemptEnum::IN_PROGRESS)
+            ->first();
+
+        if (! $inProgressAttempt && ! $exam->canUserAttempt($user)) {
+            return $this->redirectToLearning($user, $formation, $progression, 'Vous avez atteint le nombre maximum de tentatives pour cet examen.');
+        }
+
+        $attempt = $inProgressAttempt ?? ExamAttempt::firstOrCreate(
             [
                 'exam_id' => $exam->id,
                 'user_id' => $user->id,
@@ -143,6 +158,12 @@ final class ExamController extends Controller
                 'examable_type' => $exam->examable_type,
                 'show_results_immediately' => $exam->show_results_immediately,
             ],
+            'formation' => $formation ? [
+                'id' => $formation->id,
+                'title' => $formation->title,
+                'slug' => $formation->slug,
+            ] : null,
+            'examContext' => $this->examContext($exam),
             'questions' => $questions,
             'attempt' => [
                 'id' => $attempt->id,
@@ -338,6 +359,28 @@ final class ExamController extends Controller
         ]);
     }
 
+    private function redirectToLearning(
+        User $user,
+        ?Formation $formation,
+        CourseProgressionService $progression,
+        string $message,
+    ): RedirectResponse {
+        if (! $formation) {
+            return redirect()->route('dashboard')->with('error', $message);
+        }
+
+        if (! $this->isEnrolled($user, $formation)) {
+            return redirect()->route('student.learnings.detail', $formation->slug)->with('error', $message);
+        }
+
+        $chapterId = $progression->latestChapter($user, $formation)?->id;
+
+        return redirect()->route('course.player', array_filter([
+            'formation' => $formation->id,
+            'chapterId' => $chapterId,
+        ]))->with('error', $message);
+    }
+
     private function isEnrolled(User $user, Formation $formation): bool
     {
         return Enrollment::query()
@@ -375,6 +418,44 @@ final class ExamController extends Controller
         }
 
         return null;
+    }
+
+    /**
+     * @return array{type:string, label:string, parent_title:string|null}
+     */
+    private function examContext(Exam $exam): array
+    {
+        $examable = $exam->examable;
+
+        if ($examable instanceof Formation) {
+            return [
+                'type' => 'formation',
+                'label' => 'Examen final',
+                'parent_title' => $examable->title,
+            ];
+        }
+
+        if ($examable instanceof Section) {
+            return [
+                'type' => 'section',
+                'label' => 'Évaluation de section',
+                'parent_title' => $examable->title,
+            ];
+        }
+
+        if ($examable instanceof Chapter) {
+            return [
+                'type' => 'chapter',
+                'label' => 'Quiz du chapitre',
+                'parent_title' => $examable->title,
+            ];
+        }
+
+        return [
+            'type' => 'exam',
+            'label' => 'Évaluation',
+            'parent_title' => null,
+        ];
     }
 
     private function nextSectionFirstChapter(Exam $exam, Formation $formation, CourseProgressionService $progression): ?Chapter

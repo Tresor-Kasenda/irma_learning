@@ -1,10 +1,11 @@
 <script lang="ts" setup>
 import {Head, useForm} from '@inertiajs/vue3';
-import {Pencil, ShieldCheck, Users} from '@lucide/vue';
+import {Pencil, Plus, ShieldCheck, Users} from '@lucide/vue';
 import {ref} from 'vue';
 import DataTable, {type Column} from '@/Components/Admin/DataTable.vue';
 import FilterBar, {type FilterDef} from '@/Components/Admin/FilterBar.vue';
 import SearchableSelect from '@/Components/Admin/Fields/SearchableSelect.vue';
+import TextField from '@/Components/Admin/Fields/TextField.vue';
 import ToggleField from '@/Components/Admin/Fields/ToggleField.vue';
 import ResourceFormModal from '@/Components/Admin/ResourceFormModal.vue';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
@@ -16,7 +17,9 @@ interface PageData {data: UserRow[]; from: number | null; to: number | null; tot
 
 const props = defineProps<{users: PageData; filters: Record<string, string | undefined>; roleOptions: Option[]; assignableRoleOptions: Option[]; statusOptions: Option[]; canManageRoot: boolean}>();
 const selectedUser = ref<UserRow | null>(null);
+const showCreate = ref(false);
 const form = useForm({role: 'student', status: 'active', must_change_password: false});
+const createForm = useForm({name: '', email: '', password: '', password_confirmation: '', role: 'student', status: 'active', must_change_password: true});
 const columns: Column[] = [{key: 'name', label: 'Utilisateur'}, {key: 'role', label: 'Rôle'}, {key: 'status', label: 'Accès'}, {key: 'enrollments_count', label: 'Inscriptions'}, {key: 'certificates_count', label: 'Certificats'}];
 const filterDefs: FilterDef[] = [
     {key: 'role', label: 'Rôle', options: props.roleOptions},
@@ -36,6 +39,16 @@ function updateUser(): void {
     if (!selectedUser.value) return;
     form.patch(safeRoute('admin.users.update', selectedUser.value.id), {preserveScroll: true, onSuccess: () => selectedUser.value = null});
 }
+
+function openCreate(): void {
+    createForm.reset();
+    createForm.clearErrors();
+    showCreate.value = true;
+}
+
+function createUser(): void {
+    createForm.post(safeRoute('admin.users.store'), {preserveScroll: true, onSuccess: () => showCreate.value = false});
+}
 </script>
 
 <template>
@@ -45,7 +58,10 @@ function updateUser(): void {
         <div class="mx-auto min-w-0 max-w-7xl">
             <header class="mb-7 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
                 <div><p class="text-xs font-semibold uppercase tracking-[0.14em] text-[#ef477d]">Administration</p><h1 class="admin-heading mt-2 text-2xl font-semibold sm:text-3xl">Utilisateurs et accès</h1><p class="admin-muted mt-2 text-sm">{{ users.total }} compte(s). Les rôles administrateur et root donnent accès à /manage.</p></div>
-                <div class="admin-panel-muted flex items-center gap-3 border px-4 py-3"><ShieldCheck class="size-5 text-emerald-400"/><p class="admin-muted text-xs"><strong class="admin-heading block">Contrôle d’accès</strong>Étudiant : learning · Instructeur : contenu · Admin/Root : gestion</p></div>
+                <div class="flex items-center gap-3">
+                    <div class="admin-panel-muted flex items-center gap-3 border px-4 py-3"><ShieldCheck class="size-5 text-emerald-400"/><p class="admin-muted text-xs"><strong class="admin-heading block">Contrôle d’accès</strong>Étudiant : learning · Instructeur : contenu · Admin/Root : gestion</p></div>
+                    <button class="inline-flex h-11 shrink-0 items-center gap-2 bg-[#a23362] px-5 text-sm font-semibold text-white" type="button" @click="openCreate"><Plus class="size-4"/>Créer un utilisateur</button>
+                </div>
             </header>
             <DataTable :columns="columns" :filters="filters" :index-route="safeRoute('admin.users.index')" :rows="users" searchable>
                 <template #filters><FilterBar :definitions="filterDefs" :filters="filters" :index-route="safeRoute('admin.users.index')"/></template>
@@ -62,6 +78,18 @@ function updateUser(): void {
                 <SearchableSelect v-model="form.role" :clearable="false" :error="form.errors.role" :options="assignableRoleOptions" :searchable="false" label="Rôle" required/>
                 <SearchableSelect v-model="form.status" :clearable="false" :error="form.errors.status" :options="statusOptions" :searchable="false" label="Statut du compte" required/>
                 <ToggleField v-model="form.must_change_password" hint="L’utilisateur devra définir un nouveau mot de passe à sa prochaine connexion." label="Forcer le changement de mot de passe"/>
+            </div>
+        </ResourceFormModal>
+
+        <ResourceFormModal :show="showCreate" :processing="createForm.processing" title="Créer un utilisateur" submit-label="Créer l’utilisateur" @close="showCreate = false" @submit="createUser">
+            <div class="grid gap-5">
+                <TextField v-model="createForm.name" :error="createForm.errors.name" label="Nom complet" required/>
+                <TextField v-model="createForm.email" :error="createForm.errors.email" label="E-mail" type="email" required/>
+                <TextField v-model="createForm.password" :error="createForm.errors.password" hint="8 caractères minimum." label="Mot de passe" type="password" required/>
+                <TextField v-model="createForm.password_confirmation" label="Confirmer le mot de passe" type="password" required/>
+                <SearchableSelect v-model="createForm.role" :clearable="false" :error="createForm.errors.role" :options="assignableRoleOptions" :searchable="false" label="Rôle" required/>
+                <SearchableSelect v-model="createForm.status" :clearable="false" :error="createForm.errors.status" :options="statusOptions" :searchable="false" label="Statut du compte" required/>
+                <ToggleField v-model="createForm.must_change_password" hint="L’utilisateur devra définir un nouveau mot de passe à sa première connexion." label="Forcer le changement de mot de passe"/>
             </div>
         </ResourceFormModal>
     </AdminLayout>

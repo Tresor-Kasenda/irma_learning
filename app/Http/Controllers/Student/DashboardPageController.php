@@ -7,7 +7,6 @@ namespace App\Http\Controllers\Student;
 use App\Enums\CertificateStatusEnum;
 use App\Enums\EnrollmentPaymentEnum;
 use App\Enums\EnrollmentStatusEnum;
-use App\Enums\UserProgressEnum;
 use App\Http\Controllers\Controller;
 use App\Models\Certificate;
 use App\Models\Chapter;
@@ -15,13 +14,14 @@ use App\Models\Enrollment;
 use App\Models\Formation;
 use App\Models\UserProgress;
 use App\Services\CatalogStatsService;
+use App\Services\CourseProgressionService;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 
 final class DashboardPageController extends Controller
 {
-    public function __invoke(CatalogStatsService $catalogStats)
+    public function __invoke(CatalogStatsService $catalogStats, CourseProgressionService $progression)
     {
 
         $user = auth()->user();
@@ -38,8 +38,20 @@ final class DashboardPageController extends Controller
                 EnrollmentPaymentEnum::PAID->value,
                 EnrollmentPaymentEnum::FREE->value,
             ])
+            ->orderByDesc('last_accessed_at')
             ->latest('updated_at')
             ->get();
+
+        $myEnrollments->each(function (Enrollment $enrollment) use ($progression, $user): void {
+            if ($enrollment->formation) {
+                $enrollment->setAttribute(
+                    'progress_percentage',
+                    $progression->progressPercentage($user, $enrollment->formation),
+                );
+            }
+        });
+
+        $activeFormationIds = $myEnrollments->pluck('formation_id');
 
         $continueWatching = UserProgress::query()
             ->with(['trackable' => function ($query) use ($catalogCountRelations) {
@@ -50,7 +62,11 @@ final class DashboardPageController extends Controller
             }])
             ->where('user_id', $user->id)
             ->where('trackable_type', Chapter::class)
-            ->where('status', UserProgressEnum::IN_PROGRESS->value)
+            ->whereHasMorph('trackable', [Chapter::class], function ($query) use ($activeFormationIds): void {
+                $query->whereHas('section', function ($query) use ($activeFormationIds): void {
+                    $query->whereIn('formation_id', $activeFormationIds);
+                });
+            })
             ->latest('updated_at')
             ->first();
 
@@ -71,7 +87,7 @@ final class DashboardPageController extends Controller
                         ->orWhere('description', 'like', '%'.$search.'%');
                 });
             })
-            ->limit(8)
+            ->limit(9)
             ->latest()
             ->get();
 
@@ -79,8 +95,8 @@ final class DashboardPageController extends Controller
             ->withCount($catalogCountRelations)
             ->where('is_active', true)
             ->latest()
-            ->limit(8)
-            ->get();
+            ->paginate(9, ['*'], 'formations_page')
+            ->withQueryString();
 
         $completedCertificates = Certificate::query()
             ->where('user_id', $user->id)
@@ -104,12 +120,9 @@ final class DashboardPageController extends Controller
             'completedEnrollments' => Enrollment::where('user_id', $user->id)
                 ->where('status', EnrollmentStatusEnum::COMPLETED->value)
                 ->count(),
-            'averageProgress' => (int) Enrollment::where('user_id', $user->id)
-                ->whereIn('payment_status', [
-                    EnrollmentPaymentEnum::PAID->value,
-                    EnrollmentPaymentEnum::FREE->value,
-                ])
-                ->avg('progress_percentage'),
+            'averageProgress' => $myEnrollments->isNotEmpty()
+                ? (int) round($myEnrollments->avg('progress_percentage'))
+                : 0,
             'totalTimeSpent' => UserProgress::where('user_id', $user->id)->sum('time_spent'),
             'certificatesEarned' => DB::table('certificates')
                 ->where('user_id', $user->id)

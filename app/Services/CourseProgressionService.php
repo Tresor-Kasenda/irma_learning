@@ -96,6 +96,94 @@ final class CourseProgressionService
             ->all();
     }
 
+    public function latestChapter(User $user, Formation $formation): ?Chapter
+    {
+        $chapters = $this->orderedSections($formation)
+            ->flatMap(fn (Section $section) => $section->chapters)
+            ->values();
+
+        if ($chapters->isEmpty()) {
+            return null;
+        }
+
+        $latestProgress = UserProgress::query()
+            ->where('user_id', $user->id)
+            ->where('trackable_type', Chapter::class)
+            ->whereIn('trackable_id', $chapters->pluck('id'))
+            ->latest('updated_at')
+            ->first();
+
+        if (! $latestProgress) {
+            return $chapters->first();
+        }
+
+        return $chapters->firstWhere('id', $latestProgress->trackable_id) ?? $chapters->first();
+    }
+
+    public function progressPercentage(User $user, Formation $formation): float
+    {
+        $sections = $this->orderedSections($formation);
+
+        if ($sections->isEmpty()) {
+            return 0.0;
+        }
+
+        $completedChapterIds = $this->completedChapterIds($user, $formation);
+        $totalSteps = 0;
+        $completedSteps = 0;
+
+        foreach ($sections as $section) {
+            $chapterIds = $section->chapters->pluck('id');
+            $totalSteps += $chapterIds->count();
+            $completedSteps += $chapterIds
+                ->filter(fn (int $id): bool => in_array($id, $completedChapterIds, true))
+                ->count();
+
+            $totalSteps++;
+            $sectionExam = $this->sectionExam($section);
+
+            if ($sectionExam?->hasUserPassed($user)) {
+                $completedSteps++;
+            }
+        }
+
+        if ($formation->is_certifying) {
+            $totalSteps++;
+
+            if ($this->formationExam($formation)?->hasUserPassed($user)) {
+                $completedSteps++;
+            }
+        }
+
+        if ($totalSteps === 0) {
+            return 0.0;
+        }
+
+        return round(($completedSteps / $totalSteps) * 100, 2);
+    }
+
+    public function syncProgress(User $user, Formation $formation): ?Enrollment
+    {
+        $enrollment = Enrollment::query()
+            ->where('user_id', $user->id)
+            ->where('formation_id', $formation->id)
+            ->whereIn('payment_status', [
+                EnrollmentPaymentEnum::PAID->value,
+                EnrollmentPaymentEnum::FREE->value,
+            ])
+            ->first();
+
+        if (! $enrollment) {
+            return null;
+        }
+
+        $enrollment->update([
+            'progress_percentage' => $this->progressPercentage($user, $formation),
+        ]);
+
+        return $enrollment->refresh();
+    }
+
     public function sectionExam(Section $section): ?Exam
     {
         $exam = $section->exam;
@@ -109,6 +197,8 @@ final class CourseProgressionService
      */
     public function syncCompletion(User $user, Formation $formation): ?Certificate
     {
+        $this->syncProgress($user, $formation);
+
         if (! $this->isFormationComplete($user, $formation)) {
             return null;
         }
@@ -231,6 +321,7 @@ final class CourseProgressionService
             $enrollment->update([
                 'status' => EnrollmentStatusEnum::COMPLETED,
                 'completion_date' => now(),
+                'progress_percentage' => 100,
             ]);
         }
     }

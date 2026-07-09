@@ -6,6 +6,5 @@ use App\Providers\MarkdownServiceProvider;
 
 return [
     App\Providers\AppServiceProvider::class,
-    App\Providers\Filament\AdminPanelProvider::class,
     MarkdownServiceProvider::class,
 ];

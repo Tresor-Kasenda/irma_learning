@@ -1,8 +1,10 @@
 <script lang="ts" setup>
 import {Head, Link, router} from '@inertiajs/vue3';
 import {computed, ref, watch} from 'vue';
+import AdminToasts from '@/Components/Admin/AdminToasts.vue';
 import CourseCurriculum from '@/Components/Learning/CourseCurriculum.vue';
 import LearningIcon from '@/Components/Learning/LearningIcon.vue';
+import {useFlashToasts} from '@/composables/useFlashToasts';
 
 interface Chapter {
     id: number;
@@ -75,6 +77,7 @@ const props = defineProps<{
 
 const showCurriculum = ref(false);
 const contentPane = ref<'pdf' | 'markdown'>(props.currentChapter?.content_type === 'pdf' ? 'pdf' : 'markdown');
+const {dismissToast, toasts} = useFlashToasts();
 
 watch(
     () => [props.currentChapter?.id, props.currentChapter?.content_type],
@@ -175,6 +178,8 @@ function contentTypeLabel(contentType: string | null): string {
     <Head :title="`${formation.title} - Formation`"/>
 
     <div class="flex h-screen min-h-0 flex-col overflow-hidden bg-[#071525] text-slate-100">
+        <AdminToasts :toasts="toasts" @dismiss="dismissToast"/>
+
         <header class="sticky top-0 z-40 border-b border-white/10 bg-[#081524]">
             <div class="flex min-h-16 items-center justify-between gap-4 px-4 sm:px-6">
                 <div class="flex min-w-0 items-center gap-3">

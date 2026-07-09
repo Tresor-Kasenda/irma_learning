@@ -2,11 +2,13 @@
 import {Link, usePage} from '@inertiajs/vue3';
 import {
     Award,
+    BarChart3,
     BookOpen,
     ClipboardCheck,
     Clock3,
     FileText,
     Home,
+    KeyRound,
     Layers3,
     Settings,
     Users,
@@ -54,6 +56,8 @@ const groups = computed<NavGroup[]>(() => [
         items: [
             {label: 'Inscriptions', route: 'admin.enrollments.index', icon: Users},
             {label: 'Certificats', route: 'admin.certificates.index', icon: Award},
+            {label: 'Codes d’accès', route: 'admin.access-codes.index', icon: KeyRound},
+            {label: 'Progression', route: 'admin.progress.index', icon: BarChart3},
         ],
     },
     {

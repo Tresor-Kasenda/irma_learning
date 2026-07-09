@@ -68,7 +68,6 @@ final class StudentLearningPlayController extends Controller
             $lastProgress = UserProgress::where('user_id', $user->id)
                 ->where('trackable_type', Chapter::class)
                 ->whereIn('trackable_id', $accessibleChapters->pluck('id'))
-                ->where('status', UserProgressEnum::IN_PROGRESS)
                 ->latest('updated_at')
                 ->first();
 
@@ -86,18 +85,8 @@ final class StudentLearningPlayController extends Controller
             : false;
         $currentChapterIndex = $currentChapterPosition === false ? 0 : $currentChapterPosition;
 
-        if ($currentChapter && ! UserProgress::where([
-            'user_id' => $user->id,
-            'trackable_type' => Chapter::class,
-            'trackable_id' => $currentChapter->id,
-        ])->exists()) {
-            UserProgress::create([
-                'user_id' => $user->id,
-                'trackable_type' => Chapter::class,
-                'trackable_id' => $currentChapter->id,
-                'status' => UserProgressEnum::IN_PROGRESS,
-                'started_at' => now(),
-            ]);
+        if ($currentChapter) {
+            $this->recordChapterVisit($user, $currentChapter, $enrollment);
         }
 
         $completedChapters = UserProgress::where('user_id', $user->id)
@@ -110,6 +99,7 @@ final class StudentLearningPlayController extends Controller
         $finalExam = $progression->formationExam($formation);
         $sectionsComplete = $progression->areSectionsComplete($user, $formation);
         $finalExamPassed = $finalExam?->hasUserPassed($user) ?? false;
+        $enrollment->setAttribute('progress_percentage', $progression->progressPercentage($user, $formation));
 
         return Inertia::render('Student/Learnings/StudentLearningPlay', [
             'formation' => $formation,
@@ -167,21 +157,30 @@ final class StudentLearningPlayController extends Controller
             ],
         );
 
-        $this->updateChapterProgress($user, $formation, $progression);
+        $enrollment = Enrollment::query()
+            ->where('user_id', $user->id)
+            ->where('formation_id', $formation->id)
+            ->first();
+
+        $enrollment?->update(['last_accessed_at' => now()]);
+
+        $progression->syncProgress($user, $formation);
 
         $certificate = $progression->syncCompletion($user, $formation);
 
         return $this->nextLearningStep($user, $formation, $chapter, $progression, $certificate);
     }
 
-    public function detailCourse(Formation $formation)
+    public function detailCourse(Formation $formation, CourseProgressionService $progression)
     {
         $user = auth()->user();
 
         $formation->load([
             'sections' => fn ($q) => $q->orderBy('order_position')->with([
                 'chapters' => fn ($q) => $q->where('is_active', true)->orderBy('order_position'),
+                'exam',
             ]),
+            'exam',
         ]);
         $formation->loadCount(Formation::catalogCountRelations());
 
@@ -194,6 +193,8 @@ final class StudentLearningPlayController extends Controller
             ->first();
 
         $completedChapterIds = [];
+        $continueChapterId = null;
+        $learningProgress = 0.0;
 
         if ($enrollment) {
             $allChapterIds = $formation->sections->flatMap->chapters->pluck('id');
@@ -204,6 +205,8 @@ final class StudentLearningPlayController extends Controller
                 ->where('status', UserProgressEnum::COMPLETED)
                 ->pluck('trackable_id')
                 ->toArray();
+            $continueChapterId = $progression->latestChapter($user, $formation)?->id;
+            $learningProgress = $progression->progressPercentage($user, $formation);
         }
 
         $certificate = Certificate::query()
@@ -217,29 +220,40 @@ final class StudentLearningPlayController extends Controller
             'chapterCount' => $chapterCount,
             'enrollment' => $enrollment,
             'completedChapterIds' => $completedChapterIds,
+            'continueChapterId' => $continueChapterId,
+            'learningProgress' => $learningProgress,
             'certificate' => $certificate,
         ]);
     }
 
-    private function updateChapterProgress(User $user, Formation $formation, CourseProgressionService $progression): void
+    private function recordChapterVisit(User $user, Chapter $chapter, Enrollment $enrollment): void
     {
-        $allChapterIds = $progression->orderedSections($formation)
-            ->flatMap(fn (Section $section) => $section->chapters->pluck('id'));
+        $progress = UserProgress::query()
+            ->where('user_id', $user->id)
+            ->where('trackable_type', Chapter::class)
+            ->where('trackable_id', $chapter->id)
+            ->first();
 
-        $total = $allChapterIds->count();
+        if ($progress) {
+            $updates = ['updated_at' => now()];
 
-        if ($total === 0) {
-            return;
+            if ($progress->status !== UserProgressEnum::COMPLETED) {
+                $updates['status'] = UserProgressEnum::IN_PROGRESS;
+                $updates['started_at'] = $progress->started_at ?? now();
+            }
+
+            $progress->forceFill($updates)->save();
+        } else {
+            UserProgress::create([
+                'user_id' => $user->id,
+                'trackable_type' => Chapter::class,
+                'trackable_id' => $chapter->id,
+                'status' => UserProgressEnum::IN_PROGRESS,
+                'started_at' => now(),
+            ]);
         }
 
-        $completed = count($progression->completedChapterIds($user, $formation));
-        $percentage = round($completed / $total * 100, 2);
-
-        Enrollment::query()
-            ->where('user_id', $user->id)
-            ->where('formation_id', $formation->id)
-            ->first()
-            ?->update(['progress_percentage' => $percentage]);
+        $enrollment->update(['last_accessed_at' => now()]);
     }
 
     private function nextLearningStep(

@@ -123,6 +123,21 @@ test('the formation is complete only when every chapter is done and every sectio
     expect($service->isFormationComplete($user, $formation))->toBeTrue();
 });
 
+test('progress percentage counts chapters and required section exams', function () {
+    [$formation, $built] = buildSectionedFormation();
+    $user = User::factory()->create();
+    enrolStudent($user, $formation);
+    $service = app(CourseProgressionService::class);
+
+    completeChapter($user, $built[0]['chapter']);
+
+    expect($service->progressPercentage($user, $formation))->toBe(25.0);
+
+    passExam($user, $built[0]['exam']);
+
+    expect($service->progressPercentage($user, $formation))->toBe(50.0);
+});
+
 test('passing the final exam of a certifying formation issues a certificate and completes the enrollment', function () {
     [$formation, $built] = buildSectionedFormation();
     $formation->update(['is_certifying' => true]);
@@ -262,6 +277,46 @@ test('a section exam cannot be taken until all its chapters are completed', func
     $this->actingAs($user)
         ->get(route('exam.take', $built[0]['exam']))
         ->assertSuccessful();
+});
+
+test('an exhausted section exam redirects back to the learning interface with a flash error', function () {
+    [$formation, $built] = buildSectionedFormation(sections: 1);
+    $built[0]['exam']->update(['max_attempts' => 1]);
+    $user = User::factory()->create();
+    enrolStudent($user, $formation);
+    completeChapter($user, $built[0]['chapter']);
+    failExam($user, $built[0]['exam']);
+
+    $this->actingAs($user)
+        ->get(route('exam.take', $built[0]['exam']))
+        ->assertRedirect(route('course.player', [
+            'formation' => $formation->id,
+            'chapterId' => $built[0]['chapter']->id,
+        ]))
+        ->assertSessionHas('error', 'Vous avez atteint le nombre maximum de tentatives pour cet examen.');
+});
+
+test('an in progress attempt can be resumed even when the attempt limit is reached', function () {
+    [$formation, $built] = buildSectionedFormation(sections: 1);
+    $built[0]['exam']->update(['max_attempts' => 1]);
+    $user = User::factory()->create();
+    enrolStudent($user, $formation);
+    completeChapter($user, $built[0]['chapter']);
+
+    ExamAttempt::factory()->for($built[0]['exam'])->for($user)->create([
+        'status' => ExamAttemptEnum::IN_PROGRESS,
+        'started_at' => now(),
+        'max_score' => 100,
+    ]);
+
+    $this->actingAs($user)
+        ->get(route('exam.take', $built[0]['exam']))
+        ->assertSuccessful()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('Student/Exams/Take')
+            ->where('formation.id', $formation->id)
+            ->where('examContext.type', 'section')
+            ->etc());
 });
 
 test('the exam results expose the next section as the next step once passed', function () {

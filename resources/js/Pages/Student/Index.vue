@@ -27,6 +27,23 @@ interface UserProgressData {
     trackable: ChapterData | null;
 }
 
+interface PaginationLink {
+    url: string | null;
+    label: string;
+    active: boolean;
+}
+
+interface FormationPaginator {
+    data: LearningFormation[];
+    current_page: number;
+    from: number | null;
+    last_page: number;
+    links: PaginationLink[];
+    per_page: number;
+    to: number | null;
+    total: number;
+}
+
 interface Stats {
     totalEnrollments: number;
     activeEnrollments: number;
@@ -47,7 +64,7 @@ const props = defineProps<{
     myEnrollments: EnrollmentData[];
     continueWatching: UserProgressData | null;
     recommendedFormations: LearningFormation[];
-    recentFormations: LearningFormation[];
+    recentFormations: FormationPaginator;
     completedCertificates: Record<number, CertificateRef>;
     stats: Stats;
     catalogStats: LearningCatalogStats;
@@ -79,6 +96,7 @@ const visibleEnrollments = computed(
         (e): e is EnrollmentData & { formation: LearningFormation } => Boolean(e.formation),
     ),
 );
+const recentFormationRows = computed(() => props.recentFormations.data ?? []);
 
 // Tab data
 const startedEnrollments = computed(() =>
@@ -92,7 +110,7 @@ const completedEnrollments = computed(() =>
 );
 
 const tabs = computed(() => [
-    {key: 'recent' as TabKey, label: 'Récent', count: props.recentFormations.length},
+    {key: 'recent' as TabKey, label: 'Récent', count: props.recentFormations.total},
     {key: 'discover' as TabKey, label: 'Découvrir', count: props.recommendedFormations.length},
     {key: 'started' as TabKey, label: 'En cours', count: startedEnrollments.value.length},
     {key: 'completed' as TabKey, label: 'Terminé', count: completedEnrollments.value.length},
@@ -134,6 +152,28 @@ function onSearchInput(event: Event): void {
 
 function progressValue(enrollment: EnrollmentData): number {
     return Math.round(Number(enrollment.progress_percentage ?? 0));
+}
+
+function courseHref(formation: LearningFormation, chapterId?: number | null): string {
+    const params: Record<string, number> = {formation: formation.id};
+
+    if (chapterId) {
+        params.chapterId = chapterId;
+    }
+
+    return safeRoute('course.player', params);
+}
+
+function paginationLabel(label: string): string {
+    if (label.includes('Previous')) {
+        return '‹ Précédent';
+    }
+
+    if (label.includes('Next')) {
+        return 'Suivant ›';
+    }
+
+    return label;
 }
 </script>
 
@@ -182,7 +222,7 @@ function progressValue(enrollment: EnrollmentData): number {
             <ContinueLearningBanner
                 v-if="continueFormation"
                 :formation="continueFormation"
-                :href="safeRoute('course.player', continueFormation.id)"
+                :href="courseHref(continueFormation, continueWatching?.trackable?.id)"
                 :progress="continueProgress"
                 :subtitle="continueWatching?.trackable?.title"
                 action-label="Continuer"
@@ -228,20 +268,48 @@ function progressValue(enrollment: EnrollmentData): number {
                 <!-- Récent : catalogue récemment publié → page détail -->
                 <div v-if="activeTab === 'recent'" class="mt-5">
                     <div
-                        v-if="recentFormations.length > 0"
+                        v-if="recentFormationRows.length > 0"
                         class="grid gap-4 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4"
                     >
                         <FormationCard
-                            v-for="formation in recentFormations"
+                            v-for="formation in recentFormationRows"
                             :key="formation.id"
                             :formation="formation"
                             :href="safeRoute('student.learnings.detail', formation.slug)"
                             badge="Nouveau"
                         />
                     </div>
+                    <div
+                        v-if="recentFormations.last_page > 1"
+                        class="mt-6 flex flex-col gap-3 border-t border-white/10 pt-5 text-sm text-slate-400 sm:flex-row sm:items-center sm:justify-between"
+                    >
+                        <p>
+                            Affichage {{ recentFormations.from }} à {{ recentFormations.to }} sur
+                            {{ recentFormations.total }} formation(s)
+                        </p>
+                        <nav class="flex flex-wrap items-center gap-2" aria-label="Pagination des formations récentes">
+                            <Link
+                                v-for="link in recentFormations.links"
+                                :key="`${link.label}-${link.url ?? 'disabled'}`"
+                                :class="[
+                                    link.active
+                                        ? 'border-[#df3e75] bg-[#a72f5d] text-white'
+                                        : link.url
+                                            ? 'border-white/10 text-slate-300 hover:border-[#df3e75]/60 hover:text-white'
+                                            : 'cursor-not-allowed border-white/5 text-slate-600',
+                                ]"
+                                :href="link.url || '#'"
+                                class="inline-flex h-9 min-w-9 items-center justify-center border px-3 font-semibold transition"
+                                preserve-scroll
+                                preserve-state
+                            >
+                                {{ paginationLabel(link.label) }}
+                            </Link>
+                        </nav>
+                    </div>
 
                     <div
-                        v-else
+                        v-if="recentFormationRows.length === 0"
                         class="flex min-h-56 flex-col items-center justify-center border border-dashed border-white/15 bg-[#0c1b2c] px-5 text-center"
                     >
                         <LearningIcon class="size-9 brightness-0 invert opacity-50" name="book-open"/>
@@ -301,7 +369,7 @@ function progressValue(enrollment: EnrollmentData): number {
                             v-for="enrollment in startedEnrollments"
                             :key="enrollment.id"
                             :formation="enrollment.formation"
-                            :href="safeRoute('course.player', enrollment.formation.id)"
+                            :href="courseHref(enrollment.formation)"
                             :progress="progressValue(enrollment)"
                             badge="En cours"
                         />

@@ -40,9 +40,9 @@ final class UserProgress extends Model
 
     public function markAsStarted(): void
     {
-        if ($this->status === 'not_started') {
+        if ($this->status === UserProgressEnum::NOT_STARTED) {
             $this->update([
-                'status' => 'in_progress',
+                'status' => UserProgressEnum::IN_PROGRESS,
                 'started_at' => now(),
             ]);
         }

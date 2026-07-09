@@ -97,7 +97,7 @@ function sectionState(sectionId: number): SectionState | null {
                                     : 'bg-white/5 text-slate-500'"
                         >
                             <LearningIcon
-                                :name="isCompleted(chapter.id) ? 'academic-cap' : 'play'"
+                                :name="isCompleted(chapter.id) ? 'check' : 'play'"
                                 class="size-3.5 brightness-0 invert"
                             />
                         </span>
@@ -105,6 +105,8 @@ function sectionState(sectionId: number): SectionState | null {
                             <span class="block text-sm font-medium text-slate-100">{{ chapter.title }}</span>
                             <span class="mt-1 flex flex-wrap items-center gap-2 text-[11px] text-slate-500">
                                 <span>{{ formatMinutes(chapter.duration_minutes) }}</span>
+                                <span v-if="isCompleted(chapter.id)" class="text-emerald-300">Terminé</span>
+                                <span v-else-if="currentChapterId === chapter.id" class="text-[#ff79a5]">En cours</span>
                             </span>
                         </span>
                     </span>

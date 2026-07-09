@@ -14,6 +14,18 @@ enum UserRoleEnum: string
 
     case INSTRUCTOR = 'instructor';
 
+    /**
+     * Roles an actor is allowed to assign to another user. Only root can grant root.
+     *
+     * @return list<self>
+     */
+    public static function assignable(bool $actorIsRoot): array
+    {
+        return $actorIsRoot
+            ? self::cases()
+            : array_values(array_filter(self::cases(), fn (self $role): bool => $role !== self::ROOT));
+    }
+
     public function getLabel(): string
     {
         return match ($this) {

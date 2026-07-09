@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Http\Controllers\Admin\AccessCodeController;
 use App\Http\Controllers\Admin\CertificateStudentController;
 use App\Http\Controllers\Admin\ChapterController;
 use App\Http\Controllers\Admin\DashboardController;
@@ -13,20 +14,19 @@ use App\Http\Controllers\Admin\QuestionController;
 use App\Http\Controllers\Admin\SectionController;
 use App\Http\Controllers\Admin\SystemSettingController;
 use App\Http\Controllers\Admin\UserController;
+use App\Http\Controllers\Admin\UserProgressController;
 use Illuminate\Support\Facades\Route;
 
 /*
 |--------------------------------------------------------------------------
 | Administration (Inertia + Vue)
 |--------------------------------------------------------------------------
-| Préfixe TEMPORAIRE « /manage » pendant la coexistence avec Filament (qui
-| occupe « /admin »). Au cutover (retrait de Filament), changer le préfixe
-| ci-dessous en « admin » — les noms de routes restent « admin.* ».
+| Filament a été retiré (Lot 7). Le panel Inertia occupe désormais « /admin ».
 | Voir docs/ pour le plan de migration.
 */
 
 Route::middleware(['auth', 'admin.access'])
-    ->prefix('manage')
+    ->prefix('admin')
     ->name('admin.')
     ->group(function () {
         Route::get('/', DashboardController::class)->name('dashboard');
@@ -86,7 +86,19 @@ Route::middleware(['auth', 'admin.access'])
         Route::get('certificates/{user}', [CertificateStudentController::class, 'show'])->name('certificates.show');
 
         Route::get('users', [UserController::class, 'index'])->name('users.index');
+        Route::post('users', [UserController::class, 'store'])->name('users.store');
         Route::patch('users/{user}', [UserController::class, 'update'])->name('users.update');
         Route::get('settings', [SystemSettingController::class, 'edit'])->name('settings.edit');
         Route::post('settings', [SystemSettingController::class, 'update'])->name('settings.update');
+
+        Route::get('access-codes', [AccessCodeController::class, 'index'])->name('access-codes.index');
+        Route::post('access-codes/generate', [AccessCodeController::class, 'generate'])->name('access-codes.generate');
+        Route::get('access-codes/export', [AccessCodeController::class, 'export'])->name('access-codes.export');
+        Route::delete('access-codes/{code}', [AccessCodeController::class, 'destroy'])->name('access-codes.destroy');
+
+        Route::get('progress', [UserProgressController::class, 'index'])->name('progress.index');
+        Route::post('progress/{progress}/mark-started', [UserProgressController::class, 'markStarted'])->name('progress.mark-started');
+        Route::post('progress/{progress}/mark-completed', [UserProgressController::class, 'markCompleted'])->name('progress.mark-completed');
+        Route::post('progress/bulk-mark-started', [UserProgressController::class, 'bulkMarkStarted'])->name('progress.bulk-mark-started');
+        Route::post('progress/bulk-mark-completed', [UserProgressController::class, 'bulkMarkCompleted'])->name('progress.bulk-mark-completed');
     });

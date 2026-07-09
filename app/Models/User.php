@@ -8,9 +8,6 @@ namespace App\Models;
 use App\Enums\UserRoleEnum;
 use App\Enums\UserStatusEnum;
 use Database\Factories\UserFactory;
-use Exception;
-use Filament\Models\Contracts\FilamentUser;
-use Filament\Panel;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -23,7 +20,7 @@ use Illuminate\Support\Facades\Storage;
 use Spatie\Activitylog\LogOptions;
 use Spatie\Activitylog\Traits\LogsActivity;
 
-final class User extends Authenticatable implements FilamentUser
+final class User extends Authenticatable
 {
     /** @use HasFactory<UserFactory> */
     use HasFactory;
@@ -107,18 +104,6 @@ final class User extends Authenticatable implements FilamentUser
     public function certificates(): HasMany
     {
         return $this->hasMany(Certificate::class);
-    }
-
-    /**
-     * @throws Exception
-     */
-    public function canAccessPanel(Panel $panel): bool
-    {
-        if ($panel->getId() === 'admin') {
-            return $this->isAdmin() || $this->isSuperAdmin();
-        }
-
-        return $this->isAdmin();
     }
 
     public function isAdmin(): bool

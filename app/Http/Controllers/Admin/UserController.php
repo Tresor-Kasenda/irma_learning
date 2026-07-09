@@ -7,11 +7,13 @@ namespace App\Http\Controllers\Admin;
 use App\Enums\UserRoleEnum;
 use App\Enums\UserStatusEnum;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Admin\StoreAdminUserRequest;
 use App\Http\Requests\Admin\UpdateAdminUserRequest;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -52,13 +54,23 @@ final class UserController extends Controller
             'users' => $users,
             'filters' => $request->only('search', 'role', 'status', 'per_page'),
             'roleOptions' => collect(UserRoleEnum::cases())->map(fn (UserRoleEnum $role): array => ['value' => $role->value, 'label' => $role->getLabel()]),
-            'assignableRoleOptions' => collect(UserRoleEnum::cases())
-                ->reject(fn (UserRoleEnum $role): bool => $role === UserRoleEnum::ROOT && ! $canManageRoot)
+            'assignableRoleOptions' => collect(UserRoleEnum::assignable($canManageRoot))
                 ->map(fn (UserRoleEnum $role): array => ['value' => $role->value, 'label' => $role->getLabel()])
                 ->values(),
             'statusOptions' => collect(UserStatusEnum::cases())->map(fn (UserStatusEnum $status): array => ['value' => $status->value, 'label' => $status->getLabel()]),
             'canManageRoot' => $canManageRoot,
         ]);
+    }
+
+    public function store(StoreAdminUserRequest $request): RedirectResponse
+    {
+        User::create([
+            ...$request->safe()->except(['password', 'password_confirmation']),
+            'username' => explode('@', $request->validated('email'))[0],
+            'password' => Hash::make($request->validated('password')),
+        ]);
+
+        return back()->with('success', 'Utilisateur créé.');
     }
 
     public function update(UpdateAdminUserRequest $request, User $user): RedirectResponse

@@ -1,7 +1,9 @@
 <script lang="ts" setup>
 import {ref} from 'vue';
+import AdminToasts from '@/Components/Admin/AdminToasts.vue';
 import LearningSidebar from '@/Components/Learning/LearningSidebar.vue';
 import LearningHeader from '@/Components/Learning/LearningHeader.vue';
+import {useFlashToasts} from '@/composables/useFlashToasts';
 import type {LearningCatalogStats} from '@/types/learning';
 import {useUiStore} from '@/stores';
 
@@ -14,6 +16,7 @@ defineProps<{
 
 const mobileSidebarOpen = ref(false);
 const uiStore = useUiStore();
+const {dismissToast, toasts} = useFlashToasts();
 </script>
 
 <template>
@@ -34,6 +37,8 @@ const uiStore = useUiStore();
                     <slot name="header-actions"/>
                 </template>
             </LearningHeader>
+
+            <AdminToasts :toasts="toasts" @dismiss="dismissToast"/>
 
             <slot/>
         </main>
