@@ -24,7 +24,9 @@ interface SectionState {
     unlocked: boolean;
     chapters_complete: boolean;
     exam_id: number | null;
+    exam_title: string | null;
     exam_passed: boolean | null;
+    exam_missing: boolean;
     complete: boolean;
     needs_exam: boolean;
 }
@@ -39,7 +41,18 @@ interface Formation {
     id: number;
     title: string;
     slug: string;
+    is_certifying: boolean;
     sections: Section[];
+}
+
+interface FinalAssessment {
+    required: boolean;
+    ready: boolean;
+    exam_id: number | null;
+    exam_title: string | null;
+    exam_missing: boolean;
+    passed: boolean;
+    needs_exam: boolean;
 }
 
 interface Enrollment {
@@ -56,6 +69,7 @@ const props = defineProps<{
     currentChapterIndex: number;
     completedChapters: number[];
     sections: SectionState[];
+    finalAssessment: FinalAssessment;
     htmlContent: string;
 }>();
 
@@ -81,6 +95,7 @@ const currentChapterCompleted = computed(
 );
 const isLastChapter = computed(() => props.currentChapterIndex >= props.allChapters.length - 1);
 const canGoNext = computed(() => currentChapterCompleted.value && !isLastChapter.value);
+const canFinishFormation = computed(() => props.finalAssessment.ready && (!props.finalAssessment.required || props.finalAssessment.passed));
 const progressPercentage = computed(() => Math.round(Number(props.enrollment?.progress_percentage ?? 0)));
 
 function selectChapter(chapterId: number): void {
@@ -123,6 +138,12 @@ function takeSectionExam(): void {
     }
 }
 
+function takeFinalExam(): void {
+    if (props.finalAssessment.exam_id) {
+        router.get(route('exam.take', props.finalAssessment.exam_id));
+    }
+}
+
 function mediaUrl(url: string | null): string {
     if (!url) {
         return '';
@@ -153,7 +174,7 @@ function contentTypeLabel(contentType: string | null): string {
 <template>
     <Head :title="`${formation.title} - Formation`"/>
 
-    <div class="flex min-h-screen flex-col bg-[#071525] text-slate-100">
+    <div class="flex h-screen min-h-0 flex-col overflow-hidden bg-[#071525] text-slate-100">
         <header class="sticky top-0 z-40 border-b border-white/10 bg-[#081524]">
             <div class="flex min-h-16 items-center justify-between gap-4 px-4 sm:px-6">
                 <div class="flex min-w-0 items-center gap-3">
@@ -182,7 +203,7 @@ function contentTypeLabel(contentType: string | null): string {
         </header>
 
         <div class="flex min-h-0 flex-1">
-            <main class="min-w-0 flex-1 overflow-y-auto">
+            <main class="h-full min-w-0 flex-1 overflow-y-auto">
                 <div class="mx-auto max-w-5xl px-4 py-7 sm:px-6 lg:px-8">
                     <div v-if="currentChapter">
                         <section
@@ -208,7 +229,7 @@ function contentTypeLabel(contentType: string | null): string {
                             </button>
                         </section>
 
-                        <div class="border-b border-white/10 pb-6">
+                        <div class="sticky top-0 z-20 -mx-4 border-b border-white/10 bg-[#071525]/95 px-4 pb-5 pt-1 backdrop-blur sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
                             <p class="text-[11px] font-semibold uppercase text-[#ff79a5]">
                                 {{ contentTypeLabel(currentChapter.content_type) }}
                             </p>
@@ -333,13 +354,22 @@ function contentTypeLabel(contentType: string | null): string {
                             </button>
 
                             <Link
-                                v-if="isLastChapter && currentChapterCompleted"
+                                v-if="isLastChapter && currentChapterCompleted && canFinishFormation"
                                 :href="route('dashboard')"
                                 class="inline-flex h-11 items-center gap-2 bg-[#a72f5d] px-4 text-sm font-semibold text-white transition hover:bg-[#c43b6d]"
                             >
                                 Terminer la formation
                                 <LearningIcon class="size-4 brightness-0 invert" name="arrow-right"/>
                             </Link>
+                            <button
+                                v-else-if="isLastChapter && currentChapterCompleted && finalAssessment.needs_exam"
+                                class="inline-flex h-11 items-center gap-2 bg-amber-500 px-4 text-sm font-semibold text-[#1a1205] transition hover:bg-amber-400"
+                                type="button"
+                                @click="takeFinalExam"
+                            >
+                                Passer l’examen final
+                                <LearningIcon class="size-4" name="arrow-right"/>
+                            </button>
                             <button
                                 v-else
                                 :disabled="!canGoNext"
@@ -362,7 +392,7 @@ function contentTypeLabel(contentType: string | null): string {
                 </div>
             </main>
 
-            <aside class="hidden w-80 shrink-0 overflow-y-auto border-l border-white/10 bg-[#081524] md:block lg:w-96">
+            <aside class="sticky top-0 hidden h-full w-80 shrink-0 self-start overflow-y-auto border-l border-white/10 bg-[#081524] md:block lg:w-96">
                 <div class="sticky top-0 z-10 border-b border-white/10 bg-[#081524] p-4">
                     <h3 class="font-semibold text-white">Contenu de la formation</h3>
                     <p class="mt-1 text-xs text-slate-500">
@@ -374,9 +404,29 @@ function contentTypeLabel(contentType: string | null): string {
                         :completed-chapters="completedChapters"
                         :current-chapter-id="currentChapter?.id ?? null"
                         :locked-section-ids="lockedSectionIds"
+                        :section-states="sections"
                         :sections="formation.sections"
                         @select="selectChapter"
+                        @select-exam="(examId) => router.get(route('exam.take', examId))"
                     />
+                    <button
+                        v-if="finalAssessment.required"
+                        :disabled="!finalAssessment.ready || finalAssessment.exam_missing || finalAssessment.passed"
+                        :class="finalAssessment.passed
+                            ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-200'
+                            : finalAssessment.needs_exam
+                                ? 'border-amber-400/40 bg-amber-400/10 text-amber-100'
+                                : 'border-white/10 text-slate-400'"
+                        class="mt-5 flex w-full items-center gap-3 border px-3 py-3 text-left enabled:hover:bg-white/5 disabled:cursor-not-allowed disabled:opacity-55"
+                        type="button"
+                        @click="takeFinalExam"
+                    >
+                        <LearningIcon class="size-5 shrink-0 brightness-0 invert" name="academic-cap"/>
+                        <span class="min-w-0">
+                            <span class="block truncate text-sm font-semibold">{{ finalAssessment.exam_title || 'Examen final de certification' }}</span>
+                            <span class="mt-1 block text-[11px] opacity-70">{{ finalAssessment.passed ? 'Certification réussie' : finalAssessment.exam_missing ? 'Examen non configuré' : finalAssessment.ready ? 'Prêt à démarrer' : 'Disponible après toutes les sections' }}</span>
+                        </span>
+                    </button>
                 </div>
             </aside>
         </div>
@@ -420,8 +470,11 @@ function contentTypeLabel(contentType: string | null): string {
                         <CourseCurriculum
                             :completed-chapters="completedChapters"
                             :current-chapter-id="currentChapter?.id ?? null"
+                            :locked-section-ids="lockedSectionIds"
+                            :section-states="sections"
                             :sections="formation.sections"
                             @select="selectChapter"
+                            @select-exam="(examId) => router.get(route('exam.take', examId))"
                         />
                     </div>
                 </aside>

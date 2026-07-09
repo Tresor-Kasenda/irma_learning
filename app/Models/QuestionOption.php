@@ -33,6 +33,13 @@ final class QuestionOption extends Model
         return $this->hasMany(UserAnswer::class, 'selected_option_id');
     }
 
+    protected static function booted(): void
+    {
+        self::deleting(function (QuestionOption $option): void {
+            $option->userAnswers()->update(['selected_option_id' => null]);
+        });
+    }
+
     protected function casts(): array
     {
         return [

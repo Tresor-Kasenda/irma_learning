@@ -94,7 +94,7 @@ final class ExamController extends Controller
         $exam->loadCount('questions');
         $exam->load([
             'examable',
-            'questions' => fn ($q) => $q->withCount('options')->orderBy('order_position'),
+            'questions' => fn ($q) => $q->with('options')->withCount('options')->orderBy('order_position'),
             'attempts' => fn ($q) => $q->with('user:id,name,email')->latest(),
         ]);
 
@@ -115,6 +115,12 @@ final class ExamController extends Controller
                     'order_position' => $q->order_position,
                     'options_count' => $q->options_count,
                     'explanation' => $q->explanation,
+                    'options' => $q->options->map(fn ($option): array => [
+                        'id' => $option->id,
+                        'option_text' => $option->option_text,
+                        'is_correct' => $option->is_correct,
+                        'order_position' => $option->order_position,
+                    ]),
                 ]),
                 'attempts' => $exam->attempts->map(fn ($a): array => [
                     'id' => $a->id,

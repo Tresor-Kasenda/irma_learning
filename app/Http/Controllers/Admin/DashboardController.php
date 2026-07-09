@@ -15,6 +15,7 @@ use App\Models\Formation;
 use App\Models\Section;
 use App\Models\User;
 use App\Services\CatalogStatsService;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Cache;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -45,6 +46,46 @@ final class DashboardController extends Controller
         return Inertia::render('Admin/Dashboard', [
             'stats' => $stats,
             'catalogStats' => $catalogStats->get(),
+            'enrollmentTrends' => [
+                'months' => $this->monthlyEnrollmentTrend(),
+                'weeks' => $this->weeklyEnrollmentTrend(),
+            ],
         ]);
+    }
+
+    /**
+     * @return array<int, array{label:string, value:int}>
+     */
+    private function monthlyEnrollmentTrend(): array
+    {
+        $start = now()->subMonths(11)->startOfMonth();
+        $dates = Enrollment::query()->where('created_at', '>=', $start)->pluck('created_at');
+
+        return collect(range(0, 11))->map(function (int $offset) use ($start, $dates): array {
+            $month = $start->copy()->addMonths($offset);
+
+            return [
+                'label' => ucfirst($month->translatedFormat('M y')),
+                'value' => $dates->filter(fn ($date): bool => Carbon::parse($date)->isSameMonth($month))->count(),
+            ];
+        })->all();
+    }
+
+    /**
+     * @return array<int, array{label:string, value:int}>
+     */
+    private function weeklyEnrollmentTrend(): array
+    {
+        $start = now()->subWeeks(7)->startOfWeek();
+        $dates = Enrollment::query()->where('created_at', '>=', $start)->pluck('created_at');
+
+        return collect(range(0, 7))->map(function (int $offset) use ($start, $dates): array {
+            $week = $start->copy()->addWeeks($offset);
+
+            return [
+                'label' => 'S'.(int) $week->format('W'),
+                'value' => $dates->filter(fn ($date): bool => Carbon::parse($date)->between($week, $week->copy()->endOfWeek()))->count(),
+            ];
+        })->all();
     }
 }

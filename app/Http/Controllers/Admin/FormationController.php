@@ -66,7 +66,7 @@ final class FormationController extends Controller
             'formation' => [
                 ...$formation->only([
                     'id', 'slug', 'title', 'short_description', 'description', 'image',
-                    'difficulty_level', 'duration_hours', 'price', 'tags', 'is_active', 'is_featured',
+                    'difficulty_level', 'duration_hours', 'price', 'tags', 'is_active', 'is_featured', 'is_certifying',
                 ]),
                 'sections' => $formation->sections->map(fn ($section): array => [
                     'id' => $section->id,
@@ -97,7 +97,7 @@ final class FormationController extends Controller
             'formation' => [
                 ...$formation->only([
                     'id', 'slug', 'title', 'short_description', 'description', 'image',
-                    'difficulty_level', 'duration_hours', 'price', 'tags', 'is_active', 'is_featured', 'created_at',
+                    'difficulty_level', 'duration_hours', 'price', 'tags', 'is_active', 'is_featured', 'is_certifying', 'created_at',
                 ]),
                 'sections_count' => $formation->sections_count,
                 'chapters_count' => $formation->chapters_count,
@@ -130,7 +130,14 @@ final class FormationController extends Controller
         $formation = Formation::query()->create($data);
         $this->syncSections($formation, $request->validated('sections') ?? []);
 
-        return redirect()->route('admin.formations.index')->with('success', 'Formation créée avec succès.');
+        $readinessIssues = $this->deactivateWhenAssessmentsAreMissing($formation);
+
+        return redirect()->route('admin.formations.index')->with(
+            $readinessIssues === [] ? 'success' : 'info',
+            $readinessIssues === []
+                ? 'Formation créée avec succès.'
+                : 'Formation enregistrée en brouillon. Ajoutez les évaluations obligatoires avant de l’activer.',
+        );
     }
 
     public function destroy(Formation $formation): RedirectResponse
@@ -143,6 +150,14 @@ final class FormationController extends Controller
 
     public function toggleActive(Formation $formation): RedirectResponse
     {
+        if (! $formation->is_active) {
+            $readinessIssues = $this->assessmentReadinessIssues($formation);
+
+            if ($readinessIssues !== []) {
+                return back()->with('error', implode(' ', $readinessIssues));
+            }
+        }
+
         $formation->update(['is_active' => ! $formation->is_active]);
 
         return back()->with('success', $formation->is_active ? 'Formation activée.' : 'Formation désactivée.');
@@ -169,7 +184,14 @@ final class FormationController extends Controller
             $this->syncSections($formation, $request->validated('sections') ?? []);
         }
 
-        return redirect()->route('admin.formations.index')->with('success', 'Formation mise à jour.');
+        $readinessIssues = $this->deactivateWhenAssessmentsAreMissing($formation);
+
+        return redirect()->route('admin.formations.index')->with(
+            $readinessIssues === [] ? 'success' : 'info',
+            $readinessIssues === []
+                ? 'Formation mise à jour.'
+                : 'Formation mise à jour et replacée en brouillon : des évaluations obligatoires sont manquantes.',
+        );
     }
 
     /**
@@ -223,5 +245,57 @@ final class FormationController extends Controller
         if ($path && Storage::disk('public')->exists($path)) {
             Storage::disk('public')->delete($path);
         }
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function assessmentReadinessIssues(Formation $formation): array
+    {
+        $issues = [];
+
+        if (! $formation->sections()->where('is_active', true)->exists()) {
+            $issues[] = 'Ajoutez au moins une section active à la formation.';
+        }
+
+        $sectionsWithoutExam = $formation->sections()
+            ->where('is_active', true)
+            ->whereDoesntHave('exam', fn (Builder $query): Builder => $query
+                ->where('is_active', true)
+                ->whereHas('questions'))
+            ->pluck('title');
+
+        if ($sectionsWithoutExam->isNotEmpty()) {
+            $issues[] = 'Ajoutez une évaluation active avec au moins une question à chaque section : '.$sectionsWithoutExam->join(', ').'.';
+        }
+
+        $hasFinalExam = $formation->exam()
+            ->where('is_active', true)
+            ->whereHas('questions')
+            ->exists();
+
+        if ($formation->is_certifying && ! $hasFinalExam) {
+            $issues[] = 'Ajoutez un examen final actif avec au moins une question à cette formation certifiante.';
+        }
+
+        return $issues;
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function deactivateWhenAssessmentsAreMissing(Formation $formation): array
+    {
+        if (! $formation->is_active) {
+            return [];
+        }
+
+        $issues = $this->assessmentReadinessIssues($formation);
+
+        if ($issues !== []) {
+            $formation->update(['is_active' => false]);
+        }
+
+        return $issues;
     }
 }

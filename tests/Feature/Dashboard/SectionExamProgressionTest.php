@@ -123,8 +123,10 @@ test('the formation is complete only when every chapter is done and every sectio
     expect($service->isFormationComplete($user, $formation))->toBeTrue();
 });
 
-test('completing all section exams issues a certificate with the average score and completes the enrollment', function () {
+test('passing the final exam of a certifying formation issues a certificate and completes the enrollment', function () {
     [$formation, $built] = buildSectionedFormation();
+    $formation->update(['is_certifying' => true]);
+    $finalExam = Exam::factory()->forFormation($formation)->active()->create(['passing_score' => 70]);
     $user = User::factory()->create();
     $enrollment = enrolStudent($user, $formation);
 
@@ -132,11 +134,12 @@ test('completing all section exams issues a certificate with the average score a
     completeChapter($user, $built[1]['chapter']);
     passExam($user, $built[0]['exam'], 80);
     passExam($user, $built[1]['exam'], 90);
+    passExam($user, $finalExam, 88);
 
     $certificate = app(CourseProgressionService::class)->syncCompletion($user, $formation);
 
     expect($certificate)->not->toBeNull()
-        ->and((float) $certificate->final_score)->toBe(85.0)
+        ->and((float) $certificate->final_score)->toBe(88.0)
         ->and($certificate->status->value)->toBe('active');
 
     expect($enrollment->refresh()->status)->toBe(EnrollmentStatusEnum::COMPLETED)
@@ -161,6 +164,8 @@ test('no certificate is issued while a section exam is still failed', function (
 
 test('the certificate is not issued twice', function () {
     [$formation, $built] = buildSectionedFormation();
+    $formation->update(['is_certifying' => true]);
+    $finalExam = Exam::factory()->forFormation($formation)->active()->create(['passing_score' => 70]);
     $user = User::factory()->create();
     enrolStudent($user, $formation);
 
@@ -168,6 +173,7 @@ test('the certificate is not issued twice', function () {
     completeChapter($user, $built[1]['chapter']);
     passExam($user, $built[0]['exam']);
     passExam($user, $built[1]['exam']);
+    passExam($user, $finalExam);
 
     $service = app(CourseProgressionService::class);
     $service->syncCompletion($user, $formation);
@@ -176,7 +182,7 @@ test('the certificate is not issued twice', function () {
     expect(Certificate::where('user_id', $user->id)->where('formation_id', $formation->id)->count())->toBe(1);
 });
 
-test('a formation without section exams completes without issuing a certificate', function () {
+test('a formation without a section exam stays incomplete', function () {
     [$formation, $built] = buildSectionedFormation(sections: 1, withExams: false);
     $user = User::factory()->create();
     $enrollment = enrolStudent($user, $formation);
@@ -186,7 +192,23 @@ test('a formation without section exams completes without issuing a certificate'
     $certificate = app(CourseProgressionService::class)->syncCompletion($user, $formation);
 
     expect($certificate)->toBeNull();
-    expect($enrollment->refresh()->status)->toBe(EnrollmentStatusEnum::COMPLETED);
+    expect($enrollment->refresh()->status)->toBe(EnrollmentStatusEnum::ACTIVE);
+});
+
+test('a certifying formation stays incomplete until its final exam is passed', function () {
+    [$formation, $built] = buildSectionedFormation(sections: 1);
+    $formation->update(['is_certifying' => true]);
+    $user = User::factory()->create();
+    enrolStudent($user, $formation);
+
+    completeChapter($user, $built[0]['chapter']);
+    passExam($user, $built[0]['exam']);
+
+    $service = app(CourseProgressionService::class);
+
+    expect($service->areSectionsComplete($user, $formation))->toBeTrue()
+        ->and($service->isFormationComplete($user, $formation))->toBeFalse()
+        ->and($service->syncCompletion($user, $formation))->toBeNull();
 });
 
 test('the player exposes section locking state', function () {

@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace App\Http\Middleware;
 
+use App\Models\ApplicationSetting;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Inertia\Middleware;
 
 final class HandleInertiaRequests extends Middleware
@@ -31,6 +33,8 @@ final class HandleInertiaRequests extends Middleware
      */
     public function share(Request $request): array
     {
+        $settings = ApplicationSetting::current();
+
         return [
             ...parent::share($request),
             'auth' => [
@@ -40,6 +44,13 @@ final class HandleInertiaRequests extends Middleware
                 'success' => fn () => $request->session()->get('success'),
                 'error' => fn () => $request->session()->get('error'),
                 'info' => fn () => $request->session()->get('info'),
+            ],
+            'appSettings' => [
+                'name' => $settings->app_name,
+                'tagline' => $settings->app_tagline,
+                'logo_url' => $settings->logo_path ? Storage::disk('public')->url($settings->logo_path) : '/images/irma-logo-base.svg',
+                'primary_color' => $settings->primary_color,
+                'support_email' => $settings->support_email,
             ],
         ];
     }

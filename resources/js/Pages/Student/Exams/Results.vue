@@ -58,9 +58,10 @@ interface CourseCompletion {
 }
 
 interface NextStep {
-    type: 'next_section' | 'completed' | 'continue' | 'retry';
+    type: 'next_section' | 'final_exam' | 'final_exam_missing' | 'completed' | 'continue' | 'retry';
     formation_id?: number;
     chapter_id?: number;
+    exam_id?: number;
 }
 
 interface CertificateInfo {
@@ -316,6 +317,17 @@ function formatDate(date: string | null): string {
                 >
                     Continuer vers la section suivante
                 </Link>
+                <Link v-else-if="attempt.passed && nextStep?.type === 'final_exam' && nextStep.exam_id"
+                      :href="route('exam.take', nextStep.exam_id)"
+                      class="px-6 py-3 bg-amber-500 text-slate-950 rounded-lg hover:bg-amber-400 transition-colors font-semibold"
+                >
+                    Passer l’examen final
+                </Link>
+                <p v-else-if="attempt.passed && nextStep?.type === 'final_exam_missing'"
+                   class="rounded-lg border border-rose-400/30 bg-rose-400/10 px-4 py-3 text-sm text-rose-200"
+                >
+                    L’examen final n’est pas encore configuré. Contactez l’administration.
+                </p>
                 <Link v-else-if="attempt.passed && nextStep?.type === 'completed' && certificate"
                       :href="route('certificats.show', certificate.id)"
                       class="px-6 py-3 bg-emerald-600 text-white rounded-lg hover:bg-emerald-500 transition-colors"

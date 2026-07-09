@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import {Link} from '@inertiajs/vue3';
+import {Link, usePage} from '@inertiajs/vue3';
 import {
     Award,
     BookOpen,
@@ -66,6 +66,8 @@ const groups = computed<NavGroup[]>(() => [
 ]);
 
 const uiStore = useUiStore();
+const page = usePage();
+const appSettings = computed(() => page.props.appSettings as {name: string; tagline: string | null; logo_url: string});
 const isDesktop = ref(false);
 let desktopMediaQuery: MediaQueryList | null = null;
 
@@ -122,10 +124,10 @@ function close(): void {
                 class="admin-divider flex h-16 shrink-0 items-center gap-3 border-b px-5"
             >
                 <Link :href="href('admin.dashboard')" class="flex min-w-0 items-center gap-3" @click="close">
-                    <img alt="IRMA" class="h-10 w-auto shrink-0" src="/images/irma-logo-base.svg"/>
+                    <img :alt="appSettings.name" class="h-10 w-auto max-w-12 shrink-0 object-contain" :src="appSettings.logo_url"/>
                     <span v-if="!uiStore.sidebarCollapsed" class="min-w-0 lg:block">
-                        <span class="admin-heading block truncate text-sm font-semibold">IRMA Admin</span>
-                        <span class="block text-[10px] uppercase tracking-[0.18em] text-slate-500">Console de gestion</span>
+                        <span class="admin-heading block truncate text-sm font-semibold">{{ appSettings.name }} Admin</span>
+                        <span class="block truncate text-[10px] uppercase tracking-[0.18em] text-slate-500">{{ appSettings.tagline || 'Console de gestion' }}</span>
                     </span>
                 </Link>
                 <button

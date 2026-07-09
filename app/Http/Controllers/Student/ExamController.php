@@ -53,6 +53,16 @@ final class ExamController extends Controller
                 return redirect()->route('course.player', $formation->id)
                     ->with('error', 'Vous devez terminer tous les chapitres de la section avant de passer son examen.');
             }
+        } elseif ($exam->examable_type === Formation::class) {
+            $formation = $exam->examable;
+
+            abort_unless($formation->is_certifying, 403, 'Cette formation ne prévoit pas d’examen final.');
+            abort_unless($this->isEnrolled($user, $formation), 403, 'Vous devez être inscrit à cette formation.');
+
+            if (! $progression->areSectionsComplete($user, $formation)) {
+                return redirect()->route('course.player', $formation->id)
+                    ->with('error', 'Vous devez réussir les évaluations de toutes les sections avant l’examen final.');
+            }
         }
 
         $attempt = ExamAttempt::firstOrCreate(
@@ -380,11 +390,11 @@ final class ExamController extends Controller
     }
 
     /**
-     * @return array{type:string, formation_id?:int, chapter_id?:int}|null
+     * @return array{type:string, formation_id?:int, chapter_id?:int, exam_id?:int}|null
      */
     private function buildNextStep(Exam $exam, ?Formation $formation, bool $passed, CourseProgressionService $progression): ?array
     {
-        if (! $formation || $exam->examable_type !== Section::class) {
+        if (! $formation) {
             return null;
         }
 
@@ -393,6 +403,24 @@ final class ExamController extends Controller
         }
 
         $user = auth()->user();
+
+        if ($exam->examable_type === Formation::class) {
+            return $passed
+                ? ['type' => 'completed', 'formation_id' => $formation->id]
+                : ['type' => 'retry'];
+        }
+
+        if ($exam->examable_type !== Section::class) {
+            return null;
+        }
+
+        if ($progression->areSectionsComplete($user, $formation) && $formation->is_certifying) {
+            $finalExam = $progression->formationExam($formation);
+
+            return $finalExam
+                ? ['type' => 'final_exam', 'formation_id' => $formation->id, 'exam_id' => $finalExam->id]
+                : ['type' => 'final_exam_missing', 'formation_id' => $formation->id];
+        }
 
         if ($progression->isFormationComplete($user, $formation)) {
             return ['type' => 'completed', 'formation_id' => $formation->id];

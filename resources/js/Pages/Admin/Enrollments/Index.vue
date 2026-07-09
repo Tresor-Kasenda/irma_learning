@@ -18,7 +18,7 @@ interface EnrollmentRow {
     enrollment_date: string | null;
 }
 
-defineProps<{enrollments: {data: EnrollmentRow[]; from: number | null; to: number | null; total: number; links: {url: string | null; label: string; active: boolean}[]}; filters: Record<string, string | undefined>} >();
+const props = defineProps<{enrollments: {data: EnrollmentRow[]; from: number | null; to: number | null; total: number; links: {url: string | null; label: string; active: boolean}[]}; filters: Record<string, string | undefined>; students: {value: string; label: string}[]} >();
 
 const columns: Column[] = [
     {key: 'user', label: 'Apprenant'},
@@ -30,6 +30,7 @@ const columns: Column[] = [
 ];
 
 const filterDefs: FilterDef[] = [
+    {key: 'student_id', label: 'Apprenant', options: props.students},
     {key: 'status', label: 'Statut', options: [{value: 'active', label: 'Actif'}, {value: 'completed', label: 'Terminé'}, {value: 'suspended', label: 'Suspendu'}, {value: 'cancelled', label: 'Annulé'}]},
     {key: 'payment_status', label: 'Paiement', options: [{value: 'paid', label: 'Payé'}, {value: 'free', label: 'Gratuit'}, {value: 'pending', label: 'En attente'}, {value: 'refunded', label: 'Remboursé'}]},
     {key: 'per_page', label: 'Lignes', options: [{value: '10', label: '10 lignes'}, {value: '25', label: '25 lignes'}, {value: '50', label: '50 lignes'}], includeEmpty: false, defaultValue: '10'},

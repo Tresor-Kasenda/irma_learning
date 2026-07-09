@@ -8,6 +8,7 @@ import {
     Clock3,
     Copy,
     FileQuestion,
+    Eye,
     GraduationCap,
     Pencil,
     Power,
@@ -79,6 +80,7 @@ const props = defineProps<{
 }>();
 
 const questionFormOpen = ref(false);
+const expandedQuestionId = ref<number | null>(null);
 const editingQuestion = ref<Question | null>(null);
 const newQuestion = ref({
     question_text: '',
@@ -310,10 +312,10 @@ function formatTimeTaken(seconds: number): string {
                         </div>
 
                         <ul v-if="exam.questions.length > 0" class="divide-y divide-[color:var(--admin-border)]">
-                            <li v-for="(q, index) in exam.questions" :key="q.id" class="flex items-start gap-3 px-5 py-3 sm:px-6">
+                            <li v-for="(q, index) in exam.questions" :key="q.id" class="grid min-w-0 grid-cols-[auto_minmax(0,1fr)_auto] items-start gap-3 px-5 py-3 sm:px-6">
                                 <span class="admin-faint mt-1 w-6 shrink-0 text-xs font-semibold">{{ index + 1 }}.</span>
-                                <div class="min-w-0 flex-1">
-                                    <p class="admin-text text-sm font-medium">{{ q.question_text }}</p>
+                                <div class="min-w-0">
+                                    <p class="admin-text break-words text-sm font-medium [overflow-wrap:anywhere]">{{ q.question_text }}</p>
                                     <div class="mt-1 flex flex-wrap items-center gap-2">
                                         <span class="admin-panel-muted admin-faint inline-flex px-1.5 py-0.5 text-[10px] font-medium">
                                             {{ typeLabels[q.question_type] ?? q.question_type }}
@@ -321,8 +323,25 @@ function formatTimeTaken(seconds: number): string {
                                         <span class="text-[10px] font-medium text-amber-300/70">{{ q.points }} pt(s)</span>
                                         <span class="text-[10px] font-medium text-slate-500">{{ q.options_count }} option(s)</span>
                                     </div>
+                                    <div v-if="expandedQuestionId === q.id" class="admin-panel-muted mt-3 grid gap-3 border p-3">
+                                        <div v-for="option in q.options" :key="option.id" class="flex min-w-0 items-start gap-2 text-sm">
+                                            <CheckCircle2 v-if="option.is_correct" class="mt-0.5 size-4 shrink-0 text-emerald-400"/>
+                                            <XCircle v-else class="mt-0.5 size-4 shrink-0 text-slate-500"/>
+                                            <span class="admin-text break-words [overflow-wrap:anywhere]">{{ option.option_text }}</span>
+                                        </div>
+                                        <p v-if="q.explanation" class="admin-muted border-t border-[color:var(--admin-border)] pt-3 text-xs leading-5">{{ q.explanation }}</p>
+                                    </div>
                                 </div>
                                 <div class="flex shrink-0 items-center gap-1">
+                                    <button
+                                        :aria-label="expandedQuestionId === q.id ? 'Masquer le détail' : 'Voir le détail'"
+                                        class="admin-muted admin-hover grid size-8 place-items-center transition"
+                                        title="Voir le détail"
+                                        type="button"
+                                        @click="expandedQuestionId = expandedQuestionId === q.id ? null : q.id"
+                                    >
+                                        <Eye class="size-4" :stroke-width="1.7"/>
+                                    </button>
                                     <button
                                         class="admin-muted hover:text-rose-400 p-1 transition"
                                         title="Supprimer"
@@ -405,10 +424,10 @@ function formatTimeTaken(seconds: number): string {
                             <Sparkles class="size-5 text-amber-300" :stroke-width="1.7"/>
                             <h2 class="admin-heading font-semibold">Détails</h2>
                         </div>
-                        <dl class="grid gap-4 p-5">
-                            <div class="flex items-center justify-between gap-3">
+                        <dl class="grid min-w-0 gap-4 p-5">
+                            <div class="grid min-w-0 grid-cols-[auto_minmax(0,1fr)] items-start gap-3">
                                 <dt class="admin-muted flex items-center gap-2 text-sm"><GraduationCap class="size-4" :stroke-width="1.7"/> Rattaché à</dt>
-                                <dd class="admin-heading max-w-[60%] truncate text-right text-sm font-medium">{{ exam.examable_label }}</dd>
+                                <dd class="admin-heading min-w-0 break-words text-right text-sm font-medium [overflow-wrap:anywhere]">{{ exam.examable_label }}</dd>
                             </div>
                             <div class="flex items-center justify-between gap-3">
                                 <dt class="admin-muted flex items-center gap-2 text-sm"><Timer class="size-4" :stroke-width="1.7"/> Durée</dt>
@@ -430,11 +449,11 @@ function formatTimeTaken(seconds: number): string {
                                 <dt class="admin-muted flex items-center gap-2 text-sm"><CheckCircle2 class="size-4" :stroke-width="1.7"/> Résultats immédiats</dt>
                                 <dd class="admin-heading text-sm font-medium">{{ exam.show_results_immediately ? 'Oui' : 'Non' }}</dd>
                             </div>
-                            <div v-if="exam.available_from" class="flex items-center justify-between gap-3">
+                            <div v-if="exam.available_from" class="grid min-w-0 grid-cols-[auto_minmax(0,1fr)] items-start gap-3">
                                 <dt class="admin-muted flex items-center gap-2 text-sm"><Calendar class="size-4" :stroke-width="1.7"/> Disponible du</dt>
                                 <dd class="admin-heading text-right text-sm font-medium">{{ formatDate(exam.available_from) }}</dd>
                             </div>
-                            <div v-if="exam.available_until" class="flex items-center justify-between gap-3">
+                            <div v-if="exam.available_until" class="grid min-w-0 grid-cols-[auto_minmax(0,1fr)] items-start gap-3">
                                 <dt class="admin-muted flex items-center gap-2 text-sm"><Calendar class="size-4" :stroke-width="1.7"/> Jusqu'au</dt>
                                 <dd class="admin-heading text-right text-sm font-medium">{{ formatDate(exam.available_until) }}</dd>
                             </div>

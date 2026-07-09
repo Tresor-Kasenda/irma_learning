@@ -239,9 +239,9 @@ function formatDate(value: string): string {
                             <h2 class="admin-heading font-semibold">Détails</h2>
                         </div>
                         <dl class="grid gap-4 p-5">
-                            <div class="flex items-center justify-between gap-3">
+                            <div class="grid min-w-0 grid-cols-[auto_minmax(0,1fr)] items-start gap-3">
                                 <dt class="admin-muted flex items-center gap-2 text-sm"><GraduationCap class="size-4" :stroke-width="1.7"/> Formation</dt>
-                                <dd class="admin-heading max-w-[60%] truncate text-sm font-medium">{{ section.formation.title }}</dd>
+                                <dd class="admin-heading min-w-0 break-words text-right text-sm font-medium [overflow-wrap:anywhere]">{{ section.formation.title }}</dd>
                             </div>
                             <div class="flex items-center justify-between gap-3">
                                 <dt class="admin-muted flex items-center gap-2 text-sm"><Hash class="size-4" :stroke-width="1.7"/> Position</dt>

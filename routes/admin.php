@@ -11,6 +11,8 @@ use App\Http\Controllers\Admin\ExamController;
 use App\Http\Controllers\Admin\FormationController;
 use App\Http\Controllers\Admin\QuestionController;
 use App\Http\Controllers\Admin\SectionController;
+use App\Http\Controllers\Admin\SystemSettingController;
+use App\Http\Controllers\Admin\UserController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -82,4 +84,9 @@ Route::middleware(['auth', 'admin.access'])
         Route::get('enrollments', [EnrollmentController::class, 'index'])->name('enrollments.index');
         Route::get('certificates', [CertificateStudentController::class, 'index'])->name('certificates.index');
         Route::get('certificates/{user}', [CertificateStudentController::class, 'show'])->name('certificates.show');
+
+        Route::get('users', [UserController::class, 'index'])->name('users.index');
+        Route::patch('users/{user}', [UserController::class, 'update'])->name('users.update');
+        Route::get('settings', [SystemSettingController::class, 'edit'])->name('settings.edit');
+        Route::post('settings', [SystemSettingController::class, 'update'])->name('settings.update');
     });

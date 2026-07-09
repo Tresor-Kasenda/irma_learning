@@ -23,24 +23,9 @@ use Illuminate\Support\Collection as SupportCollection;
 final class CourseProgressionService
 {
     /**
-     * Ordered sections with their active chapters and exam eager-loaded.
-     *
-     * @return Collection<int, Section>
-     */
-    public function orderedSections(Formation $formation): Collection
-    {
-        return $formation->sections()
-            ->with([
-                'chapters' => fn ($query) => $query->where('is_active', true)->orderBy('order_position'),
-                'exam',
-            ])
-            ->get();
-    }
-
-    /**
      * Per-section gating state used to lock/unlock the learning path sequentially.
      *
-     * @return SupportCollection<int, array{id:int, unlocked:bool, chapters_complete:bool, exam_id:int|null, exam_passed:bool|null, complete:bool, needs_exam:bool}>
+     * @return SupportCollection<int, array{id:int, unlocked:bool, chapters_complete:bool, exam_id:int|null, exam_title:string|null, exam_passed:bool|null, exam_missing:bool, complete:bool, needs_exam:bool}>
      */
     public function sectionStates(User $user, Formation $formation): SupportCollection
     {
@@ -51,8 +36,8 @@ final class CourseProgressionService
         return $sections->map(function (Section $section) use ($user, $completedChapterIds, &$previousComplete): array {
             $chaptersComplete = $this->sectionChaptersComplete($section, $completedChapterIds);
             $exam = $this->sectionExam($section);
-            $examPassed = $exam ? $exam->hasUserPassed($user) : null;
-            $complete = $chaptersComplete && ($exam === null || $examPassed === true);
+            $examPassed = $exam?->hasUserPassed($user);
+            $complete = $chaptersComplete && $examPassed === true;
             $unlocked = $previousComplete;
 
             $state = [
@@ -60,7 +45,9 @@ final class CourseProgressionService
                 'unlocked' => $unlocked,
                 'chapters_complete' => $chaptersComplete,
                 'exam_id' => $exam?->id,
+                'exam_title' => $exam?->title,
                 'exam_passed' => $examPassed,
+                'exam_missing' => $exam === null,
                 'complete' => $complete,
                 'needs_exam' => $exam !== null && $chaptersComplete && $examPassed !== true && $unlocked,
             ];
@@ -71,57 +58,20 @@ final class CourseProgressionService
         });
     }
 
-    public function isSectionComplete(User $user, Section $section, ?array $completedChapterIds = null): bool
-    {
-        $completedChapterIds ??= $this->completedChapterIds($user, $section->formation);
-
-        if (! $this->sectionChaptersComplete($section, $completedChapterIds)) {
-            return false;
-        }
-
-        $exam = $this->sectionExam($section);
-
-        return $exam === null || $exam->hasUserPassed($user);
-    }
-
-    public function isFormationComplete(User $user, Formation $formation): bool
-    {
-        $completedChapterIds = $this->completedChapterIds($user, $formation);
-
-        return $this->orderedSections($formation)
-            ->every(fn (Section $section): bool => $this->isSectionComplete($user, $section, $completedChapterIds));
-    }
-
     /**
-     * Average of the learner's best percentage across every section that has an exam.
-     * Returns null when the formation has no section exams.
+     * Ordered sections with their active chapters and exam eager-loaded.
+     *
+     * @return Collection<int, Section>
      */
-    public function finalScore(User $user, Formation $formation): ?float
+    public function orderedSections(Formation $formation): Collection
     {
-        $scores = $this->orderedSections($formation)
-            ->map(fn (Section $section): ?float => $this->bestSectionExamPercentage($user, $section))
-            ->filter(fn (?float $score): bool => $score !== null);
-
-        if ($scores->isEmpty()) {
-            return null;
-        }
-
-        return round($scores->avg(), 2);
-    }
-
-    /**
-     * Marks the enrollment as completed once the whole formation is finished, and issues
-     * the certificate when every section exam has been passed.
-     */
-    public function syncCompletion(User $user, Formation $formation): ?Certificate
-    {
-        if (! $this->isFormationComplete($user, $formation)) {
-            return null;
-        }
-
-        $this->markEnrollmentCompleted($user, $formation);
-
-        return $this->issueCertificate($user, $formation);
+        return $formation->sections()
+            ->where('is_active', true)
+            ->with([
+                'chapters' => fn ($query) => $query->where('is_active', true)->orderBy('order_position'),
+                'exam',
+            ])
+            ->get();
     }
 
     /**
@@ -149,6 +99,82 @@ final class CourseProgressionService
     public function sectionExam(Section $section): ?Exam
     {
         $exam = $section->exam;
+
+        return $exam && $exam->is_active ? $exam : null;
+    }
+
+    /**
+     * Marks the enrollment as completed once the whole formation is finished and issues
+     * a certificate only for a certifying formation whose final exam was passed.
+     */
+    public function syncCompletion(User $user, Formation $formation): ?Certificate
+    {
+        if (! $this->isFormationComplete($user, $formation)) {
+            return null;
+        }
+
+        $this->markEnrollmentCompleted($user, $formation);
+
+        return $this->issueCertificate($user, $formation);
+    }
+
+    public function isFormationComplete(User $user, Formation $formation): bool
+    {
+        if (! $this->areSectionsComplete($user, $formation)) {
+            return false;
+        }
+
+        if (! $formation->is_certifying) {
+            return true;
+        }
+
+        $finalExam = $this->formationExam($formation);
+
+        return $finalExam !== null && $finalExam->hasUserPassed($user);
+    }
+
+    public function areSectionsComplete(User $user, Formation $formation): bool
+    {
+        $completedChapterIds = $this->completedChapterIds($user, $formation);
+
+        return $this->orderedSections($formation)
+            ->every(fn (Section $section): bool => $this->isSectionComplete($user, $section, $completedChapterIds));
+    }
+
+    public function isSectionComplete(User $user, Section $section, ?array $completedChapterIds = null): bool
+    {
+        $completedChapterIds ??= $this->completedChapterIds($user, $section->formation);
+
+        if (! $this->sectionChaptersComplete($section, $completedChapterIds)) {
+            return false;
+        }
+
+        $exam = $this->sectionExam($section);
+
+        return $exam !== null && $exam->hasUserPassed($user);
+    }
+
+    /**
+     * Best score obtained on the certification exam.
+     */
+    public function finalScore(User $user, Formation $formation): ?float
+    {
+        $exam = $this->formationExam($formation);
+        if (! $exam) {
+            return null;
+        }
+
+        $score = $exam->attempts()
+            ->where('user_id', $user->id)
+            ->where('status', ExamAttemptEnum::COMPLETED->value)
+            ->max('percentage');
+
+        return $score === null ? null : round((float) $score, 2);
+    }
+
+    public function formationExam(Formation $formation): ?Exam
+    {
+        $exam = $formation->exam;
 
         return $exam && $exam->is_active ? $exam : null;
     }
@@ -190,49 +216,6 @@ final class CourseProgressionService
         return $chapterIds->every(fn (int $id): bool => in_array($id, $completedChapterIds, true));
     }
 
-    private function bestSectionExamPercentage(User $user, Section $section): ?float
-    {
-        $exam = $this->sectionExam($section);
-
-        if (! $exam) {
-            return null;
-        }
-
-        $best = $exam->attempts()
-            ->where('user_id', $user->id)
-            ->where('status', ExamAttemptEnum::COMPLETED->value)
-            ->max('percentage');
-
-        return $best === null ? null : (float) $best;
-    }
-
-    private function issueCertificate(User $user, Formation $formation): ?Certificate
-    {
-        $finalScore = $this->finalScore($user, $formation);
-
-        if ($finalScore === null) {
-            return null;
-        }
-
-        $existing = Certificate::query()
-            ->where('user_id', $user->id)
-            ->where('formation_id', $formation->id)
-            ->where('status', CertificateStatusEnum::ACTIVE->value)
-            ->first();
-
-        if ($existing) {
-            return $existing;
-        }
-
-        return Certificate::create([
-            'user_id' => $user->id,
-            'formation_id' => $formation->id,
-            'final_score' => $finalScore,
-            'issue_date' => now(),
-            'status' => CertificateStatusEnum::ACTIVE,
-        ]);
-    }
-
     private function markEnrollmentCompleted(User $user, Formation $formation): void
     {
         $enrollment = Enrollment::query()
@@ -250,5 +233,37 @@ final class CourseProgressionService
                 'completion_date' => now(),
             ]);
         }
+    }
+
+    private function issueCertificate(User $user, Formation $formation): ?Certificate
+    {
+        if (! $formation->is_certifying) {
+            return null;
+        }
+
+        $finalScore = $this->finalScore($user, $formation);
+
+        if ($finalScore === null) {
+            return null;
+        }
+
+        $existing = Certificate::query()
+            ->where('user_id', $user->id)
+            ->where('formation_id', $formation->id)
+            ->where('status', CertificateStatusEnum::ACTIVE->value)
+            ->first();
+
+        if ($existing) {
+            return $existing;
+        }
+
+        return Certificate::query()
+            ->create([
+                'user_id' => $user->id,
+                'formation_id' => $formation->id,
+                'final_score' => $finalScore,
+                'issue_date' => now(),
+                'status' => CertificateStatusEnum::ACTIVE,
+            ]);
     }
 }

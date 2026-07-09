@@ -95,7 +95,7 @@ function submit(): void {
                 </div>
             </header>
 
-            <section class="admin-panel min-w-0 overflow-hidden border">
+            <section class="admin-panel relative z-30 min-w-0 border">
                 <div class="admin-divider flex items-center gap-3 border-b px-4 py-4 sm:px-5">
                     <span class="grid size-10 shrink-0 place-items-center bg-violet-400/10 text-violet-400"><ClipboardCheck
                         class="size-5"/></span>

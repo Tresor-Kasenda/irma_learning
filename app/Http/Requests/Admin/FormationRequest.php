@@ -26,6 +26,7 @@ abstract class FormationRequest extends FormRequest
             'difficulty_level' => ['required', Rule::enum(FormationLevelEnum::class)],
             'is_active' => ['boolean'],
             'is_featured' => ['boolean'],
+            'is_certifying' => ['boolean'],
             'tags' => ['nullable', 'array'],
             'tags.*' => ['string', 'max:50'],
             'sections' => ['nullable', 'array'],

@@ -9,6 +9,7 @@ use App\Enums\QuestionTypeEnum;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\Validator;
 
 abstract class SectionRequest extends FormRequest
 {
@@ -50,10 +51,32 @@ abstract class SectionRequest extends FormRequest
             'exam.questions.*.points' => ['required_with:exam.title', 'integer', 'min:1', 'max:100'],
             'exam.questions.*.is_required' => ['boolean'],
             'exam.questions.*.explanation' => ['nullable', 'string'],
-            'exam.questions.*.options' => ['required_with:exam.title', 'array', 'min:4', 'max:5'],
+            'exam.questions.*.options' => ['required_with:exam.title', 'array', 'min:2', 'max:5'],
             'exam.questions.*.options.*.option_text' => ['required_with:exam.title', 'string', 'max:500'],
             'exam.questions.*.options.*.is_correct' => ['required', 'boolean'],
         ];
+    }
+
+    /**
+     * @return array<int, callable(Validator): void>
+     */
+    final public function after(): array
+    {
+        return [function (Validator $validator): void {
+            foreach ($this->input('exam.questions', []) as $index => $question) {
+                $type = $question['question_type'] ?? null;
+                $options = $question['options'] ?? [];
+                $expectedMinimum = $type === QuestionTypeEnum::TRUE_FALSE->value ? 2 : 4;
+
+                if (count($options) < $expectedMinimum) {
+                    $validator->errors()->add("exam.questions.{$index}.options", "Cette question requiert au moins {$expectedMinimum} options.");
+                }
+
+                if ($type === QuestionTypeEnum::TRUE_FALSE->value && count($options) !== 2) {
+                    $validator->errors()->add("exam.questions.{$index}.options", 'Une question Vrai/Faux doit contenir exactement deux options.');
+                }
+            }
+        }];
     }
 
     /**
@@ -75,8 +98,8 @@ abstract class SectionRequest extends FormRequest
             'exam.questions.*.question_text.required_with' => 'Le texte de la question est obligatoire.',
             'exam.questions.*.question_type.required_with' => 'Le type de question est obligatoire.',
             'exam.questions.*.points.required_with' => 'Les points sont obligatoires.',
-            'exam.questions.*.options.required_with' => 'Au moins 4 options sont requises.',
-            'exam.questions.*.options.min' => 'Au moins 4 options sont requises.',
+            'exam.questions.*.options.required_with' => 'Les options de réponse sont obligatoires.',
+            'exam.questions.*.options.min' => 'Au moins 2 options sont requises.',
             'exam.questions.*.options.max' => 'Maximum 5 options autorisées.',
         ];
     }

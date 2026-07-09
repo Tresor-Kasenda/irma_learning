@@ -27,7 +27,7 @@ final class FormationFactory extends Factory
             'price' => $this->faker->randomFloat(2, 10, 100),
             'duration_hours' => $this->faker->numberBetween(10, 100),
             'difficulty_level' => $this->faker->randomElement(['beginner', 'intermediate', 'advanced']),
-
+            'is_certifying' => false,
         ];
     }
 }

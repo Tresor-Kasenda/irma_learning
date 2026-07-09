@@ -30,6 +30,7 @@ const currentUser = computed(() => page.props.auth?.user);
 const isAuthenticated = computed(() => Boolean(currentUser.value));
 const accountName = computed(() => currentUser.value?.name ?? 'Visiteur');
 const accountRole = computed(() => (isAuthenticated.value ? 'Apprenant' : 'Compte invité'));
+const appSettings = computed(() => page.props.appSettings as {name: string; logo_url: string});
 
 const currentActiveItem = computed(() => {
     if (props.activeItem) {
@@ -127,9 +128,8 @@ const closeSidebar = () => {
                 class="flex h-16 items-center border-b border-white/10"
             >
                 <Link :href="safeRoute('dashboard')" class="flex items-center gap-2" @click="closeSidebar">
-                    <img alt="IRMA" class="h-10 w-auto" src="/images/irma-logo-base.svg"/>
-                    <img v-if="!uiStore.sidebarCollapsed" alt="IRMA Learning" class="h-8 w-auto"
-                         src="/images/irma-text.svg"/>
+                    <img :alt="appSettings.name" class="h-10 w-auto max-w-12 object-contain" :src="appSettings.logo_url"/>
+                    <span v-if="!uiStore.sidebarCollapsed" class="truncate text-sm font-semibold tracking-wide text-white">{{ appSettings.name }}</span>
                 </Link>
                 <button
                     v-if="!uiStore.sidebarCollapsed"

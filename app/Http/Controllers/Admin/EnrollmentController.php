@@ -6,6 +6,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Enrollment;
+use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -28,6 +29,7 @@ final class EnrollmentController extends Controller
             })
             ->when($request->filled('status'), fn (Builder $query): Builder => $query->where('status', $request->string('status')->toString()))
             ->when($request->filled('payment_status'), fn (Builder $query): Builder => $query->where('payment_status', $request->string('payment_status')->toString()))
+            ->when($request->filled('student_id'), fn (Builder $query): Builder => $query->where('user_id', $request->integer('student_id')))
             ->latest('enrollment_date')
             ->paginate(in_array($request->integer('per_page'), [10, 25, 50, 100], true) ? $request->integer('per_page') : 10)
             ->withQueryString()
@@ -45,7 +47,12 @@ final class EnrollmentController extends Controller
 
         return Inertia::render('Admin/Enrollments/Index', [
             'enrollments' => $enrollments,
-            'filters' => $request->only('search', 'status', 'payment_status', 'per_page'),
+            'filters' => $request->only('search', 'status', 'payment_status', 'student_id', 'per_page'),
+            'students' => User::query()
+                ->whereHas('enrollments')
+                ->orderBy('name')
+                ->get(['id', 'name', 'email'])
+                ->map(fn (User $user): array => ['value' => (string) $user->id, 'label' => "{$user->name} · {$user->email}"]),
         ]);
     }
 }

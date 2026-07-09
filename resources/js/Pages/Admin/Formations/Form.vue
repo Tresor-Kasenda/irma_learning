@@ -45,6 +45,7 @@ interface FormationData {
     tags: string[] | null;
     is_active: boolean;
     is_featured: boolean;
+    is_certifying: boolean;
     sections: SectionData[];
 }
 
@@ -81,6 +82,7 @@ const form = useForm<{
     image: File | null;
     is_active: boolean;
     is_featured: boolean;
+    is_certifying: boolean;
     sections: SectionRow[];
 }>({
     title: props.formation?.title ?? '',
@@ -93,6 +95,7 @@ const form = useForm<{
     image: null,
     is_active: props.formation?.is_active ?? true,
     is_featured: props.formation?.is_featured ?? false,
+    is_certifying: props.formation?.is_certifying ?? false,
     sections: props.formation?.sections.map((section) => ({
         id: section.id,
         title: section.title,
@@ -347,6 +350,11 @@ function submit(): void {
                                 v-model="form.is_featured"
                                 hint="Mettre cette formation en avant sur l’accueil."
                                 label="À la une"
+                            />
+                            <ToggleField
+                                v-model="form.is_certifying"
+                                hint="Un examen final réussi sera requis avant la délivrance du certificat."
+                                label="Formation certifiante"
                             />
                         </div>
                     </section>

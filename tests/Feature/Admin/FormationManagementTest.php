@@ -141,9 +141,10 @@ test('an admin can create a formation', function () {
             'is_featured' => false,
         ])
         ->assertRedirect(route('admin.formations.index'))
-        ->assertSessionHas('success', 'Formation créée avec succès.');
+        ->assertSessionHas('info');
 
-    expect(Formation::where('title', 'Nouvelle formation')->exists())->toBeTrue();
+    $formation = Formation::where('title', 'Nouvelle formation')->firstOrFail();
+    expect($formation->is_active)->toBeFalse();
 });
 
 test('creating a formation validates required fields', function () {
@@ -183,7 +184,7 @@ test('an admin can update a formation', function () {
             'is_active' => true,
             'is_featured' => false,
         ])
-        ->assertSessionHas('success', 'Formation mise à jour.');
+        ->assertSessionHas('info');
 
     expect($formation->fresh()->title)->toBe('Nouveau titre');
 });
@@ -206,7 +207,7 @@ test('an admin can replace a formation image during update', function () {
         ])
         ->assertRedirect(route('admin.formations.index'))
         ->assertSessionHasNoErrors()
-        ->assertSessionHas('success', 'Formation mise à jour.');
+        ->assertSessionHas('info');
 
     $newImage = $formation->fresh()->image;
 

@@ -190,20 +190,20 @@ function formatDate(value: string): string {
                     </section>
                 </div>
 
-                <aside class="grid gap-6 xl:sticky xl:top-24">
-                    <section class="admin-panel border">
+                <aside class="grid min-w-0 gap-6 xl:sticky xl:top-24">
+                    <section class="admin-panel min-w-0 overflow-hidden border">
                         <div class="admin-divider flex items-center gap-3 border-b px-5 py-4">
                             <Settings2 class="size-5 text-amber-300" :stroke-width="1.7"/>
                             <h2 class="admin-heading font-semibold">Détails</h2>
                         </div>
-                        <dl class="grid gap-4 p-5">
-                            <div class="flex items-center justify-between gap-3">
+                        <dl class="grid min-w-0 gap-4 p-5">
+                            <div class="grid min-w-0 grid-cols-[auto_minmax(0,1fr)] items-start gap-3">
                                 <dt class="admin-muted flex items-center gap-2 text-sm"><GraduationCap class="size-4" :stroke-width="1.7"/> Formation</dt>
-                                <dd class="admin-heading max-w-[60%] truncate text-sm font-medium">{{ chapter.section.formation.title }}</dd>
+                                <dd class="admin-heading min-w-0 break-words text-right text-sm font-medium [overflow-wrap:anywhere]">{{ chapter.section.formation.title }}</dd>
                             </div>
-                            <div class="flex items-center justify-between gap-3">
+                            <div class="grid min-w-0 grid-cols-[auto_minmax(0,1fr)] items-start gap-3">
                                 <dt class="admin-muted flex items-center gap-2 text-sm"><Layers3 class="size-4" :stroke-width="1.7"/> Section</dt>
-                                <dd class="admin-heading max-w-[60%] truncate text-sm font-medium">{{ chapter.section.title }}</dd>
+                                <dd class="admin-heading min-w-0 break-words text-right text-sm font-medium [overflow-wrap:anywhere]">{{ chapter.section.title }}</dd>
                             </div>
                             <div class="flex items-center justify-between gap-3">
                                 <dt class="admin-muted flex items-center gap-2 text-sm"><Video class="size-4" :stroke-width="1.7"/> Type</dt>

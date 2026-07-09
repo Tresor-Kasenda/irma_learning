@@ -7,6 +7,8 @@ namespace App\Http\Controllers\Student;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\ProfileUpdateRequest;
 use App\Http\Requests\UpdateAvatarRequest;
+use App\Models\Certificate;
+use App\Models\Enrollment;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -23,9 +25,39 @@ final class ProfileController extends Controller
      */
     public function edit(Request $request): Response
     {
+        $user = $request->user();
+
         return Inertia::render('Student/Profile/Edit', [
             'mustVerifyEmail' => $request->user() instanceof MustVerifyEmail,
             'status' => session('status'),
+            'formations' => Enrollment::query()
+                ->where('user_id', $user->id)
+                ->with('formation:id,title,slug,short_description,image')
+                ->latest('last_accessed_at')
+                ->get()
+                ->map(fn (Enrollment $enrollment): array => [
+                    'id' => $enrollment->formation_id,
+                    'title' => $enrollment->formation?->title,
+                    'slug' => $enrollment->formation?->slug,
+                    'short_description' => $enrollment->formation?->short_description,
+                    'image' => $enrollment->formation?->image,
+                    'progress' => (float) $enrollment->progress_percentage,
+                    'status' => $enrollment->status->getLabel(),
+                    'last_accessed_at' => $enrollment->last_accessed_at?->toISOString(),
+                ]),
+            'certificates' => Certificate::query()
+                ->where('user_id', $user->id)
+                ->with('formation:id,title,slug')
+                ->latest('issue_date')
+                ->get()
+                ->map(fn (Certificate $certificate): array => [
+                    'id' => $certificate->id,
+                    'number' => $certificate->certificate_number,
+                    'formation_title' => $certificate->formation?->title,
+                    'score' => (float) $certificate->final_score,
+                    'status' => $certificate->status->getLabel(),
+                    'issue_date' => $certificate->issue_date?->toISOString(),
+                ]),
         ]);
     }
 

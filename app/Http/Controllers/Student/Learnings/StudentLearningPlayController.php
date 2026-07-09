@@ -26,9 +26,15 @@ final class StudentLearningPlayController extends Controller
     {
         $user = auth()->user();
 
-        $formation->load(['sections.chapters' => function ($query) {
-            $query->where('is_active', true)->orderBy('order_position');
-        }]);
+        $formation->load([
+            'exam',
+            'sections' => fn ($query) => $query
+                ->where('is_active', true)
+                ->orderBy('order_position')
+                ->with(['chapters' => fn ($query) => $query
+                    ->where('is_active', true)
+                    ->orderBy('order_position')]),
+        ]);
 
         $enrollment = Enrollment::query()
             ->where('user_id', $user->id)
@@ -101,6 +107,10 @@ final class StudentLearningPlayController extends Controller
             ->pluck('trackable_id')
             ->toArray();
 
+        $finalExam = $progression->formationExam($formation);
+        $sectionsComplete = $progression->areSectionsComplete($user, $formation);
+        $finalExamPassed = $finalExam?->hasUserPassed($user) ?? false;
+
         return Inertia::render('Student/Learnings/StudentLearningPlay', [
             'formation' => $formation,
             'enrollment' => $enrollment,
@@ -109,6 +119,15 @@ final class StudentLearningPlayController extends Controller
             'currentChapterIndex' => $currentChapterIndex,
             'completedChapters' => $completedChapters,
             'sections' => $sectionStates->values(),
+            'finalAssessment' => [
+                'required' => $formation->is_certifying,
+                'ready' => $sectionsComplete,
+                'exam_id' => $finalExam?->id,
+                'exam_title' => $finalExam?->title,
+                'exam_missing' => $formation->is_certifying && $finalExam === null,
+                'passed' => $finalExamPassed,
+                'needs_exam' => $formation->is_certifying && $sectionsComplete && $finalExam !== null && ! $finalExamPassed,
+            ],
             'htmlContent' => $currentChapter?->getHtmlContentRaw() ?? '',
         ]);
     }

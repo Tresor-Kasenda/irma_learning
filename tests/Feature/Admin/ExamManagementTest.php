@@ -222,6 +222,7 @@ test('an admin can add a question to an exam', function () {
                 ['option_text' => 'Paris', 'is_correct' => true, 'order_position' => 1],
                 ['option_text' => 'Lyon', 'is_correct' => false, 'order_position' => 2],
                 ['option_text' => 'Marseille', 'is_correct' => false, 'order_position' => 3],
+                ['option_text' => 'Lille', 'is_correct' => false, 'order_position' => 4],
             ],
         ])
         ->assertRedirect();
@@ -245,12 +246,52 @@ test('a single_choice question must have exactly one correct answer', function (
             'options' => [
                 ['option_text' => 'A', 'is_correct' => false, 'order_position' => 1],
                 ['option_text' => 'B', 'is_correct' => false, 'order_position' => 2],
+                ['option_text' => 'C', 'is_correct' => false, 'order_position' => 3],
+                ['option_text' => 'D', 'is_correct' => false, 'order_position' => 4],
             ],
         ])
         ->assertRedirect()
-        ->assertSessionHas('error');
+        ->assertSessionHasErrors('options');
 
     $this->assertDatabaseMissing(Question::class, ['question_text' => 'Test']);
+});
+
+test('a true false question accepts exactly two options', function () {
+    $exam = Exam::factory()->for($this->section, 'examable')->create();
+
+    $this->actingAs($this->admin)
+        ->post(route('admin.exams.questions.store', $exam), [
+            'question_text' => 'Laravel est un framework PHP ?',
+            'question_type' => 'true_false',
+            'points' => 1,
+            'options' => [
+                ['option_text' => 'Vrai', 'is_correct' => true, 'order_position' => 1],
+                ['option_text' => 'Faux', 'is_correct' => false, 'order_position' => 2],
+            ],
+        ])
+        ->assertRedirect()
+        ->assertSessionHasNoErrors();
+
+    expect($exam->questions()->firstOrFail()->options()->count())->toBe(2);
+});
+
+test('a true false question rejects more than two options', function () {
+    $exam = Exam::factory()->for($this->section, 'examable')->create();
+
+    $this->actingAs($this->admin)
+        ->post(route('admin.exams.questions.store', $exam), [
+            'question_text' => 'Question invalide',
+            'question_type' => 'true_false',
+            'points' => 1,
+            'options' => [
+                ['option_text' => 'Vrai', 'is_correct' => true],
+                ['option_text' => 'Faux', 'is_correct' => false],
+                ['option_text' => 'Peut-être', 'is_correct' => false],
+            ],
+        ])
+        ->assertSessionHasErrors('options');
+
+    $this->assertDatabaseMissing(Question::class, ['question_text' => 'Question invalide']);
 });
 
 test('an admin can delete a question', function () {

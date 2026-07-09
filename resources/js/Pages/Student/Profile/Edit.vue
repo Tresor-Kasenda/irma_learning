@@ -7,9 +7,31 @@ import {computed, ref, watch} from 'vue';
 import {safeRoute} from "@/utilities/route";
 import LearningLayout from "@/Layouts/LearningLayout.vue";
 
-defineProps<{
+interface ProfileFormation {
+    id: number;
+    title: string;
+    slug: string;
+    short_description: string | null;
+    image: string | null;
+    progress: number;
+    status: string;
+    last_accessed_at: string | null;
+}
+
+interface ProfileCertificate {
+    id: number;
+    number: string;
+    formation_title: string;
+    score: number;
+    status: string;
+    issue_date: string;
+}
+
+const props = defineProps<{
     mustVerifyEmail?: boolean;
     status?: string;
+    formations: ProfileFormation[];
+    certificates: ProfileCertificate[];
 }>();
 
 type TabKey = 'formations' | 'certificats' | 'settings';
@@ -47,20 +69,27 @@ const uploadAvatar = (event: Event): void => {
     });
 };
 
-const tabs: Array<{ key: TabKey; label: string; count: number | null }> = [
-    {key: 'formations', label: 'Formations', count: 0},
-    {key: 'certificats', label: 'Certificats', count: 0},
+const tabs = computed<Array<{ key: TabKey; label: string; count: number | null }>>(() => [
+    {key: 'formations', label: 'Formations', count: props.formations.length},
+    {key: 'certificats', label: 'Certificats', count: props.certificates.length},
     {key: 'settings', label: 'Paramètres', count: null},
-];
+]);
 
 const TAB_STORAGE_KEY = 'profile-active-tab';
 
 const isValidTab = (value: string | null): value is TabKey =>
-    tabs.some((tab) => tab.key === value);
+    tabs.value.some((tab) => tab.key === value);
 
 const storedTab = localStorage.getItem(TAB_STORAGE_KEY);
 const activeTab = ref<TabKey>(isValidTab(storedTab) ? storedTab : 'formations');
 const filterQuery = ref('');
+
+const filteredFormations = computed(() => props.formations.filter((formation) =>
+    formation.title.toLocaleLowerCase().includes(filterQuery.value.toLocaleLowerCase()),
+));
+const filteredCertificates = computed(() => props.certificates.filter((certificate) =>
+    certificate.formation_title.toLocaleLowerCase().includes(filterQuery.value.toLocaleLowerCase()),
+));
 
 watch(activeTab, (value) => {
     localStorage.setItem(TAB_STORAGE_KEY, value);
@@ -195,7 +224,7 @@ const emptyState = computed(() =>
                         <input
                             v-model="filterQuery"
                             class="w-full border-0 bg-transparent p-0 text-sm text-slate-200 placeholder:text-slate-500 focus:outline-none focus:ring-0"
-                            placeholder="Filtrer 0 résultat..."
+                            :placeholder="`Filtrer ${activeTab === 'formations' ? formations.length : certificates.length} résultat(s)…`"
                             type="text"
                         />
                     </div>
@@ -219,8 +248,33 @@ const emptyState = computed(() =>
                     </div>
                 </div>
 
-                <div
-                    class="mt-4 grid place-items-center rounded-lg border border-dashed border-white/10 py-20 text-center">
+                <div v-if="activeTab === 'formations' && filteredFormations.length" class="mt-5 grid gap-4 md:grid-cols-2">
+                    <article v-for="formation in filteredFormations" :key="formation.id" class="min-w-0 overflow-hidden border border-white/10 bg-[#0e2035]">
+                        <div class="flex min-w-0 gap-4 p-4">
+                            <img v-if="formation.image" :src="`/storage/${formation.image}`" alt="" class="h-24 w-32 shrink-0 object-cover"/>
+                            <div class="min-w-0 flex-1">
+                                <p class="text-xs font-semibold uppercase tracking-wider text-[#ef477d]">{{ formation.status }}</p>
+                                <h3 class="mt-1 break-words font-semibold text-white [overflow-wrap:anywhere]">{{ formation.title }}</h3>
+                                <p v-if="formation.short_description" class="mt-1 line-clamp-2 text-xs leading-5 text-slate-400">{{ formation.short_description }}</p>
+                            </div>
+                        </div>
+                        <div class="border-t border-white/10 p-4">
+                            <div class="flex items-center justify-between text-xs text-slate-400"><span>Progression</span><span>{{ Math.round(formation.progress) }}%</span></div>
+                            <div class="mt-2 h-1.5 overflow-hidden bg-white/10"><div class="h-full bg-[#df3e75]" :style="{width: `${Math.min(100, formation.progress)}%`}"/></div>
+                            <Link :href="safeRoute('course.player', formation.id)" class="mt-4 inline-flex h-9 items-center bg-[#a72f5d] px-4 text-xs font-semibold text-white">Continuer la formation</Link>
+                        </div>
+                    </article>
+                </div>
+
+                <div v-else-if="activeTab === 'certificats' && filteredCertificates.length" class="mt-5 grid gap-4 md:grid-cols-2">
+                    <Link v-for="certificate in filteredCertificates" :key="certificate.id" :href="safeRoute('certificats.show', certificate.id)" class="border border-emerald-400/20 bg-emerald-400/5 p-5 transition hover:border-emerald-400/50">
+                        <p class="text-xs font-semibold uppercase tracking-wider text-emerald-300">{{ certificate.status }}</p>
+                        <h3 class="mt-2 break-words font-semibold text-white [overflow-wrap:anywhere]">{{ certificate.formation_title }}</h3>
+                        <div class="mt-4 flex flex-wrap gap-x-5 gap-y-2 text-xs text-slate-400"><span>{{ certificate.number }}</span><span>Score {{ Math.round(certificate.score) }}%</span><span>{{ new Date(certificate.issue_date).toLocaleDateString('fr-FR') }}</span></div>
+                    </Link>
+                </div>
+
+                <div v-else class="mt-4 grid place-items-center rounded-lg border border-dashed border-white/10 py-20 text-center">
                     <p class="text-sm text-slate-500">{{ emptyState }}</p>
                 </div>
             </div>

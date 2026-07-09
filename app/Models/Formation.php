@@ -40,6 +40,7 @@ final class Formation extends Model
         'difficulty_level',
         'is_active',
         'is_featured',
+        'is_certifying',
         'tags',
     ];
 
@@ -155,6 +156,7 @@ final class Formation extends Model
         return [
             'is_active' => 'boolean',
             'is_featured' => 'boolean',
+            'is_certifying' => 'boolean',
             'difficulty_level' => FormationLevelEnum::class,
             'tags' => 'array',
             'price' => 'decimal:2',

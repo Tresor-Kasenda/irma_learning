@@ -126,6 +126,31 @@ function toggleCorrect(questionIndex: number, optionIndex: number): void {
         option.is_correct = index === optionIndex;
     });
 }
+
+function updateQuestionType(questionIndex: number, value: unknown): void {
+    if (typeof value !== 'string') {
+        return;
+    }
+
+    const question = exam.value.questions[questionIndex];
+    question.question_type = value;
+
+    if (value === 'true_false') {
+        question.options = [
+            {option_text: 'Vrai', is_correct: true, order_position: 1},
+            {option_text: 'Faux', is_correct: false, order_position: 2},
+        ];
+        return;
+    }
+
+    if (question.options.length < 4) {
+        question.options = Array.from({length: 4}, (_, index) => ({
+            option_text: '',
+            is_correct: index === 0,
+            order_position: index + 1,
+        }));
+    }
+}
 </script>
 
 <template>
@@ -214,8 +239,7 @@ function toggleCorrect(questionIndex: number, optionIndex: number): void {
                 class="admin-divider flex flex-col gap-3 border-b px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-5">
                 <div class="min-w-0">
                     <h3 class="admin-heading font-semibold">Questions</h3>
-                    <p class="admin-muted mt-1 text-xs">{{ exam.questions.length }} question(s) · 4 à 5 options par
-                        question</p>
+                    <p class="admin-muted mt-1 text-xs">{{ exam.questions.length }} question(s) · 2 options en Vrai/Faux, 4 à 5 pour les choix</p>
                 </div>
                 <button
                     class="inline-flex h-10 shrink-0 items-center justify-center gap-2 bg-[#a23362] px-4 text-sm font-semibold text-white transition hover:bg-[#b2386e]"
@@ -277,12 +301,13 @@ function toggleCorrect(questionIndex: number, optionIndex: number): void {
 
                         <div class="grid min-w-0 gap-4 sm:grid-cols-[minmax(0,1fr)_140px]">
                             <SearchableSelect
-                                v-model="question.question_type"
+                                :model-value="question.question_type"
                                 :clearable="false"
                                 :error="fieldError(`questions.${questionIndex}.question_type`)"
                                 :options="questionTypeOptions"
                                 :searchable="false"
                                 label="Type de réponse"
+                                @update:model-value="updateQuestionType(questionIndex, $event)"
                             />
                             <NumberField
                                 :id="`exam-question-${questionIndex}-points`"
@@ -305,7 +330,7 @@ function toggleCorrect(questionIndex: number, optionIndex: number): void {
                                     <p class="admin-muted mt-0.5 text-[10px]">Cliquez sur le cercle pour désigner la ou
                                         les bonnes réponses.</p>
                                 </div>
-                                <button v-if="question.options.length < 5"
+                                <button v-if="question.question_type !== 'true_false' && question.options.length < 5"
                                         class="inline-flex items-center gap-1 text-xs font-semibold text-[#ef477d]"
                                         type="button" @click="addOption(questionIndex)">
                                     <Plus class="size-3.5"/>
@@ -329,13 +354,13 @@ function toggleCorrect(questionIndex: number, optionIndex: number): void {
                                            :placeholder="`Option ${optionIndex + 1}`"
                                            class="admin-field h-10 min-w-0 w-full border px-3 text-sm outline-none"/>
                                     <div class="flex shrink-0 items-center gap-1">
-                                        <button v-if="question.options.length < 5"
+                                        <button v-if="question.question_type !== 'true_false' && question.options.length < 5"
                                                 :aria-label="`Dupliquer l’option ${optionIndex + 1}`"
                                                 class="grid size-8 place-items-center text-sky-500 transition hover:bg-sky-400/10"
                                                 type="button" @click="duplicateOption(questionIndex, optionIndex)">
                                             <Copy class="size-3.5"/>
                                         </button>
-                                        <button v-if="question.options.length > 4"
+                                        <button v-if="question.question_type !== 'true_false' && question.options.length > 4"
                                                 :aria-label="`Supprimer l’option ${optionIndex + 1}`"
                                                 class="grid size-8 place-items-center text-rose-500 transition hover:bg-rose-400/10"
                                                 type="button" @click="removeOption(questionIndex, optionIndex)">

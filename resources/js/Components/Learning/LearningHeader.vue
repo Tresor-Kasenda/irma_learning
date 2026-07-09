@@ -1,6 +1,7 @@
 <script lang="ts" setup>
 import {Link, usePage} from '@inertiajs/vue3';
 import {computed, ref} from 'vue';
+import {PanelLeftClose, PanelLeftOpen} from '@lucide/vue';
 import LearningIcon from '@/Components/Learning/LearningIcon.vue';
 import {useUiStore} from "@/stores";
 import {safeRoute} from "@/utilities/route";
@@ -62,11 +63,8 @@ const closeMenus = () => {
                 type="button"
                 @click="toggleSidebarCollapsed"
             >
-                <LearningIcon
-                    :class="uiStore.sidebarCollapsed ? 'rotate-180' : ''"
-                    class="size-5 brightness-0 invert opacity-80 transition"
-                    name="chevron-double-left"
-                />
+                <PanelLeftOpen v-if="uiStore.sidebarCollapsed" class="size-5" :stroke-width="1.7"/>
+                <PanelLeftClose v-else class="size-5" :stroke-width="1.7"/>
             </button>
 
             <div class="hidden items-center gap-2 text-xs text-slate-500 sm:flex">
