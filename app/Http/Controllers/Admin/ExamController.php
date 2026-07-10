@@ -85,7 +85,7 @@ final class ExamController extends Controller
                     ]),
                 ]),
             ],
-            'parentOptions' => $this->parentOptions(),
+            'parentOptions' => $this->parentOptions($exam),
         ]);
     }
 
@@ -330,10 +330,17 @@ final class ExamController extends Controller
     /**
      * @return \Illuminate\Support\Collection<int, array{value: string, label: string, group: string}>
      */
-    private function parentOptions(): \Illuminate\Support\Collection
+    private function parentOptions(?Exam $currentExam = null): \Illuminate\Support\Collection
     {
         $sections = Section::query()
             ->with('formation:id,title')
+            ->where(function (Builder $query) use ($currentExam): void {
+                $query->whereDoesntHave('exam');
+
+                if ($currentExam?->examable_type === Section::class) {
+                    $query->orWhere('sections.id', $currentExam->examable_id);
+                }
+            })
             ->orderBy('title')
             ->get()
             ->map(fn (Section $section): array => [
@@ -343,6 +350,13 @@ final class ExamController extends Controller
             ]);
 
         $formations = Formation::query()
+            ->where(function (Builder $query) use ($currentExam): void {
+                $query->whereDoesntHave('exam');
+
+                if ($currentExam?->examable_type === Formation::class) {
+                    $query->orWhere('formations.id', $currentExam->examable_id);
+                }
+            })
             ->orderBy('title')
             ->get()
             ->map(fn (Formation $formation): array => [

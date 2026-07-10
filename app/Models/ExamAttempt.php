@@ -20,6 +20,11 @@ final class ExamAttempt extends Model
         'user_id',
         'exam_id',
         'started_at',
+        'expires_at',
+        'last_activity_at',
+        'reopened_at',
+        'reopened_by',
+        'reopen_count',
         'completed_at',
         'score',
         'max_score',
@@ -54,6 +59,16 @@ final class ExamAttempt extends Model
 
     public function complete(): void
     {
+        if ($this->status !== ExamAttemptEnum::IN_PROGRESS) {
+            return;
+        }
+
+        if ($this->hasExpired()) {
+            $this->expire();
+
+            return;
+        }
+
         $userAnswers = $this->userAnswers()->with(['question.options', 'selectedOption'])->get();
 
         foreach ($userAnswers as $userAnswer) {
@@ -104,6 +119,61 @@ final class ExamAttempt extends Model
         return (float) $this->percentage >= (float) ($this->exam->passing_score ?? 70);
     }
 
+    public function hasExpired(): bool
+    {
+        return $this->status === ExamAttemptEnum::IN_PROGRESS
+            && $this->expires_at !== null
+            && $this->expires_at->isPast();
+    }
+
+    public function expire(): void
+    {
+        if ($this->status !== ExamAttemptEnum::IN_PROGRESS) {
+            return;
+        }
+
+        $this->update([
+            'status' => ExamAttemptEnum::EXPIRED,
+            'completed_at' => now(),
+            'time_taken' => (int) max(0, $this->started_at->diffInSeconds(now())),
+        ]);
+    }
+
+    public function reopen(User $admin): bool
+    {
+        if (! in_array($this->status, [
+            ExamAttemptEnum::EXPIRED,
+            ExamAttemptEnum::FAILED,
+            ExamAttemptEnum::CANCELLED,
+        ], true)) {
+            return false;
+        }
+
+        $duration = max((int) $this->exam->duration_minutes, 1);
+
+        $this->update([
+            'status' => ExamAttemptEnum::IN_PROGRESS,
+            'started_at' => now(),
+            'expires_at' => now()->addMinutes($duration),
+            'last_activity_at' => now(),
+            'completed_at' => null,
+            'score' => 0,
+            'max_score' => $this->exam->getTotalPoints(),
+            'percentage' => 0,
+            'time_taken' => null,
+            'reopened_at' => now(),
+            'reopened_by' => $admin->id,
+            'reopen_count' => $this->reopen_count + 1,
+        ]);
+
+        return true;
+    }
+
+    public function recordActivity(): void
+    {
+        $this->forceFill(['last_activity_at' => now()])->save();
+    }
+
     protected static function booted(): void
     {
         self::creating(function (self $attempt): void {
@@ -111,6 +181,14 @@ final class ExamAttempt extends Model
                 $attempt->attempt_number = static::where('exam_id', $attempt->exam_id)
                     ->where('user_id', $attempt->user_id)
                     ->max('attempt_number') + 1;
+            }
+
+            $attempt->started_at ??= now();
+            $attempt->last_activity_at ??= now();
+
+            if ($attempt->expires_at === null && $attempt->exam_id) {
+                $duration = (int) ($attempt->exam?->duration_minutes ?? 0);
+                $attempt->expires_at = $duration > 0 ? $attempt->started_at->copy()->addMinutes($duration) : null;
             }
         });
     }
@@ -121,6 +199,9 @@ final class ExamAttempt extends Model
             'answers' => 'array',
             'question_order' => 'array',
             'started_at' => 'datetime',
+            'expires_at' => 'datetime',
+            'last_activity_at' => 'datetime',
+            'reopened_at' => 'datetime',
             'completed_at' => 'datetime',
             'percentage' => 'decimal:2',
             'attempt_number' => 'integer',
@@ -128,6 +209,8 @@ final class ExamAttempt extends Model
             'score' => 'integer',
             'max_score' => 'integer',
             'time_taken' => 'integer',
+            'reopened_by' => 'integer',
+            'reopen_count' => 'integer',
         ];
     }
 }

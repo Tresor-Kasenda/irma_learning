@@ -1,5 +1,9 @@
 @php
-    $companyName = \App\Models\Setting::get('app_name', 'IRMA Learning');
+    $branding = \App\Models\ApplicationSetting::current();
+    $companyName = $branding->app_name ?: \App\Models\Setting::get('app_name', 'IRMA Learning');
+    $companyTagline = $branding->app_tagline ?: 'Plateforme de formation professionnelle';
+    $signatureName = $branding->certificate_signature_name ?: $companyName;
+    $verificationUrl = $certificate->verification_url;
 @endphp
 <!DOCTYPE html>
 <html lang="fr">
@@ -70,6 +74,11 @@
             color: #888;
             margin-bottom: 5px;
         }
+        .certificate-subtitle {
+            font-size: 12px;
+            color: #7c7c7c;
+            margin-bottom: 10px;
+        }
         .holder-name {
             font-size: 36px;
             font-weight: 700;
@@ -115,6 +124,11 @@
             font-weight: 600;
             color: #1a2a3a;
         }
+        .issuer-subtitle {
+            font-size: 11px;
+            color: #888;
+            margin-top: 4px;
+        }
         .footer {
             position: absolute;
             bottom: 40px;
@@ -134,6 +148,12 @@
             color: #bbb;
             margin-top: 5px;
         }
+        .verification-url {
+            font-size: 10px;
+            color: #caa45a;
+            margin-top: 6px;
+            word-break: break-all;
+        }
     </style>
 </head>
 <body>
@@ -145,6 +165,7 @@
         <img class="logo" src="{{ public_path('images/irma-logo-base.svg') }}" alt="IRMA">
 
         <div class="label">Certificat de réussite</div>
+        <div class="certificate-subtitle">{{ $companyTagline }}</div>
         <div class="awarded-to">Décerné à</div>
         <div class="holder-name">{{ $certificate->user->name }}</div>
         <div class="completion-text">pour avoir complété avec succès la formation</div>
@@ -161,13 +182,15 @@
             </div>
         </div>
 
-        <div class="issuer">{{ $companyName }}</div>
+        <div class="issuer">{{ $signatureName }}</div>
+        <div class="issuer-subtitle">{{ $companyName }}</div>
     </div>
 
     <div class="footer">
         <p>{{ $companyName }}</p>
         <p>N° {{ $certificate->certificate_number }}</p>
         <div class="verification-hash">{{ $certificate->verification_hash }}</div>
+        <div class="verification-url">{{ $verificationUrl }}</div>
     </div>
 </div>
 </body>

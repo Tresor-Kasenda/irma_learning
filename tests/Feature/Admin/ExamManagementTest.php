@@ -91,6 +91,41 @@ test('the create page provides parent options', function () {
             ->etc());
 });
 
+test('the create page excludes sections and formations that already have an exam', function () {
+    $availableSection = Section::factory()->for(Formation::factory())->create(['title' => 'Section disponible']);
+    $usedFormation = Formation::factory()->create(['title' => 'Formation utilisée']);
+
+    Exam::factory()->for($this->section, 'examable')->create();
+    Exam::factory()->for($usedFormation, 'examable')->create();
+
+    $this->actingAs($this->admin)
+        ->get(route('admin.exams.create'))
+        ->assertSuccessful()
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('parentOptions', fn ($options): bool => collect($options)
+                ->pluck('value')
+                ->contains('App\\Models\\Section:'.$availableSection->id)
+                && ! collect($options)->pluck('value')->contains('App\\Models\\Section:'.$this->section->id)
+                && ! collect($options)->pluck('value')->contains('App\\Models\\Formation:'.$usedFormation->id))
+            ->etc());
+});
+
+test('the edit page keeps its current parent available and excludes other used parents', function () {
+    $exam = Exam::factory()->for($this->section, 'examable')->create();
+    $otherSection = Section::factory()->for(Formation::factory())->create();
+    Exam::factory()->for($otherSection, 'examable')->create();
+
+    $this->actingAs($this->admin)
+        ->get(route('admin.exams.edit', $exam))
+        ->assertSuccessful()
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('parentOptions', fn ($options): bool => collect($options)
+                ->pluck('value')
+                ->contains('App\\Models\\Section:'.$this->section->id)
+                && ! collect($options)->pluck('value')->contains('App\\Models\\Section:'.$otherSection->id))
+            ->etc());
+});
+
 test('an admin can create an exam for a section', function () {
     $this->actingAs($this->admin)
         ->post(route('admin.exams.store'), [

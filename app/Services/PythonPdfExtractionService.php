@@ -12,7 +12,7 @@ use Symfony\Component\Process\Process;
 final class PythonPdfExtractionService
 {
     /**
-     * @return array{markdown: string, page_count: int, word_count: int, image_count: int, cover_file: string, visual_pages: array<int, int>, ocr_pages: array<int, int>, ocr_required_pages: array<int, int>, warnings: array<int, string>, asset_directory: string}
+     * @return array{markdown: string, document_type: string, extraction_strategy: string, page_count: int, word_count: int, image_count: int, cover_file: string, visual_pages: array<int, int>, ocr_pages: array<int, int>, ocr_required_pages: array<int, int>, warnings: array<int, string>, asset_directory: string}
      */
     public function extract(string $pdfPath, string $assetDirectory): array
     {
@@ -85,6 +85,8 @@ final class PythonPdfExtractionService
 
         return [
             'markdown' => (string) $result['markdown'],
+            'document_type' => (string) ($result['document_type'] ?? 'unknown'),
+            'extraction_strategy' => (string) ($result['extraction_strategy'] ?? 'unknown'),
             'page_count' => (int) ($result['page_count'] ?? 0),
             'word_count' => (int) ($result['word_count'] ?? 0),
             'image_count' => (int) ($result['image_count'] ?? 0),

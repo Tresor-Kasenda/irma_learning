@@ -39,7 +39,7 @@ final class EnrollmentController extends Controller
 
         $filename = sprintf(
             'facture-%s-%s.pdf',
-            mb_str_pad($enrollment->id, 6, '0', STR_PAD_LEFT),
+            mb_str_pad((string) $enrollment->id, 6, '0', STR_PAD_LEFT),
             $enrollment->payment_processed_at->format('Y-m-d')
         );
 
@@ -56,6 +56,10 @@ final class EnrollmentController extends Controller
     public function sendByEmail(Enrollment $enrollment, Request $request)
     {
         $this->authorize('view', $enrollment);
+
+        if (! $enrollment->payment_processed_at) {
+            abort(404, 'Cette facture n\'est pas encore disponible');
+        }
 
         $request->validate([
             'email' => 'required|email',
@@ -93,6 +97,10 @@ final class EnrollmentController extends Controller
     {
         $enrollment->load(['user', 'formation']);
 
+        if (! $enrollment->payment_processed_at) {
+            abort(404, 'Cette facture n\'est pas encore disponible');
+        }
+
         $pdf = Pdf::loadView('invoices.enrollment', [
             'enrollment' => $enrollment,
         ])
@@ -100,7 +108,7 @@ final class EnrollmentController extends Controller
 
         $filename = sprintf(
             'invoices/facture-%s-%s.pdf',
-            mb_str_pad($enrollment->id, 6, '0', STR_PAD_LEFT),
+            mb_str_pad((string) $enrollment->id, 6, '0', STR_PAD_LEFT),
             $enrollment->payment_processed_at->format('Y-m-d')
         );
 

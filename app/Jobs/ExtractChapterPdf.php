@@ -20,7 +20,12 @@ final class ExtractChapterPdf implements ShouldBeUnique, ShouldQueue
 
     public int $tries = 2;
 
-    public int $timeout = 360;
+    public int $timeout = 900;
+
+    public bool $failOnTimeout = true;
+
+    /** @var array<int, int> */
+    public array $backoff = [60, 180];
 
     public int $uniqueFor = 600;
 
@@ -28,7 +33,9 @@ final class ExtractChapterPdf implements ShouldBeUnique, ShouldQueue
         public readonly int $chapterId,
         public readonly string $mediaPath,
         public readonly string $contentHash,
-    ) {}
+    ) {
+        $this->onQueue('pdf-extraction');
+    }
 
     public function handle(
         PythonPdfExtractionService $extractionService,
@@ -91,6 +98,8 @@ final class ExtractChapterPdf implements ShouldBeUnique, ShouldQueue
             'processing_error' => null,
             'processing_metadata' => [
                 'asset_directory' => $assetDirectory,
+                'document_type' => $result['document_type'],
+                'extraction_strategy' => $result['extraction_strategy'],
                 'previous_asset_directories' => $contentWasEditedDuringProcessing ? $previousAssetDirectories : [],
                 'page_count' => $result['page_count'],
                 'word_count' => $result['word_count'],

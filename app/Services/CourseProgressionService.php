@@ -244,6 +244,20 @@ final class CourseProgressionService
         return $exam !== null && $exam->hasUserPassed($user);
     }
 
+    public function isSectionUnlocked(User $user, Section $section): bool
+    {
+        $section->loadMissing('formation');
+
+        if (! $section->formation || ! $section->is_active) {
+            return false;
+        }
+
+        $state = $this->sectionStates($user, $section->formation)
+            ->firstWhere('id', $section->id);
+
+        return (bool) ($state['unlocked'] ?? false);
+    }
+
     /**
      * Best score obtained on the certification exam.
      */

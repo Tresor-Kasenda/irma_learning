@@ -80,6 +80,7 @@ Route::middleware(['auth', 'admin.access'])
         Route::get('attempts', [ExamAttemptController::class, 'index'])->name('attempts.index');
         Route::get('attempts/{attempt}', [ExamAttemptController::class, 'show'])->name('attempts.show');
         Route::post('attempts/{attempt}/complete', [ExamAttemptController::class, 'complete'])->name('attempts.complete');
+        Route::post('attempts/{attempt}/reopen', [ExamAttemptController::class, 'reopen'])->name('attempts.reopen');
 
         Route::get('enrollments', [EnrollmentController::class, 'index'])->name('enrollments.index');
         Route::get('certificates', [CertificateStudentController::class, 'index'])->name('certificates.index');

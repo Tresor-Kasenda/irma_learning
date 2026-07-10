@@ -14,6 +14,8 @@ enum ExamAttemptEnum: string
 
     case CANCELLED = 'cancelled';
 
+    case EXPIRED = 'expired';
+
     public function getLabel(): string
     {
         return match ($this) {
@@ -21,6 +23,7 @@ enum ExamAttemptEnum: string
             self::COMPLETED => 'Terminé',
             self::FAILED => 'Échoué',
             self::CANCELLED => 'Annulé',
+            self::EXPIRED => 'Expiré',
         };
     }
 }

@@ -26,6 +26,8 @@ print(
             "markdown": "# Contenu Python\n\nUne équation $E = mc^2$.\n\n![Page]({}/page-0001.png)".format(
                 arguments.public_prefix.rstrip("/")
             ),
+            "document_type": "native",
+            "extraction_strategy": "text-first",
             "page_count": 1,
             "word_count": 8,
             "image_count": 0,

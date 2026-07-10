@@ -126,10 +126,6 @@ def log_progress(stage: str, current: int, total: int, message: str = '') -> Non
 # ── Path helpers ─────────────────────────────────────────────────────────────
 
 
-def public_url(prefix: str, filename: str) -> str:
-    return f'{prefix.rstrip("/")}/{filename.lstrip("/")}'
-
-
 def rewrite_image_paths(markdown: str, output_dir: Path, prefix: str) -> str:
     normalized = output_dir.resolve().as_posix().rstrip('/')
     markdown = markdown.replace(normalized + '/', prefix.rstrip('/') + '/')
@@ -179,10 +175,77 @@ def is_page_number(line: str) -> bool:
     ))
 
 
+def page_image_coverage(page: pymupdf.Page) -> float:
+    page_area = max(page.rect.width * page.rect.height, 1)
+    image_area = 0.0
+
+    for image in page.get_image_info():
+        bbox = image.get('bbox')
+        if bbox:
+            rect = pymupdf.Rect(bbox) & page.rect
+            image_area += max(rect.width, 0) * max(rect.height, 0)
+
+    return min(image_area / page_area, 1.0)
+
+
 def page_requires_visual_reference(page: pymupdf.Page, text: str) -> bool:
-    if len(text.strip()) < 20:
+    """Keep a visual reference only when the page cannot be represented reliably as text."""
+    if len(text.strip()) < 40:
         return True
-    return bool(page.get_images(full=True) or page.get_drawings())
+    return page_image_coverage(page) >= 0.08 or len(page.get_drawings()) >= 8
+
+
+def classify_document_profile(page_profiles: List[Dict[str, int]]) -> Dict[str, Any]:
+    """Select an extraction strategy from cheap, dependency-free page metrics."""
+    total = max(len(page_profiles), 1)
+    scanned_pages = sum(1 for profile in page_profiles if profile['is_scanned'])
+    complex_pages = sum(1 for profile in page_profiles if profile['is_complex'])
+    image_pages = sum(1 for profile in page_profiles if profile['image_count'] > 0)
+    scanned_ratio = scanned_pages / total
+    complex_ratio = complex_pages / total
+
+    if scanned_ratio >= 0.8:
+        document_type = 'scanned'
+        strategy = 'ocr-first'
+    elif scanned_pages > 0:
+        document_type = 'hybrid'
+        strategy = 'mixed-text-ocr'
+    elif complex_ratio >= 0.35:
+        document_type = 'complex'
+        strategy = 'layout-aware'
+    else:
+        document_type = 'native'
+        strategy = 'text-first'
+
+    return {
+        'document_type': document_type,
+        'strategy': strategy,
+        'scanned_pages': scanned_pages,
+        'complex_pages': complex_pages,
+        'image_pages': image_pages,
+    }
+
+
+def inspect_pdf(doc: pymupdf.Document) -> Tuple[List[Dict[str, int]], Dict[str, Any]]:
+    profiles: List[Dict[str, int]] = []
+
+    for page in doc:
+        text_length = len(page.get_text('text').strip())
+        image_count = len(page.get_images(full=True))
+        drawing_count = len(page.get_drawings())
+        image_coverage = page_image_coverage(page)
+        is_scanned = int(text_length < 40 and image_coverage >= 0.5)
+        is_complex = int(image_coverage >= 0.08 or drawing_count >= 8)
+        profiles.append({
+            'text_length': text_length,
+            'image_count': image_count,
+            'drawing_count': drawing_count,
+            'image_coverage_percent': round(image_coverage * 100),
+            'is_scanned': is_scanned,
+            'is_complex': is_complex,
+        })
+
+    return profiles, classify_document_profile(profiles)
 
 
 def clean_markdown_page(markdown: str, repeated_boundaries: Set[str]) -> str:
@@ -230,6 +293,11 @@ def detect_repeated_boundaries(markdown_pages: List[str]) -> Set[str]:
     threshold = max(2, math.ceil(sample_count * 0.4))
     return {ln for ln, cnt in occurrences.items() if cnt >= threshold}
 
+
+def repeated_boundary_lines(markdown_pages: List[str]) -> Set[str]:
+    """Backward-compatible public name used by cleanup tests and callers."""
+    return detect_repeated_boundaries(markdown_pages)
+
 # ── OCR ──────────────────────────────────────────────────────────────────────
 
 
@@ -242,17 +310,21 @@ def ocr_via_tesseract(page: pymupdf.Page, language: str) -> str:
     scale = 200 / 72
     pix = page.get_pixmap(matrix=pymupdf.Matrix(scale, scale), alpha=False)
     img_bytes = pix.tobytes('png')
-    try:
-        result = subprocess.run(
-            ['tesseract', 'stdin', 'stdout', '-l', language, '--psm', '3'],
-            input=img_bytes,
-            capture_output=True,
-            timeout=120,
-        )
-        if result.returncode == 0:
-            return result.stdout.decode('utf-8').strip()
-    except (FileNotFoundError, subprocess.TimeoutExpired):
-        pass
+
+    language_candidates = list(dict.fromkeys([language, *language.split('+'), 'eng']))
+    for candidate in language_candidates:
+        try:
+            result = subprocess.run(
+                ['tesseract', 'stdin', 'stdout', '-l', candidate, '--psm', '3'],
+                input=img_bytes,
+                capture_output=True,
+                timeout=120,
+            )
+            if result.returncode == 0:
+                return result.stdout.decode('utf-8').strip()
+        except (FileNotFoundError, subprocess.TimeoutExpired):
+            break
+
     return ''
 
 
@@ -824,6 +896,16 @@ def extract_office(args: argparse.Namespace) -> Dict[str, Any]:
 # ── PDF extraction in batches ────────────────────────────────────────────────
 
 
+def ocr_pdf_page(input_path: Path, page_number: int, language: str) -> Tuple[int, str, bool, str]:
+    """OCR one page using an isolated document handle, safe for parallel workers."""
+    worker_doc = pymupdf.open(str(input_path))
+    try:
+        text, success, method = try_ocr(worker_doc[page_number - 1], language, page_number)
+        return page_number, text, success, method
+    finally:
+        worker_doc.close()
+
+
 def process_pdf(args: argparse.Namespace) -> Dict[str, Any]:
     input_path = args.input.resolve()
     output_dir = args.output_dir.resolve()
@@ -847,14 +929,21 @@ def process_pdf(args: argparse.Namespace) -> Dict[str, Any]:
         )
 
     total = doc.page_count
-    parallel = (os.cpu_count() or 4) if args.parallel == 0 else args.parallel
+    page_profiles, document_profile = inspect_pdf(doc)
+    parallel = min(os.cpu_count() or 4, 4) if args.parallel == 0 else max(args.parallel, 1)
     if args.skip_parallel:
         parallel = 1
 
-    batch_size = min(args.batch_size, max(10, total // max(parallel, 1) + 1))
+    batch_size = min(max(args.batch_size, 1), max(10, total // parallel + 1))
     batch_size = min(batch_size, total)
 
-    log_progress('start', 0, total, f'{total} pages, lots de {batch_size}, {parallel} workers')
+    log_progress(
+        'start',
+        0,
+        total,
+        f'{total} pages, type {document_profile["document_type"]}, '
+        f'stratégie {document_profile["strategy"]}, lots de {batch_size}, {parallel} workers',
+    )
 
     # Cover
     cover = 'cover.png'
@@ -866,64 +955,105 @@ def process_pdf(args: argparse.Namespace) -> Dict[str, Any]:
     visual_queue: List[int] = []
     warnings: List[str] = []
 
-    # ── Phase 1: batch text extraction ───────────────────────────────────
-    for batch_start in range(0, total, batch_size):
-        batch_end = min(batch_start + batch_size, total)
-        log_progress('extract', batch_end, total, f'Lot {batch_start + 1}-{batch_end}')
+    # ── Phase 1: adaptive extraction ─────────────────────────────────────
+    if document_profile['document_type'] == 'scanned':
+        page_numbers = list(range(1, total + 1))
+        ocr_results: Dict[int, Tuple[str, bool, str]] = {}
+        log_progress('ocr', 0, total, 'OCR parallèle du document scanné')
 
-        batch_doc = pymupdf.open()
-        batch_doc.insert_pdf(doc, from_page=batch_start, to_page=batch_end - 1)
+        if parallel > 1 and total > 1:
+            with ThreadPoolExecutor(max_workers=parallel) as executor:
+                futures = {
+                    executor.submit(ocr_pdf_page, input_path, page_number, args.ocr_language): page_number
+                    for page_number in page_numbers
+                }
+                for future in as_completed(futures):
+                    page_number = futures[future]
+                    try:
+                        _, text, success, method = future.result()
+                        ocr_results[page_number] = (text, success, method)
+                    except Exception as error:
+                        ocr_results[page_number] = ('', False, '')
+                        warnings.append(f'Erreur OCR page {page_number}: {error}')
+        else:
+            for page_number in page_numbers:
+                _, text, success, method = ocr_pdf_page(
+                    input_path,
+                    page_number,
+                    args.ocr_language,
+                )
+                ocr_results[page_number] = (text, success, method)
 
-        try:
-            chunks = pymupdf4llm.to_markdown(
-                batch_doc,
-                page_chunks=True,
-                write_images=True,
-                image_path=str(output_dir),
-                image_format='png',
-                dpi=args.image_dpi,
-                force_text=True,
-                show_progress=False,
-                margins=(0, 36, 0, 36),
-            )
-        finally:
-            batch_doc.close()
-
-        if not chunks:
-            warnings.append(f'Lot {batch_start + 1}-{batch_end}: aucune donnée extraite')
-            continue
-
-        for bi, chunk in enumerate(chunks):
-            pn = batch_start + bi + 1
-            if pn > total:
-                break
-
-            page = doc[pn - 1]
-            text = chunk.get('text', '')
-            if not text:
-                text = ''
-            text = rewrite_image_paths(text, output_dir, args.public_prefix).strip()
-
-            raw = page.get_text('text').strip()
-            is_scanned = len(raw) < 20 and bool(page.get_images(full=True))
-
-            if is_scanned:
-                ocr_text, ok, method = try_ocr(page, args.ocr_language, pn)
-                if ok:
-                    text = f'{text}\n\n## Texte OCR — Page {pn}\n\n{ocr_text}'.strip()
-                    ocr_done.append(pn)
-                    is_scanned = False
-                    log_progress('ocr', pn, total, f'OCR page {pn} via {method}')
-                else:
-                    log_progress('ocr', pn, total, f'OCR impossible page {pn}')
-
-            if is_scanned:
-                scanned.append(pn)
-
+        for page_number in page_numbers:
+            text, success, method = ocr_results[page_number]
             raw_pages.append(text)
+            visual_queue.append(page_number)
+            if success:
+                ocr_done.append(page_number)
+                log_progress('ocr', page_number, total, f'OCR page {page_number} via {method}')
+            else:
+                scanned.append(page_number)
+                log_progress('ocr', page_number, total, f'OCR impossible page {page_number}')
+    else:
+        extract_images = document_profile['image_pages'] > 0
 
-            if page_requires_visual_reference(page, raw):
-                visual_queue.append(pn)
+        for batch_start in range(0, total, batch_size):
+            batch_end = min(batch_start + batch_size, total)
+            log_progress('extract', batch_end, total, f'Lot {batch_start + 1}-{batch_end}')
+
+            batch_doc = pymupdf.open()
+            batch_doc.insert_pdf(doc, from_page=batch_start, to_page=batch_end - 1)
+
+            try:
+                chunks = pymupdf4llm.to_markdown(
+                    batch_doc,
+                    page_chunks=True,
+                    write_images=extract_images,
+                    image_path=str(output_dir),
+                    image_format='png',
+                    dpi=args.image_dpi,
+                    force_text=True,
+                    show_progress=False,
+                    margins=(0, 36, 0, 36),
+                )
+            finally:
+                batch_doc.close()
+
+            if not chunks:
+                warnings.append(f'Lot {batch_start + 1}-{batch_end}: aucune donnée extraite')
+                continue
+
+            for batch_index, chunk in enumerate(chunks):
+                page_number = batch_start + batch_index + 1
+                if page_number > total:
+                    break
+
+                page = doc[page_number - 1]
+                text = rewrite_image_paths(
+                    chunk.get('text', '') or '',
+                    output_dir,
+                    args.public_prefix,
+                ).strip()
+                raw = page.get_text('text').strip()
+                is_scanned = bool(page_profiles[page_number - 1]['is_scanned'])
+
+                if is_scanned:
+                    ocr_text, success, method = try_ocr(page, args.ocr_language, page_number)
+                    if success:
+                        text = f'{text}\n\n{ocr_text}'.strip()
+                        ocr_done.append(page_number)
+                        is_scanned = False
+                        log_progress('ocr', page_number, total, f'OCR page {page_number} via {method}')
+                    else:
+                        log_progress('ocr', page_number, total, f'OCR impossible page {page_number}')
+
+                if is_scanned:
+                    scanned.append(page_number)
+
+                raw_pages.append(text)
+
+                if page_profiles[page_number - 1]['is_complex'] or page_requires_visual_reference(page, raw):
+                    visual_queue.append(page_number)
 
     log_progress('visual', 0, max(len(visual_queue), 1),
                  f'Rendu de {len(visual_queue)} pages visuelles')
@@ -933,9 +1063,16 @@ def process_pdf(args: argparse.Namespace) -> Dict[str, Any]:
         if parallel > 1:
 
             def render_one(pn: int) -> int:
-                p = doc[pn - 1]
-                render_page(p, output_dir / f'page-{pn:04d}.png', args.visual_dpi)
-                return pn
+                worker_doc = pymupdf.open(str(input_path))
+                try:
+                    render_page(
+                        worker_doc[pn - 1],
+                        output_dir / f'page-{pn:04d}.png',
+                        args.visual_dpi,
+                    )
+                    return pn
+                finally:
+                    worker_doc.close()
 
             with ThreadPoolExecutor(max_workers=parallel) as ex:
                 futs = {ex.submit(render_one, pn): pn for pn in visual_queue}
@@ -965,21 +1102,6 @@ def process_pdf(args: argparse.Namespace) -> Dict[str, Any]:
 
     markdown = '\n\n'.join(enhanced).strip()
 
-    if visual_queue:
-        section = [
-            '## Référence visuelle du document original',
-            '',
-            '> Ces pages conservent les schémas, formules, images et mises en page '
-            'complexes pour vérification.',
-            '',
-        ]
-        for pn in visual_queue:
-            section.append(
-                f'![Référence visuelle]({public_url(args.public_prefix, f"page-{pn:04d}.png")})'
-            )
-            section.append('')
-        markdown = markdown + '\n\n' + '\n'.join(section).strip()
-
     if scanned:
         warnings.append(
             'Certaines pages semblent scannées et nécessitent Tesseract OCR: '
@@ -994,6 +1116,8 @@ def process_pdf(args: argparse.Namespace) -> Dict[str, Any]:
 
     return {
         'markdown': markdown,
+        'document_type': document_profile['document_type'],
+        'extraction_strategy': document_profile['strategy'],
         'page_count': total,
         'word_count': wc,
         'image_count': len(images),

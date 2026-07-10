@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Models;
 
 use App\Enums\ExamAttemptEnum;
+use App\Enums\QuestionTypeEnum;
 use Database\Factories\ExamFactory;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -46,6 +47,34 @@ final class Exam extends Model
     public function getTotalPoints(): int
     {
         return $this->questions()->sum('points');
+    }
+
+    public function isReadyForPublication(): bool
+    {
+        if (! $this->is_active) {
+            return false;
+        }
+
+        $this->loadMissing('questions.options');
+
+        if ($this->questions->isEmpty()) {
+            return false;
+        }
+
+        return $this->questions->every(function (Question $question): bool {
+            if (mb_trim($question->question_text) === '' || $question->points < 1) {
+                return false;
+            }
+
+            $optionCount = $question->options->count();
+            $correctCount = $question->options->where('is_correct', true)->count();
+
+            return match ($question->question_type) {
+                QuestionTypeEnum::TRUE_FALSE => $optionCount === 2 && $correctCount === 1,
+                QuestionTypeEnum::SINGLE_CHOICE => $optionCount >= 2 && $correctCount === 1,
+                QuestionTypeEnum::MULTIPLE_CHOICE => $optionCount >= 2 && $correctCount >= 1,
+            };
+        });
     }
 
     public function questions(): HasMany

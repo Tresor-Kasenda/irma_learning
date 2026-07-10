@@ -75,6 +75,10 @@ final class ExamAttemptController extends Controller
                 'time_taken' => $attempt->time_taken,
                 'started_at' => $attempt->started_at?->toISOString(),
                 'completed_at' => $attempt->completed_at?->toISOString(),
+                'expires_at' => $attempt->expires_at?->toISOString(),
+                'reopened_at' => $attempt->reopened_at?->toISOString(),
+                'reopen_count' => $attempt->reopen_count,
+                'can_reopen' => in_array($attempt->status->value, ['expired', 'failed', 'cancelled'], true),
                 'answers' => $attempt->userAnswers->map(fn ($a): array => [
                     'id' => $a->id,
                     'question_text' => $a->question?->question_text ?? 'Question supprimée',
@@ -100,5 +104,14 @@ final class ExamAttemptController extends Controller
         $attempt->complete();
 
         return back()->with('success', 'Tentative complétée.');
+    }
+
+    public function reopen(Request $request, ExamAttempt $attempt): RedirectResponse
+    {
+        if (! $attempt->reopen($request->user())) {
+            return back()->with('error', 'Seules les tentatives expirées, échouées ou annulées peuvent être réouvertes.');
+        }
+
+        return back()->with('success', 'Tentative réouverte. L’apprenant peut reprendre son évaluation.');
     }
 }

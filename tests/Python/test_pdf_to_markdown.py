@@ -46,6 +46,37 @@ class PdfMarkdownCleanupTest(unittest.TestCase):
         self.assertIn("pied pair", boundaries)
         self.assertIn("pied impair", boundaries)
 
+    def test_selects_an_ocr_first_strategy_for_scanned_documents(self):
+        profile = MODULE.classify_document_profile([
+            {"is_scanned": 1, "is_complex": 1, "image_count": 1},
+            {"is_scanned": 1, "is_complex": 1, "image_count": 1},
+            {"is_scanned": 1, "is_complex": 1, "image_count": 1},
+            {"is_scanned": 1, "is_complex": 1, "image_count": 1},
+            {"is_scanned": 0, "is_complex": 0, "image_count": 0},
+        ])
+
+        self.assertEqual("scanned", profile["document_type"])
+        self.assertEqual("ocr-first", profile["strategy"])
+
+    def test_selects_a_mixed_strategy_for_hybrid_documents(self):
+        profile = MODULE.classify_document_profile([
+            {"is_scanned": 0, "is_complex": 0, "image_count": 0},
+            {"is_scanned": 1, "is_complex": 1, "image_count": 1},
+            {"is_scanned": 0, "is_complex": 0, "image_count": 0},
+        ])
+
+        self.assertEqual("hybrid", profile["document_type"])
+        self.assertEqual("mixed-text-ocr", profile["strategy"])
+
+    def test_selects_a_text_first_strategy_for_native_documents(self):
+        profile = MODULE.classify_document_profile([
+            {"is_scanned": 0, "is_complex": 0, "image_count": 0},
+            {"is_scanned": 0, "is_complex": 0, "image_count": 0},
+        ])
+
+        self.assertEqual("native", profile["document_type"])
+        self.assertEqual("text-first", profile["strategy"])
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import {Head, Link, router} from '@inertiajs/vue3';
-import {ArrowLeft, CheckCircle2, Clock3, Timer, User as UserIcon, XCircle} from '@lucide/vue';
+import {ArrowLeft, CheckCircle2, Clock3, RotateCcw, Timer, User as UserIcon, XCircle} from '@lucide/vue';
 import {computed} from 'vue';
 import ConfirmAction from '@/Components/Admin/ConfirmAction.vue';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
@@ -30,6 +30,10 @@ interface AttemptDetail {
     time_taken: number;
     started_at: string | null;
     completed_at: string | null;
+    expires_at: string | null;
+    reopened_at: string | null;
+    reopen_count: number;
+    can_reopen: boolean;
     answers: Answer[];
 }
 
@@ -42,6 +46,7 @@ const statusMeta: Record<string, { label: string; class: string }> = {
     completed: {label: 'Réussi', class: 'bg-emerald-400/10 text-emerald-300'},
     failed: {label: 'Échoué', class: 'bg-rose-400/10 text-rose-300'},
     cancelled: {label: 'Annulé', class: 'bg-slate-500/10 text-slate-400'},
+    expired: {label: 'Expiré', class: 'bg-orange-400/10 text-orange-300'},
 };
 
 const typeLabels: Record<string, string> = {
@@ -121,6 +126,18 @@ function formatTimeTaken(seconds: number): string {
                 </div>
 
                 <div class="flex shrink-0 items-center gap-2">
+                    <ConfirmAction
+                        v-if="attempt.can_reopen"
+                        :href="safeRoute('admin.attempts.reopen', attempt.id)"
+                        class="admin-divider admin-text admin-hover inline-flex h-11 items-center gap-2 border px-5 text-sm font-semibold transition"
+                        confirm-label="Réouvrir"
+                        message="Réouvrir cette tentative avec un nouveau délai complet ? Les réponses déjà enregistrées seront conservées."
+                        method="post"
+                        title="Réouvrir la tentative"
+                    >
+                        <RotateCcw class="size-4" :stroke-width="1.8"/>
+                        Réouvrir
+                    </ConfirmAction>
                     <ConfirmAction
                         v-if="attempt.status === 'in_progress'"
                         :href="safeRoute('admin.attempts.complete', attempt.id)"

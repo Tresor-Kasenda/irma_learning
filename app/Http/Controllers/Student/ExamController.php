@@ -22,6 +22,7 @@ use App\Models\UserAnswer;
 use App\Services\CourseProgressionService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 
@@ -49,6 +50,11 @@ final class ExamController extends Controller
                 return $this->redirectToLearning($user, $formation, $progression, 'Vous devez être inscrit à cette formation.');
             }
 
+            if (! $progression->isSectionUnlocked($user, $section)) {
+                return redirect()->route('course.player', $formation->id)
+                    ->with('error', 'Réussissez l’évaluation de la section précédente avant de continuer.');
+            }
+
             if (! $progression->hasCompletedSectionChapters($user, $section)) {
                 return redirect()->route('course.player', $formation->id)
                     ->with('error', 'Vous devez terminer tous les chapitres de la section avant de passer son examen.');
@@ -70,27 +76,44 @@ final class ExamController extends Controller
             }
         }
 
-        $inProgressAttempt = ExamAttempt::query()
-            ->where('exam_id', $exam->id)
-            ->where('user_id', $user->id)
-            ->where('status', ExamAttemptEnum::IN_PROGRESS)
-            ->first();
+        $attempt = DB::transaction(function () use ($exam, $user): ?ExamAttempt {
+            Exam::query()->whereKey($exam->id)->lockForUpdate()->firstOrFail();
 
-        if (! $inProgressAttempt && ! $exam->canUserAttempt($user)) {
-            return $this->redirectToLearning($user, $formation, $progression, 'Vous avez atteint le nombre maximum de tentatives pour cet examen.');
-        }
+            $inProgressAttempt = ExamAttempt::query()
+                ->where('exam_id', $exam->id)
+                ->where('user_id', $user->id)
+                ->where('status', ExamAttemptEnum::IN_PROGRESS)
+                ->latest('id')
+                ->lockForUpdate()
+                ->first();
 
-        $attempt = $inProgressAttempt ?? ExamAttempt::firstOrCreate(
-            [
+            if ($inProgressAttempt?->hasExpired()) {
+                $inProgressAttempt->expire();
+                $inProgressAttempt = null;
+            }
+
+            if ($inProgressAttempt) {
+                $inProgressAttempt->recordActivity();
+
+                return $inProgressAttempt->refresh();
+            }
+
+            if (! $exam->canUserAttempt($user)) {
+                return null;
+            }
+
+            return ExamAttempt::query()->create([
                 'exam_id' => $exam->id,
                 'user_id' => $user->id,
                 'status' => ExamAttemptEnum::IN_PROGRESS,
-            ],
-            [
                 'started_at' => now(),
                 'max_score' => $exam->getTotalPoints(),
-            ]
-        );
+            ]);
+        }, 3);
+
+        if (! $attempt) {
+            return $this->redirectToLearning($user, $formation, $progression, 'Vous avez atteint le nombre maximum de tentatives pour cet examen. Contactez un administrateur pour demander une réouverture.');
+        }
 
         if ($exam->randomize_questions && ! $attempt->question_order) {
             $order = $exam->questions()->pluck('id')->shuffle()->values()->toArray();
@@ -99,10 +122,8 @@ final class ExamController extends Controller
         }
 
         $timeRemaining = null;
-        if ($exam->duration_minutes) {
-            $elapsed = now()->diffInSeconds($attempt->started_at);
-            $totalSeconds = $exam->duration_minutes * 60;
-            $timeRemaining = (int) max(0, $totalSeconds - $elapsed);
+        if ($attempt->expires_at) {
+            $timeRemaining = (int) max(0, now()->diffInSeconds($attempt->expires_at, false));
         }
 
         $questionsQuery = $exam->questions()->with('options');
@@ -188,18 +209,46 @@ final class ExamController extends Controller
             ->where('status', ExamAttemptEnum::IN_PROGRESS)
             ->firstOrFail();
 
+        if ($attempt->hasExpired()) {
+            $attempt->expire();
+
+            return response()->json([
+                'saved' => false,
+                'message' => 'Le temps imparti est écoulé. Cette tentative a expiré.',
+            ], 410);
+        }
+
         $question = $exam->questions()->findOrFail($validated['question_id']);
         $answer = $validated['answer'];
 
         $updateData = [];
 
         if (in_array($question->question_type, [QuestionTypeEnum::SINGLE_CHOICE, QuestionTypeEnum::TRUE_FALSE])) {
-            $updateData['selected_option_id'] = $answer;
+            $selectedOptionId = filter_var($answer, FILTER_VALIDATE_INT);
+            abort_unless(
+                $selectedOptionId !== false && $question->options()->whereKey($selectedOptionId)->exists(),
+                422,
+                'La réponse sélectionnée ne correspond pas à cette question.',
+            );
+
+            $updateData['selected_option_id'] = $selectedOptionId;
             $updateData['selected_options'] = null;
             $updateData['answer_text'] = null;
         } elseif ($question->question_type === QuestionTypeEnum::MULTIPLE_CHOICE) {
+            $selectedOptionIds = collect(is_array($answer) ? $answer : [])
+                ->map(fn (mixed $optionId): int => (int) $optionId)
+                ->unique()
+                ->values();
+            $validOptionCount = $question->options()->whereKey($selectedOptionIds)->count();
+
+            abort_unless(
+                $selectedOptionIds->isNotEmpty() && $validOptionCount === $selectedOptionIds->count(),
+                422,
+                'Une ou plusieurs réponses ne correspondent pas à cette question.',
+            );
+
             $updateData['selected_option_id'] = null;
-            $updateData['selected_options'] = is_array($answer) ? $answer : [];
+            $updateData['selected_options'] = $selectedOptionIds->all();
             $updateData['answer_text'] = null;
         }
 
@@ -211,6 +260,8 @@ final class ExamController extends Controller
             $updateData
         );
 
+        $attempt->recordActivity();
+
         return response()->json(['saved' => true]);
     }
 
@@ -221,6 +272,29 @@ final class ExamController extends Controller
             ->where('user_id', $user->id)
             ->where('status', ExamAttemptEnum::IN_PROGRESS)
             ->firstOrFail();
+
+        if ($attempt->hasExpired()) {
+            $attempt->expire();
+
+            return redirect()->route('exam.results', $attempt)
+                ->with('error', 'Le temps imparti est écoulé. La tentative a été clôturée.');
+        }
+
+        $requiredQuestionIds = $exam->questions()
+            ->where('is_required', true)
+            ->pluck('id');
+        $answeredQuestionIds = $attempt->userAnswers()
+            ->whereIn('question_id', $requiredQuestionIds)
+            ->where(function ($query): void {
+                $query->whereNotNull('selected_option_id')
+                    ->orWhereNotNull('selected_options')
+                    ->orWhereNotNull('answer_text');
+            })
+            ->pluck('question_id');
+
+        if ($requiredQuestionIds->diff($answeredQuestionIds)->isNotEmpty()) {
+            return back()->with('error', 'Répondez à toutes les questions obligatoires avant de soumettre l’examen.');
+        }
 
         $attempt->complete();
 

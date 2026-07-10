@@ -60,6 +60,46 @@ test('a valid access code enrolls the learner and consumes the code', function (
         ->and($enrollment->payment_status)->toBe(EnrollmentPaymentEnum::PAID);
 });
 
+test('access codes are normalized before validation', function () {
+    $user = User::factory()->create();
+    $formation = Formation::factory()->create();
+    FormationAccessCode::factory()->for($formation)->create([
+        'code' => 'IRMA-PRO-2026',
+        'is_used' => false,
+    ]);
+
+    $this->actingAs($user)
+        ->post(route('student.formations.validate-code', $formation), [
+            'code' => '  irma-pro-2026  ',
+        ])
+        ->assertRedirect(route('formation.show', $formation));
+
+    expect(Enrollment::query()
+        ->where('user_id', $user->id)
+        ->where('formation_id', $formation->id)
+        ->exists())->toBeTrue();
+});
+
+test('repeated invalid access codes are rate limited', function () {
+    $user = User::factory()->create();
+    $formation = Formation::factory()->create();
+
+    foreach (range(1, 5) as $attempt) {
+        $this->actingAs($user)
+            ->post(route('student.formations.validate-code', $formation), [
+                'code' => 'INVALID-'.$attempt,
+            ]);
+    }
+
+    $this->actingAs($user)
+        ->post(route('student.formations.validate-code', $formation), [
+            'code' => 'INVALID-6',
+        ])
+        ->assertTooManyRequests();
+
+    expect(Enrollment::query()->where('user_id', $user->id)->exists())->toBeFalse();
+});
+
 test('an invalid code is rejected without enrolling', function () {
     $user = User::factory()->create();
     $formation = Formation::factory()->create();

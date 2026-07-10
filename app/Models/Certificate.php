@@ -90,12 +90,7 @@ final class Certificate extends Model
 
     protected function generateCertificateNumber(): string
     {
-        return 'CERT-'.date('Y').'-'.mb_str_pad(
-            (string) (self::whereYear('created_at', date('Y'))->count() + 1),
-            6,
-            '0',
-            STR_PAD_LEFT
-        );
+        return sprintf('CERT-%s-%s', now()->format('Y'), (string) Str::ulid());
     }
 
     protected function generateVerificationHash(): string

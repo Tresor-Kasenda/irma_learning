@@ -8,14 +8,14 @@ use App\Enums\CertificateStatusEnum;
 use App\Http\Controllers\Controller;
 use App\Models\Certificate;
 use Barryvdh\DomPDF\Facade\Pdf;
-use Illuminate\Http\Request;
 use Inertia\Inertia;
-use Inertia\Response;
+use Inertia\Response as InertiaResponse;
+use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 final class StudentCertificationController extends Controller
 {
-    public function __invoke(): Response
+    public function __invoke(): InertiaResponse
     {
         $certificates = Certificate::query()
             ->with(['formation:id,title,slug,difficulty_level'])
@@ -29,9 +29,9 @@ final class StudentCertificationController extends Controller
         ]);
     }
 
-    public function show(Certificate $certificate): Response
+    public function show(Certificate $certificate): InertiaResponse
     {
-        abort_unless($certificate->user_id === auth()->id(), 403);
+        $this->authorize('view', $certificate);
 
         $certificate->load(['formation', 'user']);
 
@@ -43,9 +43,9 @@ final class StudentCertificationController extends Controller
         ]);
     }
 
-    public function download(Certificate $certificate, Request $request): StreamedResponse
+    public function download(Certificate $certificate): Response|StreamedResponse
     {
-        abort_unless($certificate->user_id === auth()->id() || $request->user()->isAdmin(), 403);
+        $this->authorize('download', $certificate);
 
         $certificate->load(['user', 'formation']);
 

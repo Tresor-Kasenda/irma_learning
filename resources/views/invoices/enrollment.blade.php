@@ -1,8 +1,21 @@
 @php
-    $currency = $enrollment->currency ?? \App\Models\Setting::get('default_currency', 'XAF');
-    $isXaf = $currency === 'XAF';
-    $companyName = \App\Models\Setting::get('app_name', 'IRMA Learning');
-    $contactEmail = \App\Models\Setting::get('contact_email', 'contact@irmalearning.com');
+    $branding = \App\Models\ApplicationSetting::current();
+    $companyName = $branding->app_name ?: \App\Models\Setting::get('app_name', 'IRMA Learning');
+    $companyTagline = $branding->app_tagline ?: 'Plateforme de formation professionnelle';
+    $companyAddress = \App\Models\Setting::get('company_address', 'Douala, Cameroun');
+    $companyPhone = \App\Models\Setting::get('company_phone');
+    $companyRccm = \App\Models\Setting::get('company_rccm');
+    $companyNiu = \App\Models\Setting::get('company_niu');
+    $supportEmail = $branding->support_email ?: \App\Models\Setting::get('contact_email', 'contact@irmalearning.com');
+    $currency = strtoupper($enrollment->currency ?? $branding->default_currency ?? \App\Models\Setting::get('default_currency', 'XAF'));
+    $paymentMethod = $enrollment->payment_method ? match ($enrollment->payment_method) {
+        'card' => 'Carte bancaire',
+        'mobile_money' => 'Mobile Money',
+        default => ucfirst((string) $enrollment->payment_method),
+    } : 'Non renseignée';
+    $invoiceNumber = sprintf('INV-%s', str_pad((string) $enrollment->id, 6, '0', STR_PAD_LEFT));
+    $issuedAt = $enrollment->payment_processed_at?->format('d/m/Y à H:i') ?? now()->format('d/m/Y à H:i');
+    $transactionId = $enrollment->payment_transaction_id ?: '—';
 @endphp
 <!DOCTYPE html>
 <html lang="fr">
@@ -43,6 +56,12 @@
             font-weight: bold;
             color: #bf045b;
             margin-bottom: 5px;
+        }
+
+        .company-tagline {
+            font-size: 12px;
+            color: #6b7280;
+            margin-bottom: 10px;
         }
 
         .company-details {
@@ -139,6 +158,24 @@
             margin: 30px 0;
         }
 
+        .payment-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 14px 20px;
+            margin-top: 12px;
+        }
+
+        .payment-item {
+            font-size: 12px;
+            color: #334155;
+        }
+
+        .payment-item strong {
+            display: block;
+            color: #0f172a;
+            margin-bottom: 2px;
+        }
+
         .footer {
             margin-top: 40px;
             padding-top: 20px;
@@ -191,15 +228,18 @@
     <div class="header">
         <div class="company-info">
             <div class="company-name">{{ $companyName }}</div>
+            <div class="company-tagline">{{ $companyTagline }}</div>
             <div class="company-details">
-                {{ \App\Models\Setting::get('company_address', 'Douala, Cameroun') }}<br>
-                {{ \App\Models\Setting::get('company_phone', '') }}<br>
-                Email: {{ $contactEmail }}<br>
-                @if($rccm = \App\Models\Setting::get('company_rccm'))
-                    RCCM: {{ $rccm }}<br>
+                {{ $companyAddress }}<br>
+                @if($companyPhone)
+                    Tél. {{ $companyPhone }}<br>
                 @endif
-                @if($niu = \App\Models\Setting::get('company_niu'))
-                    NIU: {{ $niu }}<br>
+                Email: {{ $supportEmail }}<br>
+                @if($companyRccm)
+                    RCCM: {{ $companyRccm }}<br>
+                @endif
+                @if($companyNiu)
+                    NIU: {{ $companyNiu }}<br>
                 @endif
             </div>
         </div>
@@ -213,8 +253,8 @@
         <div class="invoice-details">
             <div class="section-title">DÉTAILS DE LA FACTURE</div>
             <div class="details-content">
-                <strong>Numéro:</strong> INV-{{ str_pad($enrollment->id, 6, '0', STR_PAD_LEFT) }}<br>
-                <strong>Date d'émission:</strong> {{ $enrollment->payment_processed_at?->format('d/m/Y') ?? now()->format('d/m/Y') }}<br>
+                <strong>Numéro:</strong> {{ $invoiceNumber }}<br>
+                <strong>Date d'émission:</strong> {{ $issuedAt }}<br>
                 <strong>Statut:</strong> <span style="color: #059669; font-weight: bold;">Payée</span>
             </div>
         </div>
@@ -241,7 +281,7 @@
         <tr>
             <td>
                 <strong>{{ $enrollment->formation->title }}</strong><br>
-                <small>Formation en ligne</small>
+                <small>Accès à la formation en ligne</small>
             </td>
             <td>1</td>
             <td>{{ number_format($enrollment->amount_paid, 0, ',', ' ') }} {{ $currency }}</td>
@@ -252,7 +292,7 @@
 
     <div class="total-section">
         <div class="total-row">
-            <div class="total-label">Total à payer:</div>
+            <div class="total-label">Total payé:</div>
             <div class="total-amount" style="font-size: 24px;">
                 {{ number_format($enrollment->amount_paid, 0, ',', ' ') }} {{ $currency }}
             </div>
@@ -261,10 +301,24 @@
 
     <div class="payment-info">
         <div class="section-title">INFORMATIONS DE PAIEMENT</div>
-        <strong>Méthode de paiement:</strong> {{ ucfirst($enrollment->payment_method) }}<br>
-        <strong>ID de transaction:</strong> {{ $enrollment->payment_transaction_id }}<br>
-        <strong>Date de paiement:</strong> {{ $enrollment->payment_processed_at?->format('d/m/Y à H:i') }}<br>
-        <strong>Statut:</strong> <span style="color: #059669; font-weight: bold;">Paiement confirmé</span>
+        <div class="payment-grid">
+            <div class="payment-item">
+                <strong>Méthode de paiement</strong>
+                {{ $paymentMethod }}
+            </div>
+            <div class="payment-item">
+                <strong>Référence de transaction</strong>
+                {{ $transactionId }}
+            </div>
+            <div class="payment-item">
+                <strong>Date de paiement</strong>
+                {{ $issuedAt }}
+            </div>
+            <div class="payment-item">
+                <strong>État</strong>
+                Paiement confirmé
+            </div>
+        </div>
     </div>
 
     <div class="signature-section">
@@ -279,8 +333,9 @@
     </div>
 
     <div class="footer">
-        <p><strong>{{ $companyName }}</strong> — {{ \App\Models\Setting::get('company_address', 'Douala, Cameroun') }}</p>
-        <p>Contact : {{ $contactEmail }}</p>
+        <p><strong>{{ $companyName }}</strong> — {{ $companyAddress }}</p>
+        <p>Contact : {{ $supportEmail }}</p>
+        <p>Document généré automatiquement par IRMA Learning.</p>
         <hr style="margin: 20px 0;">
         <p>Merci pour votre confiance !</p>
     </div>

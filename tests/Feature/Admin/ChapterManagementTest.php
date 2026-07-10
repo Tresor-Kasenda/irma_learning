@@ -141,7 +141,8 @@ test('uploading a pdf queues its Python extraction', function () {
     $chapter = Chapter::where('title', 'Support Python')->firstOrFail();
 
     expect($chapter->processing_status)->toBe('pending');
-    Queue::assertPushed(ExtractChapterPdf::class, fn (ExtractChapterPdf $job): bool => $job->chapterId === $chapter->id);
+    Queue::assertPushed(ExtractChapterPdf::class, fn (ExtractChapterPdf $job): bool => $job->chapterId === $chapter->id
+        && $job->queue === 'pdf-extraction');
 });
 
 test('the queued Python extraction stores markdown metadata and duration', function () {
@@ -173,6 +174,8 @@ test('the queued Python extraction stores markdown metadata and duration', funct
         ->and($chapter->content)->not->toContain('http://localhost')
         ->and($chapter->duration_minutes)->toBeGreaterThan(0)
         ->and($chapter->processing_metadata['page_count'])->toBe(1)
+        ->and($chapter->processing_metadata['document_type'])->toBe('native')
+        ->and($chapter->processing_metadata['extraction_strategy'])->toBe('text-first')
         ->and($chapter->cover_image)->not->toBeNull()
         ->and($chapter->markdown_file)->not->toBeNull();
     Storage::disk('public')->assertExists($chapter->cover_image);

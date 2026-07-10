@@ -131,6 +131,16 @@ final class StudentLearningPlayController extends Controller
             404,
         );
 
+        $chapter->loadMissing('section');
+
+        abort_unless(
+            $chapter->is_active
+            && $chapter->section?->is_active
+            && $progression->isSectionUnlocked($user, $chapter->section),
+            403,
+            'Réussissez l’évaluation de la section précédente avant de continuer.',
+        );
+
         $isEnrolled = Enrollment::query()
             ->where('user_id', $user->id)
             ->where('formation_id', $formation->id)

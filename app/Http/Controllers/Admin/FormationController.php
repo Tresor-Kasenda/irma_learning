@@ -8,6 +8,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\StoreFormationRequest;
 use App\Http\Requests\Admin\UpdateFormationRequest;
 use App\Models\Formation;
+use App\Services\FormationAssessmentReadinessService;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -20,6 +21,8 @@ final class FormationController extends Controller
     private const array SORTABLE = ['title', 'price', 'duration_hours', 'created_at'];
 
     private const array PER_PAGE_OPTIONS = [10, 25, 50, 100];
+
+    public function __construct(private readonly FormationAssessmentReadinessService $readiness) {}
 
     public function index(Request $request): Response
     {
@@ -130,7 +133,7 @@ final class FormationController extends Controller
         $formation = Formation::query()->create($data);
         $this->syncSections($formation, $request->validated('sections') ?? []);
 
-        $readinessIssues = $this->deactivateWhenAssessmentsAreMissing($formation);
+        $readinessIssues = $this->readiness->deactivateIfIncomplete($formation);
 
         return redirect()->route('admin.formations.index')->with(
             $readinessIssues === [] ? 'success' : 'info',
@@ -151,7 +154,7 @@ final class FormationController extends Controller
     public function toggleActive(Formation $formation): RedirectResponse
     {
         if (! $formation->is_active) {
-            $readinessIssues = $this->assessmentReadinessIssues($formation);
+            $readinessIssues = $this->readiness->issues($formation);
 
             if ($readinessIssues !== []) {
                 return back()->with('error', implode(' ', $readinessIssues));
@@ -184,7 +187,7 @@ final class FormationController extends Controller
             $this->syncSections($formation, $request->validated('sections') ?? []);
         }
 
-        $readinessIssues = $this->deactivateWhenAssessmentsAreMissing($formation);
+        $readinessIssues = $this->readiness->deactivateIfIncomplete($formation);
 
         return redirect()->route('admin.formations.index')->with(
             $readinessIssues === [] ? 'success' : 'info',
@@ -247,55 +250,4 @@ final class FormationController extends Controller
         }
     }
 
-    /**
-     * @return list<string>
-     */
-    private function assessmentReadinessIssues(Formation $formation): array
-    {
-        $issues = [];
-
-        if (! $formation->sections()->where('is_active', true)->exists()) {
-            $issues[] = 'Ajoutez au moins une section active à la formation.';
-        }
-
-        $sectionsWithoutExam = $formation->sections()
-            ->where('is_active', true)
-            ->whereDoesntHave('exam', fn (Builder $query): Builder => $query
-                ->where('is_active', true)
-                ->whereHas('questions'))
-            ->pluck('title');
-
-        if ($sectionsWithoutExam->isNotEmpty()) {
-            $issues[] = 'Ajoutez une évaluation active avec au moins une question à chaque section : '.$sectionsWithoutExam->join(', ').'.';
-        }
-
-        $hasFinalExam = $formation->exam()
-            ->where('is_active', true)
-            ->whereHas('questions')
-            ->exists();
-
-        if ($formation->is_certifying && ! $hasFinalExam) {
-            $issues[] = 'Ajoutez un examen final actif avec au moins une question à cette formation certifiante.';
-        }
-
-        return $issues;
-    }
-
-    /**
-     * @return list<string>
-     */
-    private function deactivateWhenAssessmentsAreMissing(Formation $formation): array
-    {
-        if (! $formation->is_active) {
-            return [];
-        }
-
-        $issues = $this->assessmentReadinessIssues($formation);
-
-        if ($issues !== []) {
-            $formation->update(['is_active' => false]);
-        }
-
-        return $issues;
-    }
 }
