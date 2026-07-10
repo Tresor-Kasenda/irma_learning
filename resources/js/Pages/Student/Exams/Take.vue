@@ -63,6 +63,7 @@ const notice = ref<{type: 'info' | 'warning'; message: string} | null>(null);
 
 const currentQuestion = computed(() => props.questions[currentQuestionIndex.value] ?? null);
 const backHref = computed(() => props.formation ? safeRoute('course.player', props.formation.id) : safeRoute('dashboard'));
+const saveAnswerHref = computed(() => safeRoute('exam.save-answer', props.exam.id));
 
 const progress = computed(() => {
     const answered = Object.values(answers.value).filter(v => {
@@ -93,6 +94,20 @@ function isAnswered(questionId: number): boolean {
 
 const currentQuestionAnswered = computed(() => {
     return currentQuestion.value ? isAnswered(currentQuestion.value.id) : false;
+});
+
+const questionInstruction = computed(() => {
+    if (! currentQuestion.value) {
+        return '';
+    }
+
+    const instructions: Record<string, string> = {
+        single_choice: 'Choisissez une seule réponse.',
+        multiple_choice: 'Sélectionnez toutes les réponses correctes.',
+        true_false: 'Choisissez Vrai ou Faux.',
+    };
+
+    return instructions[currentQuestion.value.question_type] ?? 'Répondez à la question.';
 });
 
 let timerInterval: ReturnType<typeof setInterval> | null = null;
@@ -128,47 +143,113 @@ function formatTime(seconds: number): string {
     return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
 }
 
-function saveCurrentAnswer() {
-    if (!currentQuestion.value) return;
-    const answer = answers.value[currentQuestion.value.id] ?? null;
+function csrfHeaders(): Record<string, string> {
+    const metaToken = document
+        .querySelector<HTMLMetaElement>('meta[name="csrf-token"]')
+        ?.content;
 
-    router.post(route('exam.save-answer', props.exam.id), {
-        question_id: currentQuestion.value.id,
-        answer,
-    }, {
-        preserveState: true,
-        preserveScroll: true,
-    });
+    if (metaToken) {
+        return {'X-CSRF-TOKEN': metaToken};
+    }
+
+    const token = document.cookie
+        .split('; ')
+        .find(row => row.startsWith('XSRF-TOKEN='))
+        ?.split('=')[1];
+
+    return token ? {'X-XSRF-TOKEN': decodeURIComponent(token)} : {};
 }
 
-function nextQuestion() {
-    saveCurrentAnswer();
+async function saveCurrentAnswer(): Promise<boolean> {
+    if (!currentQuestion.value) return true;
+    const answer = answers.value[currentQuestion.value.id] ?? null;
+
+    try {
+        const response = await fetch(saveAnswerHref.value, {
+            method: 'POST',
+            credentials: 'same-origin',
+            headers: {
+                Accept: 'application/json',
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest',
+                ...csrfHeaders(),
+            },
+            body: JSON.stringify({
+                question_id: currentQuestion.value.id,
+                answer,
+            }),
+        });
+
+        if (! response.ok) {
+            notice.value = {
+                type: 'warning',
+                message: 'La réponse n’a pas été enregistrée. Vérifiez votre connexion puis réessayez.',
+            };
+
+            return false;
+        }
+
+        return true;
+    } catch {
+        notice.value = {
+            type: 'warning',
+            message: 'La réponse n’a pas été enregistrée. Vérifiez votre connexion puis réessayez.',
+        };
+
+        return false;
+    }
+}
+
+async function nextQuestion(): Promise<void> {
+    if (! await saveCurrentAnswer()) {
+        return;
+    }
+
     if (currentQuestionIndex.value < props.questions.length - 1) {
         currentQuestionIndex.value++;
     }
 }
 
-function previousQuestion() {
-    saveCurrentAnswer();
+async function previousQuestion(): Promise<void> {
+    if (! await saveCurrentAnswer()) {
+        return;
+    }
+
     if (currentQuestionIndex.value > 0) {
         currentQuestionIndex.value--;
     }
 }
 
-function goToQuestion(index: number) {
-    saveCurrentAnswer();
+async function goToQuestion(index: number): Promise<void> {
+    if (! await saveCurrentAnswer()) {
+        return;
+    }
+
     currentQuestionIndex.value = index;
 }
 
-function requestSubmit(): void {
+async function requestSubmit(): Promise<void> {
+    if (! currentQuestionAnswered.value) {
+        notice.value = {
+            type: 'warning',
+            message: 'Répondez d’abord à la question affichée avant de soumettre l’examen.',
+        };
+
+        return;
+    }
+
+    if (! await saveCurrentAnswer()) {
+        return;
+    }
+
     showSubmitConfirm.value = true;
 }
 
-function submitExam(skipConfirmation = false) {
+async function submitExam(skipConfirmation = false): Promise<void> {
     if (isSubmitting.value) return;
 
     if (!skipConfirmation && !showSubmitConfirm.value) {
-        requestSubmit();
+        await requestSubmit();
         return;
     }
 
@@ -177,11 +258,12 @@ function submitExam(skipConfirmation = false) {
 
     if (timerInterval) clearInterval(timerInterval);
 
-    saveCurrentAnswer();
+    if (! await saveCurrentAnswer()) {
+        isSubmitting.value = false;
+        return;
+    }
 
-    setTimeout(() => {
-        router.post(route('exam.submit', props.exam.id));
-    }, 300);
+    router.post(route('exam.submit', props.exam.id));
 }
 
 function toggleMultipleChoice(optionId: number) {
@@ -206,6 +288,12 @@ function getMediaUrl(url: string | null): string {
     if (!url) return '';
     if (url.startsWith('http')) return url;
     return '/storage/' + url;
+}
+
+function isMultipleSelected(questionId: number, optionId: number): boolean {
+    const selected = answers.value[questionId];
+
+    return Array.isArray(selected) && selected.includes(optionId);
 }
 
 function questionTypeLabel(type: string): string {
@@ -292,19 +380,15 @@ function questionTypeLabel(type: string): string {
                                     </p>
                                     <p class="mt-2 text-sm text-slate-500">{{ questionTypeLabel(currentQuestion.question_type) }}</p>
                                 </div>
-                                <div class="flex items-center gap-2">
-                                    <span
-                                        :class="currentQuestionAnswered ? 'border-emerald-400/30 text-emerald-200' : 'border-white/10 text-slate-400'"
-                                        class="border px-3 py-1 text-xs font-semibold"
-                                    >
-                                        {{ currentQuestionAnswered ? 'Répondue' : 'Non répondue' }}
-                                    </span>
-                                    <span class="border border-white/10 px-3 py-1 text-xs font-semibold text-slate-300">
-                                        {{ currentQuestion.points }} {{ currentQuestion.points > 1 ? 'points' : 'point' }}
-                                    </span>
-                                </div>
+                                <span
+                                    :class="currentQuestionAnswered ? 'border-emerald-400/30 text-emerald-200' : 'border-white/10 text-slate-400'"
+                                    class="border px-3 py-1 text-xs font-semibold"
+                                >
+                                    {{ currentQuestionAnswered ? 'Répondue' : 'Non répondue' }}
+                                </span>
                             </div>
                             <h2 class="mt-5 text-xl font-semibold leading-8 text-white">{{ currentQuestion.question_text }}</h2>
+                            <p class="mt-3 text-sm leading-6 text-slate-400">{{ questionInstruction }}</p>
                         </div>
 
                         <div class="grid gap-4 p-5 sm:p-6">
@@ -315,7 +399,7 @@ function questionTypeLabel(type: string): string {
                                 class="max-h-80 w-full border border-white/10 object-contain"
                             />
 
-                            <template v-if="currentQuestion.question_type === 'single_choice' || currentQuestion.question_type === 'true_false'">
+                            <template v-if="currentQuestion.question_type === 'single_choice'">
                                 <label
                                     v-for="option in currentQuestion.options"
                                     :key="option.id"
@@ -343,15 +427,14 @@ function questionTypeLabel(type: string): string {
                             </template>
 
                             <template v-else-if="currentQuestion.question_type === 'multiple_choice'">
-                                <p class="text-sm text-slate-400">Sélectionnez toutes les réponses correctes.</p>
                                 <label
                                     v-for="option in currentQuestion.options"
                                     :key="option.id"
-                                    :class="Array.isArray(answers[currentQuestion.id]) && (answers[currentQuestion.id] as number[]).includes(option.id) ? 'border-[#df3e75] bg-[#7d254a]/35' : 'border-white/10 bg-[#0b1929] hover:border-white/20 hover:bg-white/5'"
+                                    :class="isMultipleSelected(currentQuestion.id, option.id) ? 'border-[#df3e75] bg-[#7d254a]/35' : 'border-white/10 bg-[#0b1929] hover:border-white/20 hover:bg-white/5'"
                                     class="flex cursor-pointer items-start gap-3 border p-4 transition"
                                 >
                                     <input
-                                        :checked="Array.isArray(answers[currentQuestion.id]) && (answers[currentQuestion.id] as number[]).includes(option.id)"
+                                        :checked="isMultipleSelected(currentQuestion.id, option.id)"
                                         class="mt-1 size-4 border-white/30 bg-[#071525] text-[#df3e75] focus:ring-[#df3e75]"
                                         type="checkbox"
                                         @change="toggleMultipleChoice(option.id)"
@@ -366,6 +449,27 @@ function questionTypeLabel(type: string): string {
                                         />
                                     </span>
                                 </label>
+                            </template>
+
+                            <template v-else-if="currentQuestion.question_type === 'true_false'">
+                                <div class="grid gap-3 sm:grid-cols-2">
+                                    <label
+                                        v-for="option in currentQuestion.options"
+                                        :key="option.id"
+                                        :class="answers[currentQuestion.id] === option.id ? 'border-[#df3e75] bg-[#7d254a]/35' : 'border-white/10 bg-[#0b1929] hover:border-white/20 hover:bg-white/5'"
+                                        class="flex cursor-pointer items-center gap-3 border p-5 transition"
+                                    >
+                                        <input
+                                            :checked="answers[currentQuestion.id] === option.id"
+                                            :name="'q_' + currentQuestion.id"
+                                            :value="option.id"
+                                            class="size-4 border-white/30 bg-[#071525] text-[#df3e75] focus:ring-[#df3e75]"
+                                            type="radio"
+                                            @change="answers[currentQuestion.id] = option.id"
+                                        />
+                                        <span class="text-base font-semibold text-white">{{ option.option_text }}</span>
+                                    </label>
+                                </div>
                             </template>
                         </div>
                     </section>
@@ -388,8 +492,8 @@ function questionTypeLabel(type: string): string {
 
                         <button
                             v-if="currentQuestionIndex === questions.length - 1"
-                            :disabled="isSubmitting"
-                            class="inline-flex h-11 items-center gap-2 bg-emerald-500 px-5 text-sm font-semibold text-white transition hover:bg-emerald-400 disabled:opacity-55"
+                            :disabled="isSubmitting || !currentQuestionAnswered"
+                            class="inline-flex h-11 items-center gap-2 bg-emerald-500 px-5 text-sm font-semibold text-white transition hover:bg-emerald-400 disabled:cursor-not-allowed disabled:bg-slate-700 disabled:text-slate-400 disabled:opacity-80"
                             type="button"
                             @click="requestSubmit"
                         >
@@ -433,38 +537,12 @@ function questionTypeLabel(type: string): string {
                         </div>
                     </div>
 
-                    <div class="grid grid-cols-5 gap-2">
-                        <button
-                            v-for="(question, index) in questions"
-                            :key="question.id"
-                            :class="[
-                                index === currentQuestionIndex
-                                    ? 'border-[#df3e75] bg-[#7d254a]/40 text-white'
-                                    : isAnswered(question.id)
-                                        ? 'border-emerald-400/30 bg-emerald-400/10 text-emerald-200'
-                                        : 'border-white/10 text-slate-400 hover:border-white/25 hover:text-white',
-                            ]"
-                            class="grid h-10 place-items-center border text-sm font-semibold transition"
-                            type="button"
-                            @click="goToQuestion(index)"
-                        >
-                            {{ index + 1 }}
-                        </button>
-                    </div>
-
-                    <div class="grid gap-2 border border-white/10 p-4 text-xs text-slate-400">
-                        <div class="flex items-center gap-2">
-                            <span class="size-3 border border-[#df3e75] bg-[#7d254a]/40"/>
-                            Question actuelle
-                        </div>
-                        <div class="flex items-center gap-2">
-                            <span class="size-3 border border-emerald-400/30 bg-emerald-400/10"/>
-                            Répondue
-                        </div>
-                        <div class="flex items-center gap-2">
-                            <span class="size-3 border border-white/10"/>
-                            Non répondue
-                        </div>
+                    <div class="border border-white/10 bg-white/5 p-4">
+                        <p class="text-xs font-semibold uppercase tracking-[0.08em] text-slate-500">Question active</p>
+                        <p class="mt-2 text-lg font-semibold text-white">{{ currentQuestionIndex + 1 }} / {{ questions.length }}</p>
+                        <p class="mt-2 text-sm leading-6 text-slate-400">
+                            {{ questionInstruction }}
+                        </p>
                     </div>
                 </div>
             </aside>

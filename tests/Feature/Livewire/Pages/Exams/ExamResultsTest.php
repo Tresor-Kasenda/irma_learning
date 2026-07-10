@@ -54,6 +54,8 @@ it('returns chapter context after a chapter exam', function () {
         ->get(route('exam.results', $attempt))
         ->assertSuccessful()
         ->assertInertia(fn (Assert $page) => $page
+            ->where('formation.id', $formation->id)
+            ->where('examContext.type', 'chapter')
             ->where('courseCompletion.formation_id', $formation->id)
             ->where('courseCompletion.chapter_id', $chapter->id)
             ->where('courseCompletion.chapter_title', $chapter->title)

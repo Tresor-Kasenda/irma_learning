@@ -2,39 +2,71 @@
 
 declare(strict_types=1);
 
+use App\Enums\EnrollmentPaymentEnum;
+use App\Enums\EnrollmentStatusEnum;
 use App\Enums\ExamAttemptEnum;
+use App\Models\Enrollment;
 use App\Models\Exam;
 use App\Models\ExamAttempt;
 use App\Models\Formation;
 use App\Models\Question;
 use App\Models\QuestionOption;
 use App\Models\User;
+use Inertia\Testing\AssertableInertia as Assert;
+
+/**
+ * @return array{0: Formation, 1: Exam}
+ */
+function createAccessibleFinalExam(User $user, array $examAttributes = []): array
+{
+    $formation = Formation::factory()->create([
+        'is_certifying' => true,
+        'price' => 0,
+    ]);
+
+    Enrollment::factory()->for($user)->for($formation)->create([
+        'status' => EnrollmentStatusEnum::ACTIVE,
+        'payment_status' => EnrollmentPaymentEnum::FREE,
+    ]);
+
+    $exam = Exam::factory()
+        ->forFormation($formation)
+        ->active()
+        ->create([
+            'max_attempts' => 0,
+            ...$examAttributes,
+        ]);
+
+    return [$formation, $exam];
+}
 
 test('user can access active exam', function () {
     $user = User::factory()->create();
-    $formation = Formation::factory()->create();
-    $exam = Exam::factory()->forFormation($formation)->active()->create();
+    [$formation, $exam] = createAccessibleFinalExam($user);
     Question::factory()->for($exam)->singleChoice()->create();
 
     $this->actingAs($user)
         ->get(route('exam.take', $exam))
-        ->assertSuccessful();
+        ->assertSuccessful()
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('formation.id', $formation->id)
+            ->where('examContext.type', 'formation')
+            ->etc());
 });
 
 test('user cannot access inactive exam', function () {
     $user = User::factory()->create();
-    $formation = Formation::factory()->create();
-    $exam = Exam::factory()->forFormation($formation)->inactive()->create();
+    [$formation, $exam] = createAccessibleFinalExam($user, ['is_active' => false]);
 
     $this->actingAs($user)
         ->get(route('exam.take', $exam))
-        ->assertForbidden();
+        ->assertRedirect(route('course.player', $formation->id))
+        ->assertSessionHas('error', 'Cet examen n\'est pas disponible.');
 });
 
 test('exam creates attempt when user starts exam', function () {
     $user = User::factory()->create();
-    $formation = Formation::factory()->create();
-    $exam = Exam::factory()->forFormation($formation)->active()->create();
+    [, $exam] = createAccessibleFinalExam($user);
     Question::factory()->for($exam)->singleChoice()->create();
 
     expect(ExamAttempt::count())->toBe(0);
@@ -49,8 +81,7 @@ test('exam creates attempt when user starts exam', function () {
 
 test('user can answer single choice question', function () {
     $user = User::factory()->create();
-    $formation = Formation::factory()->create();
-    $exam = Exam::factory()->forFormation($formation)->active()->create();
+    [, $exam] = createAccessibleFinalExam($user);
     $question = Question::factory()->for($exam)->singleChoice()->create();
     $correctOption = QuestionOption::factory()->for($question)->correct()->create();
     QuestionOption::factory()->for($question)->incorrect()->count(3)->create();
@@ -70,8 +101,7 @@ test('user can answer single choice question', function () {
 
 test('user can answer multiple choice question', function () {
     $user = User::factory()->create();
-    $formation = Formation::factory()->create();
-    $exam = Exam::factory()->forFormation($formation)->active()->create();
+    [, $exam] = createAccessibleFinalExam($user);
     $question = Question::factory()->for($exam)->multipleChoice()->create();
     $correctOptions = QuestionOption::factory()->for($question)->correct()->count(2)->create();
     QuestionOption::factory()->for($question)->incorrect()->count(2)->create();
@@ -95,8 +125,7 @@ test('user can answer multiple choice question', function () {
 
 test('user can submit exam and get score', function () {
     $user = User::factory()->create();
-    $formation = Formation::factory()->create();
-    $exam = Exam::factory()->forFormation($formation)->active()->create([
+    [, $exam] = createAccessibleFinalExam($user, [
         'show_results_immediately' => true,
         'passing_score' => 40,
     ]);
@@ -132,8 +161,7 @@ test('user can submit exam and get score', function () {
 
 test('timer initializes correctly with duration', function () {
     $user = User::factory()->create();
-    $formation = Formation::factory()->create();
-    $exam = Exam::factory()->forFormation($formation)->active()->create(['duration_minutes' => 60]);
+    [, $exam] = createAccessibleFinalExam($user, ['duration_minutes' => 60]);
     Question::factory()->for($exam)->singleChoice()->create();
 
     $this->actingAs($user)
@@ -143,8 +171,7 @@ test('timer initializes correctly with duration', function () {
 
 test('questions are randomized when randomize is enabled', function () {
     $user = User::factory()->create();
-    $formation = Formation::factory()->create();
-    $exam = Exam::factory()->forFormation($formation)->active()->create(['randomize_questions' => true]);
+    [, $exam] = createAccessibleFinalExam($user, ['randomize_questions' => true]);
     Question::factory()->for($exam)->singleChoice()->count(5)->create();
 
     $this->actingAs($user)->get(route('exam.take', $exam));
@@ -156,8 +183,7 @@ test('questions are randomized when randomize is enabled', function () {
 
 test('user cannot exceed max attempts', function () {
     $user = User::factory()->create();
-    $formation = Formation::factory()->create();
-    $exam = Exam::factory()->forFormation($formation)->active()->create(['max_attempts' => 1]);
+    [$formation, $exam] = createAccessibleFinalExam($user, ['max_attempts' => 1]);
     Question::factory()->for($exam)->singleChoice()->create();
 
     ExamAttempt::factory()->for($exam)->for($user)->create([
@@ -167,5 +193,6 @@ test('user cannot exceed max attempts', function () {
 
     $this->actingAs($user)
         ->get(route('exam.take', $exam))
-        ->assertForbidden();
+        ->assertRedirect(route('course.player', $formation->id))
+        ->assertSessionHas('error', 'Vous avez atteint le nombre maximum de tentatives pour cet examen.');
 });

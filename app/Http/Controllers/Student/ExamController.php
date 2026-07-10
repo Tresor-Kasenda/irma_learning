@@ -324,6 +324,12 @@ final class ExamController extends Controller
                 'title' => $attempt->exam->title,
                 'passing_score' => $attempt->exam->getPassingScore(),
             ],
+            'formation' => $formation ? [
+                'id' => $formation->id,
+                'title' => $formation->title,
+                'slug' => $formation->slug,
+            ] : null,
+            'examContext' => $this->examContext($attempt->exam),
             'userAnswers' => $userAnswers->map(function ($ua) {
                 return [
                     'id' => $ua->id,
