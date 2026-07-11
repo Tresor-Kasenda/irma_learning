@@ -18,6 +18,7 @@ const form = useForm({
 const showPassword = ref(false);
 const page = usePage();
 const allowRegistration = computed(() => Boolean((page.props.appSettings as {allow_registration?: boolean})?.allow_registration));
+const logoUrl = computed(() => (page.props.appSettings as {logo_url?: string})?.logo_url ?? '/images/irma-logo-base.svg');
 
 const submit = () => {
     form.post(route('login'), {
@@ -35,7 +36,7 @@ const submit = () => {
 
             <div class="p-5 sm:p-8">
                 <Link :href="route('home-page')" class="block">
-                    <img src="/images/irma-logo-base.svg" alt="logo Irma"
+                    <img :src="logoUrl" alt="logo Irma"
                         class="h-16 w-auto mb-5 mx-auto" />
                 </Link>
 

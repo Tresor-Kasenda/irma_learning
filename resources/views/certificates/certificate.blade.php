@@ -4,6 +4,9 @@
     $companyTagline = $branding->app_tagline ?: 'Plateforme de formation professionnelle';
     $signatureName = $branding->certificate_signature_name ?: $companyName;
     $verificationUrl = $certificate->verification_url;
+    $logoPath = $branding->logo_path && \Illuminate\Support\Facades\Storage::disk('public')->exists($branding->logo_path)
+        ? \Illuminate\Support\Facades\Storage::disk('public')->path($branding->logo_path)
+        : public_path('images/irma-logo-base.svg');
 @endphp
 <!DOCTYPE html>
 <html lang="fr">
@@ -162,7 +165,7 @@
     <div class="inner-border"></div>
 
     <div class="content">
-        <img class="logo" src="{{ public_path('images/irma-logo-base.svg') }}" alt="IRMA">
+        <img class="logo" src="{{ $logoPath }}" alt="IRMA">
 
         <div class="label">Certificat de réussite</div>
         <div class="certificate-subtitle">{{ $companyTagline }}</div>

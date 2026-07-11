@@ -1,10 +1,15 @@
 <script lang="ts" setup>
-import {Head, Link} from '@inertiajs/vue3';
+import {Head, Link, usePage} from '@inertiajs/vue3';
+import {computed} from 'vue';
 
 defineProps<{
     title?: string;
     whiteHeader?: boolean;
 }>();
+
+const page = usePage();
+const logoUrl = computed(() => (page.props.appSettings as {logo_url?: string})?.logo_url ?? '/images/irma-logo-base.svg');
+const allowRegistration = computed(() => Boolean((page.props.appSettings as {allow_registration?: boolean})?.allow_registration));
 
 function scrollToTop() {
     window.scrollTo({top: 0, behavior: 'smooth'});
@@ -23,7 +28,7 @@ function scrollToTop() {
 
                 <div class="lg:min-w-max flex">
                     <Link :href="route('home-page')" class="flex w-max gap-1">
-                        <img :src="whiteHeader ? '/assets/irma-logo-base.svg' : '/images/irma-logo-base.svg'"
+                        <img :src="logoUrl"
                              alt="logo Irma" class="h-14 w-auto" height="100" width="200"/>
                         <img :src="whiteHeader ? '/assets/irma-text.svg' : '/images/irma-text-primary.svg'"
                              alt="Irma Text" class="h-12 w-auto max-[500px]:hidden" height="51.53" width="131"/>
@@ -55,7 +60,7 @@ function scrollToTop() {
                               class="hidden sm:flex px-4 py-2 text-sm text-gray-700 hover:bg-primary-50 rounded-lg transition">
                             Se connecter
                         </Link>
-                        <Link :href="route('register')"
+                        <Link v-if="allowRegistration" :href="route('register')"
                               class="px-4 py-2 text-sm bg-primary-600 text-white bg-irma-primary rounded-lg hover:bg-primary-700 transition">
                             S'inscrire
                         </Link>
@@ -106,7 +111,7 @@ function scrollToTop() {
                     class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-10 py-10 max-sm:max-w-sm max-sm:mx-auto gap-y-8">
                     <div class="col-span-full lg:col-span-3 lg:pr-16">
                         <Link :href="route('home-page')" class="flex w-max gap-2 items-center">
-                            <img alt="logo Irma" class="h-14 w-auto" height="100" src="/images/irma-logo-base.svg"
+                            <img :src="logoUrl" alt="logo Irma" class="h-14 w-auto" height="100"
                                  width="200"/>
                             <img alt="Irma Text" class="h-12 w-auto" height="51.53" src="/images/irma-text-primary.svg"
                                  width="131"/>

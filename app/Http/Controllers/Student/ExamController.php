@@ -99,6 +99,7 @@ final class ExamController extends Controller
             }
 
             if (! $exam->canUserAttempt($user)) {
+                // Signals max-attempts-reached to the caller, which redirects with an error message.
                 return null;
             }
 
@@ -513,6 +514,7 @@ final class ExamController extends Controller
             return $examable->section?->formation;
         }
 
+        // No known examable type resolves to a formation.
         return null;
     }
 
@@ -560,6 +562,7 @@ final class ExamController extends Controller
         $index = $sections->search(fn (Section $section): bool => $section->id === $exam->examable_id);
 
         if ($index === false) {
+            // The exam's section is not part of this formation's ordered sections.
             return null;
         }
 
@@ -572,6 +575,7 @@ final class ExamController extends Controller
     private function buildNextStep(Exam $exam, ?Formation $formation, bool $passed, CourseProgressionService $progression): ?array
     {
         if (! $formation) {
+            // No resolvable formation means there is no meaningful next step.
             return null;
         }
 
@@ -588,6 +592,7 @@ final class ExamController extends Controller
         }
 
         if ($exam->examable_type !== Section::class) {
+            // Only formation and section exams have a defined next step.
             return null;
         }
 

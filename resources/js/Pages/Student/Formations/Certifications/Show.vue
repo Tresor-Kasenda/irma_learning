@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import {Head, Link, router} from '@inertiajs/vue3';
+import {Head, Link, router, usePage} from '@inertiajs/vue3';
 import {computed} from 'vue';
 import LearningLayout from '@/Layouts/LearningLayout.vue';
 import LearningIcon from '@/Components/Learning/LearningIcon.vue';
@@ -24,6 +24,9 @@ const props = defineProps<{
 }>();
 
 const score = computed(() => Math.round(Number(props.certificate.final_score ?? 0)));
+
+const page = usePage();
+const logoUrl = computed(() => (page.props.appSettings as {logo_url?: string})?.logo_url ?? '/images/irma-logo-base.svg');
 
 function formatDate(value?: string | null): string {
     if (!value) {
@@ -94,7 +97,7 @@ function downloadCertificate(): void {
                 <div class="pointer-events-none absolute inset-3 border border-[#caa45a]/20"/>
 
                 <div class="relative">
-                    <img alt="IRMA" class="mx-auto h-12 w-auto" src="/images/irma-logo-base.svg"/>
+                    <img :src="logoUrl" alt="IRMA" class="mx-auto h-12 w-auto"/>
 
                     <p class="mt-6 text-xs font-semibold uppercase tracking-[0.3em] text-[#caa45a]">
                         Certificat de réussite

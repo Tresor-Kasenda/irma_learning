@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import GuestLayout from '@/Layouts/GuestLayout.vue';
 import InputError from '@/Components/InputError.vue';
-import { Head, Link, useForm } from '@inertiajs/vue3';
+import { Head, Link, useForm, usePage } from '@inertiajs/vue3';
 import { ref, computed } from 'vue';
 
 const form = useForm({
@@ -11,6 +11,9 @@ const form = useForm({
     password: '',
     password_confirmation: '',
 });
+
+const page = usePage();
+const logoUrl = computed(() => (page.props.appSettings as {logo_url?: string})?.logo_url ?? '/images/irma-logo-base.svg');
 
 const showPassword = ref(false);
 const showConfirmPassword = ref(false);
@@ -49,7 +52,7 @@ const submit = () => {
 
             <div class="p-5 sm:p-8">
                 <Link :href="route('home-page')" class="block">
-                    <img src="/images/irma-logo-base.svg" alt="logo Irma" class="h-16 w-auto mb-5 mx-auto" />
+                    <img :src="logoUrl" alt="logo Irma" class="h-16 w-auto mb-5 mx-auto" />
                 </Link>
 
                 <div class="text-center mt-2">
