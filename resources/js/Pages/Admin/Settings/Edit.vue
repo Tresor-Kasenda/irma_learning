@@ -1,6 +1,7 @@
 <script lang="ts" setup>
-import {Head, useForm} from '@inertiajs/vue3';
+import {Head, router, useForm} from '@inertiajs/vue3';
 import {ImageIcon, Mail, Palette, Save, Settings2, ShieldCheck} from '@lucide/vue';
+import {watch} from 'vue';
 import FileUpload from '@/Components/Admin/FileUpload.vue';
 import SearchableSelect from '@/Components/Admin/Fields/SearchableSelect.vue';
 import TextField from '@/Components/Admin/Fields/TextField.vue';
@@ -13,7 +14,21 @@ interface Settings {app_name: string; app_tagline: string | null; support_email:
 const props = defineProps<{settings: Settings}>();
 const form = useForm({app_name: props.settings.app_name, app_tagline: props.settings.app_tagline ?? '', support_email: props.settings.support_email ?? '', logo: null as File | null, primary_color: props.settings.primary_color, default_currency: props.settings.default_currency, allow_registration: props.settings.allow_registration, maintenance_message: props.settings.maintenance_message ?? '', certificate_signature_name: props.settings.certificate_signature_name ?? ''});
 const currencies = [{value: 'USD', label: 'USD — Dollar américain'}, {value: 'CDF', label: 'CDF — Franc congolais'}, {value: 'EUR', label: 'EUR — Euro'}];
-function submit(): void { form.post(safeRoute('admin.settings.update'), {forceFormData: true, preserveScroll: true}); }
+watch(() => form.primary_color, (color) => {
+    if (/^#[0-9a-f]{6}$/i.test(color)) {
+        document.documentElement.style.setProperty('--irma-primary', color);
+    }
+}, {immediate: true});
+function submit(): void {
+    form.post(safeRoute('admin.settings.update'), {
+        forceFormData: true,
+        preserveScroll: true,
+        onSuccess: () => {
+            form.reset('logo');
+            router.reload({only: ['settings', 'appSettings']});
+        },
+    });
+}
 </script>
 
 <template>
@@ -28,8 +43,8 @@ function submit(): void { form.post(safeRoute('admin.settings.update'), {forceFo
                     <section class="admin-panel min-w-0 overflow-hidden border"><div class="admin-divider flex items-center gap-3 border-b p-5"><ShieldCheck class="size-5 text-emerald-400"/><div><h2 class="admin-heading font-semibold">Accès et communication</h2><p class="admin-muted text-xs">Comptes, maintenance et certificats</p></div></div><div class="grid gap-5 p-5 sm:p-6"><ToggleField v-model="form.allow_registration" hint="Autoriser la création autonome de comptes apprenants." label="Inscriptions publiques"/><TextareaField v-model="form.maintenance_message" :error="form.errors.maintenance_message" :rows="3" label="Message de maintenance" placeholder="Laissez vide en fonctionnement normal."/><TextField v-model="form.certificate_signature_name" :error="form.errors.certificate_signature_name" label="Signataire des certificats" placeholder="Nom et fonction du responsable"/></div></section>
                 </div>
                 <aside class="grid min-w-0 content-start gap-6 lg:sticky lg:top-24">
-                    <section class="admin-panel min-w-0 overflow-hidden border"><div class="admin-divider flex items-center gap-3 border-b p-5"><ImageIcon class="size-5 text-sky-400"/><h2 class="admin-heading font-semibold">Logo</h2></div><div class="grid gap-4 p-5"><div class="admin-panel-muted grid min-h-36 place-items-center border p-5"><img :src="settings.logo_url" alt="Logo actuel" class="max-h-24 max-w-full object-contain"/></div><FileUpload v-model="form.logo" :error="form.errors.logo" accept="image/png,image/jpeg,image/webp,image/svg+xml" hint="PNG, JPG, WebP ou SVG. 2 Mo maximum." label="Nouveau logo"/></div></section>
-                    <section class="admin-panel min-w-0 overflow-hidden border"><div class="admin-divider flex items-center gap-3 border-b p-5"><Palette class="size-5 text-amber-400"/><h2 class="admin-heading font-semibold">Affichage et devise</h2></div><div class="grid gap-5 p-5"><label><span class="admin-muted mb-2 block text-xs font-semibold uppercase tracking-[0.08em]">Couleur principale</span><div class="admin-field flex h-11 items-center gap-3 border px-3"><input v-model="form.primary_color" type="color" class="size-7 border-0 bg-transparent"/><input v-model="form.primary_color" class="admin-heading min-w-0 flex-1 bg-transparent text-sm outline-none"/></div><p v-if="form.errors.primary_color" class="mt-1 text-xs text-rose-400">{{ form.errors.primary_color }}</p></label><SearchableSelect v-model="form.default_currency" :clearable="false" :options="currencies" :searchable="false" label="Devise par défaut"/></div></section>
+                    <section class="admin-panel min-w-0 overflow-hidden border"><div class="admin-divider flex items-center gap-3 border-b p-5"><ImageIcon class="size-5 text-sky-400"/><h2 class="admin-heading font-semibold">Logo</h2></div><div class="grid gap-4 p-5"><div class="admin-panel-muted grid min-h-36 place-items-center border p-5"><img :src="settings.logo_url" alt="Logo actuel" class="max-h-24 max-w-full object-contain"/></div><FileUpload v-model="form.logo" :current-url="settings.logo_url" :error="form.errors.logo" :max-size-mb="2" accept="image/png,image/jpeg,image/webp,image/svg+xml" hint="PNG, JPG, WebP ou SVG. 2 Mo maximum." label="Nouveau logo"/></div></section>
+                    <section class="admin-panel relative z-30 min-w-0 overflow-visible border"><div class="admin-divider flex items-center gap-3 border-b p-5"><Palette class="size-5 text-amber-400"/><h2 class="admin-heading font-semibold">Affichage et devise</h2></div><div class="grid gap-5 p-5"><label><span class="admin-muted mb-2 block text-xs font-semibold uppercase tracking-[0.08em]">Couleur principale</span><div class="admin-field flex h-11 items-center gap-3 border px-3"><input v-model="form.primary_color" type="color" class="size-7 border-0 bg-transparent"/><input v-model="form.primary_color" class="admin-heading min-w-0 flex-1 bg-transparent text-sm outline-none"/></div><p v-if="form.errors.primary_color" class="mt-1 text-xs text-rose-400">{{ form.errors.primary_color }}</p></label><SearchableSelect v-model="form.default_currency" :clearable="false" :options="currencies" :searchable="false" label="Devise par défaut"/></div></section>
                 </aside>
             </div>
             <footer class="admin-panel sticky bottom-0 z-20 flex justify-end border p-4"><button :disabled="form.processing" class="inline-flex h-11 items-center gap-2 bg-[#a23362] px-5 text-sm font-semibold text-white disabled:opacity-60" type="submit"><Save class="size-4"/>{{ form.processing ? 'Enregistrement…' : 'Enregistrer les paramètres' }}</button></footer>

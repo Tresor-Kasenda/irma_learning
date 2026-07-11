@@ -10,7 +10,7 @@
     --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
         'Segoe UI Symbol', 'Noto Color Emoji';
 
-    --color-irma-primary: oklch(0.55 0.2 20);
+    --color-irma-primary: var(--irma-primary, #a23362);
     --color-irma-secondary: oklch(0.45 0.15 280);
     --color-irma-accent: oklch(0.65 0.25 80);
     --color-irma-surface: oklch(0.97 0.01 100);

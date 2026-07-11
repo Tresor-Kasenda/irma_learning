@@ -7,6 +7,7 @@ import DataTable, {type Column} from '@/Components/Admin/DataTable.vue';
 import FilterBar, {type FilterDef} from '@/Components/Admin/FilterBar.vue';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
 import {safeRoute} from '@/utilities/route';
+import {useCurrencyFormatter} from '@/composables/useCurrencyFormatter';
 
 interface FormationRow {
     id: number;
@@ -36,6 +37,7 @@ defineProps<{
 }>();
 
 const indexRoute = safeRoute('admin.formations.index');
+const {formatCurrency} = useCurrencyFormatter();
 
 const difficultyOptions = [
     {value: 'beginner', label: 'Débutant'},
@@ -82,7 +84,7 @@ function formatPrice(value: number | string | null): string {
 
     return amount <= 0
         ? 'Gratuit'
-        : new Intl.NumberFormat('fr-FR', {style: 'currency', currency: 'USD', maximumFractionDigits: 0}).format(amount);
+        : formatCurrency(amount);
 }
 </script>
 

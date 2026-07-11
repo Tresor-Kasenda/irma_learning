@@ -3,7 +3,10 @@ import {Head} from '@inertiajs/vue3';
 import {Award, BookOpen, CircleDollarSign, ClipboardCheck, FileText, Layers3, PlaySquare, UserCheck, Users} from '@lucide/vue';
 import {computed, ref} from 'vue';
 import StatCard from '@/Components/Admin/StatCard.vue';
+import EnrollmentTrendChart from '@/Components/Admin/EnrollmentTrendChart.vue';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
+import {safeRoute} from '@/utilities/route';
+import {useCurrencyFormatter} from '@/composables/useCurrencyFormatter';
 
 interface Stats {
     formations: number;
@@ -30,20 +33,20 @@ const props = defineProps<{
 }>();
 
 const trendPeriod = ref<'months' | 'weeks'>('months');
+const {formatCurrency} = useCurrencyFormatter();
 const activeTrend = computed(() => props.enrollmentTrends[trendPeriod.value]);
-const trendMaximum = computed(() => Math.max(1, ...activeTrend.value.map((item) => item.value)));
 
 const formattedRevenue = computed(() =>
-    new Intl.NumberFormat('fr-FR', {style: 'currency', currency: 'USD', maximumFractionDigits: 0}).format(props.stats.revenue),
+    formatCurrency(props.stats.revenue),
 );
 
 const cards = computed(() => [
-    {label: 'Formations', value: props.stats.formations, icon: BookOpen},
-    {label: 'Sections', value: props.stats.sections, icon: Layers3},
-    {label: 'Examens', value: props.stats.exams, icon: ClipboardCheck},
-    {label: 'Apprenants', value: props.stats.students, icon: Users},
-    {label: 'Inscriptions actives', value: props.stats.activeEnrollments, icon: UserCheck},
-    {label: 'Certificats délivrés', value: props.stats.certificates, icon: Award},
+    {label: 'Formations', value: props.stats.formations, icon: BookOpen, href: safeRoute('admin.formations.index')},
+    {label: 'Sections', value: props.stats.sections, icon: Layers3, href: safeRoute('admin.sections.index')},
+    {label: 'Examens', value: props.stats.exams, icon: ClipboardCheck, href: safeRoute('admin.exams.index')},
+    {label: 'Apprenants', value: props.stats.students, icon: Users, href: safeRoute('admin.users.index', {role: 'student'})},
+    {label: 'Inscriptions actives', value: props.stats.activeEnrollments, icon: UserCheck, href: safeRoute('admin.enrollments.index')},
+    {label: 'Certificats délivrés', value: props.stats.certificates, icon: Award, href: safeRoute('admin.certificates.index')},
     {label: 'Revenus', value: formattedRevenue.value, icon: CircleDollarSign},
 ]);
 </script>
@@ -75,14 +78,15 @@ const cards = computed(() => [
                     :icon="card.icon"
                     :label="card.label"
                     :value="card.value"
+                    :href="card.href"
                 />
             </section>
 
             <section class="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                <StatCard :value="catalogStats.formations" :icon="BookOpen" accent="bg-slate-400/10 text-slate-600 dark:text-slate-300" label="Formations actives"/>
-                <StatCard :value="catalogStats.videos" :icon="PlaySquare" accent="bg-blue-400/10 text-blue-300" label="Vidéos"/>
-                <StatCard :value="catalogStats.pdfs" :icon="FileText" accent="bg-amber-400/10 text-amber-300" label="PDF"/>
-                <StatCard :value="catalogStats.texts" :icon="FileText" accent="bg-emerald-400/10 text-emerald-300" label="Textes"/>
+                <StatCard :value="catalogStats.formations" :icon="BookOpen" :href="safeRoute('admin.formations.index', {is_active: 1})" accent="bg-slate-400/10 text-slate-600 dark:text-slate-300" label="Formations actives"/>
+                <StatCard :value="catalogStats.videos" :icon="PlaySquare" :href="safeRoute('admin.chapters.index', {content_type: 'video'})" accent="bg-blue-400/10 text-blue-300" label="Vidéos"/>
+                <StatCard :value="catalogStats.pdfs" :icon="FileText" :href="safeRoute('admin.chapters.index', {content_type: 'pdf'})" accent="bg-amber-400/10 text-amber-300" label="PDF"/>
+                <StatCard :value="catalogStats.texts" :icon="FileText" :href="safeRoute('admin.chapters.index', {content_type: 'text'})" accent="bg-emerald-400/10 text-emerald-300" label="Textes"/>
             </section>
 
             <section class="admin-panel mt-6 min-w-0 overflow-hidden border">
@@ -90,15 +94,7 @@ const cards = computed(() => [
                     <div><h2 class="admin-heading font-semibold">Évolution des inscriptions</h2><p class="admin-muted mt-1 text-xs">Nouveaux apprenants inscrits sur la période.</p></div>
                     <div class="admin-panel-muted inline-flex self-start border p-1 sm:self-auto"><button :class="trendPeriod === 'weeks' ? 'bg-[#a23362] text-white' : 'admin-muted'" class="h-8 px-3 text-xs font-semibold" type="button" @click="trendPeriod = 'weeks'">8 semaines</button><button :class="trendPeriod === 'months' ? 'bg-[#a23362] text-white' : 'admin-muted'" class="h-8 px-3 text-xs font-semibold" type="button" @click="trendPeriod = 'months'">12 mois</button></div>
                 </div>
-                <div class="overflow-x-auto p-5 sm:p-6">
-                    <div class="flex min-w-[640px] items-end gap-3" role="img" :aria-label="`Courbe des inscriptions sur ${trendPeriod === 'months' ? 'douze mois' : 'huit semaines'}`">
-                        <div v-for="item in activeTrend" :key="item.label" class="flex min-w-0 flex-1 flex-col items-center gap-2">
-                            <span class="admin-heading text-xs font-semibold">{{ item.value }}</span>
-                            <div class="flex h-48 w-full items-end bg-slate-500/5"><div class="w-full bg-[#a23362] transition-[height] duration-300" :style="{height: `${Math.max(item.value ? 8 : 2, item.value / trendMaximum * 100)}%`}"/></div>
-                            <span class="admin-faint truncate text-[10px]">{{ item.label }}</span>
-                        </div>
-                    </div>
-                </div>
+                <div class="min-w-0 p-5 sm:p-6"><EnrollmentTrendChart :values="activeTrend"/></div>
             </section>
         </div>
     </AdminLayout>

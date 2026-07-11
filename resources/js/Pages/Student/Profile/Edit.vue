@@ -2,8 +2,9 @@
 import DeleteUserForm from './Partials/DeleteUserForm.vue';
 import UpdatePasswordForm from './Partials/UpdatePasswordForm.vue';
 import UpdateProfileInformationForm from './Partials/UpdateProfileInformationForm.vue';
-import {Head, Link, useForm, usePage} from '@inertiajs/vue3';
-import {computed, ref, watch} from 'vue';
+import {Head, Link, router, useForm, usePage} from '@inertiajs/vue3';
+import {computed, onBeforeUnmount, ref, watch} from 'vue';
+import SearchableSelect from '@/Components/Admin/Fields/SearchableSelect.vue';
 import {safeRoute} from "@/utilities/route";
 import LearningLayout from "@/Layouts/LearningLayout.vue";
 
@@ -43,6 +44,8 @@ const handle = computed(() => '@' + (user.value.name ?? '').trim().replace(/\s+/
 
 const avatarInput = ref<HTMLInputElement | null>(null);
 const avatarForm = useForm<{ avatar: File | null }>({avatar: null});
+const avatarPreview = ref<string | null>(null);
+const avatarSource = computed(() => avatarPreview.value ?? user.value.avatar_url);
 
 const selectAvatar = (): void => {
     avatarInput.value?.click();
@@ -56,9 +59,22 @@ const uploadAvatar = (event: Event): void => {
         return;
     }
 
+    if (avatarPreview.value) {
+        URL.revokeObjectURL(avatarPreview.value);
+    }
+    avatarPreview.value = URL.createObjectURL(file);
     avatarForm.avatar = file;
     avatarForm.post(safeRoute('profile.avatar.update'), {
         preserveScroll: true,
+        onSuccess: () => {
+            router.reload({only: ['auth']});
+        },
+        onError: () => {
+            if (avatarPreview.value) {
+                URL.revokeObjectURL(avatarPreview.value);
+                avatarPreview.value = null;
+            }
+        },
         onFinish: () => {
             avatarForm.reset('avatar');
 
@@ -83,16 +99,47 @@ const isValidTab = (value: string | null): value is TabKey =>
 const storedTab = localStorage.getItem(TAB_STORAGE_KEY);
 const activeTab = ref<TabKey>(isValidTab(storedTab) ? storedTab : 'formations');
 const filterQuery = ref('');
+const sort = ref<'recent' | 'progress-desc' | 'progress-asc' | 'title'>('recent');
+const sortOptions = [
+    {label: 'Dernière modification', value: 'recent'},
+    {label: 'Progression décroissante', value: 'progress-desc'},
+    {label: 'Progression croissante', value: 'progress-asc'},
+    {label: 'Titre A–Z', value: 'title'},
+];
 
-const filteredFormations = computed(() => props.formations.filter((formation) =>
-    formation.title.toLocaleLowerCase().includes(filterQuery.value.toLocaleLowerCase()),
-));
-const filteredCertificates = computed(() => props.certificates.filter((certificate) =>
-    certificate.formation_title.toLocaleLowerCase().includes(filterQuery.value.toLocaleLowerCase()),
-));
+const filteredFormations = computed(() => {
+    const formations = props.formations.filter((formation) =>
+        formation.title.toLocaleLowerCase().includes(filterQuery.value.toLocaleLowerCase()),
+    );
+
+    return [...formations].sort((left, right) => {
+        if (sort.value === 'progress-desc') return right.progress - left.progress;
+        if (sort.value === 'progress-asc') return left.progress - right.progress;
+        if (sort.value === 'title') return left.title.localeCompare(right.title, 'fr');
+
+        return (Date.parse(right.last_accessed_at ?? '') || 0) - (Date.parse(left.last_accessed_at ?? '') || 0);
+    });
+});
+const filteredCertificates = computed(() => {
+    const certificates = props.certificates.filter((certificate) =>
+        certificate.formation_title.toLocaleLowerCase().includes(filterQuery.value.toLocaleLowerCase()),
+    );
+
+    return [...certificates].sort((left, right) => {
+        if (sort.value === 'title') return left.formation_title.localeCompare(right.formation_title, 'fr');
+
+        return (Date.parse(right.issue_date) || 0) - (Date.parse(left.issue_date) || 0);
+    });
+});
 
 watch(activeTab, (value) => {
     localStorage.setItem(TAB_STORAGE_KEY, value);
+});
+
+onBeforeUnmount(() => {
+    if (avatarPreview.value) {
+        URL.revokeObjectURL(avatarPreview.value);
+    }
 });
 
 const emptyState = computed(() =>
@@ -115,7 +162,7 @@ const emptyState = computed(() =>
             <div class="flex flex-col gap-6 sm:flex-row sm:items-start">
                 <div class="relative shrink-0">
                     <img
-                        :src="user.avatar_url"
+                        :src="avatarSource"
                         alt=""
                         class="size-32 rounded-full object-cover object-top ring-2 ring-white/10"
                     />
@@ -229,23 +276,15 @@ const emptyState = computed(() =>
                         />
                     </div>
 
-                    <div
-                        class="inline-flex items-center gap-2 self-start rounded border border-white/10 px-3 py-1.5 text-sm text-slate-300 sm:self-auto">
-                        <span>Dernière modification</span>
-                        <button class="text-slate-500 transition hover:text-slate-300" type="button">
-                            <svg class="size-4" fill="none" stroke="currentColor" stroke-width="1.5"
-                                 viewBox="0 0 24 24">
-                                <path d="M6 18 18 6M6 6l12 12" stroke-linecap="round" stroke-linejoin="round"/>
-                            </svg>
-                        </button>
-                        <button class="text-slate-400 transition hover:text-slate-200" type="button">
-                            <svg class="size-4" fill="none" stroke="currentColor" stroke-width="1.5"
-                                 viewBox="0 0 24 24">
-                                <path d="M3 4.5h14.25M3 9h9.75M3 13.5h9.75m4.5-4.5v12m0 0-3.75-3.75M17.25 21 21 17.25"
-                                      stroke-linecap="round" stroke-linejoin="round"/>
-                            </svg>
-                        </button>
-                    </div>
+                    <SearchableSelect
+                        v-model="sort"
+                        :clearable="false"
+                        :options="sortOptions"
+                        :searchable="false"
+                        compact
+                        hide-label
+                        label="Trier les résultats"
+                    />
                 </div>
 
                 <div v-if="activeTab === 'formations' && filteredFormations.length" class="mt-5 grid gap-4 md:grid-cols-2">

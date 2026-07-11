@@ -2,6 +2,7 @@
 import {Head, Link, router} from '@inertiajs/vue3';
 import {computed, ref, watch} from 'vue';
 import FormationCard from '@/Components/Learning/FormationCard.vue';
+import SearchableSelect from '@/Components/Admin/Fields/SearchableSelect.vue';
 import LearningIcon from '@/Components/Learning/LearningIcon.vue';
 import LearningLayout from '@/Layouts/LearningLayout.vue';
 import type {LearningCatalogStats, LearningFormation} from '@/types/learning';
@@ -152,8 +153,8 @@ function onSearchInput(event: Event): void {
     debounceTimer = setTimeout(() => navigate({search: searchValue.value}), 350);
 }
 
-function onSortChange(event: Event): void {
-    navigate({sort: (event.target as HTMLSelectElement).value});
+function onSortChange(sort: string | number | (string | number)[] | null): void {
+    navigate({sort: String(sort)});
 }
 
 function applyFilters(): void {
@@ -281,22 +282,16 @@ function formationHref(formation: LearningFormation): string {
                             <span class="font-semibold text-slate-300">{{ formations.total }}</span>
                             {{ formations.total > 1 ? 'résultats' : 'résultat' }}
                         </p>
-                        <label class="relative">
-                            <span class="sr-only">Trier les formations</span>
-                            <select
-                                :value="filters.sort"
-                                class="h-11 appearance-none border border-white/10 bg-[#0c1a2a] pl-3 pr-10 text-sm text-slate-300 outline-none focus:border-sky-400/60"
-                                @change="onSortChange"
-                            >
-                                <option v-for="option in sortOptions" :key="option.value" :value="option.value">
-                                    {{ option.label }}
-                                </option>
-                            </select>
-                            <LearningIcon
-                                class="pointer-events-none absolute right-3 top-1/2 size-4 -translate-y-1/2 brightness-0 invert opacity-50"
-                                name="chevron-down"
-                            />
-                        </label>
+                        <SearchableSelect
+                            :model-value="filters.sort"
+                            :clearable="false"
+                            :options="sortOptions"
+                            :searchable="false"
+                            compact
+                            hide-label
+                            label="Trier les formations"
+                            @update:model-value="onSortChange"
+                        />
                     </div>
                 </div>
 

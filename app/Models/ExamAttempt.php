@@ -32,6 +32,7 @@ final class ExamAttempt extends Model
         'status',
         'answers',
         'question_order',
+        'option_order',
         'attempt_number',
         'time_taken',
     ];
@@ -198,6 +199,7 @@ final class ExamAttempt extends Model
         return [
             'answers' => 'array',
             'question_order' => 'array',
+            'option_order' => 'array',
             'started_at' => 'datetime',
             'expires_at' => 'datetime',
             'last_activity_at' => 'datetime',

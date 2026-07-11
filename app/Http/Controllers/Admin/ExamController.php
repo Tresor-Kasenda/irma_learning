@@ -49,10 +49,40 @@ final class ExamController extends Controller
         ]);
     }
 
-    public function create(): Response
+    public function create(Request $request): Response
     {
+        $template = null;
+        if ($request->filled('copy')) {
+            $source = Exam::query()
+                ->with(['questions' => fn ($query) => $query->with('options')->orderBy('order_position')])
+                ->findOrFail($request->integer('copy'));
+            $template = [
+                ...$source->only([
+                    'description', 'instructions', 'duration_minutes', 'passing_score', 'max_attempts',
+                    'randomize_questions', 'show_results_immediately',
+                ]),
+                'title' => $source->title.' (copie)',
+                'is_active' => false,
+                'available_from' => $source->available_from,
+                'available_until' => $source->available_until,
+                'questions' => $source->questions->map(fn ($question): array => [
+                    'question_text' => $question->question_text,
+                    'question_type' => $question->question_type->value,
+                    'points' => $question->points,
+                    'is_required' => $question->is_required,
+                    'explanation' => $question->explanation,
+                    'options' => $question->options->map(fn ($option): array => [
+                        'option_text' => $option->option_text,
+                        'is_correct' => $option->is_correct,
+                        'order_position' => $option->order_position,
+                    ])->values(),
+                ])->values(),
+            ];
+        }
+
         return Inertia::render('Admin/Exams/Form', [
             'exam' => null,
+            'template' => $template,
             'parentOptions' => $this->parentOptions(),
         ]);
     }
@@ -85,6 +115,7 @@ final class ExamController extends Controller
                     ]),
                 ]),
             ],
+            'template' => null,
             'parentOptions' => $this->parentOptions($exam),
         ]);
     }
@@ -175,27 +206,8 @@ final class ExamController extends Controller
 
     public function duplicate(Exam $exam): RedirectResponse
     {
-        $exam->load('questions.options');
-
-        $duplicate = $exam->replicate(['created_at', 'updated_at']);
-        $duplicate->title = $exam->title.' (copie)';
-        $duplicate->is_active = false;
-        $duplicate->save();
-
-        foreach ($exam->questions as $question) {
-            $newQuestion = $question->replicate(['exam_id', 'created_at', 'updated_at']);
-            $newQuestion->exam_id = $duplicate->id;
-            $newQuestion->save();
-
-            foreach ($question->options as $option) {
-                $newOption = $option->replicate(['question_id', 'created_at', 'updated_at']);
-                $newOption->question_id = $newQuestion->id;
-                $newOption->save();
-            }
-        }
-
-        return redirect()->route('admin.exams.show', $duplicate->id)
-            ->with('success', 'Examen dupliqué avec succès.');
+        return redirect()->route('admin.exams.create', ['copy' => $exam->id])
+            ->with('info', 'Copie préparée. Choisissez son rattachement et vérifiez les informations avant de créer l’examen.');
     }
 
     public function bulkActivate(Request $request): RedirectResponse

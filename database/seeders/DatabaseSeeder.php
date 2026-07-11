@@ -19,6 +19,7 @@ final class DatabaseSeeder extends Seeder
             ExamSeeder::class,
             QuestionSeeder::class,
             QuestionOptionSeeder::class,
+            ProfessionalDemoContentSeeder::class,
             EnrollmentSeeder::class,
             ExamAttemptSeeder::class,
             UserAnswerSeeder::class,

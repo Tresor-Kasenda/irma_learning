@@ -24,7 +24,7 @@ final class SystemSettingController extends Controller
                     'app_name', 'app_tagline', 'support_email', 'logo_path', 'primary_color',
                     'default_currency', 'allow_registration', 'maintenance_message', 'certificate_signature_name',
                 ]),
-                'logo_url' => $settings->logo_path ? Storage::disk('public')->url($settings->logo_path) : '/images/irma-logo-base.svg',
+                'logo_url' => $settings->logo_path ? '/storage/'.$settings->logo_path : '/images/irma-logo-base.svg',
             ],
         ]);
     }

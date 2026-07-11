@@ -3,6 +3,7 @@ import {Link} from '@inertiajs/vue3';
 import ContentFormatBadges from '@/Components/Learning/ContentFormatBadges.vue';
 import LearningIcon from '@/Components/Learning/LearningIcon.vue';
 import type {LearningFormation} from '@/types/learning';
+import {useCurrencyFormatter} from '@/composables/useCurrencyFormatter';
 
 const props = withDefaults(
     defineProps<{
@@ -22,6 +23,7 @@ const props = withDefaults(
         certificateHref: '',
     },
 );
+const {formatCurrency} = useCurrencyFormatter();
 
 const fallbackImages = [
     '/images/image1.webp',
@@ -105,11 +107,7 @@ function formatPrice(): string {
         return 'Gratuit';
     }
 
-    return new Intl.NumberFormat('fr-FR', {
-        style: 'currency',
-        currency: 'USD',
-        maximumFractionDigits: 0,
-    }).format(amount);
+    return formatCurrency(amount);
 }
 
 function contentSummary(): string {

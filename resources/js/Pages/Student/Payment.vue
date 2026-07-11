@@ -4,6 +4,7 @@ import {computed} from 'vue';
 import InputError from '@/Components/InputError.vue';
 import LearningLayout from '@/Layouts/LearningLayout.vue';
 import {safeRoute} from '@/utilities/route';
+import {useCurrencyFormatter} from '@/composables/useCurrencyFormatter';
 
 interface Formation {
     id: number;
@@ -19,6 +20,7 @@ interface Formation {
 const props = defineProps<{
     formation: Formation;
 }>();
+const {formatCurrency} = useCurrencyFormatter();
 
 const operators = [
     {value: 'orange', label: 'Orange Money'},
@@ -40,11 +42,7 @@ const formattedPrice = computed(() => {
         return 'Gratuit';
     }
 
-    return new Intl.NumberFormat('fr-FR', {
-        style: 'currency',
-        currency: 'USD',
-        maximumFractionDigits: 0,
-    }).format(amount);
+    return formatCurrency(amount);
 });
 
 function selectMethod(method: 'mobile_money' | 'card'): void {

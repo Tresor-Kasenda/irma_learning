@@ -293,7 +293,7 @@ test('an exhausted section exam redirects back to the learning interface with a 
             'formation' => $formation->id,
             'chapterId' => $built[0]['chapter']->id,
         ]))
-        ->assertSessionHas('error', 'Vous avez atteint le nombre maximum de tentatives pour cet examen.');
+        ->assertSessionHas('error', 'Vous avez atteint le nombre maximum de tentatives pour cet examen. Contactez un administrateur pour demander une réouverture.');
 });
 
 test('an in progress attempt can be resumed even when the attempt limit is reached', function () {

@@ -141,3 +141,35 @@ test('a student cannot access user administration', function () {
         ->get(route('admin.users.index'))
         ->assertForbidden();
 });
+
+test('an administrator can suspend and delete another user', function () {
+    $admin = User::factory()->create(['role' => UserRoleEnum::ADMIN]);
+    $student = User::factory()->create(['role' => UserRoleEnum::STUDENT]);
+
+    $this->actingAs($admin)
+        ->patch(route('admin.users.update', $student), [
+            'role' => UserRoleEnum::STUDENT->value,
+            'status' => UserStatusEnum::BANNED->value,
+            'must_change_password' => false,
+        ])
+        ->assertRedirect();
+
+    expect($student->refresh()->status)->toBe(UserStatusEnum::BANNED);
+
+    $this->actingAs($admin)
+        ->delete(route('admin.users.destroy', $student))
+        ->assertRedirect();
+
+    expect($student->fresh())->toBeNull();
+});
+
+test('an administrator cannot delete their own account or a root account', function () {
+    $admin = User::factory()->create(['role' => UserRoleEnum::ADMIN]);
+    $root = User::factory()->create(['role' => UserRoleEnum::ROOT]);
+
+    $this->actingAs($admin)->delete(route('admin.users.destroy', $admin))->assertUnprocessable();
+    $this->actingAs($admin)->delete(route('admin.users.destroy', $root))->assertForbidden();
+
+    expect($admin->fresh())->not->toBeNull()
+        ->and($root->fresh())->not->toBeNull();
+});

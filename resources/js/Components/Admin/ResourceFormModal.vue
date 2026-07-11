@@ -63,8 +63,8 @@ onBeforeUnmount(() => {
             <form
                 :aria-busy="processing"
                 aria-modal="true"
-                :class="widthClass"
-                class="admin-panel admin-text relative flex max-h-[94vh] min-w-0 flex-col overflow-hidden border shadow-2xl shadow-black/30"
+                :class="[widthClass, slideOver ? 'max-h-none' : 'max-h-[94vh]']"
+                class="admin-panel admin-text relative flex min-w-0 flex-col overflow-hidden border shadow-2xl shadow-black/30"
                 role="dialog"
                 @submit.prevent="emit('submit')"
             >

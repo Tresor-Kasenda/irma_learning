@@ -22,6 +22,7 @@ import {computed} from 'vue';
 import ConfirmAction from '@/Components/Admin/ConfirmAction.vue';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
 import {safeRoute} from '@/utilities/route';
+import {useCurrencyFormatter} from '@/composables/useCurrencyFormatter';
 
 interface Chapter {
     id: number;
@@ -65,6 +66,7 @@ interface FormationDetail {
 const props = defineProps<{
     formation: FormationDetail;
 }>();
+const {formatCurrency} = useCurrencyFormatter();
 
 const difficultyLabels: Record<string, string> = {
     beginner: 'Débutant',
@@ -94,7 +96,7 @@ function formatPrice(value: number | string | null): string {
 
     return amount <= 0
         ? 'Gratuit'
-        : new Intl.NumberFormat('fr-FR', {style: 'currency', currency: 'USD', maximumFractionDigits: 0}).format(amount);
+        : formatCurrency(amount);
 }
 
 function formatDate(value: string): string {

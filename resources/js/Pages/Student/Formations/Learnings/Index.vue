@@ -2,6 +2,7 @@
 import {Head, Link, router} from '@inertiajs/vue3';
 import {computed} from 'vue';
 import FormationCard from '@/Components/Learning/FormationCard.vue';
+import SearchableSelect from '@/Components/Admin/Fields/SearchableSelect.vue';
 import LearningIcon from '@/Components/Learning/LearningIcon.vue';
 import LearningLayout from '@/Layouts/LearningLayout.vue';
 import type {LearningCatalogStats, LearningFormation} from '@/types/learning';
@@ -33,12 +34,10 @@ const summaryCards = computed(() => [
     {label: 'Cours terminés', value: props.stats.completed, icon: 'academic-cap'},
 ]);
 
-function onSortChange(event: Event): void {
-    const sort = (event.target as HTMLSelectElement).value;
-
+function onSortChange(sort: string | number | (string | number)[] | null): void {
     router.get(
         safeRoute('student.progress'),
-        sort === 'recent' ? {} : {sort},
+        sort === 'recent' ? {} : {sort: String(sort)},
         {
             preserveState: true,
             preserveScroll: true,
@@ -103,22 +102,16 @@ function courseHref(formation: LearningFormation): string {
                         <span class="font-semibold text-slate-200">{{ courses.length }}</span>
                         cours en progression
                     </p>
-                    <label class="relative self-start sm:self-auto">
-                        <span class="sr-only">Trier les cours</span>
-                        <select
-                            :value="filters.sort"
-                            class="h-11 appearance-none border border-white/10 bg-[#0c1a2a] pl-3 pr-10 text-sm text-slate-300 outline-none focus:border-sky-400/60"
-                            @change="onSortChange"
-                        >
-                            <option v-for="option in sortOptions" :key="option.value" :value="option.value">
-                                {{ option.label }}
-                            </option>
-                        </select>
-                        <LearningIcon
-                            class="pointer-events-none absolute right-3 top-1/2 size-4 -translate-y-1/2 brightness-0 invert opacity-50"
-                            name="chevron-down"
-                        />
-                    </label>
+                    <SearchableSelect
+                        :model-value="filters.sort"
+                        :clearable="false"
+                        :options="sortOptions"
+                        :searchable="false"
+                        compact
+                        hide-label
+                        label="Trier les cours"
+                        @update:model-value="onSortChange"
+                    />
                 </div>
 
                 <div

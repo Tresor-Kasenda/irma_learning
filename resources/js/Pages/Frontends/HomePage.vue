@@ -1,6 +1,7 @@
 <script lang="ts" setup>
 import {Link} from '@inertiajs/vue3';
 import PublicLayout from '@/Layouts/PublicLayout.vue';
+import {useCurrencyFormatter} from '@/composables/useCurrencyFormatter';
 
 defineProps<{
     canLogin?: boolean;
@@ -15,10 +16,11 @@ defineProps<{
         duration_hours: number;
     } | null;
 }>();
+const {formatCurrency} = useCurrencyFormatter();
 
 function formatPrice(price: number): string {
     if (price <= 0) return 'Gratuit';
-    return new Intl.NumberFormat('fr-CD', {style: 'currency', currency: 'USD'}).format(price);
+    return formatCurrency(price, 2);
 }
 </script>
 

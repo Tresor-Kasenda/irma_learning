@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Frontends;
 
 use App\Http\Controllers\Controller;
+use App\Models\ApplicationSetting;
 use App\Models\Formation;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -15,7 +16,7 @@ final class HomePageController extends Controller
     {
         return Inertia::render('Frontends/HomePage', [
             'canLogin' => Route::has('login'),
-            'canRegister' => Route::has('register'),
+            'canRegister' => Route::has('register') && ApplicationSetting::current()->allow_registration,
             'formation' => Formation::query()->active()->latest('created_at')->first(),
         ]);
     }

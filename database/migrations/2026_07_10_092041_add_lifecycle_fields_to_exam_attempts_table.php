@@ -21,6 +21,7 @@ return new class extends Migration
             $table->timestamp('reopened_at')->nullable()->after('last_activity_at');
             $table->foreignId('reopened_by')->nullable()->after('reopened_at')->constrained('users')->nullOnDelete();
             $table->unsignedSmallInteger('reopen_count')->default(0)->after('reopened_by');
+            $table->json('option_order')->nullable()->after('reopen_count');
         });
 
         if (DB::getDriverName() === 'pgsql') {
@@ -49,6 +50,7 @@ return new class extends Migration
                 'reopened_at',
                 'reopened_by',
                 'reopen_count',
+                'option_order',
             ]);
             $table->enum('status', ['in_progress', 'completed', 'failed', 'cancelled'])
                 ->default('in_progress')

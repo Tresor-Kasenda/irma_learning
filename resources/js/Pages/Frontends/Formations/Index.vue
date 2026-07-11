@@ -3,6 +3,7 @@ import PublicLayout from "@/Layouts/PublicLayout.vue";
 import type {LearningFormation} from "@/types/learning";
 import {computed, ref, watch} from "vue";
 import {Head, Link, router} from "@inertiajs/vue3";
+import {useCurrencyFormatter} from '@/composables/useCurrencyFormatter';
 
 interface LearningCatalogStats {
     videos: number;
@@ -34,6 +35,8 @@ interface CatalogFilters {
     content: string;
     sort: string;
 }
+
+const {formatCurrency} = useCurrencyFormatter();
 
 interface ContinueLearning {
     id: number;
@@ -150,7 +153,7 @@ function parseTags(tags: unknown): string[] {
 function formatPrice(price: unknown): string {
     const num = Number(price ?? 0);
     if (!num) return 'Gratuit';
-    return new Intl.NumberFormat('fr-CD', {style: 'currency', currency: 'USD'}).format(num);
+    return formatCurrency(num, 2);
 }
 
 function imageUrl(image: unknown): string | null {

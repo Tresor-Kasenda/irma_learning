@@ -46,6 +46,7 @@ final class UserController extends Controller
                 'status_label' => $user->status->getLabel(),
                 'enrollments_count' => $user->enrollments_count,
                 'certificates_count' => $user->certificates_count,
+                'can_manage' => ! $request->user()?->is($user) && ($user->role !== UserRoleEnum::ROOT || $canManageRoot),
             ]);
 
         $canManageRoot = $request->user()?->isRoot() ?? false;
@@ -80,5 +81,15 @@ final class UserController extends Controller
         $user->update($request->validated());
 
         return back()->with('success', 'Rôle et accès de l’utilisateur mis à jour.');
+    }
+
+    public function destroy(Request $request, User $user): RedirectResponse
+    {
+        abort_if($request->user()->is($user), 422, 'Vous ne pouvez pas supprimer votre propre compte.');
+        abort_if($user->isRoot() && ! $request->user()->isRoot(), 403);
+
+        $user->delete();
+
+        return back()->with('success', 'Utilisateur supprimé.');
     }
 }

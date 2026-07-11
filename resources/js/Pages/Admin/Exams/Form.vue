@@ -21,6 +21,7 @@ interface ExamData extends ExamEditorData {
 
 const props = defineProps<{
     exam: ExamData | null;
+    template?: Partial<ExamData> | null;
     parentOptions: ParentOption[];
 }>();
 
@@ -28,6 +29,7 @@ const isEditing = Boolean(props.exam?.id);
 const parentValue = ref(props.exam ? `${props.exam.examable_type}:${props.exam.examable_id}` : '');
 const form = useForm<ExamData>({
     ...createEmptyExam(),
+    ...props.template,
     ...props.exam,
     examable_type: props.exam?.examable_type ?? '',
     examable_id: props.exam?.examable_id ?? 0,

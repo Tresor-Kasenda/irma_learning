@@ -6,7 +6,6 @@ namespace App\Http\Middleware;
 
 use App\Models\ApplicationSetting;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
 use Inertia\Middleware;
 
 final class HandleInertiaRequests extends Middleware
@@ -48,8 +47,10 @@ final class HandleInertiaRequests extends Middleware
             'appSettings' => [
                 'name' => $settings->app_name,
                 'tagline' => $settings->app_tagline,
-                'logo_url' => $settings->logo_path ? Storage::disk('public')->url($settings->logo_path) : '/images/irma-logo-base.svg',
+                'logo_url' => $settings->logo_path ? '/storage/'.$settings->logo_path : '/images/irma-logo-base.svg',
                 'primary_color' => $settings->primary_color,
+                'default_currency' => $settings->default_currency,
+                'allow_registration' => $settings->allow_registration,
                 'support_email' => $settings->support_email,
             ],
         ];

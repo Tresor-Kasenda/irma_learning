@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import {Head, useForm} from '@inertiajs/vue3';
-import {Pencil, Plus, ShieldCheck, Users} from '@lucide/vue';
+import {Pencil, Plus, Power, Trash2} from '@lucide/vue';
 import {ref} from 'vue';
 import DataTable, {type Column} from '@/Components/Admin/DataTable.vue';
 import FilterBar, {type FilterDef} from '@/Components/Admin/FilterBar.vue';
@@ -8,11 +8,12 @@ import SearchableSelect from '@/Components/Admin/Fields/SearchableSelect.vue';
 import TextField from '@/Components/Admin/Fields/TextField.vue';
 import ToggleField from '@/Components/Admin/Fields/ToggleField.vue';
 import ResourceFormModal from '@/Components/Admin/ResourceFormModal.vue';
+import ConfirmAction from '@/Components/Admin/ConfirmAction.vue';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
 import {safeRoute} from '@/utilities/route';
 
 interface Option {value: string; label: string}
-interface UserRow {id: number; name: string; email: string; avatar_url: string; role: string; role_label: string; status: string; status_label: string; must_change_password: boolean; enrollments_count: number; certificates_count: number; created_at: string}
+interface UserRow {id: number; name: string; email: string; avatar_url: string; role: string; role_label: string; status: string; status_label: string; must_change_password: boolean; enrollments_count: number; certificates_count: number; created_at: string; can_manage: boolean}
 interface PageData {data: UserRow[]; from: number | null; to: number | null; total: number; links: {url: string | null; label: string; active: boolean}[]}
 
 const props = defineProps<{users: PageData; filters: Record<string, string | undefined>; roleOptions: Option[]; assignableRoleOptions: Option[]; statusOptions: Option[]; canManageRoot: boolean}>();
@@ -59,7 +60,6 @@ function createUser(): void {
             <header class="mb-7 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
                 <div><p class="text-xs font-semibold uppercase tracking-[0.14em] text-[#ef477d]">Administration</p><h1 class="admin-heading mt-2 text-2xl font-semibold sm:text-3xl">Utilisateurs et accès</h1><p class="admin-muted mt-2 text-sm">{{ users.total }} compte(s). Les rôles administrateur et root donnent accès à /manage.</p></div>
                 <div class="flex items-center gap-3">
-                    <div class="admin-panel-muted flex items-center gap-3 border px-4 py-3"><ShieldCheck class="size-5 text-emerald-400"/><p class="admin-muted text-xs"><strong class="admin-heading block">Contrôle d’accès</strong>Étudiant : learning · Instructeur : contenu · Admin/Root : gestion</p></div>
                     <button class="inline-flex h-11 shrink-0 items-center gap-2 bg-[#a23362] px-5 text-sm font-semibold text-white" type="button" @click="openCreate"><Plus class="size-4"/>Créer un utilisateur</button>
                 </div>
             </header>
@@ -68,7 +68,28 @@ function createUser(): void {
                 <template #cell-name="{row}"><div class="flex min-w-0 items-center gap-3"><img :src="row.avatar_url" alt="" class="size-10 shrink-0 rounded-full object-cover"/><div class="min-w-0"><p class="admin-heading truncate text-sm font-medium">{{ row.name }}</p><p class="admin-muted truncate text-xs">{{ row.email }}</p></div></div></template>
                 <template #cell-role="{row}"><span class="admin-panel-muted px-2 py-1 text-xs font-semibold">{{ row.role_label }}</span></template>
                 <template #cell-status="{row}"><span :class="row.status === 'active' ? 'bg-emerald-400/10 text-emerald-400' : 'bg-rose-400/10 text-rose-400'" class="px-2 py-1 text-xs font-semibold">{{ row.status_label }}</span></template>
-                <template #actions="{row}"><button v-if="row.role !== 'root' || canManageRoot" class="admin-muted admin-hover grid size-9 place-items-center" title="Modifier les accès" type="button" @click="openEditor(row)"><Pencil class="size-4"/></button></template>
+                <template #actions="{row}">
+                    <div v-if="row.can_manage" class="flex items-center justify-end gap-1">
+                        <button class="admin-muted admin-hover grid size-9 place-items-center" title="Modifier les accès" type="button" @click="openEditor(row)"><Pencil class="size-4"/></button>
+                        <ConfirmAction
+                            :href="safeRoute('admin.users.update', row.id)"
+                            :data="{role: row.role, status: row.status === 'active' ? 'suspended' : 'active', must_change_password: row.must_change_password}"
+                            :message="row.status === 'active' ? 'Suspendre le compte de ' + row.name + ' ?' : 'Réactiver le compte de ' + row.name + ' ?'"
+                            :title="row.status === 'active' ? 'Suspendre l’utilisateur' : 'Réactiver l’utilisateur'"
+                            class="admin-muted admin-hover grid size-9 place-items-center"
+                            method="patch"
+                        ><Power class="size-4"/></ConfirmAction>
+                        <ConfirmAction
+                            :href="safeRoute('admin.users.destroy', row.id)"
+                            :message="'Supprimer définitivement ' + row.name + ' et son compte ?'"
+                            class="grid size-9 place-items-center text-rose-400 transition hover:bg-rose-400/10"
+                            confirm-label="Supprimer"
+                            danger
+                            method="delete"
+                            title="Supprimer l’utilisateur"
+                        ><Trash2 class="size-4"/></ConfirmAction>
+                    </div>
+                </template>
             </DataTable>
         </div>
 

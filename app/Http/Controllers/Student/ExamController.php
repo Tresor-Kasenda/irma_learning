@@ -115,9 +115,20 @@ final class ExamController extends Controller
             return $this->redirectToLearning($user, $formation, $progression, 'Vous avez atteint le nombre maximum de tentatives pour cet examen. Contactez un administrateur pour demander une réouverture.');
         }
 
-        if ($exam->randomize_questions && ! $attempt->question_order) {
-            $order = $exam->questions()->pluck('id')->shuffle()->values()->toArray();
-            $attempt->update(['question_order' => $order]);
+        if ($exam->randomize_questions && (! $attempt->question_order || ! $attempt->option_order)) {
+            $randomizedQuestions = $exam->questions()
+                ->with('options:id,question_id')
+                ->get();
+            $optionOrder = $randomizedQuestions
+                ->mapWithKeys(fn ($question): array => [
+                    (string) $question->id => $question->options->pluck('id')->shuffle()->values()->all(),
+                ])
+                ->all();
+            $attempt->update([
+                'question_order' => $attempt->question_order
+                    ?: $randomizedQuestions->pluck('id')->shuffle()->values()->all(),
+                'option_order' => $optionOrder,
+            ]);
             $attempt->refresh();
         }
 
@@ -136,7 +147,12 @@ final class ExamController extends Controller
             $questions = $questionsQuery->get();
         }
 
-        $questions = $questions->map(function ($question) {
+        $questions = $questions->map(function ($question) use ($attempt) {
+            $optionOrder = $attempt->option_order[(string) $question->id] ?? [];
+            $options = $optionOrder
+                ? $question->options->sortBy(fn ($option): int|false => array_search($option->id, $optionOrder, true))->values()
+                : $question->options;
+
             return [
                 'id' => $question->id,
                 'question_text' => $question->question_text,
@@ -145,7 +161,7 @@ final class ExamController extends Controller
                 'image' => $question->image,
                 'explanation' => $question->explanation,
                 'is_required' => $question->is_required,
-                'options' => $question->options->map(fn ($option) => [
+                'options' => $options->map(fn ($option) => [
                     'id' => $option->id,
                     'option_text' => $option->option_text,
                     'image' => $option->image,

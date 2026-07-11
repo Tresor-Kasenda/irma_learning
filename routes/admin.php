@@ -89,6 +89,7 @@ Route::middleware(['auth', 'admin.access'])
         Route::get('users', [UserController::class, 'index'])->name('users.index');
         Route::post('users', [UserController::class, 'store'])->name('users.store');
         Route::patch('users/{user}', [UserController::class, 'update'])->name('users.update');
+        Route::delete('users/{user}', [UserController::class, 'destroy'])->name('users.destroy');
         Route::get('settings', [SystemSettingController::class, 'edit'])->name('settings.edit');
         Route::post('settings', [SystemSettingController::class, 'update'])->name('settings.update');
 

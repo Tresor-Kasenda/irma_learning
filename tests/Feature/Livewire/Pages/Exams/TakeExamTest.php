@@ -179,6 +179,8 @@ test('questions are randomized when randomize is enabled', function () {
     $attempt = ExamAttempt::first();
     expect($attempt->question_order)->not->toBeNull();
     expect($attempt->question_order)->toHaveCount(5);
+    expect($attempt->option_order)->not->toBeNull();
+    expect($attempt->option_order)->toHaveCount(5);
 });
 
 test('user cannot exceed max attempts', function () {
@@ -194,5 +196,5 @@ test('user cannot exceed max attempts', function () {
     $this->actingAs($user)
         ->get(route('exam.take', $exam))
         ->assertRedirect(route('course.player', $formation->id))
-        ->assertSessionHas('error', 'Vous avez atteint le nombre maximum de tentatives pour cet examen.');
+        ->assertSessionHas('error', 'Vous avez atteint le nombre maximum de tentatives pour cet examen. Contactez un administrateur pour demander une réouverture.');
 });

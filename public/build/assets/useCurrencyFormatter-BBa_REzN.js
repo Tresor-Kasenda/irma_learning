@@ -1,0 +1,1 @@
+import{p as c,x as o}from"./app-B35kYpyh.js";function m(){const n=o(),e=c(()=>{var r;return String(((r=n.props.appSettings)==null?void 0:r.default_currency)??"USD")});return{currency:e,formatCurrency:(r,u=0)=>{const t=Number(r??0);return new Intl.NumberFormat("fr-CD",{style:"currency",currency:e.value,maximumFractionDigits:u}).format(Number.isFinite(t)?t:0)}}}export{m as u};

@@ -212,7 +212,7 @@ test('an admin can toggle exam active state', function () {
     $this->assertDatabaseHas(Exam::class, ['id' => $exam->id, 'is_active' => true]);
 });
 
-test('an admin can duplicate an exam with questions and options', function () {
+test('duplicating an exam opens a prefilled creation form without creating a second exam', function () {
     $exam = Exam::factory()
         ->for($this->section, 'examable')
         ->has(Question::factory()->hasOptions(3))
@@ -220,13 +220,19 @@ test('an admin can duplicate an exam with questions and options', function () {
 
     $this->actingAs($this->admin)
         ->post(route('admin.exams.duplicate', $exam))
-        ->assertRedirect();
+        ->assertRedirect(route('admin.exams.create', ['copy' => $exam->id]));
 
-    $this->assertDatabaseHas(Exam::class, ['title' => 'Original (copie)', 'is_active' => false]);
-    $duplicate = Exam::where('title', 'Original (copie)')->first();
-    expect($duplicate)->not->toBeNull();
-    expect($duplicate->questions()->count())->toBe(1);
-    expect($duplicate->questions()->first()->options()->count())->toBe(3);
+    expect(Exam::query()->count())->toBe(1);
+
+    $this->actingAs($this->admin)
+        ->get(route('admin.exams.create', ['copy' => $exam->id]))
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('Admin/Exams/Form')
+            ->where('exam', null)
+            ->where('template.title', 'Original (copie)')
+            ->where('template.is_active', false)
+            ->has('template.questions', 1)
+            ->has('template.questions.0.options', 3));
 });
 
 test('an admin can delete an exam', function () {

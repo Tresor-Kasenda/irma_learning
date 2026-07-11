@@ -25,7 +25,13 @@ abstract class ChapterRequest extends FormRequest
             'duration_minutes' => ['nullable', 'integer', 'min:0'],
             'is_free' => ['boolean'],
             'is_active' => ['boolean'],
-            'video' => ['nullable', 'file', 'mimetypes:video/mp4,video/webm,video/ogg,video/quicktime', 'max:512000'],
+            'video' => [
+                'nullable',
+                'file',
+                'extensions:mp4,webm,ogg,mov',
+                'mimetypes:video/mp4,video/webm,video/ogg,video/quicktime,application/octet-stream',
+                'max:512000',
+            ],
             'media' => ['nullable', 'file', 'mimes:pdf', 'max:51200'],
         ];
     }
@@ -42,6 +48,7 @@ abstract class ChapterRequest extends FormRequest
             'content_type.required' => 'Le type de contenu est obligatoire.',
             'media.mimes' => 'Le fichier doit être un PDF.',
             'media.max' => 'Le PDF ne doit pas dépasser 50 Mo.',
+            'video.extensions' => 'Le fichier doit utiliser une extension vidéo autorisée (mp4, webm, ogg, mov).',
             'video.mimetypes' => 'Le fichier doit être une vidéo (mp4, webm, ogg, mov).',
             'video.max' => 'La vidéo ne doit pas dépasser 500 Mo.',
         ];

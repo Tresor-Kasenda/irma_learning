@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import GuestLayout from '@/Layouts/GuestLayout.vue';
 import InputError from '@/Components/InputError.vue';
-import { Head, Link, useForm } from '@inertiajs/vue3';
+import { Head, Link, useForm, usePage } from '@inertiajs/vue3';
+import {computed, ref} from 'vue';
+import {Eye, EyeOff} from '@lucide/vue';
 
 defineProps<{
     canResetPassword?: boolean;
@@ -13,6 +15,9 @@ const form = useForm({
     password: '',
     remember: false,
 });
+const showPassword = ref(false);
+const page = usePage();
+const allowRegistration = computed(() => Boolean((page.props.appSettings as {allow_registration?: boolean})?.allow_registration));
 
 const submit = () => {
     form.post(route('login'), {
@@ -64,16 +69,27 @@ const submit = () => {
 
                     <div class="flex flex-col gap-2">
                         <label for="password" class="text-sm font-medium text-gray-700">Mot de passe</label>
-                        <input
-                            id="password"
-                            v-model="form.password"
-                            type="password"
-                            name="password"
-                            placeholder="••••••••"
-                            required
-                            autocomplete="current-password"
-                            class="block w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 caret-irma-primary shadow-sm placeholder:text-gray-400 focus:border-irma-primary focus:outline-none focus:ring-1 focus:ring-irma-primary"
-                        />
+                        <div class="relative">
+                            <input
+                                id="password"
+                                v-model="form.password"
+                                :type="showPassword ? 'text' : 'password'"
+                                name="password"
+                                placeholder="••••••••"
+                                required
+                                autocomplete="current-password"
+                                class="block w-full rounded-md border border-gray-300 bg-white px-3 py-2 pr-11 text-sm text-gray-900 caret-irma-primary shadow-sm placeholder:text-gray-400 focus:border-irma-primary focus:outline-none focus:ring-1 focus:ring-irma-primary"
+                            />
+                            <button
+                                :aria-label="showPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'"
+                                class="absolute inset-y-0 right-0 grid w-11 place-items-center text-gray-500 transition hover:text-irma-primary"
+                                type="button"
+                                @click="showPassword = !showPassword"
+                            >
+                                <EyeOff v-if="showPassword" class="size-4"/>
+                                <Eye v-else class="size-4"/>
+                            </button>
+                        </div>
                         <InputError :message="form.errors.password" />
 
                         <div class="flex justify-between w-full pt-2">
@@ -111,7 +127,7 @@ const submit = () => {
                 </div>
             </div>
 
-            <div class="bg-gray-50 rounded px-5 sm:px-6 py-4">
+            <div v-if="allowRegistration" class="bg-gray-50 rounded px-5 sm:px-6 py-4">
                 <p class="text-center text-sm text-gray-600">
                     Vous n'avez pas de compte ?
                     <Link :href="route('register')" class="font-medium text-irma-primary hover:opacity-80">

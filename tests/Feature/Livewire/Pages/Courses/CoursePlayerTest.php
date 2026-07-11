@@ -138,10 +138,10 @@ test('it updates enrollment progress when chapter completed', function () {
 
     $this->enrollment->refresh();
 
-    expect((float) $this->enrollment->progress_percentage)->toBe(50.0);
+    expect((float) $this->enrollment->progress_percentage)->toBe(33.33);
 });
 
-test('it marks enrollment as completed when all chapters done', function () {
+test('it keeps enrollment active until the mandatory section exam is passed', function () {
     $this->post(route('course.chapter.complete', [
         'formation' => $this->formation->id,
         'chapter' => $this->chapter1->id,
@@ -154,9 +154,9 @@ test('it marks enrollment as completed when all chapters done', function () {
 
     $this->enrollment->refresh();
 
-    expect((float) $this->enrollment->progress_percentage)->toBe(100.0)
-        ->and($this->enrollment->status->value)->toBe('completed')
-        ->and($this->enrollment->completion_date)->not->toBeNull();
+    expect((float) $this->enrollment->progress_percentage)->toBe(66.67)
+        ->and($this->enrollment->status->value)->toBe('active')
+        ->and($this->enrollment->completion_date)->toBeNull();
 });
 
 test('it redirects to next chapter after completion', function () {

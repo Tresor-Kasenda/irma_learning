@@ -4,6 +4,10 @@ declare(strict_types=1);
 
 use Illuminate\Support\Str;
 
+$mysqlSslCaAttribute = defined('Pdo\\Mysql::ATTR_SSL_CA')
+    ? constant('Pdo\\Mysql::ATTR_SSL_CA')
+    : constant('PDO::MYSQL_ATTR_SSL_CA');
+
 return [
 
     /*
@@ -60,7 +64,7 @@ return [
             'strict' => true,
             'engine' => 'InnoDB ROW_FORMAT=DYNAMIC',
             'options' => extension_loaded('pdo_mysql') ? array_filter([
-                PDO::MYSQL_ATTR_SSL_CA => env('MYSQL_ATTR_SSL_CA'),
+                $mysqlSslCaAttribute => env('MYSQL_ATTR_SSL_CA'),
             ]) : [],
         ],
 
@@ -80,7 +84,7 @@ return [
             'strict' => true,
             'engine' => null,
             'options' => extension_loaded('pdo_mysql') ? array_filter([
-                PDO::MYSQL_ATTR_SSL_CA => env('MYSQL_ATTR_SSL_CA'),
+                $mysqlSslCaAttribute => env('MYSQL_ATTR_SSL_CA'),
             ]) : [],
         ],
 

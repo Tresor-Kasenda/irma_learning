@@ -123,6 +123,24 @@ test('an admin can upload a video for a chapter', function () {
     Storage::disk('public')->assertExists($chapter->video_url);
 });
 
+test('an admin can upload a large mp4 detected as a generic binary file', function () {
+    Storage::fake('public');
+
+    $this->actingAs($this->admin)
+        ->post(route('admin.chapters.store'), [
+            'section_id' => $this->section->id,
+            'title' => 'Vidéo professionnelle',
+            'content_type' => 'video',
+            'video' => UploadedFile::fake()->create('masterclass.mp4', 14 * 1024, 'application/octet-stream'),
+            'is_active' => true,
+        ])
+        ->assertRedirect(route('admin.chapters.index'))
+        ->assertSessionHasNoErrors();
+
+    $chapter = Chapter::query()->where('title', 'Vidéo professionnelle')->firstOrFail();
+    Storage::disk('public')->assertExists($chapter->video_url);
+});
+
 test('uploading a pdf queues its Python extraction', function () {
     Queue::fake();
     Storage::fake('public');

@@ -31,8 +31,10 @@ const attrs = useAttrs();
 
 function confirm(): void {
     processing.value = true;
-    const visit = (router as any)[props.method];
-    visit(props.href, props.data, {
+
+    router.visit(props.href, {
+        method: props.method,
+        data: props.data,
         preserveScroll: true,
         onFinish: () => {
             processing.value = false;
