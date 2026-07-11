@@ -7,6 +7,7 @@ import {
     ClipboardCheck,
     Clock3,
     FileText,
+    History,
     Home,
     KeyRound,
     Layers3,
@@ -65,6 +66,7 @@ const groups = computed<NavGroup[]>(() => [
         items: [
             {label: 'Utilisateurs', route: 'admin.users.index', icon: Users},
             {label: 'Paramètres', route: 'admin.settings.edit', icon: Settings},
+            {label: 'Journal d’activité', route: 'admin.activity-logs.index', icon: History},
         ],
     },
 ]);

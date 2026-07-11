@@ -7,6 +7,7 @@ namespace App\Models;
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use App\Enums\UserRoleEnum;
 use App\Enums\UserStatusEnum;
+use App\Models\Concerns\LogsAllActivity;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -17,15 +18,13 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\Storage;
-use Spatie\Activitylog\LogOptions;
-use Spatie\Activitylog\Traits\LogsActivity;
 
 final class User extends Authenticatable
 {
     /** @use HasFactory<UserFactory> */
     use HasFactory;
 
-    use LogsActivity;
+    use LogsAllActivity;
     use Notifiable;
 
     /**
@@ -121,11 +120,6 @@ final class User extends Authenticatable
         return $this->role->value === UserRoleEnum::ROOT->value;
     }
 
-    public function getActivitylogOptions(): LogOptions
-    {
-        return LogOptions::defaults()->logFillable();
-    }
-
     public function hasStudent(): bool
     {
         if ($this->isStudent()) {
@@ -138,6 +132,14 @@ final class User extends Authenticatable
     public function isStudent(): bool
     {
         return $this->role->value === UserRoleEnum::STUDENT->value;
+    }
+
+    /**
+     * @return list<string>
+     */
+    protected function activityLogExcept(): array
+    {
+        return ['password', 'remember_token'];
     }
 
     /**

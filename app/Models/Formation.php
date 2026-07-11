@@ -7,6 +7,7 @@ namespace App\Models;
 use App\Enums\ChapterTypeEnum;
 use App\Enums\EnrollmentPaymentEnum;
 use App\Enums\FormationLevelEnum;
+use App\Models\Concerns\LogsAllActivity;
 use App\Services\CatalogStatsService;
 use Database\Factories\FormationFactory;
 use Illuminate\Database\Eloquent\Builder;
@@ -17,8 +18,6 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
-use Spatie\Activitylog\LogOptions;
-use Spatie\Activitylog\Traits\LogsActivity;
 use Spatie\Sluggable\HasSlug;
 use Spatie\Sluggable\SlugOptions;
 
@@ -28,7 +27,7 @@ final class Formation extends Model
     use HasFactory;
 
     use HasSlug;
-    use LogsActivity;
+    use LogsAllActivity;
 
     protected $fillable = [
         'title',
@@ -101,11 +100,6 @@ final class Formation extends Model
         return $this->belongsToMany(User::class, 'enrollments')
             ->withPivot(['status', 'payment_status', 'progress_percentage'])
             ->withTimestamps();
-    }
-
-    public function getActivitylogOptions(): LogOptions
-    {
-        return LogOptions::defaults()->logFillable();
     }
 
     public function progress(): MorphMany

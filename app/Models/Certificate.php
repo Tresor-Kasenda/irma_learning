@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Models;
 
 use App\Enums\CertificateStatusEnum;
+use App\Models\Concerns\LogsAllActivity;
 use Database\Factories\CertificateFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -15,6 +16,8 @@ final class Certificate extends Model
 {
     /** @use HasFactory<CertificateFactory> */
     use HasFactory;
+
+    use LogsAllActivity;
 
     protected $fillable = [
         'user_id',

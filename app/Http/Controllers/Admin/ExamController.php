@@ -213,7 +213,8 @@ final class ExamController extends Controller
     public function bulkActivate(Request $request): RedirectResponse
     {
         $ids = $request->input('ids', []);
-        Exam::query()->whereKey($ids)->update(['is_active' => true]);
+        // Individual saves (not a mass update query) so each change fires model events and gets logged.
+        Exam::query()->whereKey($ids)->get()->each->update(['is_active' => true]);
 
         return back()->with('success', 'Examens activés avec succès.');
     }
@@ -221,7 +222,7 @@ final class ExamController extends Controller
     public function bulkDeactivate(Request $request): RedirectResponse
     {
         $ids = $request->input('ids', []);
-        Exam::query()->whereKey($ids)->update(['is_active' => false]);
+        Exam::query()->whereKey($ids)->get()->each->update(['is_active' => false]);
 
         return back()->with('success', 'Examens désactivés avec succès.');
     }

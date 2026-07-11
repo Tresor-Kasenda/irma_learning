@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Models;
 
 use App\Enums\UserProgressEnum;
+use App\Models\Concerns\LogsAllActivity;
 use Database\Factories\UserProgressFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -15,6 +16,8 @@ final class UserProgress extends Model
 {
     /** @use HasFactory<UserProgressFactory> */
     use HasFactory;
+
+    use LogsAllActivity;
 
     protected $guarded = [];
 

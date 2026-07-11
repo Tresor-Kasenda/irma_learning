@@ -6,19 +6,18 @@ namespace App\Models;
 
 use App\Enums\EnrollmentPaymentEnum;
 use App\Enums\EnrollmentStatusEnum;
+use App\Models\Concerns\LogsAllActivity;
 use Database\Factories\EnrollmentFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Spatie\Activitylog\LogOptions;
-use Spatie\Activitylog\Traits\LogsActivity;
 
 final class Enrollment extends Model
 {
     /** @use HasFactory<EnrollmentFactory> */
     use HasFactory;
 
-    use LogsActivity;
+    use LogsAllActivity;
 
     protected $fillable = [
         'user_id',
@@ -67,11 +66,6 @@ final class Enrollment extends Model
     public function scopeCompleted($query)
     {
         return $query->where('status', EnrollmentStatusEnum::COMPLETED);
-    }
-
-    public function getActivitylogOptions(): LogOptions
-    {
-        return LogOptions::defaults()->logFillable();
     }
 
     public function markAsPaid(array $paymentData = []): void

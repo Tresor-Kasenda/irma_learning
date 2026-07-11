@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Models;
 
 use App\Enums\QuestionTypeEnum;
+use App\Models\Concerns\LogsAllActivity;
 use Database\Factories\QuestionFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -15,6 +16,8 @@ final class Question extends Model
 {
     /** @use HasFactory<QuestionFactory> */
     use HasFactory;
+
+    use LogsAllActivity;
 
     protected $fillable = [
         'exam_id',

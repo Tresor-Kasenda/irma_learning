@@ -6,6 +6,7 @@ namespace App\Models;
 
 use App\Enums\ExamAttemptEnum;
 use App\Enums\QuestionTypeEnum;
+use App\Models\Concerns\LogsAllActivity;
 use Database\Factories\ExamFactory;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -17,6 +18,8 @@ final class Exam extends Model
 {
     /** @use HasFactory<ExamFactory> */
     use HasFactory;
+
+    use LogsAllActivity;
 
     protected $fillable = [
         'examable_type',

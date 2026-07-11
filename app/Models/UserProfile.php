@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Models\Concerns\LogsAllActivity;
 use Database\Factories\UserProfileFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -13,6 +14,8 @@ final class UserProfile extends Model
 {
     /** @use HasFactory<UserProfileFactory> */
     use HasFactory;
+
+    use LogsAllActivity;
 
     /**
      * @return BelongsTo<User, $this>

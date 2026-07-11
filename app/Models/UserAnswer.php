@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Models\Concerns\LogsAllActivity;
 use Database\Factories\UserAnswerFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -13,6 +14,8 @@ final class UserAnswer extends Model
 {
     /** @use HasFactory<UserAnswerFactory> */
     use HasFactory;
+
+    use LogsAllActivity;
 
     protected $guarded = [];
 

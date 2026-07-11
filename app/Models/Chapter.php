@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Models;
 
 use App\Enums\ChapterTypeEnum;
+use App\Models\Concerns\LogsAllActivity;
 use App\Services\CatalogStatsService;
 use App\Services\MarkdownService;
 use App\Services\MarkdownToHtmlConverter;
@@ -20,6 +21,8 @@ final class Chapter extends Model
 {
     /** @use HasFactory<ChapterFactory> */
     use HasFactory;
+
+    use LogsAllActivity;
 
     protected $fillable = [
         'section_id',

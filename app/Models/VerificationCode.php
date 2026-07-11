@@ -8,6 +8,7 @@ use App\Enums\EnrollmentPaymentEnum;
 use App\Enums\EnrollmentStatusEnum;
 use App\Enums\VerificationCodeStatusEnum;
 use App\Enums\VerificationCodeTypeEnum;
+use App\Models\Concerns\LogsAllActivity;
 use Database\Factories\VerificationCodeFactory;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -19,6 +20,8 @@ final class VerificationCode extends Model
 {
     /** @use HasFactory<VerificationCodeFactory> */
     use HasFactory;
+
+    use LogsAllActivity;
 
     public $incrementing = false;
 

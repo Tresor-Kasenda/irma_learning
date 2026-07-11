@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Http\Controllers\Admin\AccessCodeController;
+use App\Http\Controllers\Admin\ActivityLogController;
 use App\Http\Controllers\Admin\CertificateStudentController;
 use App\Http\Controllers\Admin\ChapterController;
 use App\Http\Controllers\Admin\DashboardController;
@@ -103,4 +104,6 @@ Route::middleware(['auth', 'admin.access'])
         Route::post('progress/{progress}/mark-completed', [UserProgressController::class, 'markCompleted'])->name('progress.mark-completed');
         Route::post('progress/bulk-mark-started', [UserProgressController::class, 'bulkMarkStarted'])->name('progress.bulk-mark-started');
         Route::post('progress/bulk-mark-completed', [UserProgressController::class, 'bulkMarkCompleted'])->name('progress.bulk-mark-completed');
+
+        Route::get('activity-logs', [ActivityLogController::class, 'index'])->name('activity-logs.index');
     });

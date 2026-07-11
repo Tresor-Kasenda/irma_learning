@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Models\Concerns\LogsAllActivity;
 use Database\Factories\QuestionOptionFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -14,6 +15,8 @@ final class QuestionOption extends Model
 {
     /** @use HasFactory<QuestionOptionFactory> */
     use HasFactory;
+
+    use LogsAllActivity;
 
     protected $fillable = [
         'question_id',
