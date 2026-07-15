@@ -33,8 +33,16 @@ final class PythonPdfExtractionService
             throw new RuntimeException("Le répertoire de sortie n'a pas pu être déterminé : {$assetDirectory}");
         }
 
+        if (! is_string($outputPath)) {
+            throw new RuntimeException('Le chemin de sortie doit être une chaîne, reçu : '.gettype($outputPath));
+        }
+
         Storage::disk('public')->deleteDirectory($assetDirectory);
         Storage::disk('public')->makeDirectory($assetDirectory);
+
+        if (! is_dir($outputPath)) {
+            throw new RuntimeException("Impossible de créer le répertoire de sortie : {$outputPath}");
+        }
 
         $maxPages = (int) config('learning.pdf_extraction.max_pages', 0);
         $batchSize = (int) config('learning.pdf_extraction.batch_size', 50);
