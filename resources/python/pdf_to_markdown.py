@@ -1015,6 +1015,7 @@ def process_pdf(args: argparse.Namespace) -> Dict[str, Any]:
 
             batch_doc = pymupdf.open()
             batch_doc.insert_pdf(doc, from_page=batch_start, to_page=batch_end - 1)
+            batch_doc.set_metadata({'filename': str(input_path)})
 
             try:
                 chunks = pymupdf4llm.to_markdown(
