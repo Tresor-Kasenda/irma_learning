@@ -1067,13 +1067,14 @@ def process_pdf(args: argparse.Namespace) -> Dict[str, Any]:
 
                 raw_pages.append(text)
 
-                if page_profiles[page_number - 1]['is_complex'] or page_requires_visual_reference(page, raw):
-                    visual_queue.append(page_number)
+                # Per spec: only capture the first page as cover image
+                # Text extraction is prioritized over visual pages
+                # if page_profiles[page_number - 1]['is_complex'] or page_requires_visual_reference(page, raw):
+                #     visual_queue.append(page_number)
 
-    log_progress('visual', 0, max(len(visual_queue), 1),
-                 f'Rendu de {len(visual_queue)} pages visuelles')
+    log_progress('visual', 0, 0, 'Capture d\'écran: première page seulement (couverture)')
 
-    # ── Phase 2: parallel visual rendering ───────────────────────────────
+    # ── Phase 2: visual rendering (disabled - only cover page is captured) ───
     if visual_queue:
         if parallel > 1:
 
