@@ -301,6 +301,7 @@ function submit(): void {
                     </p>
                 </div>
                 <button
+                    v-if="isEdit"
                     class="inline-flex h-11 shrink-0 items-center justify-center gap-2 border border-[#a23362] px-4 text-sm font-semibold text-[#a23362] transition hover:bg-[#a23362]/10"
                     type="button"
                     @click="openExamModal"

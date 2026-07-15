@@ -52,6 +52,13 @@ final class HandleInertiaRequests extends Middleware
                 'default_currency' => $settings->default_currency,
                 'allow_registration' => $settings->allow_registration,
                 'support_email' => $settings->support_email,
+                'contact_email' => $settings->contact_email ?: ApplicationSetting::DEFAULT_CONTACT_EMAIL,
+                'contact_phone' => $settings->contact_phone ?: ApplicationSetting::DEFAULT_CONTACT_PHONE,
+                'contact_address_primary' => $settings->contact_address_primary ?: ApplicationSetting::DEFAULT_CONTACT_ADDRESS_PRIMARY,
+                'contact_address_secondary' => $settings->contact_address_secondary ?: ApplicationSetting::DEFAULT_CONTACT_ADDRESS_SECONDARY,
+                'home_hero_title' => $settings->home_hero_title ?: ApplicationSetting::DEFAULT_HOME_HERO_TITLE,
+                'home_hero_subtitle' => $settings->home_hero_subtitle ?: ApplicationSetting::DEFAULT_HOME_HERO_SUBTITLE,
+                'home_features' => $settings->home_features ?: ApplicationSetting::DEFAULT_HOME_FEATURES,
             ],
         ];
     }

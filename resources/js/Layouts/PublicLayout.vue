@@ -8,8 +8,20 @@ defineProps<{
 }>();
 
 const page = usePage();
-const logoUrl = computed(() => (page.props.appSettings as {logo_url?: string})?.logo_url ?? '/images/irma-logo-base.svg');
-const allowRegistration = computed(() => Boolean((page.props.appSettings as {allow_registration?: boolean})?.allow_registration));
+interface PublicSettings {
+    name?: string;
+    logo_url?: string;
+    allow_registration?: boolean;
+    contact_email?: string;
+    contact_phone?: string;
+    contact_address_primary?: string;
+    contact_address_secondary?: string;
+}
+const settings = computed(() => (page.props.appSettings as PublicSettings | undefined) ?? {});
+const logoUrl = computed(() => settings.value.logo_url ?? '/images/irma-logo-base.svg');
+const applicationName = computed(() => settings.value.name ?? 'Irma');
+const allowRegistration = computed(() => Boolean(settings.value.allow_registration));
+const phoneHref = computed(() => `tel:${(settings.value.contact_phone ?? '').replace(/[^+\d]/g, '')}`);
 
 function scrollToTop() {
     window.scrollTo({top: 0, behavior: 'smooth'});
@@ -29,9 +41,7 @@ function scrollToTop() {
                 <div class="lg:min-w-max flex">
                     <Link :href="route('home-page')" class="flex w-max gap-1">
                         <img :src="logoUrl"
-                             alt="logo Irma" class="h-14 w-auto" height="100" width="200"/>
-                        <img :src="whiteHeader ? '/assets/irma-text.svg' : '/images/irma-text-primary.svg'"
-                             alt="Irma Text" class="h-12 w-auto max-[500px]:hidden" height="51.53" width="131"/>
+                             :alt="`Logo ${applicationName}`" class="h-14 max-w-44 object-contain object-left" height="100" width="200"/>
                     </Link>
                 </div>
 
@@ -43,14 +53,6 @@ function scrollToTop() {
                         ]"
                         :href="route('certifications')"
                     >Nos Formations
-                    </Link>
-                    <Link
-                        :class="[
-                            'py-2 text-sm ease-linear duration-100 inline-flex',
-                            route().current('pages.pricings') ? 'text-irma-primary font-semibold' : 'text-gray-700 hover:text-irma-primary'
-                        ]"
-                        :href="route('pages.pricings')"
-                    >Nos tarifs
                     </Link>
                 </div>
 
@@ -100,7 +102,7 @@ function scrollToTop() {
 
         <button
             aria-label="Scroll to top"
-            class="fixed bottom-5 right-5 bg-primary-600 hover:bg-primary-700 bg-irma-accent text-white size-10 rounded-full shadow-lg transition-all"
+            class="fixed bottom-5 right-5 z-40 grid size-10 place-items-center rounded-full bg-irma-primary text-white shadow-lg transition hover:opacity-90"
             @click="scrollToTop">
             ↑
         </button>
@@ -111,10 +113,8 @@ function scrollToTop() {
                     class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-10 py-10 max-sm:max-w-sm max-sm:mx-auto gap-y-8">
                     <div class="col-span-full lg:col-span-3 lg:pr-16">
                         <Link :href="route('home-page')" class="flex w-max gap-2 items-center">
-                            <img :src="logoUrl" alt="logo Irma" class="h-14 w-auto" height="100"
+                            <img :src="logoUrl" :alt="`Logo ${applicationName}`" class="h-14 max-w-48 object-contain object-left" height="100"
                                  width="200"/>
-                            <img alt="Irma Text" class="h-12 w-auto" height="51.53" src="/images/irma-text-primary.svg"
-                                 width="131"/>
                         </Link>
                         <div
                             class="flex flex-col divide-y divide-gray-200 *:py-2 first:*:pt-0 last:*:pb-0 mt-8 p-4 bg-gray-50 rounded-md text-sm text-gray-600">
@@ -128,7 +128,7 @@ function scrollToTop() {
                                         stroke-linecap="round"
                                         stroke-linejoin="round"/>
                                 </svg>
-                                <span>269, Av. KASONGO NYEMBO, Q/ Baudouin, Lubumbashi, RD Congo</span>
+                                <span class="break-words">{{ settings.contact_address_primary }}</span>
                             </div>
                             <div class="flex items-center gap-3">
                                 <svg class="size-4 shrink-0" fill="none" stroke="currentColor"
@@ -140,10 +140,10 @@ function scrollToTop() {
                                         stroke-linecap="round"
                                         stroke-linejoin="round"/>
                                 </svg>
-                                <span>2, Avenue Père Boka, Commune de la Gombe, Kinshasa, RD Congo</span>
+                                <span class="break-words">{{ settings.contact_address_secondary }}</span>
                             </div>
-                            <a class="flex items-center gap-3 hover:text-primary-600"
-                               href="mailto:communication@irmardc.org">
+                            <a class="flex min-w-0 items-center gap-3 hover:text-irma-primary"
+                               :href="`mailto:${settings.contact_email}`">
                                 <svg class="size-4" fill="none" stroke="currentColor"
                                      stroke-width="1.5" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                                     <path
@@ -151,9 +151,9 @@ function scrollToTop() {
                                         stroke-linecap="round"
                                         stroke-linejoin="round"/>
                                 </svg>
-                                <span>communication@irmardc.org</span>
+                                <span class="min-w-0 break-all">{{ settings.contact_email }}</span>
                             </a>
-                            <a class="flex items-center gap-3 hover:text-primary-600" href="tel:+243819742171">
+                            <a class="flex items-center gap-3 hover:text-irma-primary" :href="phoneHref">
                                 <svg class="size-4" fill="none" stroke="currentColor"
                                      stroke-width="1.5" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                                     <path
@@ -161,7 +161,7 @@ function scrollToTop() {
                                         stroke-linecap="round"
                                         stroke-linejoin="round"/>
                                 </svg>
-                                <span>+243 819 742 171</span>
+                                <span>{{ settings.contact_phone }}</span>
                             </a>
                         </div>
                     </div>
@@ -203,7 +203,7 @@ function scrollToTop() {
                 <div class="py-7 border-t border-gray-200">
                     <div class="flex items-center justify-center flex-col lg:justify-between lg:flex-row">
                         <span class="text-sm text-gray-500">
-                            © Irma {{ new Date().getFullYear() }}, All rights reserved.
+                            © {{ applicationName }} {{ new Date().getFullYear() }}, Tous droits réservés.
                         </span>
                         <div class="flex mt-4 space-x-4 sm:justify-center lg:mt-0">
                             <a class="w-9 h-9 rounded-full bg-gray-700 flex justify-center items-center hover:bg-primary-600"

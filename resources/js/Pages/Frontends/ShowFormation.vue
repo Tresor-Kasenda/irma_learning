@@ -2,6 +2,7 @@
 import {router, useForm} from '@inertiajs/vue3';
 import {computed, ref} from 'vue';
 import PublicLayout from '@/Layouts/PublicLayout.vue';
+import {useCurrencyFormatter} from '@/composables/useCurrencyFormatter';
 
 interface Chapter {
     id: number;
@@ -43,7 +44,9 @@ const props = defineProps<{
 }>();
 
 const showFullDescription = ref(false);
+const expandedSectionIds = ref<number[]>([]);
 const enrollForm = useForm({});
+const {formatCurrency} = useCurrencyFormatter();
 
 const descriptionText = computed(() => props.formation.description ?? '');
 const isLongDescription = computed(() => descriptionText.value.length > 300);
@@ -70,11 +73,21 @@ function handleCTA(): void {
     }
     enrollForm.post(route('formation.enroll', props.formation.id));
 }
+
+function toggleSection(sectionId: number): void {
+    expandedSectionIds.value = expandedSectionIds.value.includes(sectionId)
+        ? expandedSectionIds.value.filter((id) => id !== sectionId)
+        : [...expandedSectionIds.value, sectionId];
+}
+
+function formatDuration(minutes: number | null): string {
+    return minutes ? `${minutes} min` : 'À votre rythme';
+}
 </script>
 
 <template>
     <PublicLayout :title="formation.title">
-        <section class="my-32 mx-auto max-w-7xl w-full px-5 sm:px-10 flex flex-col md:flex-row gap-16">
+        <section class="mx-auto my-28 flex w-full max-w-7xl flex-col gap-10 px-5 sm:px-10 md:flex-row lg:gap-16">
             <article class="flex flex-col flex-1">
                 <h1 class="font-medium text-xl sm:text-2xl/snug lg:text-4xl text-gray-900">
                     {{ formation.title }}
@@ -141,14 +154,19 @@ function handleCTA(): void {
 
                 <div v-if="formation.sections.length > 0" class="mt-12 flex flex-col space-y-6">
                     <span class="text-lg font-semibold text-gray-900">Contenu du programme</span>
-                    <div
-                        class="flex flex-col divide-y divide-gray-100 border border-gray-100 rounded-md overflow-hidden">
-                        <div
+                    <div class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+                        <section
                             v-for="section in formation.sections"
                             :key="section.id"
-                            class="flex items-center justify-between gap-4 px-4 py-3 bg-white hover:bg-gray-50 transition-colors"
+                            class="border-b border-gray-100 last:border-b-0"
                         >
-                            <div class="flex items-center gap-3">
+                            <button
+                                :aria-expanded="expandedSectionIds.includes(section.id)"
+                                class="flex w-full items-center justify-between gap-4 px-4 py-4 text-left transition hover:bg-gray-50 sm:px-5"
+                                type="button"
+                                @click="toggleSection(section.id)"
+                            >
+                            <div class="flex min-w-0 items-center gap-3">
                                 <svg class="size-5 text-primary-500 shrink-0" fill="none" stroke="currentColor"
                                      stroke-width="1.5" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                                     <path
@@ -156,12 +174,25 @@ function handleCTA(): void {
                                         stroke-linecap="round"
                                         stroke-linejoin="round"/>
                                 </svg>
-                                <span class="font-medium text-gray-800 text-sm">{{ section.title }}</span>
+                                <span class="min-w-0 break-words text-sm font-semibold text-gray-800">{{ section.title }}</span>
                             </div>
-                            <span class="shrink-0 text-xs text-gray-500">
+                            <span class="flex shrink-0 items-center gap-2 text-xs text-gray-500">
                                 {{ section.chapters.length }} chapitre{{ section.chapters.length > 1 ? 's' : '' }}
+                                <svg :class="expandedSectionIds.includes(section.id) ? 'rotate-180' : ''" class="size-4 transition" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"/></svg>
                             </span>
-                        </div>
+                            </button>
+                            <div v-if="expandedSectionIds.includes(section.id)" class="border-t border-gray-100 bg-gray-50/70 px-4 py-2 sm:px-5">
+                                <p v-if="section.description" class="border-b border-gray-200 py-3 text-sm leading-6 text-gray-600">{{ section.description }}</p>
+                                <ol v-if="section.chapters.length" class="divide-y divide-gray-200">
+                                    <li v-for="(chapter, index) in section.chapters" :key="chapter.id" class="flex min-w-0 items-center gap-3 py-3 text-sm">
+                                        <span class="grid size-7 shrink-0 place-items-center rounded-full bg-white text-xs font-semibold text-irma-primary shadow-sm">{{ index + 1 }}</span>
+                                        <span class="min-w-0 flex-1 break-words text-gray-700">{{ chapter.title }}</span>
+                                        <span class="shrink-0 text-xs text-gray-500">{{ formatDuration(chapter.duration_minutes) }}</span>
+                                    </li>
+                                </ol>
+                                <p v-else class="py-3 text-sm text-gray-500">Les chapitres seront bientôt disponibles.</p>
+                            </div>
+                        </section>
                     </div>
                 </div>
             </article>
@@ -207,7 +238,7 @@ function handleCTA(): void {
                                 class="bg-gray-50 border border-gray-100 rounded-md px-3 py-2 flex justify-between items-center">
                                 <span class="text-sm text-gray-500">Prix :</span>
                                 <span :class="Number(formation.price ?? 0) === 0 ? 'text-green-600' : 'text-gray-900'" class="font-semibold">
-                                    {{ Number(formation.price ?? 0) === 0 ? 'Gratuit' : `${formation.price} $` }}
+                                    {{ Number(formation.price ?? 0) === 0 ? 'Gratuit' : formatCurrency(Number(formation.price), 2) }}
                                 </span>
                             </div>
                         </div>

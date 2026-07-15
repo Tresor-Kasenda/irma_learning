@@ -9,6 +9,7 @@
         "@inertiajs/vue3": "^2.0.0",
         "@tailwindcss/vite": "^4.0.6",
         "@types/canvas-confetti": "^1.9.0",
+        "@types/prismjs": "^1.26.6",
         "@vitejs/plugin-vue": "^6.0.0",
         "axios": "^1.7.4",
         "concurrently": "^9.0.1",
@@ -28,6 +29,7 @@
         "marked": "^18.0.5",
         "marked-katex-extension": "^5.1.10",
         "mermaid": "^11.16.0",
-        "pinia": "^3.0.4"
+        "pinia": "^3.0.4",
+        "prismjs": "^1.30.0"
     }
 }

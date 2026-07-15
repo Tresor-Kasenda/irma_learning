@@ -1,5 +1,6 @@
 <script lang="ts" setup>
-import {Link} from '@inertiajs/vue3';
+import {Link, usePage} from '@inertiajs/vue3';
+import {computed} from 'vue';
 import PublicLayout from '@/Layouts/PublicLayout.vue';
 import {useCurrencyFormatter} from '@/composables/useCurrencyFormatter';
 
@@ -17,6 +18,12 @@ defineProps<{
     } | null;
 }>();
 const {formatCurrency} = useCurrencyFormatter();
+const page = usePage();
+const publicContent = computed(() => (page.props.appSettings as {
+    home_hero_title?: string;
+    home_hero_subtitle?: string;
+    home_features?: string[];
+} | undefined) ?? {});
 
 function formatPrice(price: number): string {
     if (price <= 0) return 'Gratuit';
@@ -31,40 +38,17 @@ function formatPrice(price: number): string {
                 <div
                     class="lg:w-1/2 lg:py-12 xl:py-20 space-y-7 flex flex-col items-center lg:items-start text-center lg:text-left">
                     <h1 class="font-medium text-3xl md:text-4xl text-gray-900">
-                        Devenez Leader du Risque en RD Congo avec l'iRMA
+                        {{ publicContent.home_hero_title }}
                     </h1>
-                    <p class="text-gray-700">L'iRMA offre 3 types de formation</p>
+                    <p class="text-gray-700">{{ publicContent.home_hero_subtitle }}</p>
                     <ul class="text-gray-600 grid gap-y-4">
-                        <li class="flex items-start">
+                        <li v-for="(feature, index) in publicContent.home_features" :key="index" class="flex items-start">
                             <svg class="size-5 mr-3 mt-0.5 text-irma-primary shrink-0" fill="none" stroke="currentColor"
                                  stroke-width="3" viewBox="0 0 24 24"
                                  xmlns="http://www.w3.org/2000/svg">
                                 <path d="m4.5 12.75 6 6 9-13.5" stroke-linecap="round" stroke-linejoin="round"/>
                             </svg>
-                            <span>Les certifications professionnelles à travers des formations menant à des
-                                Titres Professionnels qui témoignent de l'autorité et de la crédibilité
-                                professionnelles des membres. Chaque membre doit totaliser au moins 25 points
-                                DPC par période de douze mois afin de conserver son titre professionnel.</span>
-                        </li>
-                        <li class="flex items-start">
-                            <svg class="size-5 mr-3 mt-0.5 text-irma-primary shrink-0" fill="none" stroke="currentColor"
-                                 stroke-width="3" viewBox="0 0 24 24"
-                                 xmlns="http://www.w3.org/2000/svg">
-                                <path d="m4.5 12.75 6 6 9-13.5" stroke-linecap="round" stroke-linejoin="round"/>
-                            </svg>
-                            <span>La Formation Continue à travers de courts programmes qui permettent aux
-                                membres d'acquérir, d'actualiser ou d'améliorer rapidement leur compétence
-                                tout au long de leur vie professionnelle. Chaque membre doit cumuler au moins
-                                20 Unités de Formation Continue (UFC) par période de référence de 12 mois.</span>
-                        </li>
-                        <li class="flex items-start">
-                            <svg class="size-5 mr-3 mt-0.5 text-irma-primary shrink-0" fill="none" stroke="currentColor"
-                                 stroke-width="3" viewBox="0 0 24 24"
-                                 xmlns="http://www.w3.org/2000/svg">
-                                <path d="m4.5 12.75 6 6 9-13.5" stroke-linecap="round" stroke-linejoin="round"/>
-                            </svg>
-                            <span>La Formation en Entreprise livrées en respectant les besoins spécifiques
-                                des sociétés à travers une démarche partenariale sur mesure.</span>
+                            <span>{{ feature }}</span>
                         </li>
                     </ul>
                     <Link :href="route('certifications')"

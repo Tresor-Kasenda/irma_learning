@@ -51,7 +51,7 @@ markdown.use(katexExtension({
 
 const textareaRef = ref<HTMLTextAreaElement | null>(null);
 const previewRef = ref<HTMLElement | null>(null);
-const editorHeight = ref(320);
+const editorHeight = 420;
 const mobilePane = ref<'editor' | 'preview'>('editor');
 const themeVersion = ref(0);
 let diagramId = 0;
@@ -120,25 +120,11 @@ async function renderMermaidDiagrams(): Promise<void> {
 }
 
 watch(renderedHtml, () => void renderMermaidDiagrams(), {immediate: true});
-watch(() => props.modelValue, () => nextTick(resizeEditor));
-
-function resizeEditor(): void {
-    const textarea = textareaRef.value;
-    if (! textarea) {
-        return;
-    }
-
-    textarea.style.height = 'auto';
-    editorHeight.value = Math.min(640, Math.max(240, textarea.scrollHeight));
-}
-
 function updateValue(event: Event): void {
     emit('update:modelValue', (event.target as HTMLTextAreaElement).value);
-    void nextTick(resizeEditor);
 }
 
 onMounted(() => {
-    resizeEditor();
     void renderMermaidDiagrams();
     themeObserver = new MutationObserver(() => {
         themeVersion.value += 1;

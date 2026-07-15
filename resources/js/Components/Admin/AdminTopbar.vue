@@ -1,6 +1,6 @@
 <script lang="ts" setup>
-import {Link, router, usePage} from '@inertiajs/vue3';
-import {ChevronDown, LogOut, Menu, Moon, PanelLeftClose, Sun, UserRound} from '@lucide/vue';
+import {router, usePage} from '@inertiajs/vue3';
+import {ChevronDown, LogOut, Menu, Moon, PanelLeftClose, Sun} from '@lucide/vue';
 import {computed, ref} from 'vue';
 import {useUiStore} from '@/stores';
 import {safeRoute} from '@/utilities/route';
@@ -105,15 +105,8 @@ function logout(): void {
                         <p class="admin-heading truncate text-sm font-semibold">{{ user?.name ?? 'Admin' }}</p>
                         <p class="mt-0.5 text-xs text-slate-500">Administrateur</p>
                     </div>
-                    <Link
-                        :href="safeRoute('profile.edit')"
-                        class="admin-text admin-hover flex items-center gap-3 px-4 py-2.5 text-sm transition"
-                    >
-                        <UserRound class="size-4" :stroke-width="1.7"/>
-                        Mon profil
-                    </Link>
                     <button
-                        class="admin-divider flex w-full items-center gap-3 border-t px-4 py-2.5 text-left text-sm text-rose-500 transition hover:bg-rose-50 dark:text-rose-400 dark:hover:bg-white/5 dark:hover:text-rose-300"
+                        class="flex w-full items-center gap-3 px-4 py-2.5 text-left text-sm text-rose-500 transition hover:bg-rose-50 dark:text-rose-400 dark:hover:bg-white/5 dark:hover:text-rose-300"
                         type="button"
                         @click="logout"
                     >

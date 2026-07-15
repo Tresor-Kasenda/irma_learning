@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import {Check, ChevronDown, Plus, X} from '@lucide/vue';
-import {computed, onBeforeUnmount, onMounted, ref} from 'vue';
+import {computed, nextTick, onBeforeUnmount, onMounted, ref} from 'vue';
 import FieldWrapper from '@/Components/Admin/Fields/FieldWrapper.vue';
 
 type OptionValue = string | number;
@@ -42,8 +42,11 @@ const props = withDefaults(
 const emit = defineEmits<{ (e: 'update:modelValue', value: OptionValue | OptionValue[] | null): void }>();
 
 const root = ref<HTMLElement | null>(null);
+const trigger = ref<HTMLElement | null>(null);
+const dropdown = ref<HTMLElement | null>(null);
 const open = ref(false);
 const search = ref('');
+const dropdownStyle = ref<Record<string, string>>({});
 
 const selectedValues = computed<OptionValue[]>(() => {
     if (props.multiple) {
@@ -115,17 +118,53 @@ function toggle(): void {
     open.value = !open.value;
     if (open.value) {
         search.value = '';
+        void nextTick(updateDropdownPosition);
     }
 }
 
+function updateDropdownPosition(): void {
+    const element = trigger.value;
+    if (! element || ! open.value) {
+        return;
+    }
+
+    const rect = element.getBoundingClientRect();
+    const gap = 4;
+    const viewportPadding = 8;
+    const desiredHeight = 280;
+    const spaceBelow = window.innerHeight - rect.bottom - viewportPadding;
+    const spaceAbove = rect.top - viewportPadding;
+    const opensUpward = spaceBelow < 180 && spaceAbove > spaceBelow;
+    const availableHeight = Math.max(120, Math.min(desiredHeight, opensUpward ? spaceAbove - gap : spaceBelow - gap));
+
+    dropdownStyle.value = {
+        position: 'fixed',
+        left: `${Math.max(viewportPadding, rect.left)}px`,
+        top: opensUpward ? 'auto' : `${rect.bottom + gap}px`,
+        bottom: opensUpward ? `${window.innerHeight - rect.top + gap}px` : 'auto',
+        width: `${Math.min(rect.width, window.innerWidth - viewportPadding * 2)}px`,
+        maxHeight: `${availableHeight}px`,
+        zIndex: '9999',
+    };
+}
+
 function onClickOutside(event: MouseEvent): void {
-    if (root.value && !root.value.contains(event.target as Node)) {
+    const target = event.target as Node;
+    if (root.value && !root.value.contains(target) && !dropdown.value?.contains(target)) {
         open.value = false;
     }
 }
 
-onMounted(() => document.addEventListener('mousedown', onClickOutside));
-onBeforeUnmount(() => document.removeEventListener('mousedown', onClickOutside));
+onMounted(() => {
+    document.addEventListener('mousedown', onClickOutside);
+    window.addEventListener('resize', updateDropdownPosition);
+    window.addEventListener('scroll', updateDropdownPosition, true);
+});
+onBeforeUnmount(() => {
+    document.removeEventListener('mousedown', onClickOutside);
+    window.removeEventListener('resize', updateDropdownPosition);
+    window.removeEventListener('scroll', updateDropdownPosition, true);
+});
 </script>
 
 <template>
@@ -138,6 +177,7 @@ onBeforeUnmount(() => document.removeEventListener('mousedown', onClickOutside))
     >
         <div ref="root" class="relative min-w-0 max-w-full">
             <div
+                ref="trigger"
                 :id="id"
                 :aria-label="label"
                 :aria-expanded="open"
@@ -193,7 +233,8 @@ onBeforeUnmount(() => document.removeEventListener('mousedown', onClickOutside))
                 </span>
             </div>
 
-            <div v-if="open" class="admin-panel absolute z-50 mt-1 w-full overflow-hidden border shadow-2xl shadow-black/20">
+            <Teleport to="body">
+            <div v-if="open" ref="dropdown" :style="dropdownStyle" class="admin-panel flex flex-col overflow-hidden border shadow-2xl shadow-black/20">
                 <div v-if="searchable" class="admin-divider border-b p-2">
                     <input
                         v-model="search"
@@ -204,7 +245,7 @@ onBeforeUnmount(() => document.removeEventListener('mousedown', onClickOutside))
                         @click.stop
                     />
                 </div>
-                <ul class="max-h-56 overflow-y-auto py-1" role="listbox">
+                <ul class="min-h-0 flex-1 overflow-y-auto py-1" role="listbox">
                     <li
                         v-for="option in filteredOptions"
                         :key="option.value"
@@ -239,6 +280,7 @@ onBeforeUnmount(() => document.removeEventListener('mousedown', onClickOutside))
                     </li>
                 </ul>
             </div>
+            </Teleport>
         </div>
     </FieldWrapper>
 </template>

@@ -156,19 +156,19 @@ celery -A pdf_extraction_api worker --loglevel=info
 ```yaml
 version: '3.8'
 services:
-  pdf-api:
-    build: .
-    ports:
-      - "8001:8001"
-    environment:
-      - WORKERS=4
-    restart: always
+    pdf-api:
+        build: ../..
+        ports:
+            - "8001:8001"
+        environment:
+            - WORKERS=4
+        restart: always
 
-  redis:
-    image: redis:latest
-    ports:
-      - "6379:6379"
-    restart: always
+    redis:
+        image: redis:latest
+        ports:
+            - "6379:6379"
+        restart: always
 ```
 
 ## 📈 Performances
@@ -176,10 +176,10 @@ services:
 ### Benchmarks (sur un serveur 4-core, 8GB RAM)
 
 | Taille PDF | Temps d'extraction |
-|------------|-------------------|
-| 50 pages   | ~5 secondes       |
-| 200 pages  | ~15 secondes      |
-| 395 pages  | ~30 secondes      |
+|------------|--------------------|
+| 50 pages   | ~5 secondes        |
+| 200 pages  | ~15 secondes       |
+| 395 pages  | ~30 secondes       |
 
 ### Optimisations possibles
 

@@ -120,17 +120,17 @@ function updateDateFilter(key: 'date_from' | 'date_to', value: string | null): v
         </div>
 
         <ResourceFormModal :processing="false" :show="showDetails" size="lg" title="Détails de l’activité" @close="showDetails = false" @submit="showDetails = false">
-            <div v-if="selected" class="grid gap-4 text-sm">
-                <div class="grid grid-cols-2 gap-4">
-                    <div><p class="admin-muted text-xs uppercase tracking-wide">Date</p><p class="admin-text mt-1">{{ formatDateTime(selected.created_at) }}</p></div>
-                    <div><p class="admin-muted text-xs uppercase tracking-wide">Auteur</p><p class="admin-text mt-1">{{ selected.causer?.name ?? 'Système' }}</p></div>
-                    <div><p class="admin-muted text-xs uppercase tracking-wide">Modèle</p><p class="admin-text mt-1">{{ selected.log_name ?? '—' }}</p></div>
-                    <div><p class="admin-muted text-xs uppercase tracking-wide">Événement</p><p class="admin-text mt-1">{{ selected.event ?? '—' }}</p></div>
+            <div v-if="selected" class="grid min-w-0 gap-4 text-sm">
+                <div class="grid min-w-0 gap-4 sm:grid-cols-2">
+                    <div class="min-w-0"><p class="admin-muted text-xs uppercase tracking-wide">Date</p><p class="admin-text mt-1 break-words">{{ formatDateTime(selected.created_at) }}</p></div>
+                    <div class="min-w-0"><p class="admin-muted text-xs uppercase tracking-wide">Auteur</p><p class="admin-text mt-1 break-words">{{ selected.causer?.name ?? 'Système' }}</p></div>
+                    <div class="min-w-0"><p class="admin-muted text-xs uppercase tracking-wide">Modèle</p><p class="admin-text mt-1 break-words">{{ selected.log_name ?? '—' }}</p></div>
+                    <div class="min-w-0"><p class="admin-muted text-xs uppercase tracking-wide">Événement</p><p class="admin-text mt-1 break-words">{{ selected.event ?? '—' }}</p></div>
                 </div>
-                <div><p class="admin-muted text-xs uppercase tracking-wide">Description</p><p class="admin-text mt-1">{{ selected.description }}</p></div>
-                <div>
+                <div class="min-w-0"><p class="admin-muted text-xs uppercase tracking-wide">Description</p><p class="admin-text mt-1 break-words">{{ selected.description }}</p></div>
+                <div class="min-w-0">
                     <p class="admin-muted text-xs uppercase tracking-wide">Propriétés</p>
-                    <pre class="admin-panel-muted admin-text mt-1 max-h-96 overflow-auto p-3 text-xs">{{ JSON.stringify(selected.properties, null, 2) }}</pre>
+                    <pre class="admin-panel-muted admin-text mt-1 max-h-96 max-w-full overflow-x-hidden overflow-y-auto whitespace-pre-wrap break-all p-3 text-xs leading-5">{{ JSON.stringify(selected.properties, null, 2) }}</pre>
                 </div>
             </div>
         </ResourceFormModal>
