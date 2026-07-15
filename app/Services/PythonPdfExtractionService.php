@@ -27,6 +27,11 @@ final class PythonPdfExtractionService
             throw new RuntimeException("Le script Python est introuvable : {$scriptPath}");
         }
 
+        $outputPath = Storage::disk('public')->path($assetDirectory);
+        if ($outputPath === null || $outputPath === '') {
+            throw new RuntimeException("Le répertoire de sortie n'a pas pu être déterminé : {$assetDirectory}");
+        }
+
         Storage::disk('public')->deleteDirectory($assetDirectory);
         Storage::disk('public')->makeDirectory($assetDirectory);
 
@@ -43,7 +48,7 @@ final class PythonPdfExtractionService
             '--input',
             $pdfPath,
             '--output-dir',
-            Storage::disk('public')->path($assetDirectory),
+            $outputPath,
             '--public-prefix',
             '/storage/'.mb_ltrim($assetDirectory, '/'),
             '--max-pages',

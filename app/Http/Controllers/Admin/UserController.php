@@ -25,6 +25,8 @@ final class UserController extends Controller
             ? $request->integer('per_page')
             : 10;
 
+        $canManageRoot = $request->user()?->isRoot() ?? false;
+
         $users = User::query()
             ->withCount(['enrollments', 'certificates'])
             ->when($request->string('search')->isNotEmpty(), function (Builder $query) use ($request): void {
@@ -48,8 +50,6 @@ final class UserController extends Controller
                 'certificates_count' => $user->certificates_count,
                 'can_manage' => ! $request->user()?->is($user) && ($user->role !== UserRoleEnum::ROOT || $canManageRoot),
             ]);
-
-        $canManageRoot = $request->user()?->isRoot() ?? false;
 
         return Inertia::render('Admin/Users/Index', [
             'users' => $users,

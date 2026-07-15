@@ -99,10 +99,17 @@ class ConversionError(Exception):
 # ── CLI ──────────────────────────────────────────────────────────────────────
 
 
+def validate_path(value: str) -> Path:
+    """Validate and convert string to Path, rejecting None or empty strings."""
+    if not value or value == 'None':
+        raise argparse.ArgumentTypeError(f'Path invalide: {value!r}')
+    return Path(value)
+
+
 def parse_args(argv: Optional[List[str]] = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--input', required=True, type=Path)
-    parser.add_argument('--output-dir', required=True, type=Path)
+    parser.add_argument('--input', required=True, type=validate_path)
+    parser.add_argument('--output-dir', required=True, type=validate_path)
     parser.add_argument('--public-prefix', required=True)
     parser.add_argument('--max-pages', type=int, default=0,
                         help='Max pages (0 = unlimited, default)')
