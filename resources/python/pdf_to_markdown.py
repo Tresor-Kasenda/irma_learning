@@ -101,9 +101,14 @@ class ConversionError(Exception):
 
 def validate_path(value: str) -> Path:
     """Validate and convert string to Path, rejecting None or empty strings."""
+    if value is None:
+        raise argparse.ArgumentTypeError('Path ne peut pas être None')
     if not value or value == 'None':
         raise argparse.ArgumentTypeError(f'Path invalide: {value!r}')
-    return Path(value)
+    try:
+        return Path(value)
+    except (TypeError, AttributeError) as e:
+        raise argparse.ArgumentTypeError(f'Chemin invalide {value!r}: {e}')
 
 
 def parse_args(argv: Optional[List[str]] = None) -> argparse.Namespace:
@@ -1159,12 +1164,23 @@ def extract_document(args: argparse.Namespace) -> Dict[str, Any]:
 
 
 def main(argv: Optional[List[str]] = None) -> int:
-    args = parse_args(argv)
+    try:
+        args = parse_args(argv)
+        log_progress('parse_success', 0, 1, f'input={args.input}, output_dir={args.output_dir}')
+    except Exception as e:
+        error_msg = f'Erreur parsing: {type(e).__name__}: {str(e)}'
+        log_progress('error', 0, 1, error_msg)
+        print(json.dumps({'error': error_msg}, ensure_ascii=False), file=sys.stderr)
+        return 1
+
     try:
         result = extract_document(args)
     except Exception as e:
-        log_progress('error', 0, 1, str(e))
-        print(json.dumps({'error': str(e)}, ensure_ascii=False), file=sys.stderr)
+        error_msg = f'{type(e).__name__}: {str(e)}'
+        log_progress('error', 0, 1, error_msg)
+        print(json.dumps({'error': error_msg}, ensure_ascii=False), file=sys.stderr)
+        import traceback
+        traceback.print_exc(file=sys.stderr)
         return 1
     print(json.dumps(result, ensure_ascii=False))
     return 0

@@ -6,6 +6,7 @@ namespace App\Services;
 
 use Illuminate\Support\Facades\Storage;
 use JsonException;
+use Log;
 use RuntimeException;
 use Symfony\Component\Process\Process;
 
@@ -42,7 +43,7 @@ final class PythonPdfExtractionService
         $visualDpi = (int) config('learning.pdf_extraction.visual_dpi', 110);
         $ocrLanguage = (string) config('learning.pdf_extraction.ocr_language', 'fra+eng');
 
-        $process = new Process([
+        $command = [
             $pythonBinary,
             $scriptPath,
             '--input',
@@ -63,7 +64,16 @@ final class PythonPdfExtractionService
             (string) $batchSize,
             '--parallel',
             (string) $parallel,
-        ], base_path());
+        ];
+
+        Log::debug('PDF extraction command', [
+            'python' => $pythonBinary,
+            'script' => $scriptPath,
+            'input' => $pdfPath,
+            'output' => $outputPath,
+        ]);
+
+        $process = new Process($command, base_path());
         $process->setTimeout((float) config('learning.pdf_extraction.timeout', 600));
         $process->run();
 
