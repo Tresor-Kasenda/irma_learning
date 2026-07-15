@@ -1015,13 +1015,15 @@ def process_pdf(args: argparse.Namespace) -> Dict[str, Any]:
 
             batch_doc = pymupdf.open()
             batch_doc.insert_pdf(doc, from_page=batch_start, to_page=batch_end - 1)
-            batch_doc.set_metadata({'filename': str(input_path)})
 
             try:
+                # Note: write_images=False because batch_doc.filename is None
+                # pymupdf4llm would fail trying to generate image names
+                # Images are not as critical as the text content for extraction
                 chunks = pymupdf4llm.to_markdown(
                     batch_doc,
                     page_chunks=True,
-                    write_images=extract_images,
+                    write_images=False,
                     image_path=str(output_dir),
                     image_format='png',
                     dpi=args.image_dpi,
