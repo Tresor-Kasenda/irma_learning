@@ -206,18 +206,6 @@ const closeSidebar = () => {
 
                 <div class="my-5 border-t border-white/10"/>
 
-                <div v-if="!uiStore.sidebarCollapsed" class="border border-[#a23362]/50 bg-[#151c2c] p-4">
-                    <p class="text-sm font-semibold text-[#ff6f9d]">Catalogue professionnel</p>
-                    <p class="mt-2 text-xs leading-5 text-slate-400">
-                        Des parcours vidéo, PDF et texte conçus pour progresser à votre rythme.
-                    </p>
-                    <Link
-                        :href="safeRoute('pages.pricings')"
-                        class="mt-4 inline-flex h-9 w-full items-center justify-center bg-[#8e2853] px-3 text-sm font-semibold text-white transition hover:bg-[#a23362]"
-                    >
-                        Voir les tarifs
-                    </Link>
-                </div>
             </div>
 
             <div class="border-t border-white/10 p-4">

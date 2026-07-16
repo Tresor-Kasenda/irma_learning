@@ -213,6 +213,7 @@
     }
 
     .rich-markdown pre {
+        position: relative;
         max-width: 100%;
         overflow-x: auto;
         border: 1px solid color-mix(in srgb, currentColor 15%, transparent);
@@ -225,6 +226,38 @@
         background: transparent;
         padding: 0;
         color: inherit;
+    }
+
+    .rich-markdown .markdown-code-frame {
+        position: relative;
+        max-width: 100%;
+        margin-block: 1em;
+    }
+
+    .rich-markdown .markdown-code-frame pre.markdown-code-block {
+        margin-block: 0;
+        padding-top: 3.25rem;
+    }
+
+    .rich-markdown .markdown-code-copy {
+        position: absolute;
+        top: 0.65rem;
+        right: 0.65rem;
+        border: 1px solid rgb(148 163 184 / 0.35);
+        background: rgb(15 29 45 / 0.94);
+        padding: 0.35rem 0.6rem;
+        color: #e2e8f0;
+        font-size: 0.75rem;
+        font-weight: 600;
+        line-height: 1;
+        transition: background-color 150ms ease, border-color 150ms ease;
+    }
+
+    .rich-markdown .markdown-code-copy:hover,
+    .rich-markdown .markdown-code-copy:focus-visible {
+        border-color: #60a5fa;
+        background: #1b365d;
+        outline: none;
     }
 
     .rich-markdown blockquote {
@@ -269,5 +302,61 @@
     .rich-markdown hr {
         border: 0;
         border-top: 1px solid color-mix(in srgb, currentColor 20%, transparent);
+    }
+
+    .rich-markdown .markdown-mermaid {
+        width: 100%;
+        max-width: 100%;
+        margin-block: 1.25rem;
+        overflow-x: auto;
+        border: 1px solid color-mix(in srgb, currentColor 15%, transparent);
+        background: color-mix(in srgb, currentColor 4%, transparent);
+        padding: 1rem;
+    }
+
+    .rich-markdown .markdown-mermaid svg {
+        display: block;
+        width: 100%;
+        min-width: max-content;
+        height: auto;
+        margin-inline: auto;
+    }
+
+    .rich-markdown .markdown-mermaid-dark svg text,
+    .rich-markdown .markdown-mermaid-dark svg .label,
+    .rich-markdown .markdown-mermaid-dark svg .nodeLabel {
+        fill: #f8fafc !important;
+        color: #f8fafc !important;
+    }
+
+    .rich-markdown .markdown-mermaid-dark svg foreignObject,
+    .rich-markdown .markdown-mermaid-dark svg foreignObject * {
+        fill: #f8fafc !important;
+        color: #f8fafc !important;
+    }
+
+    .rich-markdown .markdown-mermaid:not(.markdown-mermaid-dark) svg text,
+    .rich-markdown .markdown-mermaid:not(.markdown-mermaid-dark) svg .label,
+    .rich-markdown .markdown-mermaid:not(.markdown-mermaid-dark) svg .nodeLabel {
+        fill: #172033 !important;
+        color: #172033 !important;
+    }
+
+    .rich-markdown .markdown-mermaid:not(.markdown-mermaid-dark) svg foreignObject,
+    .rich-markdown .markdown-mermaid:not(.markdown-mermaid-dark) svg foreignObject * {
+        fill: #172033 !important;
+        color: #172033 !important;
+    }
+
+    .rich-markdown .markdown-mermaid-error {
+        color: #fda4af;
+        font-size: 0.875rem;
+    }
+
+    .rich-markdown .katex-display {
+        max-width: 100%;
+        overflow-x: auto;
+        overflow-y: hidden;
+        padding-block: 0.5rem;
     }
 }

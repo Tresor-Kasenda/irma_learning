@@ -137,12 +137,18 @@ function updateDropdownPosition(): void {
     const opensUpward = spaceBelow < 180 && spaceAbove > spaceBelow;
     const availableHeight = Math.max(120, Math.min(desiredHeight, opensUpward ? spaceAbove - gap : spaceBelow - gap));
 
+    const dropdownWidth = Math.min(rect.width, window.innerWidth - viewportPadding * 2);
+    const dropdownLeft = Math.min(
+        Math.max(viewportPadding, rect.left),
+        window.innerWidth - dropdownWidth - viewportPadding,
+    );
+
     dropdownStyle.value = {
         position: 'fixed',
-        left: `${Math.max(viewportPadding, rect.left)}px`,
+        left: `${dropdownLeft}px`,
         top: opensUpward ? 'auto' : `${rect.bottom + gap}px`,
         bottom: opensUpward ? `${window.innerHeight - rect.top + gap}px` : 'auto',
-        width: `${Math.min(rect.width, window.innerWidth - viewportPadding * 2)}px`,
+        width: `${dropdownWidth}px`,
         maxHeight: `${availableHeight}px`,
         zIndex: '9999',
     };

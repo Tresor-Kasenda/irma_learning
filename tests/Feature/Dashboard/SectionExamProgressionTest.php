@@ -12,6 +12,8 @@ use App\Models\Enrollment;
 use App\Models\Exam;
 use App\Models\ExamAttempt;
 use App\Models\Formation;
+use App\Models\Question;
+use App\Models\QuestionOption;
 use App\Models\Section;
 use App\Models\User;
 use App\Models\UserProgress;
@@ -340,4 +342,62 @@ test('the exam results expose the next section as the next step once passed', fu
             ->where('nextStep.type', 'next_section')
             ->where('nextStep.chapter_id', $built[1]['chapter']->id)
             ->etc());
+});
+
+test('a failed hidden-result section exam returns the learner to the completed section', function () {
+    [$formation, $built] = buildSectionedFormation();
+    $exam = $built[0]['exam'];
+    $exam->update(['show_results_immediately' => false, 'passing_score' => 70]);
+    $user = User::factory()->create();
+    enrolStudent($user, $formation);
+    completeChapter($user, $built[0]['chapter']);
+
+    $question = Question::factory()->for($exam)->singleChoice()->create(['points' => 10]);
+    QuestionOption::factory()->for($question)->correct()->create();
+    $incorrectOption = QuestionOption::factory()->for($question)->incorrect()->create();
+
+    $this->actingAs($user)->get(route('exam.take', $exam));
+    $this->post(route('exam.save-answer', $exam), [
+        'question_id' => $question->id,
+        'answer' => $incorrectOption->id,
+    ])->assertOk();
+
+    $this->post(route('exam.submit', $exam))
+        ->assertRedirect(route('course.player', [
+            'formation' => $formation->id,
+            'chapterId' => $built[0]['chapter']->id,
+        ]))
+        ->assertSessionHas('error', fn (string $message): bool => str_contains($message, 'Évaluation non validée'));
+
+    expect(ExamAttempt::query()->where('exam_id', $exam->id)->first()?->status)
+        ->toBe(ExamAttemptEnum::FAILED);
+});
+
+test('a passed hidden-result section exam opens the first chapter of the next section', function () {
+    [$formation, $built] = buildSectionedFormation();
+    $exam = $built[0]['exam'];
+    $exam->update(['show_results_immediately' => false, 'passing_score' => 70]);
+    $user = User::factory()->create();
+    enrolStudent($user, $formation);
+    completeChapter($user, $built[0]['chapter']);
+
+    $question = Question::factory()->for($exam)->singleChoice()->create(['points' => 10]);
+    $correctOption = QuestionOption::factory()->for($question)->correct()->create();
+    QuestionOption::factory()->for($question)->incorrect()->create();
+
+    $this->actingAs($user)->get(route('exam.take', $exam));
+    $this->post(route('exam.save-answer', $exam), [
+        'question_id' => $question->id,
+        'answer' => $correctOption->id,
+    ])->assertOk();
+
+    $this->post(route('exam.submit', $exam))
+        ->assertRedirect(route('course.player', [
+            'formation' => $formation->id,
+            'chapterId' => $built[1]['chapter']->id,
+        ]))
+        ->assertSessionHas('success', 'Votre examen a été soumis avec succès!');
+
+    expect(ExamAttempt::query()->where('exam_id', $exam->id)->first()?->status)
+        ->toBe(ExamAttemptEnum::COMPLETED);
 });

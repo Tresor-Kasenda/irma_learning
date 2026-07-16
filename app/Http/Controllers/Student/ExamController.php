@@ -314,6 +314,7 @@ final class ExamController extends Controller
         }
 
         $attempt->complete();
+        $attempt->refresh();
 
         $formation = $this->resolveFormation($exam);
         if ($formation) {
@@ -325,6 +326,23 @@ final class ExamController extends Controller
         }
 
         if ($exam->examable_type === Section::class && $formation) {
+            if (! $attempt->isPassed()) {
+                $chapterId = $progression->latestChapter($user, $formation)?->id;
+                $message = sprintf(
+                    'Évaluation non validée : %s%% sur %s%% requis. ',
+                    number_format((float) $attempt->percentage, 0, ',', ' '),
+                    number_format($exam->getPassingScore(), 0, ',', ' '),
+                );
+                $message .= $exam->canUserAttempt($user)
+                    ? 'Réessayez pour débloquer la section suivante.'
+                    : 'Vos tentatives sont épuisées. Contactez un administrateur pour demander une réouverture.';
+
+                return redirect()->route('course.player', array_filter([
+                    'formation' => $formation->id,
+                    'chapterId' => $chapterId,
+                ]))->with('error', $message);
+            }
+
             $nextChapter = $this->nextSectionFirstChapter($exam, $formation, $progression);
 
             return redirect()->route('course.player', array_filter([

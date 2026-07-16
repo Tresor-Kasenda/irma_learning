@@ -29,7 +29,7 @@ final class UpdateSystemSettingsRequest extends FormRequest
             'contact_address_secondary' => ['nullable', 'string', 'max:255'],
             'home_hero_title' => ['nullable', 'string', 'max:180'],
             'home_hero_subtitle' => ['nullable', 'string', 'max:180'],
-            'home_features' => ['required', 'array', 'size:3'],
+            'home_features' => ['sometimes', 'array', 'size:3'],
             'home_features.*' => ['required', 'string', 'max:1000'],
             'logo' => ['nullable', 'image', 'mimes:png,jpg,jpeg,webp,svg', 'max:2048'],
             'primary_color' => ['required', 'regex:/^#[0-9A-Fa-f]{6}$/'],

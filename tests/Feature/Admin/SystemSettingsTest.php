@@ -25,6 +25,13 @@ test('an administrator can view and update system settings', function () {
             'app_name' => 'IRMA Academy',
             'app_tagline' => 'Formations professionnelles',
             'support_email' => 'support@irma.test',
+            'contact_email' => 'contact@irma.test',
+            'contact_phone' => '+243 000 000 000',
+            'contact_address_primary' => 'Adresse principale',
+            'contact_address_secondary' => 'Adresse secondaire',
+            'home_hero_title' => 'Apprenez avec IRMA',
+            'home_hero_subtitle' => 'Des parcours professionnels',
+            'home_features' => ['Une première promesse.', 'Une deuxième promesse.', 'Une troisième promesse.'],
             'logo' => UploadedFile::fake()->image('logo.png', 320, 320),
             'primary_color' => '#8f2857',
             'default_currency' => 'USD',
@@ -37,6 +44,8 @@ test('an administrator can view and update system settings', function () {
     $settings = ApplicationSetting::query()->firstOrFail();
 
     expect($settings->app_name)->toBe('IRMA Academy')
+        ->and($settings->contact_email)->toBe('contact@irma.test')
+        ->and($settings->home_features)->toHaveCount(3)
         ->and($settings->logo_path)->not->toBeNull();
     Storage::disk('public')->assertExists($settings->logo_path);
 });

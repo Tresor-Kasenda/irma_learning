@@ -29,7 +29,7 @@ function scrollToTop() {
 </script>
 
 <template>
-    <Head :title="title ?? 'Irma RDC'"/>
+    <Head :title="title ?? applicationName"/>
 
     <div class="min-h-screen bg-white font-sans text-gray-900">
         <header class="fixed top-0 z-50 w-full pt-5 px-0.5 sm:px-5 xl:pt-7 bg-white">

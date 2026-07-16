@@ -4,6 +4,7 @@ import {computed, ref, watch} from 'vue';
 import AdminToasts from '@/Components/Admin/AdminToasts.vue';
 import CourseCurriculum from '@/Components/Learning/CourseCurriculum.vue';
 import LearningIcon from '@/Components/Learning/LearningIcon.vue';
+import RichMarkdown from '@/Components/Learning/RichMarkdown.vue';
 import {useFlashToasts} from '@/composables/useFlashToasts';
 
 interface Chapter {
@@ -307,22 +308,22 @@ function contentTypeLabel(contentType: string | null): string {
                                 />
                             </div>
 
-                            <div
+                            <RichMarkdown
                                 id="chapter-markdown-panel"
                                 v-else-if="htmlContent"
-                                class="rich-markdown border border-white/10 bg-[#101d2d] p-5 text-slate-200 sm:p-7"
+                                :html="htmlContent"
+                                class="border border-white/10 bg-[#101d2d] p-5 text-slate-200 sm:p-7"
                                 role="tabpanel"
-                                v-html="htmlContent"
                             />
                             <p v-else class="border border-white/10 bg-[#101d2d] p-5 text-sm text-slate-400">
                                 Aucune version texte n’est disponible pour ce document.
                             </p>
                         </div>
 
-                        <div
+                        <RichMarkdown
                             v-if="htmlContent && currentChapter.content_type === 'text'"
-                            class="rich-markdown mt-6 border border-white/10 bg-[#101d2d] p-5 text-slate-200 sm:p-7"
-                            v-html="htmlContent"
+                            :html="htmlContent"
+                            class="mt-6 border border-white/10 bg-[#101d2d] p-5 text-slate-200 sm:p-7"
                         />
 
                         <section

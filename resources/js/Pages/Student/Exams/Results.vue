@@ -97,7 +97,16 @@ const props = defineProps<{
     certificate: CertificateInfo | null;
 }>();
 
-const backHref = computed(() => props.formation ? safeRoute('course.player', props.formation.id) : safeRoute('dashboard'));
+const backHref = computed(() => {
+    if (props.formation && props.nextStep?.type === 'next_section' && props.nextStep.chapter_id) {
+        return safeRoute('course.player', {
+            formation: props.nextStep.formation_id ?? props.formation.id,
+            chapterId: props.nextStep.chapter_id,
+        });
+    }
+
+    return props.formation ? safeRoute('course.player', props.formation.id) : safeRoute('dashboard');
+});
 const correctCount = computed(() => props.userAnswers.filter(answer => answer.is_correct === true).length);
 const incorrectCount = computed(() => props.userAnswers.filter(answer => answer.is_correct === false).length);
 const resultTone = computed(() => props.attempt.passed ? 'success' : 'danger');

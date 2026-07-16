@@ -98,7 +98,8 @@ final class CourseProgressionService
 
     public function latestChapter(User $user, Formation $formation): ?Chapter
     {
-        $chapters = $this->orderedSections($formation)
+        $sections = $this->orderedSections($formation);
+        $chapters = $sections
             ->flatMap(fn (Section $section) => $section->chapters)
             ->values();
 
@@ -113,11 +114,34 @@ final class CourseProgressionService
             ->latest('updated_at')
             ->first();
 
-        if (! $latestProgress) {
-            return $chapters->first();
+        $completedChapterIds = $this->completedChapterIds($user, $formation);
+        $sectionStates = $this->sectionStates($user, $formation)->keyBy('id');
+        $latestChapter = $latestProgress
+            ? $chapters->firstWhere('id', $latestProgress->trackable_id)
+            : null;
+
+        if ($latestChapter
+            && in_array($latestChapter->section_id, $sectionStates->where('unlocked', true)->keys()->all(), true)
+            && ! in_array($latestChapter->id, $completedChapterIds, true)) {
+            return $latestChapter;
         }
 
-        return $chapters->firstWhere('id', $latestProgress->trackable_id) ?? $chapters->first();
+        foreach ($sections as $section) {
+            $state = $sectionStates->get($section->id);
+
+            if (! ($state['unlocked'] ?? false)) {
+                continue;
+            }
+
+            $nextIncompleteChapter = $section->chapters
+                ->first(fn (Chapter $chapter): bool => ! in_array($chapter->id, $completedChapterIds, true));
+
+            if ($nextIncompleteChapter) {
+                return $nextIncompleteChapter;
+            }
+        }
+
+        return $latestChapter ?? $chapters->first();
     }
 
     public function progressPercentage(User $user, Formation $formation): float

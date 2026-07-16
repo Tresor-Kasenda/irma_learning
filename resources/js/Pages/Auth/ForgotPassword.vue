@@ -44,7 +44,7 @@ const submit = () => { form.post(route('password.email')); };
                         <label for="email" class="text-sm font-medium text-gray-700">Email</label>
                         <input id="email" v-model="form.email" type="email" name="email"
                             placeholder="Ex: users@example.com" required autofocus autocomplete="username"
-                            class="block w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm placeholder:text-gray-400 focus:border-irma-primary focus:outline-none focus:ring-1 focus:ring-irma-primary" />
+                            class="block w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 caret-irma-primary shadow-sm placeholder:text-gray-400 focus:border-irma-primary focus:outline-none focus:ring-1 focus:ring-irma-primary" />
                         <InputError :message="form.errors.email" />
                     </div>
 

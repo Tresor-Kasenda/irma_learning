@@ -66,18 +66,11 @@ final class StudentLearningPlayController extends Controller
             $currentChapter = $accessibleChapters->firstWhere('id', (int) $chapterId);
         }
 
-        // If chapterId was passed but chapter is not accessible (e.g., next section not unlocked yet),
-        // fallback to the most recently visited chapter instead of jumping to first accessible
         if (! $currentChapter) {
-            $lastProgress = UserProgress::where('user_id', $user->id)
-                ->where('trackable_type', Chapter::class)
-                ->whereIn('trackable_id', $accessibleChapters->pluck('id'))
-                ->latest('updated_at')
-                ->first();
-
-            if ($lastProgress) {
-                $currentChapter = $accessibleChapters->firstWhere('id', $lastProgress->trackable_id);
-            }
+            $latestChapter = $progression->latestChapter($user, $formation);
+            $currentChapter = $latestChapter
+                ? $accessibleChapters->firstWhere('id', $latestChapter->id)
+                : null;
         }
 
         if (! $currentChapter) {
