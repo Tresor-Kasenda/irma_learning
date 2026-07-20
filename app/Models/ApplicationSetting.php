@@ -12,22 +12,22 @@ use Illuminate\Support\Facades\Cache;
 
 final class ApplicationSetting extends Model
 {
-    public const DEFAULT_CONTACT_ADDRESS_PRIMARY = '269, Av. KASONGO NYEMBO, Q/ Baudouin, Lubumbashi, RD Congo';
+    public const DEFAULT_CONTACT_ADDRESS_PRIMARY = '07, Av. OUA, Kinshasa - Ngaliema, RD Congo';
 
-    public const DEFAULT_CONTACT_ADDRESS_SECONDARY = '2, Avenue Père Boka, Commune de la Gombe, Kinshasa, RD Congo';
+    public const DEFAULT_CONTACT_ADDRESS_SECONDARY = '07, Av. OUA, Kinshasa - Ngaliema, RD Congo';
 
-    public const DEFAULT_CONTACT_EMAIL = 'communication@irmardc.org';
+    public const DEFAULT_CONTACT_EMAIL = 'info@btpcma.org';
 
-    public const DEFAULT_CONTACT_PHONE = '+243 819 742 171';
+    public const DEFAULT_CONTACT_PHONE = '+243 974 078 656';
 
-    public const DEFAULT_HOME_HERO_TITLE = "Devenez Leader du Risque en RD Congo avec l'iRMA";
+    public const DEFAULT_HOME_HERO_TITLE = 'Formation BTP & Artisanat en RDC';
 
-    public const DEFAULT_HOME_HERO_SUBTITLE = "L'iRMA offre 3 types de formation";
+    public const DEFAULT_HOME_HERO_SUBTITLE = "Développez vos compétences dans le Bâtiment et les Travaux Publics avec le Club BTP & CMA";
 
     public const DEFAULT_HOME_FEATURES = [
-        "Les certifications professionnelles à travers des formations menant à des Titres Professionnels qui témoignent de l'autorité et de la crédibilité professionnelles des membres. Chaque membre doit totaliser au moins 25 points DPC par période de douze mois afin de conserver son titre professionnel.",
-        "La Formation Continue à travers de courts programmes qui permettent aux membres d'acquérir, d'actualiser ou d'améliorer rapidement leur compétence tout au long de leur vie professionnelle. Chaque membre doit cumuler au moins 20 Unités de Formation Continue (UFC) par période de référence de 12 mois.",
-        'La Formation en Entreprise livrées en respectant les besoins spécifiques des sociétés à travers une démarche partenariale sur mesure.',
+        "Club BTP — Dédié aux entreprises structurées (PME, grandes entreprises, institutions, investisseurs) : formations en gestion de projet, normes de construction, sécurité sur chantier et management.",
+        "CMA (Chambre des Métiers et de l'Artisanat) — Dédiée aux artisans, techniciens, coopératives et petites unités de production : formations pratiques en maçonnerie, électricité, plomberie et finitions.",
+        'Formations certifiantes et continues — Programmes courts et parcours professionnalisants pour acquérir, actualiser ou améliorer vos compétences tout au long de votre carrière dans le BTP.',
     ];
 
     /** @use HasFactory<ApplicationSettingFactory> */
