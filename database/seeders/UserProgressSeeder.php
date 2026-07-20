@@ -87,7 +87,7 @@ final class UserProgressSeeder extends Seeder
             ->get();
 
         foreach ($students as $student) {
-            $formationId = $student->enrollments->first()->formation_id;
+            $formationId = (int) $student->enrollments->first()->formation_id;
 
             UserProgress::updateOrCreate(
                 ['user_id' => $student->id, 'trackable_type' => Formation::class, 'trackable_id' => $formationId],
