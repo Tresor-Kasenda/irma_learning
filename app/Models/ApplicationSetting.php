@@ -58,7 +58,7 @@ final class ApplicationSetting extends Model
     {
         $attributes = Cache::rememberForever(
             'application_settings',
-            fn (): array => self::query()->firstOrCreate()->refresh()->attributesToArray()
+            fn (): array => self::query()->firstOrCreate()->refresh()->getRawOriginal()
         );
 
         return (new self())->newFromBuilder($attributes);
