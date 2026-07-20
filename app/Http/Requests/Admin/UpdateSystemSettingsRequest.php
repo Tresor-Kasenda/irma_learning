@@ -37,6 +37,9 @@ final class UpdateSystemSettingsRequest extends FormRequest
             'allow_registration' => ['required', 'boolean'],
             'maintenance_message' => ['nullable', 'string', 'max:500'],
             'certificate_signature_name' => ['nullable', 'string', 'max:120'],
+            'auth_page_subtitle' => ['nullable', 'string', 'max:255'],
+            'auth_login_subtitle' => ['nullable', 'string', 'max:255'],
+            'auth_register_subtitle' => ['nullable', 'string', 'max:255'],
         ];
     }
 }

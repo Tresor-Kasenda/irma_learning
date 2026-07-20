@@ -59,6 +59,9 @@ final class HandleInertiaRequests extends Middleware
                 'home_hero_title' => $settings->home_hero_title ?: ApplicationSetting::DEFAULT_HOME_HERO_TITLE,
                 'home_hero_subtitle' => $settings->home_hero_subtitle ?: ApplicationSetting::DEFAULT_HOME_HERO_SUBTITLE,
                 'home_features' => $settings->home_features ?: ApplicationSetting::DEFAULT_HOME_FEATURES,
+                'auth_page_subtitle' => $settings->auth_page_subtitle ?: ApplicationSetting::DEFAULT_AUTH_PAGE_SUBTITLE,
+                'auth_login_subtitle' => $settings->auth_login_subtitle ?: ApplicationSetting::DEFAULT_AUTH_LOGIN_SUBTITLE,
+                'auth_register_subtitle' => $settings->auth_register_subtitle ?: ApplicationSetting::DEFAULT_AUTH_REGISTER_SUBTITLE,
             ],
         ];
     }

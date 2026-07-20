@@ -25,6 +25,7 @@ final class SystemSettingController extends Controller
                     'default_currency', 'allow_registration', 'maintenance_message', 'certificate_signature_name',
                     'contact_email', 'contact_phone', 'contact_address_primary', 'contact_address_secondary',
                     'home_hero_title', 'home_hero_subtitle', 'home_features',
+                    'auth_page_subtitle', 'auth_login_subtitle', 'auth_register_subtitle',
                 ]),
                 'contact_email' => $settings->contact_email ?: ApplicationSetting::DEFAULT_CONTACT_EMAIL,
                 'contact_phone' => $settings->contact_phone ?: ApplicationSetting::DEFAULT_CONTACT_PHONE,
@@ -33,6 +34,9 @@ final class SystemSettingController extends Controller
                 'home_hero_title' => $settings->home_hero_title ?: ApplicationSetting::DEFAULT_HOME_HERO_TITLE,
                 'home_hero_subtitle' => $settings->home_hero_subtitle ?: ApplicationSetting::DEFAULT_HOME_HERO_SUBTITLE,
                 'home_features' => $settings->home_features ?: ApplicationSetting::DEFAULT_HOME_FEATURES,
+                'auth_page_subtitle' => $settings->auth_page_subtitle ?: ApplicationSetting::DEFAULT_AUTH_PAGE_SUBTITLE,
+                'auth_login_subtitle' => $settings->auth_login_subtitle ?: ApplicationSetting::DEFAULT_AUTH_LOGIN_SUBTITLE,
+                'auth_register_subtitle' => $settings->auth_register_subtitle ?: ApplicationSetting::DEFAULT_AUTH_REGISTER_SUBTITLE,
                 'logo_url' => $settings->logo_path ? '/storage/'.$settings->logo_path : '/images/irma-logo-base.svg',
             ],
         ]);

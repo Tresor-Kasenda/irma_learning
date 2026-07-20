@@ -30,6 +30,12 @@ final class ApplicationSetting extends Model
         'Formations certifiantes et continues — Programmes courts et parcours professionnalisants pour acquérir, actualiser ou améliorer vos compétences tout au long de votre carrière dans le BTP.',
     ];
 
+    public const DEFAULT_AUTH_PAGE_SUBTITLE = 'Bâtissez votre avenir professionnel dans le BTP et l\'Artisanat';
+
+    public const DEFAULT_AUTH_LOGIN_SUBTITLE = 'Connectez-vous pour accéder à votre espace de formation';
+
+    public const DEFAULT_AUTH_REGISTER_SUBTITLE = 'Créez votre compte et commencez votre parcours';
+
     /** @use HasFactory<ApplicationSettingFactory> */
     use HasFactory;
 
@@ -52,6 +58,9 @@ final class ApplicationSetting extends Model
         'allow_registration',
         'maintenance_message',
         'certificate_signature_name',
+        'auth_page_subtitle',
+        'auth_login_subtitle',
+        'auth_register_subtitle',
     ];
 
     public static function current(): self

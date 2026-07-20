@@ -14,6 +14,10 @@ const form = useForm({
 
 const page = usePage();
 const logoUrl = computed(() => (page.props.appSettings as {logo_url?: string})?.logo_url ?? '/images/irma-logo-base.svg');
+const appSettings = computed(() => (page.props.appSettings as Record<string, unknown>) ?? {});
+const appName = computed(() => (appSettings.value.name as string) ?? '');
+const authPageSubtitle = computed(() => (appSettings.value.auth_page_subtitle as string) ?? '');
+const authRegisterSubtitle = computed(() => (appSettings.value.auth_register_subtitle as string) ?? '');
 
 const showPassword = ref(false);
 const showConfirmPassword = ref(false);
@@ -52,12 +56,12 @@ const submit = () => {
 
             <div class="p-5 sm:p-8">
                 <Link :href="route('home-page')" class="block">
-                    <img :src="logoUrl" alt="logo Irma" class="h-16 w-auto mb-5 mx-auto" />
+                    <img :src="logoUrl" :alt="`Logo ${appName}`" class="h-16 w-auto mb-5 mx-auto" />
                 </Link>
 
                 <div class="text-center mt-2">
-                    <h1 class="text-gray-900 mb-1 text-xl font-semibold">Bienvenue sur Irma</h1>
-                    <p class="text-sm text-gray-500">Créez votre compte pour commencer</p>
+                    <h1 class="text-gray-900 mb-1 text-xl font-semibold">{{ appName ? `Bienvenue sur ${appName}` : authPageSubtitle }}</h1>
+                    <p class="text-sm text-gray-500">{{ authRegisterSubtitle }}</p>
                 </div>
 
                 <hr class="my-4 border-gray-300/60" />
