@@ -2,14 +2,18 @@
 import {Head, Link, usePage} from '@inertiajs/vue3';
 import {computed} from 'vue';
 
-defineProps<{
+const props = defineProps<{
     title?: string;
     whiteHeader?: boolean;
+    metaDescription?: string;
+    ogImage?: string | null;
+    canonicalUrl?: string;
 }>();
 
 const page = usePage();
 interface PublicSettings {
     name?: string;
+    tagline?: string;
     logo_url?: string;
     allow_registration?: boolean;
     contact_email?: string;
@@ -23,13 +27,29 @@ const applicationName = computed(() => settings.value.name ?? 'Irma');
 const allowRegistration = computed(() => Boolean(settings.value.allow_registration));
 const phoneHref = computed(() => `tel:${(settings.value.contact_phone ?? '').replace(/[^+\d]/g, '')}`);
 
+const pageUrl = computed(() => typeof window !== 'undefined' ? window.location.href : '');
+const defaultDescription = computed(() => settings.value.tagline || 'Plateforme de formation BTP & Artisanat en RDC');
+const metaDesc = computed(() => props.metaDescription ?? defaultDescription.value);
+const ogImg = computed(() => props.ogImage ? `/storage/${props.ogImage}` : (settings.value.logo_url ?? ''));
+
 function scrollToTop() {
     window.scrollTo({top: 0, behavior: 'smooth'});
 }
 </script>
 
 <template>
-    <Head :title="title ?? applicationName"/>
+    <Head :title="title ?? applicationName">
+        <meta name="description" :content="metaDesc"/>
+        <meta property="og:type" content="website"/>
+        <meta property="og:title" :content="title ?? applicationName"/>
+        <meta property="og:description" :content="metaDesc"/>
+        <meta property="og:url" :content="props.canonicalUrl ?? pageUrl"/>
+        <meta v-if="ogImg" property="og:image" :content="ogImg"/>
+        <meta name="twitter:card" content="summary_large_image"/>
+        <meta name="twitter:title" :content="title ?? applicationName"/>
+        <meta name="twitter:description" :content="metaDesc"/>
+        <link v-if="props.canonicalUrl" rel="canonical" :href="props.canonicalUrl"/>
+    </Head>
 
     <div class="min-h-screen bg-white font-sans text-gray-900">
         <header class="fixed top-0 z-50 w-full pt-5 px-0.5 sm:px-5 xl:pt-7 bg-white">

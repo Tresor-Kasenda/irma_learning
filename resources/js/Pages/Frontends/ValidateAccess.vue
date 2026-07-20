@@ -28,7 +28,10 @@ function submit(): void {
 </script>
 
 <template>
-    <PublicLayout :title="`Accéder à ${formation.title}`">
+    <PublicLayout
+        :title="`Accéder à ${formation.title}`"
+        :meta-description="`Accédez à la formation ${formation.title} avec votre code d'accès.`"
+    >
         <div class="mx-auto flex min-h-[70vh] max-w-7xl items-center justify-center px-5 py-28">
             <div class="w-full max-w-md rounded-lg border border-gray-200/60 bg-white p-1 shadow-lg shadow-gray-200/40">
                 <div class="p-6 sm:p-8">

@@ -32,7 +32,7 @@ function formatPrice(price: number): string {
 </script>
 
 <template>
-    <PublicLayout title="Acceuil | Home Page">
+    <PublicLayout title="Accueil" meta-description="Formation professionnelle BTP & Artisanat en RDC – Club BTP & CMA">
         <section class="pt-32">
             <div class="mx-auto max-w-7xl w-full px-5 sm:px-10 flex flex-col lg:flex-row gap-16">
                 <div

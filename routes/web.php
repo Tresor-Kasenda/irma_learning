@@ -115,5 +115,7 @@ Route::middleware(['auth', 'check.status', 'force.password.change'])->group(func
 Route::get('/verify-certificate/{hash}', [App\Http\Controllers\CertificateVerificationController::class, 'verify'])
     ->name('certificates.verify');
 
+Route::get('/sitemap.xml', App\Http\Controllers\SitemapController::class)->name('sitemap');
+
 require __DIR__.'/auth.php';
 require __DIR__.'/admin.php';

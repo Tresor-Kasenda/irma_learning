@@ -86,7 +86,12 @@ function formatDuration(minutes: number | null): string {
 </script>
 
 <template>
-    <PublicLayout :title="formation.title">
+    <PublicLayout
+        :title="formation.title"
+        :meta-description="formation.short_description ?? `Formation ${formation.title} – BTPCMA`"
+        :og-image="formation.image"
+        :canonical-url="route('formation.show', formation.slug)"
+    >
         <section class="mx-auto my-28 flex w-full max-w-7xl flex-col gap-10 px-5 sm:px-10 md:flex-row lg:gap-16">
             <article class="flex flex-col flex-1">
                 <h1 class="font-medium text-xl sm:text-2xl/snug lg:text-4xl text-gray-900">

@@ -164,7 +164,10 @@ function imageUrl(image: unknown): string | null {
 
 <template>
     <Head title="Nos formations"/>
-    <PublicLayout title="Nos formations">
+    <PublicLayout
+        title="Nos formations"
+        meta-description="Découvrez toutes nos formations et certifications professionnelles en BTP, artisanat et gestion de projet."
+    >
         <section class="pt-32">
             <div class="mx-auto flex w-full max-w-7xl flex-col items-start gap-16 px-5 py-20 sm:px-10 lg:flex-row">
                 <div

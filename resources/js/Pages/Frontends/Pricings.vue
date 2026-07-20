@@ -26,7 +26,10 @@ const activeTab = ref<string>(tabs[0].id);
 </script>
 
 <template>
-    <PublicLayout title="Tarifications de nos formations">
+    <PublicLayout
+        title="Tarifs des certifications"
+        meta-description="Consultez nos tarifs pour les certifications professionnelles BTP & Artisanat – formules individuelles et équipes."
+    >
         <!-- Hero -->
         <section
             class="relative overflow-hidden pt-40 pb-24"
