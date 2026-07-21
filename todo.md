@@ -10,19 +10,19 @@ est surtout prête pour des tests techniques internes.
     - Un paiement est actuellement marqué « payé » sans transaction réelle.
     - Ajouter webhooks, idempotence, statuts `pending/failed/cancelled/paid`, références et reprise après erreur.
     -
-    Voir [PaymentController.php](/Users/scott/Movies/PROJETS/irma_learning/app/Http/Controllers/Student/PaymentController.php:46).
+   Voir [PaymentController.php](/Users/scott/Movies/PROJETS/irma_learning/app/Http/Controllers/Student/PaymentController.php:46).
 
 2. **Sécuriser les factures**
     - Tout utilisateur authentifié peut potentiellement télécharger la facture d’une autre inscription par son ID.
     - Ajouter une Policy propriétaire/admin.
     -
-    Voir [EnrollmentController.php](/Users/scott/Movies/PROJETS/irma_learning/app/Http/Controllers/Student/EnrollmentController.php:20).
+   Voir [EnrollmentController.php](/Users/scott/Movies/PROJETS/irma_learning/app/Http/Controllers/Student/EnrollmentController.php:20).
 
 3. **Corriger les factures**
     - Adresse fictive à Paris, fausse TVA, euros, PayPal, “Formation Academy”.
     - Remplacer par les vraies informations légales IRMA et la devise réellement utilisée.
     -
-    Voir [enrollment.blade.php](/Users/scott/Movies/PROJETS/irma_learning/resources/views/invoices/enrollment.blade.php:197).
+   Voir [enrollment.blade.php](/Users/scott/Movies/PROJETS/irma_learning/resources/views/invoices/enrollment.blade.php:197).
 
 4. **Finaliser les certificats**
     - Téléchargement PDF absent.
@@ -142,3 +142,7 @@ viewport : [app.blade.php](/Users/scott/Movies/PROJETS/irma_learning/resources/v
 7. Donner ensuite l’accès à l’équipe marketing.
 
 Le prochain chantier recommandé est donc la phase P0 : sécurité des factures, build vert et finalisation du paiement.
+
+User: lasogsyh_youness Database: lasogsyh_formation_btpcma
+
+

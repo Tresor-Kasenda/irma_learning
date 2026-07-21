@@ -36,9 +36,9 @@ final class SearchFormationsTool extends Tool
             ->when($search !== '', function (Builder $query) use ($search): void {
                 $query->where(function (Builder $query) use ($search): void {
                     $query
-                        ->where('title', 'ilike', "%{$search}%")
-                        ->orWhere('short_description', 'ilike', "%{$search}%")
-                        ->orWhere('description', 'ilike', "%{$search}%");
+                        ->where('title', 'like', "%{$search}%")
+                        ->orWhere('short_description', 'like', "%{$search}%")
+                        ->orWhere('description', 'like', "%{$search}%");
                 });
             })
             ->orderByDesc('is_featured')
