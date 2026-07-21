@@ -192,7 +192,7 @@ onBeforeUnmount(() => {
                     open ? 'border-[#c23a72]' : '',
                     compact ? 'min-h-10 py-1.5' : 'min-h-11 py-2',
                 ]"
-                class="admin-field flex w-full cursor-pointer flex-wrap items-center gap-1.5 border px-3 text-sm transition"
+                class="admin-field flex w-full cursor-pointer flex-wrap items-center gap-1.5 border bg-[var(--admin-field)] px-3 text-[var(--admin-heading)] transition"
                 role="combobox"
                 tabindex="0"
                 @click="toggle"
@@ -240,7 +240,7 @@ onBeforeUnmount(() => {
             </div>
 
             <Teleport to="body">
-            <div v-if="open" ref="dropdown" :style="dropdownStyle" class="admin-panel flex flex-col overflow-hidden border shadow-2xl shadow-black/20">
+            <div v-if="open" ref="dropdown" :style="dropdownStyle" class="admin-panel flex flex-col overflow-hidden border bg-[var(--admin-panel)] text-[var(--admin-text)] shadow-2xl shadow-black/20">
                 <div v-if="searchable" class="admin-divider border-b p-2">
                     <input
                         v-model="search"

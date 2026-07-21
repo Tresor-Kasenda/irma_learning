@@ -771,7 +771,7 @@ final class BtpCmaContentSeeder extends Seeder
             ['L\'ordre de service est un document contractuel.', QuestionTypeEnum::TRUE_FALSE, ['Vrai', 'Faux'], [0]],
         ]);
         $this->exam($s3, 'Évaluation — Sécurité', [
-            ['Document sécurité obligatoire par entreprise sur chantier ?', QuestionTypeEnum::SINGLE_CHOICE, ['PPSPS', ['PGCSPS', 'DOE', 'CCTP']], [0]],
+            ['Document sécurité obligatoire par entreprise sur chantier ?', QuestionTypeEnum::SINGLE_CHOICE, ['PPSPS', 'PGCSPS', 'DOE', 'CCTP'], [0]],
             ['Risques principaux du BTP ?', QuestionTypeEnum::MULTIPLE_CHOICE, ['Chute hauteur', 'Électrocution', 'Noyade', 'Manutention'], [0, 1, 3]],
             ['Les EPI sont prioritaires sur les EPC.', QuestionTypeEnum::TRUE_FALSE, ['Vrai', 'Faux'], [1]],
         ]);

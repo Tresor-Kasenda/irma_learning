@@ -17,7 +17,6 @@ use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-use Illuminate\Support\Facades\Storage;
 use Laravel\Sanctum\HasApiTokens;
 
 final class User extends Authenticatable
@@ -26,6 +25,7 @@ final class User extends Authenticatable
 
     /** @use HasFactory<UserFactory> */
     use HasFactory;
+
     use LogsAllActivity;
     use Notifiable;
 
@@ -158,7 +158,9 @@ final class User extends Authenticatable
                 return $this->avatar;
             }
 
-            return Storage::disk('public')->url($this->avatar);
+            $version = $this->updated_at?->getTimestamp();
+
+            return '/storage/'.mb_ltrim($this->avatar, '/').($version === null ? '' : '?v='.$version);
         });
     }
 

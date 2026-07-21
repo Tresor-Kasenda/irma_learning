@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Enums\EnrollmentPaymentEnum;
 use App\Enums\EnrollmentStatusEnum;
 use App\Enums\UserProgressEnum;
+use App\Enums\UserStatusEnum;
 use App\Mcp\Servers\LearningServer;
 use App\Mcp\Tools\MyCertificatesTool;
 use App\Mcp\Tools\MyLearningProgressTool;
@@ -18,6 +19,76 @@ use App\Models\Formation;
 use App\Models\Section;
 use App\Models\User;
 use App\Models\UserProgress;
+use Laravel\Sanctum\PersonalAccessToken;
+
+/**
+ * @return array<string, mixed>
+ */
+function initializeMcpRequest(): array
+{
+    return [
+        'jsonrpc' => '2.0',
+        'id' => 'test-initialize',
+        'method' => 'initialize',
+        'params' => [
+            'protocolVersion' => '2025-06-18',
+            'capabilities' => [],
+            'clientInfo' => [
+                'name' => 'irma-learning-test',
+                'version' => '1.0.0',
+            ],
+        ],
+    ];
+}
+
+test('the web MCP endpoint requires a Sanctum bearer token', function () {
+    $this->postJson('/mcp/learning', initializeMcpRequest())
+        ->assertUnauthorized();
+});
+
+test('a Sanctum bearer token can initialize the learning server', function () {
+    $user = User::factory()->create();
+    $token = $user->createToken('learning-mcp', ['mcp:read'])->plainTextToken;
+
+    $this->withToken($token)
+        ->postJson('/mcp/learning', initializeMcpRequest())
+        ->assertOk()
+        ->assertJsonPath('result.serverInfo.name', 'IRMA Learning');
+});
+
+test('the learning server rejects a token without the read ability', function () {
+    $user = User::factory()->create();
+    $token = $user->createToken('unrelated-token', ['profile:read'])->plainTextToken;
+
+    $this->withToken($token)
+        ->postJson('/mcp/learning', initializeMcpRequest())
+        ->assertForbidden();
+});
+
+test('the learning server rejects a token belonging to a suspended user', function () {
+    $user = User::factory()->create(['status' => UserStatusEnum::BANNED]);
+    $token = $user->createToken('suspended-user', ['mcp:read'])->plainTextToken;
+
+    $this->withToken($token)
+        ->postJson('/mcp/learning', initializeMcpRequest())
+        ->assertForbidden();
+});
+
+test('the MCP token command only creates a read token for an active user', function () {
+    $user = User::factory()->create();
+
+    $this->artisan('app:issue-mcp-token', [
+        'email' => $user->email,
+        '--expires-in' => 7,
+    ])->assertSuccessful();
+
+    expect(PersonalAccessToken::query()
+        ->where('tokenable_id', $user->id)
+        ->where('tokenable_type', User::class)
+        ->first())
+        ->not->toBeNull()
+        ->and(PersonalAccessToken::query()->first()?->abilities)->toBe(['mcp:read']);
+});
 
 test('the catalogue tool only returns active formations', function () {
     $user = User::factory()->create();
@@ -35,7 +106,6 @@ test('the catalogue tool only returns active formations', function () {
     ]);
 
     $response
-        ->dump()
         ->assertOk()
         ->assertSee($visible->title)
         ->assertDontSee('Python archivée');

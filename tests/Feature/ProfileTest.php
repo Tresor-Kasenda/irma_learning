@@ -85,6 +85,8 @@ final class ProfileTest extends TestCase
 
         $this->assertNotNull($user->avatar);
         Storage::disk('public')->assertExists($user->avatar);
+        $this->assertStringStartsWith('/storage/avatars/', $user->avatar_url);
+        $this->assertStringContainsString('?v=', $user->avatar_url);
     }
 
     public function test_uploading_avatar_replaces_the_previous_one(): void
