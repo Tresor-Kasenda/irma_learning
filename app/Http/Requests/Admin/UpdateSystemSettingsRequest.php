@@ -38,8 +38,14 @@ final class UpdateSystemSettingsRequest extends FormRequest
             'maintenance_message' => ['nullable', 'string', 'max:500'],
             'certificate_signature_name' => ['nullable', 'string', 'max:120'],
             'auth_page_subtitle' => ['nullable', 'string', 'max:255'],
+            'auth_login_title' => ['nullable', 'string', 'max:255'],
+            'auth_register_title' => ['nullable', 'string', 'max:255'],
             'auth_login_subtitle' => ['nullable', 'string', 'max:255'],
             'auth_register_subtitle' => ['nullable', 'string', 'max:255'],
+            'catalog_information_heading' => ['nullable', 'string', 'max:255'],
+            'catalog_information_items' => ['sometimes', 'array', 'size:3'],
+            'catalog_information_items.*.title' => ['required', 'string', 'max:255'],
+            'catalog_information_items.*.content' => ['required', 'string', 'max:2000'],
         ];
     }
 }

@@ -44,10 +44,21 @@ interface ContinueLearning {
     formation: LearningFormation | null;
 }
 
+interface CatalogInformationItem {
+    title: string;
+    content: string;
+}
+
+interface CatalogInformation {
+    heading: string;
+    items: CatalogInformationItem[];
+}
+
 const props = defineProps<{
     formations: PaginatedData;
     catalogStats: LearningCatalogStats;
     continueLearning: ContinueLearning | null;
+    catalogInformation: CatalogInformation;
     filters: CatalogFilters;
 }>();
 
@@ -299,109 +310,29 @@ function imageUrl(image: unknown): string | null {
         <section class="px-5 py-20 sm:px-10">
             <div class="mx-auto flex w-full max-w-7xl flex-col gap-16">
                 <h2 class="relative mx-auto max-w-xl text-center text-3xl font-medium capitalize text-gray-900 md:text-4xl">
-                    Informations importantes
+                    {{ catalogInformation.heading }}
                 </h2>
 
                 <div class="grid w-full gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                    <!-- Item 1 -->
                     <div
-                        :class="openAccordion === 0 ? 'border-primary-400 bg-primary-50/30' : 'border-gray-200 bg-white/50 backdrop-blur-sm'"
+                        v-for="(item, index) in catalogInformation.items"
+                        :key="item.title"
+                        :class="openAccordion === index ? 'border-primary-400 bg-primary-50/30' : 'border-gray-200 bg-white/50 backdrop-blur-sm'"
                         class="h-max rounded-lg border transition duration-500"
                     >
                         <button
                             class="inline-flex w-full items-center justify-between rounded-lg p-4 text-left transition hover:bg-gray-50"
-                            @click="toggleAccordion(0)"
+                            @click="toggleAccordion(index)"
                         >
-                            <h5 class="font-medium text-primary-700">Validation des Compétences</h5>
-                            <div :class="openAccordion === 0 ? 'rotate-45' : ''"
+                            <h5 class="font-medium text-primary-700">{{ item.title }}</h5>
+                            <div :class="openAccordion === index ? 'rotate-45' : ''"
                                  class="relative flex size-3 duration-300 ease-linear">
                                 <span class="absolute top-1/2 flex h-0.5 w-full -translate-y-1/2 bg-gray-500"/>
                                 <span class="absolute left-1/2 flex h-full w-0.5 -translate-x-1/2 bg-gray-500"/>
                             </div>
                         </button>
-                        <div v-if="openAccordion === 0" class="border-t border-gray-100 p-4">
-                            <p class="text-gray-600">
-                                Les tests de certification professionnelle permettent de valider le niveau de
-                                compétence, de
-                                connaissance et d'aptitude des participants aux MasterClasses. Ils constituent une
-                                preuve
-                                d'autorité et de crédibilité professionnelles pour les certifiés.
-                            </p>
-                        </div>
-                    </div>
-
-                    <!-- Item 2 -->
-                    <div
-                        :class="openAccordion === 1 ? 'border-primary-400 bg-primary-50/30' : 'border-gray-200 bg-white/50 backdrop-blur-sm'"
-                        class="h-max rounded-lg border transition duration-500"
-                    >
-                        <button
-                            class="inline-flex w-full items-center justify-between rounded-lg p-4 text-left transition hover:bg-gray-50"
-                            @click="toggleAccordion(1)"
-                        >
-                            <h5 class="font-medium text-primary-700">Modalités d'Accès et de Passation</h5>
-                            <div :class="openAccordion === 1 ? 'rotate-45' : ''"
-                                 class="relative flex size-3 duration-300 ease-linear">
-                                <span class="absolute top-1/2 flex h-0.5 w-full -translate-y-1/2 bg-gray-500"/>
-                                <span class="absolute left-1/2 flex h-full w-0.5 -translate-x-1/2 bg-gray-500"/>
-                            </div>
-                        </button>
-                        <div v-if="openAccordion === 1" class="border-t border-gray-100 p-4">
-                            <p class="text-gray-600">Les tests de certification sont :</p>
-                            <ul class="mt-2 list-outside list-disc space-y-1 pl-5 text-sm text-gray-600">
-                                <li>
-                                    Entièrement automatisés et accessibles en ligne immédiatement après la fin de la
-                                    MasterClass.
-                                </li>
-                                <li>
-                                    Disponibles pour une durée de 30 jours afin de permettre aux participants de
-                                    finaliser
-                                    et soumettre leur évaluation via notre plateforme dédiée.
-                                </li>
-                            </ul>
-                        </div>
-                    </div>
-
-                    <!-- Item 3 -->
-                    <div
-                        :class="openAccordion === 2 ? 'border-primary-400 bg-primary-50/30' : 'border-gray-200 bg-white/50 backdrop-blur-sm'"
-                        class="h-max rounded-lg border transition duration-500"
-                    >
-                        <button
-                            class="inline-flex w-full items-center justify-between rounded-lg p-4 text-left transition hover:bg-gray-50"
-                            @click="toggleAccordion(2)"
-                        >
-                            <h5 class="font-medium text-primary-700">Publication des Résultats et Délivrance des
-                                Certifications</h5>
-                            <div :class="openAccordion === 2 ? 'rotate-45' : ''"
-                                 class="relative flex size-3 duration-300 ease-linear">
-                                <span class="absolute top-1/2 flex h-0.5 w-full -translate-y-1/2 bg-gray-500"/>
-                                <span class="absolute left-1/2 flex h-full w-0.5 -translate-x-1/2 bg-gray-500"/>
-                            </div>
-                        </button>
-                        <div v-if="openAccordion === 2" class="border-t border-gray-100 p-4">
-                            <ul class="list-outside list-disc space-y-2 pl-5 text-sm text-gray-600">
-                                <li>
-                                    Les résultats sont automatiquement générés et communiqués dans un délai de 7 jours
-                                    après
-                                    la soumission.
-                                </li>
-                                <li>
-                                    Les certifications attestant des compétences acquises sont disponibles sous deux
-                                    formats :
-                                    <ul class="mt-2 list-outside list-disc space-y-2 pl-5 text-sm text-gray-600">
-                                        <li>
-                                            <span class="font-medium text-gray-800">Téléchargement instantané</span>
-                                            via la plateforme en ligne dès la publication des résultats.
-                                        </li>
-                                        <li>
-                                            <span class="font-medium text-gray-800">Envoi physique</span>
-                                            des certifications imprimées sous 5 jours ouvrables après publication des
-                                            résultats.
-                                        </li>
-                                    </ul>
-                                </li>
-                            </ul>
+                        <div v-if="openAccordion === index" class="border-t border-gray-100 p-4">
+                            <p class="whitespace-pre-line text-gray-600">{{ item.content }}</p>
                         </div>
                     </div>
                 </div>

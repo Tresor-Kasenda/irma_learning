@@ -8,6 +8,7 @@ use App\Enums\ChapterTypeEnum;
 use App\Enums\EnrollmentPaymentEnum;
 use App\Enums\EnrollmentStatusEnum;
 use App\Http\Controllers\Controller;
+use App\Models\ApplicationSetting;
 use App\Models\Enrollment;
 use App\Models\Formation;
 use App\Services\CatalogStatsService;
@@ -111,6 +112,7 @@ final class FormationsController extends Controller
         $formations = $query->paginate(8)->withQueryString();
 
         $catalogStats = $catalogStatsService->get();
+        $settings = ApplicationSetting::current();
 
         $continueLearning = null;
 
@@ -135,6 +137,10 @@ final class FormationsController extends Controller
             'formations' => $formations,
             'catalogStats' => $catalogStats,
             'continueLearning' => $continueLearning,
+            'catalogInformation' => [
+                'heading' => $settings->catalog_information_heading ?: ApplicationSetting::DEFAULT_CATALOG_INFORMATION_HEADING,
+                'items' => $settings->catalog_information_items ?: ApplicationSetting::DEFAULT_CATALOG_INFORMATION_ITEMS,
+            ],
             'filters' => [
                 'search' => $search,
                 'category' => $category,

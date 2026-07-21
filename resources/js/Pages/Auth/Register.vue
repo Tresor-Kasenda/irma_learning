@@ -16,7 +16,7 @@ const page = usePage();
 const logoUrl = computed(() => (page.props.appSettings as {logo_url?: string})?.logo_url ?? '/images/irma-logo-base.svg');
 const appSettings = computed(() => (page.props.appSettings as Record<string, unknown>) ?? {});
 const appName = computed(() => (appSettings.value.name as string) ?? '');
-const authPageSubtitle = computed(() => (appSettings.value.auth_page_subtitle as string) ?? '');
+const authRegisterTitle = computed(() => ((appSettings.value.auth_register_title as string) ?? '').replace('{app_name}', appName.value));
 const authRegisterSubtitle = computed(() => (appSettings.value.auth_register_subtitle as string) ?? '');
 
 const showPassword = ref(false);
@@ -60,7 +60,7 @@ const submit = () => {
                 </Link>
 
                 <div class="text-center mt-2">
-                    <h1 class="text-gray-900 mb-1 text-xl font-semibold">{{ appName ? `Bienvenue sur ${appName}` : authPageSubtitle }}</h1>
+                    <h1 class="text-gray-900 mb-1 text-xl font-semibold">{{ authRegisterTitle }}</h1>
                     <p class="text-sm text-gray-500">{{ authRegisterSubtitle }}</p>
                 </div>
 
