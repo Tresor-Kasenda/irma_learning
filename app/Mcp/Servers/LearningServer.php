@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Mcp\Servers;
 
+use App\Mcp\Tools\FormationDetailTool;
 use App\Mcp\Tools\MyCertificatesTool;
 use App\Mcp\Tools\MyLearningProgressTool;
 use App\Mcp\Tools\MyNextLearningStepTool;
@@ -23,6 +24,7 @@ final class LearningServer extends Server
      */
     protected array $tools = [
         SearchFormationsTool::class,
+        FormationDetailTool::class,
         MyLearningProgressTool::class,
         MyNextLearningStepTool::class,
         MyCertificatesTool::class,
