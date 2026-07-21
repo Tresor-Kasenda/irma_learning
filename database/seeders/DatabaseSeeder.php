@@ -20,6 +20,7 @@ final class DatabaseSeeder extends Seeder
             QuestionSeeder::class,
             QuestionOptionSeeder::class,
             ProfessionalDemoContentSeeder::class,
+            BtpCmaContentSeeder::class,
             EnrollmentSeeder::class,
             ExamAttemptSeeder::class,
             UserAnswerSeeder::class,
