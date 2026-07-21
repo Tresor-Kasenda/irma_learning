@@ -164,7 +164,32 @@ test('it redirects to next chapter after completion', function () {
         'formation' => $this->formation->id,
         'chapter' => $this->chapter1->id,
     ]))
-        ->assertRedirect();
+        ->assertRedirect(route('course.player', [
+            'formation' => $this->formation->id,
+            'chapterId' => $this->chapter2->id,
+        ]));
+});
+
+test('it can complete a chapter from a completed enrollment', function () {
+    $this->enrollment->update([
+        'status' => EnrollmentStatusEnum::COMPLETED,
+    ]);
+
+    $this->post(route('course.chapter.complete', [
+        'formation' => $this->formation->id,
+        'chapter' => $this->chapter1->id,
+    ]))
+        ->assertRedirect(route('course.player', [
+            'formation' => $this->formation->id,
+            'chapterId' => $this->chapter2->id,
+        ]));
+
+    $this->assertDatabaseHas('user_progress', [
+        'user_id' => $this->user->id,
+        'trackable_type' => Chapter::class,
+        'trackable_id' => $this->chapter1->id,
+        'status' => UserProgressEnum::COMPLETED->value,
+    ]);
 });
 
 test('it shows completed chapters correctly', function () {

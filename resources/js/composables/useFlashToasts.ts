@@ -56,6 +56,7 @@ export function useFlashToasts(eventName = 'app:toast') {
 
     return {
         dismissToast,
+        pushToast,
         toasts,
     };
 }

@@ -77,8 +77,9 @@ const props = defineProps<{
 }>();
 
 const showCurriculum = ref(false);
+const isCompletingChapter = ref(false);
 const contentPane = ref<'pdf' | 'markdown'>(props.currentChapter?.content_type === 'pdf' ? 'pdf' : 'markdown');
-const {dismissToast, toasts} = useFlashToasts();
+const {dismissToast, pushToast, toasts} = useFlashToasts();
 
 watch(
     () => [props.currentChapter?.id, props.currentChapter?.content_type],
@@ -124,7 +125,7 @@ function goNext(): void {
 }
 
 function markComplete(): void {
-    if (!props.currentChapter) {
+    if (!props.currentChapter || isCompletingChapter.value) {
         return;
     }
 
@@ -133,6 +134,22 @@ function markComplete(): void {
             formation: props.formation.id,
             chapter: props.currentChapter.id,
         }),
+        {},
+        {
+            preserveScroll: true,
+            onStart: () => {
+                isCompletingChapter.value = true;
+            },
+            onError: () => {
+                pushToast({
+                    type: 'error',
+                    message: 'La validation du chapitre a échoué. Réessayez dans un instant.',
+                });
+            },
+            onFinish: () => {
+                isCompletingChapter.value = false;
+            },
+        },
     );
 }
 
@@ -339,12 +356,13 @@ function contentTypeLabel(contentType: string | null): string {
                                 </p>
                             </div>
                             <button
-                                class="inline-flex h-11 shrink-0 items-center justify-center gap-2 bg-[#a72f5d] px-5 text-sm font-semibold text-white transition hover:bg-[#c43b6d]"
+                                :disabled="isCompletingChapter"
+                                class="inline-flex h-11 shrink-0 items-center justify-center gap-2 bg-[#a72f5d] px-5 text-sm font-semibold text-white transition hover:bg-[#c43b6d] disabled:cursor-wait disabled:opacity-70"
                                 type="button"
                                 @click="markComplete"
                             >
                                 <LearningIcon class="size-4 brightness-0 invert" name="academic-cap"/>
-                                Terminer le chapitre
+                                {{ isCompletingChapter ? 'Validation…' : 'Terminer le chapitre' }}
                             </button>
                         </section>
 

@@ -141,7 +141,10 @@ final class StudentLearningPlayController extends Controller
         $isEnrolled = Enrollment::query()
             ->where('user_id', $user->id)
             ->where('formation_id', $formation->id)
-            ->where('status', EnrollmentStatusEnum::ACTIVE->value)
+            ->whereIn('status', [
+                EnrollmentStatusEnum::ACTIVE->value,
+                EnrollmentStatusEnum::COMPLETED->value,
+            ])
             ->whereIn('payment_status', [
                 EnrollmentPaymentEnum::PAID->value,
                 EnrollmentPaymentEnum::FREE->value,
@@ -293,7 +296,7 @@ final class StudentLearningPlayController extends Controller
             return redirect()->route('course.player', [
                 'formation' => $formation->id,
                 'chapterId' => $next->id,
-            ]);
+            ])->with('success', 'Chapitre terminé. Vous pouvez poursuivre votre apprentissage.');
         }
 
         $message = $certificate
