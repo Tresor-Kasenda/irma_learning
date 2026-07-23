@@ -1,10 +1,11 @@
 <script lang="ts" setup>
-import {Link, usePage} from '@inertiajs/vue3';
+import {Link, router, usePage} from '@inertiajs/vue3';
 import {computed, ref} from 'vue';
 import {PanelLeftClose, PanelLeftOpen} from '@lucide/vue';
 import LearningIcon from '@/Components/Learning/LearningIcon.vue';
 import {useUiStore} from "@/stores";
 import {safeRoute} from "@/utilities/route";
+import type {LearningNotification, LearningNotifications} from '@/types';
 
 const props = defineProps<{
     mobileSidebarOpen: boolean;
@@ -23,6 +24,13 @@ const currentUser = computed(() => page.props.auth?.user);
 const isAuthenticated = computed(() => Boolean(currentUser.value));
 const accountName = computed(() => currentUser.value?.name ?? 'Visiteur');
 const accountRole = computed(() => (isAuthenticated.value ? 'Apprenant' : 'Compte invité'));
+const notifications = computed<LearningNotifications>(() => (
+    page.props.notifications as LearningNotifications | undefined
+) ?? {
+    items: [],
+    unread_count: 0,
+});
+const unreadNotificationsCount = computed(() => notifications.value.unread_count);
 
 const toggleMobileSidebar = () => {
     emit('update:mobileSidebarOpen', !props.mobileSidebarOpen);
@@ -35,6 +43,48 @@ const toggleSidebarCollapsed = () => {
 const closeMenus = () => {
     profileMenuOpen.value = false;
     notificationMenuOpen.value = false;
+};
+
+const notificationToneClass = (notification: LearningNotification): string => ({
+    success: 'border-emerald-400/30 bg-emerald-400/10',
+    celebration: 'border-amber-300/30 bg-amber-300/10',
+    info: 'border-sky-400/30 bg-sky-400/10',
+}[notification.tone] ?? 'border-slate-400/20 bg-white/5');
+
+const notificationDate = (notification: LearningNotification): string => {
+    if (!notification.created_at) {
+        return '';
+    }
+
+    return new Intl.DateTimeFormat('fr-FR', {
+        day: 'numeric',
+        month: 'short',
+        hour: '2-digit',
+        minute: '2-digit',
+    }).format(new Date(notification.created_at));
+};
+
+const openNotification = (notification: LearningNotification): void => {
+    router.post(safeRoute('notifications.read', {notification: notification.id}), {}, {
+        preserveScroll: true,
+        onSuccess: () => {
+            notificationMenuOpen.value = false;
+
+            if (notification.action_url) {
+                router.visit(notification.action_url);
+            }
+        },
+    });
+};
+
+const markAllNotificationsAsRead = (): void => {
+    if (unreadNotificationsCount.value === 0) {
+        return;
+    }
+
+    router.post(safeRoute('notifications.read-all'), {}, {
+        preserveScroll: true,
+    });
 };
 </script>
 
@@ -88,7 +138,12 @@ const closeMenus = () => {
                     @click="notificationMenuOpen = !notificationMenuOpen; profileMenuOpen = false"
                 >
                     <LearningIcon class="size-5 brightness-0 invert opacity-80" name="bell"/>
-                    <span class="absolute right-1.5 top-1.5 size-2 bg-[#ef477d]"/>
+                    <span
+                        v-if="unreadNotificationsCount > 0"
+                        class="absolute -right-1 -top-1 grid min-w-5 size-5 place-items-center rounded-full bg-[#ef477d] px-1 text-[10px] font-bold text-white"
+                    >
+                        {{ unreadNotificationsCount > 9 ? '9+' : unreadNotificationsCount }}
+                    </span>
                 </button>
 
                 <Transition
@@ -104,16 +159,52 @@ const closeMenus = () => {
                         class="absolute right-0 top-full z-40 mt-2 w-80 border border-white/10 bg-[#0e2035] shadow-xl"
                     >
                         <div class="border-b border-white/10 px-4 py-3">
-                            <p class="text-sm font-semibold text-white">Notifications</p>
+                            <div class="flex items-center justify-between gap-3">
+                                <p class="text-sm font-semibold text-white">Notifications</p>
+                                <span v-if="unreadNotificationsCount > 0" class="text-xs text-[#ef477d]">
+                                    {{ unreadNotificationsCount }} nouvelle{{ unreadNotificationsCount > 1 ? 's' : '' }}
+                                </span>
+                            </div>
                         </div>
                         <div class="max-h-96 overflow-y-auto py-2">
-                            <div class="px-4 py-8 text-center">
+                            <div v-if="notifications.items.length === 0" class="px-4 py-8 text-center">
                                 <LearningIcon class="mx-auto size-12 brightness-0 invert opacity-10 mb-3" name="bell"/>
                                 <p class="text-sm text-slate-500">Aucune nouvelle notification</p>
                             </div>
+                            <button
+                                v-for="notification in notifications.items"
+                                :key="notification.id"
+                                :class="[
+                                    'flex w-full items-start gap-3 border-l-2 px-4 py-3 text-left transition hover:bg-white/5',
+                                    notification.read_at ? 'border-transparent opacity-70' : notificationToneClass(notification),
+                                ]"
+                                type="button"
+                                @click="openNotification(notification)"
+                            >
+                                <span
+                                    :class="notification.read_at ? 'bg-slate-500' : 'bg-[#ef477d]'"
+                                    class="mt-1.5 size-2 shrink-0 rounded-full"
+                                />
+                                <span class="min-w-0 flex-1">
+                                    <span class="flex items-start justify-between gap-3">
+                                        <span class="truncate text-sm font-medium text-white">{{ notification.title }}</span>
+                                        <time class="shrink-0 text-[11px] text-slate-500">{{ notificationDate(notification) }}</time>
+                                    </span>
+                                    <span class="mt-1 block text-xs leading-5 text-slate-400">{{ notification.message }}</span>
+                                    <span v-if="notification.action_label" class="mt-2 block text-xs font-medium text-[#ef477d]">
+                                        {{ notification.action_label }}
+                                    </span>
+                                </span>
+                            </button>
                         </div>
-                        <div class="border-t border-white/10 p-2 text-center">
-                            <button class="text-xs text-[#ef477d] hover:underline" type="button">
+                        <div v-if="notifications.items.length > 0" class="border-t border-white/10 p-2 text-center">
+                            <button
+                                :class="unreadNotificationsCount === 0 ? 'cursor-not-allowed text-slate-600' : 'text-[#ef477d] hover:underline'"
+                                :disabled="unreadNotificationsCount === 0"
+                                class="text-xs"
+                                type="button"
+                                @click="markAllNotificationsAsRead"
+                            >
                                 Tout marquer comme lu
                             </button>
                         </div>

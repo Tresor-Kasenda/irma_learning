@@ -26,6 +26,7 @@ final class Enrollment extends Model
         'payment_status',
         'payment_method',
         'payment_transaction_id',
+        'stripe_checkout_session_id',
         'payment_gateway',
         'payment_gateway_response',
         'amount_paid',
@@ -89,15 +90,6 @@ final class Enrollment extends Model
             'payment_notes' => ($this->payment_notes ? $this->payment_notes."\n\n" : '').
                 'REMBOURSEMENT: '.$reason.' ('.now()->format('d/m/Y H:i').')',
         ]);
-    }
-
-    protected static function booted(): void
-    {
-        self::creating(function (self $enrollment): void {
-            if (empty($enrollment->payment_transaction_id)) {
-                $enrollment->payment_transaction_id = 'pi_'.bin2hex(random_bytes(8));
-            }
-        });
     }
 
     protected function casts(): array

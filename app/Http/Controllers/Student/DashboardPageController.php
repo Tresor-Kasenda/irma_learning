@@ -15,16 +15,19 @@ use App\Models\Formation;
 use App\Models\UserProgress;
 use App\Services\CatalogStatsService;
 use App\Services\CourseProgressionService;
+use App\Services\LearnerNotificationService;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 
 final class DashboardPageController extends Controller
 {
+    public function __construct(private LearnerNotificationService $notifications) {}
+
     public function __invoke(CatalogStatsService $catalogStats, CourseProgressionService $progression)
     {
-
         $user = auth()->user();
+        $this->notifications->welcomeIfNeeded($user);
         $catalogCountRelations = Formation::catalogCountRelations();
 
         $myEnrollments = Enrollment::query()

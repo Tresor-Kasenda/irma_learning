@@ -7,6 +7,7 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use App\Models\ApplicationSetting;
 use App\Models\User;
+use App\Services\LearnerNotificationService;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -34,7 +35,7 @@ final class RegisteredUserController extends Controller
      *
      * @throws ValidationException
      */
-    public function store(Request $request): RedirectResponse
+    public function store(Request $request, LearnerNotificationService $notifications): RedirectResponse
     {
         abort_unless(ApplicationSetting::current()->allow_registration, 404);
 
@@ -50,6 +51,8 @@ final class RegisteredUserController extends Controller
             'email' => $request->email,
             'password' => Hash::make($request->password),
         ]);
+
+        $notifications->welcomeIfNeeded($user);
 
         event(new Registered($user));
 

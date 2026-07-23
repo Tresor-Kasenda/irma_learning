@@ -22,6 +22,8 @@ use Illuminate\Support\Collection as SupportCollection;
 
 final class CourseProgressionService
 {
+    public function __construct(private LearnerNotificationService $notifications) {}
+
     /**
      * Per-section gating state used to lock/unlock the learning path sequentially.
      *
@@ -227,7 +229,9 @@ final class CourseProgressionService
             return null;
         }
 
-        $this->markEnrollmentCompleted($user, $formation);
+        if ($this->markEnrollmentCompleted($user, $formation)) {
+            $this->notifications->formationCompleted($user, $formation);
+        }
 
         return $this->issueCertificate($user, $formation);
     }
@@ -344,7 +348,7 @@ final class CourseProgressionService
         return $chapterIds->every(fn (int $id): bool => in_array($id, $completedChapterIds, true));
     }
 
-    private function markEnrollmentCompleted(User $user, Formation $formation): void
+    private function markEnrollmentCompleted(User $user, Formation $formation): bool
     {
         $enrollment = Enrollment::query()
             ->where('user_id', $user->id)
@@ -361,7 +365,11 @@ final class CourseProgressionService
                 'completion_date' => now(),
                 'progress_percentage' => 100,
             ]);
+
+            return true;
         }
+
+        return false;
     }
 
     private function issueCertificate(User $user, Formation $formation): ?Certificate
@@ -386,7 +394,7 @@ final class CourseProgressionService
             return $existing;
         }
 
-        return Certificate::query()
+        $certificate = Certificate::query()
             ->create([
                 'user_id' => $user->id,
                 'formation_id' => $formation->id,
@@ -394,5 +402,9 @@ final class CourseProgressionService
                 'issue_date' => now(),
                 'status' => CertificateStatusEnum::ACTIVE,
             ]);
+
+        $this->notifications->certificateIssued($user, $certificate);
+
+        return $certificate;
     }
 }

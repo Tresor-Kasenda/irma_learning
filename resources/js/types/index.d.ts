@@ -13,6 +13,23 @@ export interface FlashMessages {
     info?: string | null;
 }
 
+export interface LearningNotification {
+    id: string;
+    type: string;
+    title: string;
+    message: string;
+    action_url: string | null;
+    action_label: string | null;
+    tone: 'info' | 'success' | 'celebration' | string;
+    read_at: string | null;
+    created_at: string | null;
+}
+
+export interface LearningNotifications {
+    items: LearningNotification[];
+    unread_count: number;
+}
+
 export type PageProps<
     T extends Record<string, unknown> = Record<string, unknown>,
 > = T & {
@@ -20,4 +37,5 @@ export type PageProps<
         user: User;
     };
     flash?: FlashMessages;
+    notifications?: LearningNotifications;
 };

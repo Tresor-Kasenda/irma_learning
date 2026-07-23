@@ -15,8 +15,10 @@ use App\Http\Controllers\Student\Formations\StudentCertificationController;
 use App\Http\Controllers\Student\Formations\StudentFormationController;
 use App\Http\Controllers\Student\Formations\StudentLearningController;
 use App\Http\Controllers\Student\Learnings\StudentLearningPlayController;
+use App\Http\Controllers\Student\NotificationController;
 use App\Http\Controllers\Student\PaymentController;
 use App\Http\Controllers\Student\ProfileController;
+use App\Http\Controllers\Student\StripeWebhookController;
 use App\Models\Formation;
 use Illuminate\Support\Facades\Route;
 
@@ -27,6 +29,8 @@ Route::get('/nos-tarifs', [HomePageController::class, 'pricings'])->name('pages.
 
 Route::get('/account/inactive', fn () => inertia('Auth/AccountStatus', ['status' => 'inactive']))->name('account.inactive');
 Route::get('/account/suspended', fn () => inertia('Auth/AccountStatus', ['status' => 'suspended']))->name('account.suspended');
+
+Route::post('/stripe/webhook', StripeWebhookController::class)->name('stripe.webhook');
 
 Route::middleware(['auth'])->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
@@ -42,6 +46,11 @@ Route::middleware(['auth', 'check.status', 'force.password.change'])->group(func
     Route::get('/certificats/{certificate}', [StudentCertificationController::class, 'show'])->name('certificats.show');
     Route::get('/inprogress', StudentLearningController::class)->name('student.progress');
 
+    Route::post('/notifications/{notification}/read', [NotificationController::class, 'read'])
+        ->name('notifications.read');
+    Route::post('/notifications/read-all', [NotificationController::class, 'readAll'])
+        ->name('notifications.read-all');
+
     Route::get('/learnings', StudentFormationController::class)->name('student.learnings');
     Route::get('/learnings/{formation:slug}/detaile', [StudentLearningPlayController::class, 'detailCourse'])->name('student.learnings.detail');
 
@@ -52,7 +61,10 @@ Route::middleware(['auth', 'check.status', 'force.password.change'])->group(func
             return redirect()->back()->with('error', 'Seuls les étudiants peuvent s\'inscrire aux formations.');
         }
 
-        if ($user->enrollments()->where('formation_id', $formation->id)->exists()) {
+        if ($user->enrollments()
+            ->where('formation_id', $formation->id)
+            ->whereIn('payment_status', [EnrollmentPaymentEnum::PAID, EnrollmentPaymentEnum::FREE])
+            ->exists()) {
             return redirect()->route('course.player', $formation->id);
         }
 
@@ -80,6 +92,8 @@ Route::middleware(['auth', 'check.status', 'force.password.change'])->group(func
     Route::get('/formation/{formation:id}/payment', PaymentController::class)
         ->name('student.payment.create');
     Route::post('/formation/{formation:id}/payment', [PaymentController::class, 'store']);
+    Route::get('/formation/{formation:id}/payment/success', [PaymentController::class, 'success'])
+        ->name('student.payment.success');
 
     Route::get('/media/{chapter}/{type}', [App\Http\Controllers\MediaController::class, 'stream'])
         ->name('media.stream')

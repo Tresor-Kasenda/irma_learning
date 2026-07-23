@@ -6,6 +6,7 @@ namespace App\Http\Middleware;
 
 use App\Models\ApplicationSetting;
 use Illuminate\Http\Request;
+use Illuminate\Notifications\DatabaseNotification;
 use Inertia\Middleware;
 
 final class HandleInertiaRequests extends Middleware
@@ -44,6 +45,7 @@ final class HandleInertiaRequests extends Middleware
                 'error' => fn () => $request->session()->get('error'),
                 'info' => fn () => $request->session()->get('info'),
             ],
+            'notifications' => fn (): array => $this->notifications($request),
             'appSettings' => [
                 'name' => $settings->app_name,
                 'tagline' => $settings->app_tagline,
@@ -67,6 +69,41 @@ final class HandleInertiaRequests extends Middleware
                 'catalog_information_heading' => $settings->catalog_information_heading ?: ApplicationSetting::DEFAULT_CATALOG_INFORMATION_HEADING,
                 'catalog_information_items' => $settings->catalog_information_items ?: ApplicationSetting::DEFAULT_CATALOG_INFORMATION_ITEMS,
             ],
+        ];
+    }
+
+    /**
+     * @return array{items: array<int, array{id: string, type: string, title: string, message: string, action_url: string|null, action_label: string|null, tone: string, read_at: string|null, created_at: string|null}>, unread_count: int}
+     */
+    private function notifications(Request $request): array
+    {
+        $user = $request->user();
+
+        if ($user === null) {
+            return [
+                'items' => [],
+                'unread_count' => 0,
+            ];
+        }
+
+        return [
+            'items' => $user->notifications()
+                ->latest()
+                ->limit(8)
+                ->get()
+                ->map(fn (DatabaseNotification $notification): array => [
+                    'id' => (string) $notification->id,
+                    'type' => $notification->type,
+                    'title' => (string) ($notification->data['title'] ?? 'Notification'),
+                    'message' => (string) ($notification->data['message'] ?? ''),
+                    'action_url' => $notification->data['action_url'] ?? null,
+                    'action_label' => $notification->data['action_label'] ?? null,
+                    'tone' => (string) ($notification->data['tone'] ?? 'info'),
+                    'read_at' => $notification->read_at?->toISOString(),
+                    'created_at' => $notification->created_at?->toISOString(),
+                ])
+                ->all(),
+            'unread_count' => $user->unreadNotifications()->count(),
         ];
     }
 }

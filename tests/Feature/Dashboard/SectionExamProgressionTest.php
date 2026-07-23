@@ -161,6 +161,13 @@ test('passing the final exam of a certifying formation issues a certificate and 
 
     expect($enrollment->refresh()->status)->toBe(EnrollmentStatusEnum::COMPLETED)
         ->and($enrollment->completion_date)->not->toBeNull();
+
+    expect($user->notifications()
+        ->where('type', 'learning.formation-completed')
+        ->count())->toBe(1)
+        ->and($user->notifications()
+            ->where('type', 'learning.certificate-issued')
+            ->count())->toBe(1);
 });
 
 test('no certificate is issued while a section exam is still failed', function () {
