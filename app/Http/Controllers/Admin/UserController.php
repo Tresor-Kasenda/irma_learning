@@ -10,6 +10,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\StoreAdminUserRequest;
 use App\Http\Requests\Admin\UpdateAdminUserRequest;
 use App\Models\User;
+use App\Services\UsernameGenerator;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -63,11 +64,11 @@ final class UserController extends Controller
         ]);
     }
 
-    public function store(StoreAdminUserRequest $request): RedirectResponse
+    public function store(StoreAdminUserRequest $request, UsernameGenerator $usernames): RedirectResponse
     {
         User::create([
             ...$request->safe()->except(['password', 'password_confirmation']),
-            'username' => explode('@', $request->validated('email'))[0],
+            'username' => $usernames->forEmail($request->validated('email')),
             'password' => Hash::make($request->validated('password')),
         ]);
 

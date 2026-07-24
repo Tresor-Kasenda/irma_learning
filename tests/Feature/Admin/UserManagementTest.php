@@ -84,8 +84,8 @@ test('an administrator can create a user with a role', function () {
         ->post(route('admin.users.store'), [
             'name' => 'Nouvel Instructeur',
             'email' => 'instructor@irma.test',
-            'password' => 'super-secret-1',
-            'password_confirmation' => 'super-secret-1',
+            'password' => 'SuperSecret!2026',
+            'password_confirmation' => 'SuperSecret!2026',
             'role' => UserRoleEnum::INSTRUCTOR->value,
             'status' => UserStatusEnum::ACTIVE->value,
             'must_change_password' => true,
@@ -95,7 +95,7 @@ test('an administrator can create a user with a role', function () {
     $user = User::query()->where('email', 'instructor@irma.test')->firstOrFail();
     expect($user->role)->toBe(UserRoleEnum::INSTRUCTOR)
         ->and($user->must_change_password)->toBeTrue()
-        ->and(Hash::check('super-secret-1', $user->password))->toBeTrue();
+        ->and(Hash::check('SuperSecret!2026', $user->password))->toBeTrue();
 });
 
 test('a non-root administrator cannot create a root user', function () {
@@ -105,8 +105,8 @@ test('a non-root administrator cannot create a root user', function () {
         ->post(route('admin.users.store'), [
             'name' => 'Faux Root',
             'email' => 'fakeroot@irma.test',
-            'password' => 'super-secret-1',
-            'password_confirmation' => 'super-secret-1',
+            'password' => 'SuperSecret!2026',
+            'password_confirmation' => 'SuperSecret!2026',
             'role' => UserRoleEnum::ROOT->value,
             'status' => UserStatusEnum::ACTIVE->value,
             'must_change_password' => true,
@@ -123,8 +123,8 @@ test('a root administrator can create a root user', function () {
         ->post(route('admin.users.store'), [
             'name' => 'Second Root',
             'email' => 'secondroot@irma.test',
-            'password' => 'super-secret-1',
-            'password_confirmation' => 'super-secret-1',
+            'password' => 'SuperSecret!2026',
+            'password_confirmation' => 'SuperSecret!2026',
             'role' => UserRoleEnum::ROOT->value,
             'status' => UserStatusEnum::ACTIVE->value,
             'must_change_password' => false,

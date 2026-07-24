@@ -40,7 +40,7 @@ Route::middleware(['auth'])->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
-Route::middleware(['auth', 'check.status', 'force.password.change'])->group(function () {
+Route::middleware(['auth', 'verified', 'check.status', 'force.password.change'])->group(function () {
     Route::get('/dashboard', DashboardPageController::class)->name('dashboard');
     Route::get('/certificats', StudentCertificationController::class)->name('certificats');
     Route::get('/certificats/{certificate}', [StudentCertificationController::class, 'show'])->name('certificats.show');

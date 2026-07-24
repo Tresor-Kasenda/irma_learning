@@ -9,9 +9,10 @@ use Inertia\Testing\AssertableInertia as Assert;
 test('registration stores a welcome notification', function () {
     $this->post('/register', [
         'name' => 'Marie Apprenante',
+        'username' => 'marie.apprenante',
         'email' => 'marie@example.com',
-        'password' => 'password',
-        'password_confirmation' => 'password',
+        'password' => 'MotDePasse!2026',
+        'password_confirmation' => 'MotDePasse!2026',
     ])->assertRedirect(route('dashboard', absolute: false));
 
     $user = User::query()->where('email', 'marie@example.com')->firstOrFail();

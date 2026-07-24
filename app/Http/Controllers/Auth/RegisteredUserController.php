@@ -5,16 +5,13 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Auth\RegisterUserRequest;
 use App\Models\ApplicationSetting;
 use App\Models\User;
 use App\Services\LearnerNotificationService;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Validation\Rules;
-use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -27,29 +24,28 @@ final class RegisteredUserController extends Controller
     {
         abort_unless(ApplicationSetting::current()->allow_registration, 404);
 
-        return Inertia::render('Auth/Register');
+        return Inertia::render('Auth/Register', [
+            'socialAuthentication' => [
+                'google' => SocialAuthenticationController::isConfigured('google'),
+                'github' => SocialAuthenticationController::isConfigured('github'),
+            ],
+        ]);
     }
 
     /**
      * Handle an incoming registration request.
-     *
-     * @throws ValidationException
      */
-    public function store(Request $request, LearnerNotificationService $notifications): RedirectResponse
+    public function store(RegisterUserRequest $request, LearnerNotificationService $notifications): RedirectResponse
     {
         abort_unless(ApplicationSetting::current()->allow_registration, 404);
 
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|string|lowercase|email|max:255|unique:'.User::class,
-            'password' => ['required', 'confirmed', Rules\Password::defaults()],
-        ]);
+        $validated = $request->validated();
 
         $user = User::create([
-            'name' => $request->name,
-            'username' => explode('@', $request->email)[0],
-            'email' => $request->email,
-            'password' => Hash::make($request->password),
+            'name' => $validated['name'],
+            'username' => $validated['username'],
+            'email' => $validated['email'],
+            'password' => $validated['password'],
         ]);
 
         $notifications->welcomeIfNeeded($user);

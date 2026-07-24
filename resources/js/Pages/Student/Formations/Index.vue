@@ -2,7 +2,7 @@
 import {Head, Link, router} from '@inertiajs/vue3';
 import {computed, ref, watch} from 'vue';
 import FormationCard from '@/Components/Learning/FormationCard.vue';
-import SearchableSelect from '@/Components/Admin/Fields/SearchableSelect.vue';
+import SelectField from '@/Components/Admin/Fields/SelectField.vue';
 import LearningIcon from '@/Components/Learning/LearningIcon.vue';
 import LearningLayout from '@/Layouts/LearningLayout.vue';
 import type {LearningCatalogStats, LearningFormation} from '@/types/learning';
@@ -282,14 +282,13 @@ function formationHref(formation: LearningFormation): string {
                             <span class="font-semibold text-slate-300">{{ formations.total }}</span>
                             {{ formations.total > 1 ? 'résultats' : 'résultat' }}
                         </p>
-                        <SearchableSelect
+                        <SelectField
                             :model-value="filters.sort"
-                            :clearable="false"
                             :options="sortOptions"
-                            :searchable="false"
                             compact
                             hide-label
                             label="Trier les formations"
+                            variant="learning"
                             @update:model-value="onSortChange"
                         />
                     </div>

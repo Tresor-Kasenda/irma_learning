@@ -4,7 +4,7 @@ import UpdatePasswordForm from './Partials/UpdatePasswordForm.vue';
 import UpdateProfileInformationForm from './Partials/UpdateProfileInformationForm.vue';
 import {Head, Link, router, useForm, usePage} from '@inertiajs/vue3';
 import {computed, onBeforeUnmount, ref, watch} from 'vue';
-import SearchableSelect from '@/Components/Admin/Fields/SearchableSelect.vue';
+import SelectField from '@/Components/Admin/Fields/SelectField.vue';
 import {safeRoute} from "@/utilities/route";
 import LearningLayout from "@/Layouts/LearningLayout.vue";
 
@@ -276,14 +276,13 @@ const emptyState = computed(() =>
                         />
                     </div>
 
-                    <SearchableSelect
+                    <SelectField
                         v-model="sort"
-                        :clearable="false"
                         :options="sortOptions"
-                        :searchable="false"
                         compact
                         hide-label
                         label="Trier les résultats"
+                        variant="learning"
                     />
                 </div>
 

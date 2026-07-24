@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Enums\CertificateStatusEnum;
+use App\Enums\UserRoleEnum;
 use App\Models\Certificate;
 use App\Models\Formation;
 use App\Models\User;
@@ -48,7 +49,7 @@ test('the certificate page is restricted to its owner', function () {
     $owner = User::factory()->create();
     $certificate = Certificate::factory()->for($owner)->create();
 
-    $this->actingAs(User::factory()->create())
+    $this->actingAs(User::factory()->create(['role' => UserRoleEnum::STUDENT]))
         ->get(route('certificats.show', $certificate))
         ->assertForbidden();
 

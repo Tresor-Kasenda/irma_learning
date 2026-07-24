@@ -22,6 +22,10 @@ final class AuthenticatedSessionController extends Controller
     {
         return Inertia::render('Auth/Login', [
             'canResetPassword' => Route::has('password.request'),
+            'socialAuthentication' => [
+                'google' => SocialAuthenticationController::isConfigured('google'),
+                'github' => SocialAuthenticationController::isConfigured('github'),
+            ],
             'status' => session('status'),
         ]);
     }

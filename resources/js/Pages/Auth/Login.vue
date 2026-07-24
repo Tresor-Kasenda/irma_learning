@@ -1,12 +1,17 @@
 <script setup lang="ts">
 import GuestLayout from '@/Layouts/GuestLayout.vue';
 import InputError from '@/Components/InputError.vue';
+import SocialAuthenticationButtons from '@/Components/Auth/SocialAuthenticationButtons.vue';
 import { Head, Link, useForm, usePage } from '@inertiajs/vue3';
 import {computed, ref} from 'vue';
 import {Eye, EyeOff} from '@lucide/vue';
 
 defineProps<{
     canResetPassword?: boolean;
+    socialAuthentication: {
+        google: boolean;
+        github: boolean;
+    };
     status?: string;
 }>();
 
@@ -129,6 +134,8 @@ const submit = () => {
                         </svg>
                         {{ form.processing ? 'Connexion...' : 'Se connecter' }}
                     </button>
+
+                    <SocialAuthenticationButtons :social-authentication="socialAuthentication" />
                 </div>
             </div>
 

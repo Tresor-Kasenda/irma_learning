@@ -12,9 +12,11 @@ const props = withDefaults(defineProps<{
     placeholder?: string;
     compact?: boolean;
     hideLabel?: boolean;
+    variant?: 'default' | 'learning';
 }>(), {
     compact: false,
     hideLabel: false,
+    variant: 'default',
 });
 
 defineEmits<{ (e: 'update:modelValue', value: string): void }>();
@@ -32,8 +34,13 @@ defineEmits<{ (e: 'update:modelValue', value: string): void }>();
         <select
             :id="id"
             :value="modelValue ?? ''"
-            :class="props.compact ? 'h-10 pl-3 pr-8' : 'h-11 px-3'"
-            class="admin-field w-full border text-sm outline-none transition focus:border-[#c23a72]"
+            :class="[
+                props.compact ? 'h-10 pl-3 pr-8' : 'h-11 px-3',
+                props.variant === 'learning'
+                    ? 'border-white/10 bg-[#0c1a2a] text-slate-200 focus:border-sky-400/60'
+                    : 'admin-field focus:border-[#c23a72]',
+            ]"
+            class="w-full border text-sm outline-none transition"
             @change="$emit('update:modelValue', ($event.target as HTMLSelectElement).value)"
         >
             <option v-if="placeholder" disabled value="">{{ placeholder }}</option>

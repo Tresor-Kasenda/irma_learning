@@ -2,6 +2,7 @@
 import {useForm} from '@inertiajs/vue3';
 import {ref} from 'vue';
 import InputError from "@/Components/InputError.vue";
+import PasswordRequirements from '@/Components/Auth/PasswordRequirements.vue';
 
 const passwordInput = ref<HTMLInputElement | null>(null);
 const currentPasswordInput = ref<HTMLInputElement | null>(null);
@@ -120,6 +121,8 @@ const updatePassword = () => {
                         </svg>
                     </button>
                 </div>
+
+                <PasswordRequirements :password="form.password" dark />
 
                 <InputError :message="form.errors.password"/>
             </div>

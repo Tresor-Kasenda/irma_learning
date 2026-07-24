@@ -1,8 +1,17 @@
 <script setup lang="ts">
 import GuestLayout from '@/Layouts/GuestLayout.vue';
 import InputError from '@/Components/InputError.vue';
+import PasswordRequirements from '@/Components/Auth/PasswordRequirements.vue';
+import SocialAuthenticationButtons from '@/Components/Auth/SocialAuthenticationButtons.vue';
 import { Head, Link, useForm, usePage } from '@inertiajs/vue3';
 import { ref, computed } from 'vue';
+
+defineProps<{
+    socialAuthentication: {
+        google: boolean;
+        github: boolean;
+    };
+}>();
 
 const form = useForm({
     name: '',
@@ -24,21 +33,20 @@ const showConfirmPassword = ref(false);
 
 const passwordStrength = computed(() => {
     const p = form.password;
-    if (!p) return 0;
-    let score = 0;
-    if (p.length >= 8) score++;
-    if (p.length >= 12) score++;
-    if (/[0-9]/.test(p)) score++;
-    if (/[a-z]/.test(p)) score++;
-    if (/[A-Z]/.test(p)) score++;
-    if (/[^a-zA-Z0-9]/.test(p)) score++;
-    return Math.min(5, score);
+    return [
+        p.length >= 12,
+        /[a-z]/.test(p),
+        /[A-Z]/.test(p),
+        /\d/.test(p),
+        /[^A-Za-z0-9]/.test(p),
+    ].filter(Boolean).length;
 });
 
 const strengthLabel = computed(() => ['', 'Très faible', 'Faible', 'Moyen', 'Fort', 'Très fort'][passwordStrength.value] ?? '');
 const strengthWidth = computed(() => ['w-0', 'w-1/5', 'w-2/5', 'w-3/5', 'w-4/5', 'w-full'][passwordStrength.value] ?? 'w-0');
 const strengthColor = computed(() => passwordStrength.value <= 2 ? 'bg-red-500' : passwordStrength.value <= 4 ? 'bg-yellow-500' : 'bg-green-500');
 const strengthTextColor = computed(() => passwordStrength.value === 0 ? 'text-gray-400' : passwordStrength.value <= 2 ? 'text-red-500' : passwordStrength.value <= 4 ? 'text-yellow-500' : 'text-green-500');
+const passwordIsCompliant = computed(() => passwordStrength.value === 5);
 
 const submit = () => {
     form.post(route('register'), {
@@ -70,16 +78,19 @@ const submit = () => {
                     <div class="flex flex-col gap-1">
                         <label for="name" class="text-sm font-medium text-gray-700">Nom complet</label>
                         <input id="name" v-model="form.name" type="text" name="name" placeholder="Votre nom"
-                            required autofocus autocomplete="name"
+                            aria-describedby="name-help" required autofocus autocomplete="name"
                             class="block w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 caret-irma-primary shadow-sm placeholder:text-gray-400 focus:border-irma-primary focus:outline-none focus:ring-1 focus:ring-irma-primary" />
+                        <p id="name-help" class="text-xs text-gray-500">Votre identité complète, par exemple « Trésor Kasenda ».</p>
                         <InputError :message="form.errors.name" />
                     </div>
 
                     <div class="flex flex-col gap-1">
                         <label for="username" class="text-sm font-medium text-gray-700">Nom d'utilisateur</label>
                         <input id="username" v-model="form.username" type="text" name="username"
-                            placeholder="Votre nom d'utilisateur" required autocomplete="username"
+                            aria-describedby="username-help" autocapitalize="none" autocomplete="username" maxlength="30"
+                            minlength="3" pattern="[a-z0-9][a-z0-9._-]*" placeholder="ex. tresor.kasenda" required spellcheck="false"
                             class="block w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 caret-irma-primary shadow-sm placeholder:text-gray-400 focus:border-irma-primary focus:outline-none focus:ring-1 focus:ring-irma-primary" />
+                        <p id="username-help" class="text-xs text-gray-500">Votre identifiant unique sur la plateforme : 3 à 30 caractères en minuscules.</p>
                         <InputError :message="form.errors.username" />
                     </div>
 
@@ -113,6 +124,7 @@ const submit = () => {
                             </div>
                             <p v-if="form.password" class="text-xs mt-1" :class="strengthTextColor">{{ strengthLabel }}</p>
                         </div>
+                        <PasswordRequirements :password="form.password" />
                         <InputError :message="form.errors.password" />
                     </div>
 
@@ -136,7 +148,7 @@ const submit = () => {
                         <InputError :message="form.errors.password_confirmation" />
                     </div>
 
-                    <button type="submit" :disabled="form.processing"
+                    <button type="submit" :disabled="form.processing || !passwordIsCompliant"
                         class="flex w-full items-center justify-center gap-2 rounded-md bg-irma-primary px-4 py-2.5 text-sm font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-60">
                         <svg v-if="form.processing" class="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
@@ -144,6 +156,8 @@ const submit = () => {
                         </svg>
                         {{ form.processing ? 'Inscription...' : "S'inscrire" }}
                     </button>
+
+                    <SocialAuthenticationButtons :social-authentication="socialAuthentication" />
                 </div>
             </div>
 

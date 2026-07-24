@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import GuestLayout from '@/Layouts/GuestLayout.vue';
 import InputError from '@/Components/InputError.vue';
+import PasswordRequirements from '@/Components/Auth/PasswordRequirements.vue';
 import { Head, useForm } from '@inertiajs/vue3';
 import { ref } from 'vue';
 
@@ -62,6 +63,7 @@ const submit = () => {
                                 </svg>
                             </button>
                         </div>
+                        <PasswordRequirements :password="form.password" />
                         <InputError :message="form.errors.password" />
                     </div>
 

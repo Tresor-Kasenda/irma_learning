@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Enums\EnrollmentPaymentEnum;
 use App\Enums\EnrollmentStatusEnum;
 use App\Enums\UserProgressEnum;
+use App\Enums\UserRoleEnum;
 use App\Models\Certificate;
 use App\Models\Chapter;
 use App\Models\Enrollment;
@@ -188,7 +189,7 @@ test('certificate page is visible to its owner', function () {
 
 test('certificate page is forbidden for another user', function () {
     $owner = User::factory()->create();
-    $intruder = User::factory()->create();
+    $intruder = User::factory()->create(['role' => UserRoleEnum::STUDENT]);
     $certificate = Certificate::factory()->create(['user_id' => $owner->id]);
 
     $this->actingAs($intruder)
