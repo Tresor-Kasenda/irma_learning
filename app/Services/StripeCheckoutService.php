@@ -24,18 +24,20 @@ final class StripeCheckoutService
     /**
      * @var array<int, string>
      */
-    private const ZERO_DECIMAL_CURRENCIES = [
+    private const array ZERO_DECIMAL_CURRENCIES = [
         'BIF', 'CLP', 'DJF', 'GNF', 'JPY', 'KMF', 'KRW', 'MGA', 'PYG', 'RWF', 'UGX', 'VND', 'VUV', 'XAF', 'XOF', 'XPF',
     ];
 
-    public function __construct(private LearnerNotificationService $notifications) {}
+    public function __construct(private readonly LearnerNotificationService $notifications)
+    {
+    }
 
     /**
-     * @throws ApiErrorException
+     * @throws ApiErrorException|Throwable
      */
     public function startCheckout(User $user, Formation $formation): ?string
     {
-        $amount = (float) ($formation->price ?? 0);
+        $amount = (float)($formation->price ?? 0);
 
         if ($amount <= 0) {
             throw new InvalidArgumentException('Une formation gratuite ne peut pas être payée par Stripe.');
@@ -47,7 +49,7 @@ final class StripeCheckoutService
 
         if ($enrollment->stripe_checkout_session_id) {
             $existingSession = $stripe->checkout->sessions->retrieve($enrollment->stripe_checkout_session_id);
-            $existingCheckoutUrl = (string) ($existingSession->url ?? '');
+            $existingCheckoutUrl = (string)($existingSession->url ?? '');
 
             if ($existingSession->status === 'open' && $existingCheckoutUrl !== '') {
                 return $existingCheckoutUrl;
@@ -66,7 +68,7 @@ final class StripeCheckoutService
 
         $checkoutSession = $stripe->checkout->sessions->create([
             'mode' => 'payment',
-            'client_reference_id' => (string) $enrollment->id,
+            'client_reference_id' => (string)$enrollment->id,
             'customer_email' => $user->email,
             'line_items' => [[
                 'price_data' => [
@@ -79,21 +81,21 @@ final class StripeCheckoutService
                 'quantity' => 1,
             ]],
             'metadata' => [
-                'enrollment_id' => (string) $enrollment->id,
-                'formation_id' => (string) $formation->id,
+                'enrollment_id' => (string)$enrollment->id,
+                'formation_id' => (string)$formation->id,
             ],
             'payment_intent_data' => [
                 'metadata' => [
-                    'enrollment_id' => (string) $enrollment->id,
-                    'formation_id' => (string) $formation->id,
+                    'enrollment_id' => (string)$enrollment->id,
+                    'formation_id' => (string)$formation->id,
                 ],
             ],
-            'success_url' => route('student.payment.success', $formation->id).'?session_id={CHECKOUT_SESSION_ID}',
+            'success_url' => route('student.payment.success', $formation->id) . '?session_id={CHECKOUT_SESSION_ID}',
             'cancel_url' => route('student.payment.create', $formation->id),
         ]);
 
-        $checkoutSessionId = (string) ($checkoutSession->id ?? '');
-        $checkoutUrl = (string) ($checkoutSession->url ?? '');
+        $checkoutSessionId = (string)($checkoutSession->id ?? '');
+        $checkoutUrl = (string)($checkoutSession->url ?? '');
 
         if ($checkoutSessionId === '' || $checkoutUrl === '') {
             throw new LogicException('Stripe n\'a pas renvoyé de session de paiement valide.');
@@ -108,46 +110,6 @@ final class StripeCheckoutService
         ]);
 
         return $checkoutUrl;
-    }
-
-    /**
-     * @throws SignatureVerificationException
-     */
-    public function handleWebhook(string $payload, string $signature): void
-    {
-        $event = Webhook::constructEvent($payload, $signature, $this->webhookSecret());
-        $checkoutSession = $event->data->object->toArray();
-
-        match ($event->type) {
-            'checkout.session.completed', 'checkout.session.async_payment_succeeded' => $this->completeCheckout($checkoutSession, $event->id),
-            'checkout.session.async_payment_failed', 'checkout.session.expired' => $this->failCheckout($checkoutSession, $event->id),
-            default => null,
-        };
-    }
-
-    public function synchronizeCheckoutSession(Enrollment $enrollment, string $checkoutSessionId): void
-    {
-        if ($enrollment->stripe_checkout_session_id !== $checkoutSessionId) {
-            throw new InvalidArgumentException('La session Stripe ne correspond pas à cette inscription.');
-        }
-
-        $checkoutSession = $this->stripeClient()
-            ->checkout
-            ->sessions
-            ->retrieve($checkoutSessionId)
-            ->toArray();
-
-        if ((string) ($checkoutSession['id'] ?? '') !== $checkoutSessionId) {
-            throw new InvalidArgumentException('Stripe n\'a pas renvoyé la session de paiement attendue.');
-        }
-
-        $metadata = $checkoutSession['metadata'] ?? [];
-
-        if (! is_array($metadata) || (string) ($metadata['enrollment_id'] ?? '') !== (string) $enrollment->id) {
-            throw new InvalidArgumentException('La session Stripe ne référence pas cette inscription.');
-        }
-
-        $this->completeCheckout($checkoutSession);
     }
 
     /**
@@ -167,7 +129,7 @@ final class StripeCheckoutService
             }
 
             if ($enrollment) {
-                if (! $enrollment->stripe_checkout_session_id) {
+                if (!$enrollment->stripe_checkout_session_id) {
                     $this->resetPendingEnrollment($enrollment, $currency, $amount);
                 }
 
@@ -209,7 +171,7 @@ final class StripeCheckoutService
     {
         $secret = config('services.stripe.secret');
 
-        if (! is_string($secret) || $secret === '') {
+        if (!is_string($secret) || $secret === '') {
             throw new LogicException('La clé secrète Stripe est absente de la configuration.');
         }
 
@@ -217,7 +179,7 @@ final class StripeCheckoutService
     }
 
     /**
-     * @param  array<string, mixed>  $checkoutSession
+     * @param array<string, mixed> $checkoutSession
      *
      * @throws Throwable
      */
@@ -248,7 +210,7 @@ final class StripeCheckoutService
     }
 
     /**
-     * @param  array<string, mixed>  $checkoutSession
+     * @param array<string, mixed> $checkoutSession
      */
     private function enrollmentForCheckout(array $checkoutSession): Enrollment
     {
@@ -263,21 +225,21 @@ final class StripeCheckoutService
     }
 
     /**
-     * @param  array<string, mixed>  $checkoutSession
+     * @param array<string, mixed> $checkoutSession
      */
     private function ensureCheckoutMatchesEnrollment(array $checkoutSession, Enrollment $enrollment): void
     {
         $metadata = $checkoutSession['metadata'] ?? [];
 
-        if (! is_array($metadata) || (string) ($metadata['formation_id'] ?? '') !== (string) $enrollment->formation_id) {
+        if (!is_array($metadata) || (string)($metadata['formation_id'] ?? '') !== (string)$enrollment->formation_id) {
             throw new InvalidArgumentException('La session Stripe ne correspond pas à la formation inscrite.');
         }
 
-        if (mb_strtolower((string) ($checkoutSession['currency'] ?? '')) !== mb_strtolower((string) $enrollment->currency)) {
+        if (mb_strtolower((string)($checkoutSession['currency'] ?? '')) !== mb_strtolower((string)$enrollment->currency)) {
             throw new InvalidArgumentException('La devise reçue de Stripe ne correspond pas à l\'inscription.');
         }
 
-        if ((int) ($checkoutSession['amount_total'] ?? -1) !== $this->amountInMinorUnit((float) $enrollment->amount_paid, (string) $enrollment->currency)) {
+        if ((int)($checkoutSession['amount_total'] ?? -1) !== $this->amountInMinorUnit((float)$enrollment->amount_paid, (string)$enrollment->currency)) {
             throw new InvalidArgumentException('Le montant reçu de Stripe ne correspond pas à l\'inscription.');
         }
     }
@@ -286,7 +248,7 @@ final class StripeCheckoutService
     {
         $multiplier = in_array(mb_strtoupper($currency), self::ZERO_DECIMAL_CURRENCIES, true) ? 1 : 100;
 
-        return (int) round($amount * $multiplier, 0, PHP_ROUND_HALF_UP);
+        return (int)round($amount * $multiplier, 0, PHP_ROUND_HALF_UP);
     }
 
     private function stringValue(mixed $value): ?string
@@ -295,7 +257,7 @@ final class StripeCheckoutService
     }
 
     /**
-     * @param  array<string, mixed>  $checkoutSession
+     * @param array<string, mixed> $checkoutSession
      * @return array<string, string|null>
      */
     private function gatewayResponse(array $checkoutSession, ?string $eventId): array
@@ -308,11 +270,26 @@ final class StripeCheckoutService
         ];
     }
 
+    /**
+     * @throws SignatureVerificationException|Throwable
+     */
+    public function handleWebhook(string $payload, string $signature): void
+    {
+        $event = Webhook::constructEvent($payload, $signature, $this->webhookSecret());
+        $checkoutSession = $event->data->object->toArray();
+
+        match ($event->type) {
+            'checkout.session.completed', 'checkout.session.async_payment_succeeded' => $this->completeCheckout($checkoutSession, $event->id),
+            'checkout.session.async_payment_failed', 'checkout.session.expired' => $this->failCheckout($checkoutSession, $event->id),
+            default => null,
+        };
+    }
+
     private function webhookSecret(): string
     {
         $secret = config('services.stripe.webhook_secret');
 
-        if (! is_string($secret) || $secret === '') {
+        if (!is_string($secret) || $secret === '') {
             throw new LogicException('Le secret de webhook Stripe est absent de la configuration.');
         }
 
@@ -320,7 +297,7 @@ final class StripeCheckoutService
     }
 
     /**
-     * @param  array<string, mixed>  $checkoutSession
+     * @param array<string, mixed> $checkoutSession
      *
      * @throws Throwable
      */
@@ -340,5 +317,34 @@ final class StripeCheckoutService
                 'payment_gateway_response' => $this->gatewayResponse($checkoutSession, $eventId),
             ]);
         }, attempts: 3);
+    }
+
+    /**
+     * @throws ApiErrorException
+     * @throws Throwable
+     */
+    public function synchronizeCheckoutSession(Enrollment $enrollment, string $checkoutSessionId): void
+    {
+        if ($enrollment->stripe_checkout_session_id !== $checkoutSessionId) {
+            throw new InvalidArgumentException('La session Stripe ne correspond pas à cette inscription.');
+        }
+
+        $checkoutSession = $this->stripeClient()
+            ->checkout
+            ->sessions
+            ->retrieve($checkoutSessionId)
+            ->toArray();
+
+        if ((string)($checkoutSession['id'] ?? '') !== $checkoutSessionId) {
+            throw new InvalidArgumentException('Stripe n\'a pas renvoyé la session de paiement attendue.');
+        }
+
+        $metadata = $checkoutSession['metadata'] ?? [];
+
+        if (!is_array($metadata) || (string)($metadata['enrollment_id'] ?? '') !== (string)$enrollment->id) {
+            throw new InvalidArgumentException('La session Stripe ne référence pas cette inscription.');
+        }
+
+        $this->completeCheckout($checkoutSession);
     }
 }

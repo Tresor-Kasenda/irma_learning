@@ -21,7 +21,7 @@ final class SocialAuthenticationController extends Controller
     /**
      * @var array<string, array{label: string, id_column: string}>
      */
-    private const PROVIDERS = [
+    private const array PROVIDERS = [
         'google' => [
             'label' => 'Google',
             'id_column' => 'google_id',
@@ -32,6 +32,29 @@ final class SocialAuthenticationController extends Controller
         ],
     ];
 
+    public function redirect(string $provider): RedirectResponse
+    {
+        $definition = $this->definitionFor($provider);
+
+        if (!$this->isConfigured($provider)) {
+            return to_route('login')->withErrors([
+                'email' => "La connexion avec {$definition['label']} est temporairement indisponible.",
+            ]);
+        }
+
+        return Socialite::driver($provider)->redirect();
+    }
+
+    /**
+     * @return array{label: string, id_column: string}
+     */
+    private function definitionFor(string $provider): array
+    {
+        abort_unless(array_key_exists($provider, self::PROVIDERS), 404);
+
+        return self::PROVIDERS[$provider];
+    }
+
     public static function isConfigured(string $provider): bool
     {
         $clientId = config("services.{$provider}.client_id");
@@ -41,29 +64,17 @@ final class SocialAuthenticationController extends Controller
             && is_string($clientSecret) && $clientSecret !== '';
     }
 
-    public function redirect(string $provider): RedirectResponse
-    {
-        $definition = $this->definitionFor($provider);
-
-        if (! $this->isConfigured($provider)) {
-            return to_route('login')->withErrors([
-                'email' => "La connexion avec {$definition['label']} est temporairement indisponible.",
-            ]);
-        }
-
-        return Socialite::driver($provider)->redirect();
-    }
-
     public function callback(
-        Request $request,
-        string $provider,
+        Request                    $request,
+        string                     $provider,
         LearnerNotificationService $notifications,
-        UsernameGenerator $usernames,
-    ): RedirectResponse {
+        UsernameGenerator          $usernames,
+    ): RedirectResponse
+    {
         $definition = $this->definitionFor($provider);
         $providerLabel = $definition['label'];
 
-        if (! $this->isConfigured($provider)) {
+        if (!$this->isConfigured($provider)) {
             return $this->redirectToLoginWithError("La connexion avec {$providerLabel} est temporairement indisponible.");
         }
 
@@ -83,11 +94,11 @@ final class SocialAuthenticationController extends Controller
         $email = $socialUser->getEmail();
         $profile = $socialUser->getRaw();
 
-        if (! is_string($id) || $id === '' || ! is_string($email) || ! filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        if (!is_string($id) || $id === '' || !is_string($email) || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
             return $this->redirectToLoginWithError("{$providerLabel} ne nous a pas transmis d'identité valide.");
         }
 
-        if (! $this->hasVerifiedEmail($provider, $profile)) {
+        if (!$this->hasVerifiedEmail($provider, $profile)) {
             return $this->redirectToLoginWithError("L'adresse e-mail de votre compte {$providerLabel} doit être vérifiée.");
         }
 
@@ -100,7 +111,7 @@ final class SocialAuthenticationController extends Controller
             $user = User::query()->where('email', $email)->first();
 
             if ($user === null) {
-                if (! ApplicationSetting::current()->allow_registration) {
+                if (!ApplicationSetting::current()->allow_registration) {
                     return $this->redirectToLoginWithError('Les inscriptions sont actuellement fermées.');
                 }
 
@@ -132,6 +143,11 @@ final class SocialAuthenticationController extends Controller
         return redirect()->intended(route('dashboard', absolute: false));
     }
 
+    private function redirectToLoginWithError(string $message): RedirectResponse
+    {
+        return to_route('login')->withErrors(['email' => $message]);
+    }
+
     private function hasVerifiedEmail(string $provider, array $profile): bool
     {
         if ($provider === 'google') {
@@ -141,16 +157,6 @@ final class SocialAuthenticationController extends Controller
         // The Socialite GitHub provider only returns a primary, verified email when `user:email`
         // is requested; it returns null otherwise.
         return true;
-    }
-
-    /**
-     * @return array{label: string, id_column: string}
-     */
-    private function definitionFor(string $provider): array
-    {
-        abort_unless(array_key_exists($provider, self::PROVIDERS), 404);
-
-        return self::PROVIDERS[$provider];
     }
 
     private function nameFor(?string $name, string $email): string
@@ -166,10 +172,5 @@ final class SocialAuthenticationController extends Controller
             ->replace(['.', '_', '-'], ' ')
             ->title()
             ->value();
-    }
-
-    private function redirectToLoginWithError(string $message): RedirectResponse
-    {
-        return to_route('login')->withErrors(['email' => $message]);
     }
 }

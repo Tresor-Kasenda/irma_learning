@@ -21,8 +21,6 @@
         "ezyang/htmlpurifier": "^4.19",
         "inertiajs/inertia-laravel": "^2.0",
         "inspector-apm/inspector-laravel": "^4.15.8",
-        "intervention/image": "^3.11",
-        "intervention/image-laravel": "^1.5",
         "laravel/framework": "^13.0",
         "laravel/sanctum": "^4.0",
         "laravel/socialite": "^5.29",
