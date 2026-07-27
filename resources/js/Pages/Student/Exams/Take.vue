@@ -2,6 +2,7 @@
 import {Head, Link, router} from '@inertiajs/vue3';
 import {computed, onMounted, onUnmounted, ref} from 'vue';
 import LearningIcon from '@/Components/Learning/LearningIcon.vue';
+import LearningThemeToggle from '@/Components/Learning/LearningThemeToggle.vue';
 import {safeRoute} from '@/utilities/route';
 
 interface Exam {
@@ -310,8 +311,8 @@ function questionTypeLabel(type: string): string {
 <template>
     <Head title="Passer l'examen"/>
 
-    <div class="flex h-screen min-h-0 flex-col overflow-hidden bg-[#071525] text-slate-100">
-        <header class="sticky top-0 z-40 border-b border-white/10 bg-[#081524]">
+    <div class="learning-shell flex h-screen min-h-0 flex-col overflow-hidden">
+        <header class="learning-header sticky top-0 z-40 border-b">
             <div class="flex min-h-16 items-center justify-between gap-4 px-4 sm:px-6">
                 <div class="flex min-w-0 items-center gap-3">
                     <Link
@@ -331,6 +332,7 @@ function questionTypeLabel(type: string): string {
                 </div>
 
                 <div class="flex shrink-0 items-center gap-3">
+                    <LearningThemeToggle/>
                     <div
                         v-if="remaining !== null"
                         class="hidden items-center gap-2 border border-white/10 bg-white/5 px-3 py-2 text-sm font-semibold text-white sm:flex"
@@ -513,8 +515,8 @@ function questionTypeLabel(type: string): string {
                 </div>
             </main>
 
-            <aside class="sticky top-0 hidden h-full w-80 shrink-0 self-start overflow-y-auto border-l border-white/10 bg-[#081524] md:block lg:w-96">
-                <div class="sticky top-0 z-10 border-b border-white/10 bg-[#081524] p-4">
+            <aside class="learning-sidebar sticky top-0 hidden h-full w-80 shrink-0 self-start overflow-y-auto border-l md:block lg:w-96">
+                <div class="learning-header sticky top-0 z-10 border-b p-4">
                     <h3 class="font-semibold text-white">Navigation de l’examen</h3>
                     <p class="mt-1 text-xs text-slate-500">{{ answeredCount }} / {{ questions.length }} réponse(s)</p>
                 </div>

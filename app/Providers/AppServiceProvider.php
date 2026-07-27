@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace App\Providers;
 
+use App\Contracts\MobileMoneyGateway;
 use App\Listeners\LogAuthenticationActivity;
+use App\Services\ShwaryMobileMoneyGateway;
 use Illuminate\Auth\Events\Failed;
 use Illuminate\Auth\Events\Login;
 use Illuminate\Auth\Events\Logout;
@@ -23,7 +25,7 @@ final class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        $this->app->singleton(MobileMoneyGateway::class, ShwaryMobileMoneyGateway::class);
     }
 
     /**

@@ -5,21 +5,25 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Student;
 
 use App\Enums\EnrollmentPaymentEnum;
+use App\Enums\MobileMoneyCountryEnum;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\ProcessPaymentRequest;
 use App\Models\Enrollment;
 use App\Models\Formation;
+use App\Services\MobileMoneyCheckoutService;
 use App\Services\StripeCheckoutService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
+use InvalidArgumentException;
+use LogicException;
 use Symfony\Component\HttpFoundation\Response as SymfonyResponse;
 use Throwable;
 
 final class PaymentController extends Controller
 {
-    public function __invoke(Request $request, Formation $formation): Response|RedirectResponse
+    public function __invoke(Request $request, Formation $formation, MobileMoneyCheckoutService $mobileMoney): Response|RedirectResponse
     {
         if ($request->user()?->enrollments()
             ->where('formation_id', $formation->id)
@@ -39,11 +43,16 @@ final class PaymentController extends Controller
                 'duration_hours' => $formation->duration_hours,
                 'sections_count' => $formation->sections()->count(),
             ],
+            'mobileMoney' => $mobileMoney->paymentOptions(),
         ]);
     }
 
-    public function store(ProcessPaymentRequest $request, Formation $formation, StripeCheckoutService $stripeCheckout): RedirectResponse|SymfonyResponse
-    {
+    public function store(
+        ProcessPaymentRequest $request,
+        Formation $formation,
+        StripeCheckoutService $stripeCheckout,
+        MobileMoneyCheckoutService $mobileMoney,
+    ): RedirectResponse|SymfonyResponse {
         $user = $request->user();
 
         if ($user->enrollments()
@@ -52,6 +61,35 @@ final class PaymentController extends Controller
             ->exists()) {
             return redirect()->route('course.player', $formation->id)
                 ->with('success', 'Vous êtes déjà inscrit à cette formation.');
+        }
+
+        $validated = $request->validated();
+
+        if ($validated['payment_method'] === 'mobile_money') {
+            try {
+                $enrollment = $mobileMoney->startPayment(
+                    user: $user,
+                    formation: $formation,
+                    country: MobileMoneyCountryEnum::from($validated['mobile_money_country']),
+                    phoneNumber: $validated['mobile_money_phone'],
+                );
+            } catch (InvalidArgumentException|LogicException $exception) {
+                return back()->withErrors(['payment_method' => $exception->getMessage()]);
+            } catch (Throwable $exception) {
+                report($exception);
+
+                return back()->withErrors([
+                    'payment_method' => 'Le paiement par Mobile Money est temporairement indisponible. Veuillez réessayer plus tard.',
+                ]);
+            }
+
+            if ($enrollment->payment_status === EnrollmentPaymentEnum::PAID) {
+                return redirect()->route('course.player', $formation->id)
+                    ->with('success', 'Paiement confirmé ! Bonne formation.');
+            }
+
+            return redirect()->route('student.payment.create', $formation->id)
+                ->with('success', 'Validez la demande de paiement sur votre téléphone. L’accès sera ouvert dès confirmation du Mobile Money.');
         }
 
         try {

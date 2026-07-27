@@ -14,7 +14,7 @@
     ],
     "license": "MIT",
     "require": {
-        "php": "^8.4",
+        "php": "^8.3",
         "ext-fileinfo": "*",
         "ext-imagick": "*",
         "barryvdh/laravel-dompdf": "^3.1",
@@ -27,6 +27,7 @@
         "laravel/tinker": "^3.0",
         "league/commonmark": "^2.7",
         "livewire/livewire": "^4.0",
+        "shwary/php-sdk": "^1.0",
         "smalot/pdfparser": "*",
         "spatie/laravel-activitylog": "^4.10",
         "spatie/laravel-sluggable": "^3.7",

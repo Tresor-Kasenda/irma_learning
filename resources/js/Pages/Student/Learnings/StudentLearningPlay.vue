@@ -4,6 +4,7 @@ import {computed, ref, watch} from 'vue';
 import AdminToasts from '@/Components/Admin/AdminToasts.vue';
 import CourseCurriculum from '@/Components/Learning/CourseCurriculum.vue';
 import LearningIcon from '@/Components/Learning/LearningIcon.vue';
+import LearningThemeToggle from '@/Components/Learning/LearningThemeToggle.vue';
 import RichMarkdown from '@/Components/Learning/RichMarkdown.vue';
 import {useFlashToasts} from '@/composables/useFlashToasts';
 
@@ -195,10 +196,10 @@ function contentTypeLabel(contentType: string | null): string {
 <template>
     <Head :title="`${formation.title} - Formation`"/>
 
-    <div class="flex h-screen min-h-0 flex-col overflow-hidden bg-[#071525] text-slate-100">
+    <div class="learning-shell flex h-screen min-h-0 flex-col overflow-hidden">
         <AdminToasts :toasts="toasts" @dismiss="dismissToast"/>
 
-        <header class="sticky top-0 z-40 border-b border-white/10 bg-[#081524]">
+        <header class="learning-header sticky top-0 z-40 border-b">
             <div class="flex min-h-16 items-center justify-between gap-4 px-4 sm:px-6">
                 <div class="flex min-w-0 items-center gap-3">
                     <Link
@@ -216,10 +217,13 @@ function contentTypeLabel(contentType: string | null): string {
                     </div>
                 </div>
 
-                <div class="hidden items-center gap-3 sm:flex">
+                <div class="flex shrink-0 items-center gap-3">
+                    <LearningThemeToggle/>
+                    <div class="hidden items-center gap-3 sm:flex">
                     <span class="text-xs text-slate-400">{{ progressPercentage }}% complété</span>
                     <div class="h-1.5 w-32 bg-white/10">
                         <div :style="{ width: `${progressPercentage}%` }" class="h-full bg-[#df3e75]"/>
+                    </div>
                     </div>
                 </div>
             </div>
@@ -416,8 +420,8 @@ function contentTypeLabel(contentType: string | null): string {
                 </div>
             </main>
 
-            <aside class="sticky top-0 hidden h-full w-80 shrink-0 self-start overflow-y-auto border-l border-white/10 bg-[#081524] md:block lg:w-96">
-                <div class="sticky top-0 z-10 border-b border-white/10 bg-[#081524] p-4">
+            <aside class="learning-sidebar sticky top-0 hidden h-full w-80 shrink-0 self-start overflow-y-auto border-l md:block lg:w-96">
+                <div class="learning-header sticky top-0 z-10 border-b p-4">
                     <h3 class="font-semibold text-white">Contenu de la formation</h3>
                     <p class="mt-1 text-xs text-slate-500">
                         {{ completedChapters.length }} / {{ allChapters.length }} chapitres complétés
@@ -472,9 +476,9 @@ function contentTypeLabel(contentType: string | null): string {
                     type="button"
                     @click="showCurriculum = false"
                 />
-                <aside class="absolute right-0 top-0 h-full w-[min(88vw,360px)] overflow-y-auto bg-[#081524]">
+                <aside class="learning-sidebar absolute right-0 top-0 h-full w-[min(88vw,360px)] overflow-y-auto">
                     <div
-                        class="sticky top-0 z-10 flex items-center justify-between border-b border-white/10 bg-[#081524] p-4">
+                        class="learning-header sticky top-0 z-10 flex items-center justify-between border-b p-4">
                         <div>
                             <h3 class="font-semibold text-white">Contenu de la formation</h3>
                             <p class="mt-1 text-xs text-slate-500">

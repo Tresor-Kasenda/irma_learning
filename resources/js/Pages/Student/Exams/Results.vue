@@ -1,5 +1,6 @@
 <script lang="ts" setup>
 import LearningIcon from '@/Components/Learning/LearningIcon.vue';
+import LearningThemeToggle from '@/Components/Learning/LearningThemeToggle.vue';
 import {safeRoute} from '@/utilities/route';
 import {Head, Link} from '@inertiajs/vue3';
 import {computed} from 'vue';
@@ -204,8 +205,8 @@ function formatMinutes(value: number | null): string {
 <template>
     <Head title="Résultats de l'examen"/>
 
-    <div class="flex min-h-screen flex-col bg-[#071525] text-slate-100">
-        <header class="sticky top-0 z-40 border-b border-white/10 bg-[#081524]">
+    <div class="learning-shell flex min-h-screen flex-col">
+        <header class="learning-header sticky top-0 z-40 border-b">
             <div class="flex min-h-16 items-center justify-between gap-4 px-4 sm:px-6">
                 <div class="flex min-w-0 items-center gap-3">
                     <Link
@@ -223,11 +224,14 @@ function formatMinutes(value: number | null): string {
                         <p v-if="formation" class="mt-0.5 truncate text-xs text-slate-500">{{ formation.title }}</p>
                     </div>
                 </div>
-                <div
-                    :class="attempt.passed ? 'border-emerald-400/30 text-emerald-200' : 'border-rose-400/30 text-rose-200'"
-                    class="shrink-0 border px-3 py-1.5 text-xs font-semibold"
-                >
-                    {{ resultLabel }}
+                <div class="flex shrink-0 items-center gap-3">
+                    <LearningThemeToggle/>
+                    <div
+                        :class="attempt.passed ? 'border-emerald-400/30 text-emerald-200' : 'border-rose-400/30 text-rose-200'"
+                        class="border px-3 py-1.5 text-xs font-semibold"
+                    >
+                        {{ resultLabel }}
+                    </div>
                 </div>
             </div>
         </header>

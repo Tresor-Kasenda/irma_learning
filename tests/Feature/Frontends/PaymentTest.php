@@ -267,7 +267,7 @@ test('a Stripe webhook with an invalid signature is rejected', function () {
         ->assertBadRequest();
 });
 
-test('only card payments are supported', function () {
+test('a Mobile Money payment requires its country and phone number', function () {
     $user = User::factory()->create();
     $formation = Formation::factory()->create(['price' => 50]);
 
@@ -276,7 +276,7 @@ test('only card payments are supported', function () {
         ->post(route('student.payment.create', $formation->id), [
             'payment_method' => 'mobile_money',
         ])
-        ->assertSessionHasErrors('payment_method');
+        ->assertSessionHasErrors(['mobile_money_country', 'mobile_money_phone']);
 
     expect(Enrollment::query()->where('user_id', $user->id)->exists())->toBeFalse();
 });

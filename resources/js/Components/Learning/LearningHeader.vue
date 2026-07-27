@@ -3,6 +3,7 @@ import {Link, router, usePage} from '@inertiajs/vue3';
 import {computed, ref} from 'vue';
 import {PanelLeftClose, PanelLeftOpen} from '@lucide/vue';
 import LearningIcon from '@/Components/Learning/LearningIcon.vue';
+import LearningThemeToggle from '@/Components/Learning/LearningThemeToggle.vue';
 import {useUiStore} from "@/stores";
 import {safeRoute} from "@/utilities/route";
 import type {LearningNotification, LearningNotifications} from '@/types';
@@ -89,7 +90,7 @@ const markAllNotificationsAsRead = (): void => {
 </script>
 
 <template>
-    <header class="flex h-16 items-center justify-between border-b border-white/10 px-4 sm:px-6 lg:px-8">
+    <header class="learning-header flex h-16 items-center justify-between border-b px-4 sm:px-6 lg:px-8">
         <!-- Backdrops -->
         <div
             v-if="profileMenuOpen || notificationMenuOpen"
@@ -100,7 +101,7 @@ const markAllNotificationsAsRead = (): void => {
         <div class="flex items-center gap-4">
             <button
                 aria-label="Ouvrir la navigation"
-                class="grid size-10 place-items-center border border-white/10 lg:hidden"
+                class="learning-control size-10 lg:hidden"
                 type="button"
                 @click="toggleMobileSidebar"
             >
@@ -109,7 +110,7 @@ const markAllNotificationsAsRead = (): void => {
 
             <button
                 aria-label="Réduire la barre latérale"
-                class="hidden size-10 place-items-center border border-white/10 text-slate-300 transition hover:bg-white/5 lg:grid"
+                class="learning-control hidden size-10 lg:grid"
                 type="button"
                 @click="toggleSidebarCollapsed"
             >
@@ -128,6 +129,8 @@ const markAllNotificationsAsRead = (): void => {
 
         <div class="ml-auto flex items-center gap-3">
             <slot name="header-actions"/>
+
+            <LearningThemeToggle/>
 
             <!-- Notifications dropdown -->
             <div class="relative">

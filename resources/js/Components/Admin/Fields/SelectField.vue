@@ -37,7 +37,7 @@ defineEmits<{ (e: 'update:modelValue', value: string): void }>();
             :class="[
                 props.compact ? 'h-10 pl-3 pr-8' : 'h-11 px-3',
                 props.variant === 'learning'
-                    ? 'border-white/10 bg-[#0c1a2a] text-slate-200 focus:border-sky-400/60'
+                    ? 'learning-field focus:border-sky-400/60'
                     : 'admin-field focus:border-[#c23a72]',
             ]"
             class="w-full border text-sm outline-none transition"

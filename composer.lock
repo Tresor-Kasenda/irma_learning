@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "df225dbaf70799edd7a8178559756e51",
+    "content-hash": "cdd96c3db0ea7fb84efdda911bbf242e",
     "packages": [
         {
             "name": "barryvdh/laravel-dompdf",
@@ -4534,6 +4534,55 @@
                 "source": "https://github.com/MyIntervals/PHP-CSS-Parser/tree/v9.4.0"
             },
             "time": "2026-06-18T15:10:53+00:00"
+        },
+        {
+            "name": "shwary/php-sdk",
+            "version": "v1.0.2",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/Tresor-Kasenda/shwary-php-sdk.git",
+                "reference": "aeb724d6c53ffffad1adceaf11232451cf0c8930"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/Tresor-Kasenda/shwary-php-sdk/zipball/aeb724d6c53ffffad1adceaf11232451cf0c8930",
+                "reference": "aeb724d6c53ffffad1adceaf11232451cf0c8930",
+                "shasum": ""
+            },
+            "require": {
+                "guzzlehttp/guzzle": "^7.0",
+                "php": "^8.2",
+                "psr/log": "^3.0"
+            },
+            "require-dev": {
+                "mockery/mockery": "^1.6",
+                "pestphp/pest": "^2.36",
+                "phpstan/phpstan": "^2.1",
+                "phpunit/phpunit": "^10.0"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Shwary\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Tresor Kasenda",
+                    "email": "tresorkasendat@gmail.com"
+                }
+            ],
+            "description": "SDK PHP officiel pour l'API marchande Shwary - Paiements Mobile Money (RDC, Kenya, Ouganda)",
+            "homepage": "https://github.com/Tresor-Kasenda/shwary-php-sdk",
+            "support": {
+                "issues": "https://github.com/Tresor-Kasenda/shwary-php-sdk/issues",
+                "source": "https://github.com/Tresor-Kasenda/shwary-php-sdk"
+            },
+            "time": "2026-02-05T09:47:41+00:00"
         },
         {
             "name": "smalot/pdfparser",

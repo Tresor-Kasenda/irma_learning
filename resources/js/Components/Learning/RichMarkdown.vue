@@ -125,19 +125,8 @@ function applyMermaidTheme(wrapper: HTMLElement, isDark: boolean): void {
     }
 }
 
-function hasDarkLearningTheme(element: HTMLElement): boolean {
-    if (document.documentElement.classList.contains('dark')) {
-        return true;
-    }
-
-    const background = getComputedStyle(element).backgroundColor;
-    const components = background.match(/\d+(?:\.\d+)?/g)?.map(Number);
-
-    if (! components || components.length < 3) {
-        return false;
-    }
-
-    return (components[0] * 0.299) + (components[1] * 0.587) + (components[2] * 0.114) < 128;
+function hasDarkLearningTheme(): boolean {
+    return document.documentElement.classList.contains('dark');
 }
 
 function loadPrism(): Promise<PrismApi> {
@@ -195,7 +184,7 @@ async function enhanceContent(): Promise<void> {
     const mermaidBlocks = Array.from(element.querySelectorAll<HTMLElement>('pre code.language-mermaid'));
     if (mermaidBlocks.length > 0) {
         const {default: mermaid} = await import('mermaid');
-        const isDark = hasDarkLearningTheme(element);
+        const isDark = hasDarkLearningTheme();
         mermaid.initialize({
             startOnLoad: false,
             securityLevel: 'antiscript',

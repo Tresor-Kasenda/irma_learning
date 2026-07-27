@@ -23,6 +23,7 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware) {
         $middleware->preventRequestForgery(except: [
             'stripe/webhook',
+            'shwary/webhook/*',
         ]);
 
         $middleware->web(append: [

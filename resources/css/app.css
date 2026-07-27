@@ -18,6 +18,133 @@
     --color-irma-glass: oklch(0.35 0.05 250 / 30%);
 }
 
+/*
+ * The student area predates the shared theme tokens and still contains a few
+ * dark Tailwind utilities. Keep them readable in light mode while individual
+ * pages progressively adopt the semantic learning-* classes above.
+ */
+:root:not(.dark) .learning-shell .bg-\[\#071525\],
+:root:not(.dark) .learning-shell .bg-\[\#081524\],
+:root:not(.dark) .learning-shell .bg-\[\#08192b\] {
+    background-color: var(--learning-page);
+}
+
+:root:not(.dark) .learning-shell .learning-sidebar {
+    background-color: var(--learning-sidebar);
+    border-color: var(--learning-border);
+}
+
+:root:not(.dark) .learning-shell .learning-header {
+    background-color: var(--learning-header);
+    border-color: var(--learning-border);
+}
+
+:root:not(.dark) .learning-shell .bg-\[\#0e2035\],
+:root:not(.dark) .learning-shell .bg-\[\#101d2d\],
+:root:not(.dark) .learning-shell .bg-\[\#121d2b\],
+:root:not(.dark) .learning-shell .bg-\[\#151a2a\],
+:root:not(.dark) .learning-shell .bg-\[\#0c1a2a\],
+:root:not(.dark) .learning-shell .bg-\[\#0c1b2c\],
+:root:not(.dark) .learning-shell .bg-\[\#0d1d30\],
+:root:not(.dark) .learning-shell .bg-\[\#0b1929\],
+:root:not(.dark) .learning-shell .bg-\[\#16253a\],
+:root:not(.dark) .learning-shell .bg-\[\#1b2d45\],
+:root:not(.dark) .learning-shell .bg-\[\#162333\] {
+    background-color: var(--learning-panel);
+}
+
+:root:not(.dark) .learning-shell .bg-\[\#261a29\],
+:root:not(.dark) .learning-shell .bg-\[\#29231b\],
+:root:not(.dark) .learning-shell .bg-\[\#17243a\],
+:root:not(.dark) .learning-shell .bg-white\/5 {
+    background-color: var(--learning-panel-muted);
+}
+
+:root:not(.dark) .learning-shell .bg-white\/10 {
+    background-color: var(--learning-border);
+}
+
+:root:not(.dark) .learning-shell .border-white\/10,
+:root:not(.dark) .learning-shell .border-white\/15,
+:root:not(.dark) .learning-shell .border-white\/20,
+:root:not(.dark) .learning-shell .border-white\/30 {
+    border-color: var(--learning-border);
+}
+
+:root:not(.dark) .learning-shell .text-slate-100,
+:root:not(.dark) .learning-shell .text-slate-200,
+:root:not(.dark) .learning-shell .text-slate-300 {
+    color: var(--learning-text);
+}
+
+:root:not(.dark) .learning-shell .text-slate-400,
+:root:not(.dark) .learning-shell .text-slate-500,
+:root:not(.dark) .learning-shell .text-slate-600 {
+    color: var(--learning-muted);
+}
+
+:root:not(.dark) .learning-shell .text-slate-700,
+:root:not(.dark) .learning-shell .text-slate-800,
+:root:not(.dark) .learning-shell .text-slate-900,
+:root:not(.dark) .learning-shell .text-white {
+    color: var(--learning-heading);
+}
+
+:root:not(.dark) .learning-shell .hover\:bg-white\/5:hover,
+:root:not(.dark) .learning-shell .hover\:bg-\[\#1b2d45\]:hover,
+:root:not(.dark) .learning-shell .hover\:bg-\[\#162333\]:hover {
+    background-color: var(--learning-hover);
+}
+
+:root:not(.dark) .learning-shell .hover\:text-white:hover {
+    color: var(--learning-heading);
+}
+
+:root:not(.dark) .learning-shell .brightness-0.invert {
+    filter: var(--learning-icon-filter);
+}
+
+:root:not(.dark) .learning-shell :is(
+    .bg-irma-primary,
+    .bg-\[\#7d254a\],
+    .bg-\[\#a52f5c\],
+    .bg-\[\#a72f5d\],
+    .bg-\[\#d24376\],
+    .bg-\[\#df3e75\],
+    .bg-\[\#ef477d\],
+    .bg-sky-500,
+    .bg-emerald-500,
+    .bg-rose-600,
+    .bg-red-600
+) .text-white,
+:root:not(.dark) .learning-shell :is(
+    .bg-irma-primary,
+    .bg-\[\#7d254a\],
+    .bg-\[\#a52f5c\],
+    .bg-\[\#a72f5d\],
+    .bg-\[\#d24376\],
+    .bg-\[\#df3e75\],
+    .bg-\[\#ef477d\],
+    .bg-sky-500,
+    .bg-emerald-500,
+    .bg-rose-600,
+    .bg-red-600
+).text-white {
+    color: #ffffff;
+}
+
+:root:not(.dark) .learning-shell :is(
+    .bg-irma-primary,
+    .bg-\[\#7d254a\],
+    .bg-\[\#a52f5c\],
+    .bg-\[\#a72f5d\],
+    .bg-\[\#d24376\],
+    .bg-\[\#df3e75\],
+    .bg-\[\#ef477d\]
+) .brightness-0.invert {
+    filter: brightness(0) invert(1);
+}
+
 :root {
     color-scheme: light;
     --admin-page: #f1f5f9;
@@ -33,6 +160,19 @@
     --admin-muted: #64748b;
     --admin-faint: #94a3b8;
     --admin-hover: #f1f5f9;
+    --learning-page: #f4f7fb;
+    --learning-sidebar: #ffffff;
+    --learning-header: rgb(255 255 255 / 0.92);
+    --learning-panel: #ffffff;
+    --learning-panel-muted: #eef4f8;
+    --learning-field: #ffffff;
+    --learning-border: #d8e2ec;
+    --learning-heading: #12243a;
+    --learning-text: #40536c;
+    --learning-muted: #6c7f95;
+    --learning-faint: #8fa0b2;
+    --learning-hover: #edf3f8;
+    --learning-icon-filter: brightness(0) saturate(100%) invert(14%) sepia(18%) saturate(1640%) hue-rotate(170deg) brightness(91%) contrast(92%);
 }
 
 :root.dark {
@@ -50,6 +190,19 @@
     --admin-muted: #94a3b8;
     --admin-faint: #64748b;
     --admin-hover: rgb(255 255 255 / 0.05);
+    --learning-page: #071525;
+    --learning-sidebar: #08192b;
+    --learning-header: rgb(8 25 43 / 0.96);
+    --learning-panel: #0e2035;
+    --learning-panel-muted: #0a1c30;
+    --learning-field: #0c1a2a;
+    --learning-border: rgb(255 255 255 / 0.1);
+    --learning-heading: #ffffff;
+    --learning-text: #cbd5e1;
+    --learning-muted: #94a3b8;
+    --learning-faint: #64748b;
+    --learning-hover: rgb(255 255 255 / 0.05);
+    --learning-icon-filter: brightness(0) invert(1);
 }
 
 @layer components {
@@ -116,6 +269,59 @@
     .admin-hover:hover {
         background-color: var(--admin-hover);
         color: var(--admin-heading);
+    }
+
+    .learning-shell {
+        min-height: 100%;
+        background-color: var(--learning-page);
+        color: var(--learning-text);
+    }
+
+    .learning-sidebar {
+        background-color: var(--learning-sidebar);
+        border-color: var(--learning-border);
+    }
+
+    .learning-header {
+        background-color: var(--learning-header);
+        border-color: var(--learning-border);
+    }
+
+    .learning-panel {
+        background-color: var(--learning-panel);
+        border-color: var(--learning-border);
+    }
+
+    .learning-panel-muted {
+        background-color: var(--learning-panel-muted);
+        border-color: var(--learning-border);
+    }
+
+    .learning-control {
+        display: grid;
+        place-items: center;
+        border: 1px solid var(--learning-border);
+        color: var(--learning-text);
+        transition: background-color 150ms ease, border-color 150ms ease, color 150ms ease;
+    }
+
+    .learning-control:hover {
+        background-color: var(--learning-hover);
+        color: var(--learning-heading);
+    }
+
+    .learning-field {
+        background-color: var(--learning-field);
+        border-color: var(--learning-border);
+        color: var(--learning-heading);
+    }
+
+    .learning-field:focus {
+        border-color: #38bdf8;
+    }
+
+    .learning-field::placeholder {
+        color: var(--learning-faint);
     }
 
     .rich-markdown {

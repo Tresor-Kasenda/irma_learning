@@ -42,6 +42,13 @@ return [
         'webhook_secret' => env('STRIPE_WEBHOOK_SECRET'),
     ],
 
+    'shwary' => [
+        'merchant_id' => env('SHWARY_MERCHANT_ID'),
+        'merchant_key' => env('SHWARY_MERCHANT_KEY'),
+        'sandbox' => env('SHWARY_SANDBOX', false),
+        'timeout' => env('SHWARY_TIMEOUT', 30),
+    ],
+
     'google' => [
         'client_id' => env('GOOGLE_CLIENT_ID'),
         'client_secret' => env('GOOGLE_CLIENT_SECRET'),

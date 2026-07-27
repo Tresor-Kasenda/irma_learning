@@ -121,7 +121,7 @@ const closeSidebar = () => {
                 mobileSidebarOpen ? 'translate-x-0' : '-translate-x-full',
                 uiStore.sidebarCollapsed ? 'lg:w-20' : 'lg:w-63'
             ]"
-            class="fixed inset-y-0 left-0 z-50 flex flex-col border-r border-white/10 bg-[#08192b] transition-all duration-200 lg:translate-x-0 w-63"
+            class="learning-sidebar fixed inset-y-0 left-0 z-50 flex flex-col border-r transition-all duration-200 lg:translate-x-0 w-63"
         >
             <div
                 :class="uiStore.sidebarCollapsed ? 'justify-center px-0' : 'justify-between px-5'"

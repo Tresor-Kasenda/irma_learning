@@ -18,6 +18,7 @@ use App\Http\Controllers\Student\Learnings\StudentLearningPlayController;
 use App\Http\Controllers\Student\NotificationController;
 use App\Http\Controllers\Student\PaymentController;
 use App\Http\Controllers\Student\ProfileController;
+use App\Http\Controllers\Student\ShwaryWebhookController;
 use App\Http\Controllers\Student\StripeWebhookController;
 use App\Models\Formation;
 use Illuminate\Support\Facades\Route;
@@ -31,6 +32,9 @@ Route::get('/account/inactive', fn () => inertia('Auth/AccountStatus', ['status'
 Route::get('/account/suspended', fn () => inertia('Auth/AccountStatus', ['status' => 'suspended']))->name('account.suspended');
 
 Route::post('/stripe/webhook', StripeWebhookController::class)->name('stripe.webhook');
+Route::post('/shwary/webhook/{token}', ShwaryWebhookController::class)
+    ->where('token', '[a-f0-9]{64}')
+    ->name('shwary.webhook');
 
 Route::middleware(['auth'])->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');

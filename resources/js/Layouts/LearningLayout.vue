@@ -20,7 +20,7 @@ const {dismissToast, toasts} = useFlashToasts();
 </script>
 
 <template>
-    <div class="min-h-screen bg-[#071525] text-slate-100">
+    <div class="learning-shell min-h-screen">
         <LearningSidebar
             v-model:mobileSidebarOpen="mobileSidebarOpen"
             :active-item="activeItem"
