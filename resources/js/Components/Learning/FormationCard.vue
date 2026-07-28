@@ -125,7 +125,7 @@ function isCompleted(): boolean {
 <template>
     <article
         v-if="variant === 'scrimba'"
-        class="group flex min-h-[310px] flex-col border border-white/10 bg-[#121d2b] p-5 transition hover:-translate-y-0.5 hover:border-[#4d6d91] hover:bg-[#162333] hover:shadow-2xl sm:p-6"
+        class="learning-card group flex min-h-[310px] flex-col border p-5 sm:p-6"
     >
         <div class="flex items-start justify-between gap-4">
             <span class="inline-flex items-center gap-2 text-xs font-medium text-slate-400">
@@ -206,13 +206,13 @@ function isCompleted(): boolean {
 
     <article
         v-else
-        class="group flex min-h-93.5 flex-col overflow-hidden border border-white/10 bg-[#101d2d] transition hover:-translate-y-0.5 hover:border-[#a53a66]/65 hover:shadow-2xl"
+        class="learning-card group flex min-h-93.5 flex-col overflow-hidden border"
     >
         <Link :href="href" class="relative block h-32 overflow-hidden">
             <img
                 :alt="formation.title"
                 :src="imageUrl()"
-                class="size-full object-cover transition duration-300 group-hover:scale-[1.03]"
+                class="size-full object-cover transition duration-200 group-hover:scale-[1.015] motion-reduce:transition-none"
                 @error="replaceBrokenImage"
             />
             <span class="absolute left-3 top-3 bg-[#a72f5d] px-2 py-1 text-[11px] font-semibold text-white">

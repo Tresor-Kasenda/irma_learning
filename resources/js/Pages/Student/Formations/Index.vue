@@ -269,7 +269,7 @@ function formationHref(formation: LearningFormation): string {
                             />
                             <input
                                 :value="searchValue"
-                                class="h-11 w-full border border-white/10 bg-[#0c1a2a] pl-10 pr-3 text-sm text-white outline-none placeholder:text-slate-600 focus:border-sky-400/60"
+                                class="learning-field h-11 w-full border pl-10 pr-3 text-sm outline-none focus:border-sky-400/60"
                                 placeholder="Filtrer les formations…"
                                 type="search"
                                 @input="onSearchInput"

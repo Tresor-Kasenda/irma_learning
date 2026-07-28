@@ -72,7 +72,7 @@ function formatDate(value: string | null): string {
                         v-for="certificate in certificates"
                         :key="certificate.id"
                         :href="safeRoute('certificats.show', certificate.id)"
-                        class="group flex flex-col border border-[#caa45a]/30 bg-gradient-to-b from-[#11233a] to-[#0b1827] p-5 transition hover:-translate-y-0.5 hover:border-[#caa45a]/60 hover:shadow-2xl"
+                        class="learning-card group flex flex-col border border-[#caa45a]/50 p-5"
                     >
                         <div class="flex items-center justify-between">
                             <span class="grid size-11 place-items-center border border-[#caa45a]/40 bg-[#caa45a]/10 text-[#caa45a]">

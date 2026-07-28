@@ -87,6 +87,7 @@ final class ChapterController extends Controller
                     'id', 'title', 'description', 'content', 'content_type',
                     'video_url', 'media_url', 'cover_image', 'duration_minutes',
                     'is_free', 'is_active', 'order_position', 'created_at',
+                    'video_href', 'media_href', 'cover_image_href',
                 ]),
                 'content_html' => $chapter->getHtmlContentRaw(),
                 'section' => [

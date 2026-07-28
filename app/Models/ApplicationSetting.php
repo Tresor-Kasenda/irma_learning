@@ -101,6 +101,14 @@ final class ApplicationSetting extends Model
         return (new self())->newFromBuilder($attributes);
     }
 
+    /**
+     * URL publique du logo, avec repli sur le logo par défaut de l'application.
+     */
+    public function logoUrl(): string
+    {
+        return $this->logo_path ? '/storage/'.$this->logo_path : '/images/irma-logo-base.svg';
+    }
+
     protected static function booted(): void
     {
         self::saved(fn (): bool => Cache::forget('application_settings'));

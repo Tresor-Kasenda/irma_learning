@@ -10,11 +10,13 @@ use App\Services\CatalogStatsService;
 use App\Services\MarkdownService;
 use App\Services\MarkdownToHtmlConverter;
 use Database\Factories\ChapterFactory;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
+use Illuminate\Support\Facades\Storage;
 use League\CommonMark\Exception\CommonMarkException;
 
 final class Chapter extends Model
@@ -43,6 +45,18 @@ final class Chapter extends Model
         'order_position',
         'is_free',
         'is_active',
+    ];
+
+    /**
+     * Accesseurs calculés toujours ajoutés à la sérialisation du modèle.
+     *
+     * @var list<string>
+     */
+    protected $appends = [
+        'video_href',
+        'media_href',
+        'cover_image_href',
+        'markdown_file_href',
     ];
 
     public function section(): BelongsTo
@@ -162,6 +176,38 @@ final class Chapter extends Model
         self::deleted(fn (): null => self::flushCatalogStats());
     }
 
+    /**
+     * URL publique résolue de la vidéo (compatible disque local ou S3).
+     */
+    protected function videoHref(): Attribute
+    {
+        return Attribute::get(fn (): ?string => $this->resolveMediaUrl($this->video_url));
+    }
+
+    /**
+     * URL publique résolue du média PDF (compatible disque local ou S3).
+     */
+    protected function mediaHref(): Attribute
+    {
+        return Attribute::get(fn (): ?string => $this->resolveMediaUrl($this->media_url));
+    }
+
+    /**
+     * URL publique résolue de l'image de couverture (compatible disque local ou S3).
+     */
+    protected function coverImageHref(): Attribute
+    {
+        return Attribute::get(fn (): ?string => $this->resolveMediaUrl($this->cover_image));
+    }
+
+    /**
+     * URL publique résolue du fichier Markdown extrait (compatible disque local ou S3).
+     */
+    protected function markdownFileHref(): Attribute
+    {
+        return Attribute::get(fn (): ?string => $this->resolveMediaUrl($this->markdown_file));
+    }
+
     protected function casts(): array
     {
         return [
@@ -179,5 +225,10 @@ final class Chapter extends Model
         app(CatalogStatsService::class)->forget();
 
         return null;
+    }
+
+    private function resolveMediaUrl(?string $path): ?string
+    {
+        return $path === null || $path === '' ? null : Storage::disk('public')->url($path);
     }
 }

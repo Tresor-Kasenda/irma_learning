@@ -29,6 +29,9 @@ interface ChapterDetail {
     video_url: string | null;
     media_url: string | null;
     cover_image: string | null;
+    video_href: string | null;
+    media_href: string | null;
+    cover_image_href: string | null;
     duration_minutes: number | null;
     is_free: boolean;
     is_active: boolean;
@@ -159,15 +162,15 @@ function formatDate(value: string): string {
                         </div>
                         <div class="p-5 sm:p-6">
                             <video
-                                v-if="chapter.content_type === 'video' && chapter.video_url"
-                                :src="`/storage/${chapter.video_url}`"
+                                v-if="chapter.content_type === 'video' && chapter.video_href"
+                                :src="chapter.video_href"
                                 class="w-full rounded-lg"
                                 controls
                             />
-                            <div v-else-if="chapter.content_type === 'pdf' && chapter.media_url" class="grid gap-4">
-                                <img v-if="chapter.cover_image" :src="`/storage/${chapter.cover_image}`" alt="" class="max-h-64 w-auto rounded-lg border border-[color:var(--admin-border)]"/>
+                            <div v-else-if="chapter.content_type === 'pdf' && chapter.media_href" class="grid gap-4">
+                                <img v-if="chapter.cover_image_href" :src="chapter.cover_image_href" alt="" class="max-h-64 w-auto rounded-lg border border-[color:var(--admin-border)]"/>
                                 <a
-                                    :href="`/storage/${chapter.media_url}`"
+                                    :href="chapter.media_href"
                                     class="admin-divider admin-text admin-hover inline-flex w-fit items-center gap-2 border px-4 py-2 text-sm font-medium transition"
                                     target="_blank"
                                 >

@@ -24,7 +24,7 @@ test('the certificate number is unique and resistant to concurrent creation', fu
     expect($second->verification_hash)->toMatch('/^[a-f0-9]{64}$/');
 });
 
-test('the certificate download is restricted to the owner and administrators', function () {
+test('the certificate download is a valid PDF and is restricted to the owner and administrators', function () {
     $owner = User::factory()->create(['role' => UserRoleEnum::STUDENT]);
     $otherStudent = User::factory()->create(['role' => UserRoleEnum::STUDENT]);
     $admin = User::factory()->create(['role' => UserRoleEnum::ADMIN]);
@@ -33,16 +33,24 @@ test('the certificate download is restricted to the owner and administrators', f
         'status' => CertificateStatusEnum::ACTIVE->value,
     ]);
 
-    $this->actingAs($owner)
-        ->post(route('certificates.download', $certificate))
-        ->assertSuccessful();
+    $ownerDownload = $this->actingAs($owner)
+        ->get(route('certificates.download', $certificate));
+
+    $ownerDownload
+        ->assertSuccessful()
+        ->assertDownload(sprintf('certificat-%s.pdf', $certificate->certificate_number))
+        ->assertHeader('content-type', 'application/pdf');
+
+    expect($ownerDownload->getContent())
+        ->toStartWith('%PDF-')
+        ->toMatch('/\/Count\s+1\b/');
 
     $this->actingAs($admin)
-        ->post(route('certificates.download', $certificate))
+        ->get(route('certificates.download', $certificate))
         ->assertSuccessful();
 
     $this->actingAs($otherStudent)
-        ->post(route('certificates.download', $certificate))
+        ->get(route('certificates.download', $certificate))
         ->assertForbidden();
 });
 

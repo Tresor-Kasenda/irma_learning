@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import {router, useForm} from '@inertiajs/vue3';
+import {Head, router, useForm, usePage} from '@inertiajs/vue3';
 import {computed, ref} from 'vue';
 import PublicLayout from '@/Layouts/PublicLayout.vue';
 import {useCurrencyFormatter} from '@/composables/useCurrencyFormatter';
@@ -46,7 +46,27 @@ const props = defineProps<{
 const showFullDescription = ref(false);
 const expandedSectionIds = ref<number[]>([]);
 const enrollForm = useForm({});
-const {formatCurrency} = useCurrencyFormatter();
+const {currency, formatCurrency} = useCurrencyFormatter();
+const page = usePage();
+
+const courseJsonLd = computed(() => JSON.stringify({
+    '@context': 'https://schema.org',
+    '@type': 'Course',
+    name: props.formation.title,
+    description: props.formation.short_description ?? props.formation.description ?? undefined,
+    provider: {
+        '@type': 'Organization',
+        name: (page.props.appSettings as {name?: string} | undefined)?.name ?? 'IRMA Learning',
+        sameAs: typeof window !== 'undefined' ? window.location.origin : undefined,
+    },
+    offers: {
+        '@type': 'Offer',
+        price: props.formation.price,
+        priceCurrency: currency.value,
+        availability: 'https://schema.org/InStock',
+        url: typeof window !== 'undefined' ? window.location.href : undefined,
+    },
+}));
 
 const descriptionText = computed(() => props.formation.description ?? '');
 const isLongDescription = computed(() => descriptionText.value.length > 300);
@@ -86,6 +106,9 @@ function formatDuration(minutes: number | null): string {
 </script>
 
 <template>
+    <Head>
+        <script type="application/ld+json" v-html="courseJsonLd"/>
+    </Head>
     <PublicLayout
         :title="formation.title"
         :meta-description="formation.short_description ?? `Formation ${formation.title} – BTPCMA`"

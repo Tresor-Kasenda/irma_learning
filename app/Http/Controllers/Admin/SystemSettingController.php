@@ -43,7 +43,7 @@ final class SystemSettingController extends Controller
                 'auth_register_subtitle' => $settings->auth_register_subtitle ?: ApplicationSetting::DEFAULT_AUTH_REGISTER_SUBTITLE,
                 'catalog_information_heading' => $settings->catalog_information_heading ?: ApplicationSetting::DEFAULT_CATALOG_INFORMATION_HEADING,
                 'catalog_information_items' => $settings->catalog_information_items ?: ApplicationSetting::DEFAULT_CATALOG_INFORMATION_ITEMS,
-                'logo_url' => $settings->logo_path ? '/storage/'.$settings->logo_path : '/images/irma-logo-base.svg',
+                'logo_url' => $settings->logoUrl(),
             ],
         ]);
     }

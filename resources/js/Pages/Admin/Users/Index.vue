@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import {Head, useForm} from '@inertiajs/vue3';
-import {Pencil, Plus, Power, Trash2} from '@lucide/vue';
+import {LogOut, Pencil, Plus, Power, Trash2} from '@lucide/vue';
 import {ref} from 'vue';
 import DataTable, {type Column} from '@/Components/Admin/DataTable.vue';
 import FilterBar, {type FilterDef} from '@/Components/Admin/FilterBar.vue';
@@ -79,6 +79,15 @@ function createUser(): void {
                             class="admin-muted admin-hover grid size-9 place-items-center"
                             method="patch"
                         ><Power class="size-4"/></ConfirmAction>
+                        <ConfirmAction
+                            v-if="row.role === 'student'"
+                            :href="safeRoute('admin.users.terminate-sessions', row.id)"
+                            :message="'Déconnecter toutes les sessions actives de ' + row.name + ' ? La personne devra se reconnecter.'"
+                            class="admin-muted admin-hover grid size-9 place-items-center"
+                            confirm-label="Déconnecter"
+                            method="post"
+                            title="Déconnecter les sessions actives"
+                        ><LogOut class="size-4"/></ConfirmAction>
                         <ConfirmAction
                             :href="safeRoute('admin.users.destroy', row.id)"
                             :message="'Supprimer définitivement ' + row.name + ' et son compte ?'"

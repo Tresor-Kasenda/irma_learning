@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import {Head, Link, usePage} from '@inertiajs/vue3';
-import {computed} from 'vue';
+import {computed, defineComponent, h} from 'vue';
 
 const props = defineProps<{
     title?: string;
@@ -32,12 +32,38 @@ const defaultDescription = computed(() => settings.value.tagline || 'Plateforme 
 const metaDesc = computed(() => props.metaDescription ?? defaultDescription.value);
 const ogImg = computed(() => props.ogImage ? `/storage/${props.ogImage}` : (settings.value.logo_url ?? ''));
 
+const organizationJsonLd = computed(() => JSON.stringify({
+    '@context': 'https://schema.org',
+    '@type': 'Organization',
+    name: applicationName.value,
+    url: typeof window !== 'undefined' ? window.location.origin : '',
+    logo: logoUrl.value,
+    email: settings.value.contact_email,
+    telephone: settings.value.contact_phone,
+}).replace(/</g, '\\u003c'));
+
+const OrganizationJsonLd = defineComponent({
+    name: 'OrganizationJsonLd',
+    setup() {
+        return () => h(Head, null, {
+            default: () => [
+                h('script', {
+                    type: 'application/ld+json',
+                    'head-key': 'organization-json-ld',
+                }, organizationJsonLd.value),
+            ],
+        });
+    },
+});
+
 function scrollToTop() {
     window.scrollTo({top: 0, behavior: 'smooth'});
 }
 </script>
 
 <template>
+    <OrganizationJsonLd/>
+
     <Head :title="title ?? applicationName">
         <meta name="description" :content="metaDesc"/>
         <meta property="og:type" content="website"/>

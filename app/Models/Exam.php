@@ -49,7 +49,7 @@ final class Exam extends Model
 
     public function getTotalPoints(): int
     {
-        return $this->questions()->sum('points');
+        return (int) $this->questions()->sum('points');
     }
 
     public function isReadyForPublication(): bool

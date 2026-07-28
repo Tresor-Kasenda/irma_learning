@@ -119,7 +119,7 @@ Route::middleware(['auth', 'verified', 'check.status', 'force.password.change'])
             ->name('exam.results');
     });
 
-    Route::post('/certificates/{certificate}/download', [StudentCertificationController::class, 'download'])
+    Route::get('/certificates/{certificate}/download', [StudentCertificationController::class, 'download'])
         ->name('certificates.download');
 
     Route::group(['prefix' => 'enrollments'], function () {

@@ -2,6 +2,12 @@
 
 declare(strict_types=1);
 
+$publicS3Configured = env('FILESYSTEM_PUBLIC_DRIVER', 'local') === 's3'
+    && filled(env('AWS_ACCESS_KEY_ID'))
+    && filled(env('AWS_SECRET_ACCESS_KEY'))
+    && filled(env('AWS_DEFAULT_REGION'))
+    && filled(env('AWS_BUCKET'));
+
 return [
 
     /*
@@ -40,7 +46,23 @@ return [
             'report' => false,
         ],
 
-        'public' => [
+        // Le contenu pédagogique (vidéos, PDF, images de couverture, avatars, logo)
+        // est stocké sur ce disque. S3 n'est activé que si le driver et toutes
+        // les informations de connexion nécessaires sont renseignés. Sinon,
+        // le disque public local reste utilisé sans erreur de configuration.
+        'public' => $publicS3Configured ? [
+            'driver' => 's3',
+            'key' => env('AWS_ACCESS_KEY_ID'),
+            'secret' => env('AWS_SECRET_ACCESS_KEY'),
+            'region' => env('AWS_DEFAULT_REGION'),
+            'bucket' => env('AWS_BUCKET'),
+            'url' => env('AWS_URL'),
+            'endpoint' => env('AWS_ENDPOINT'),
+            'use_path_style_endpoint' => env('AWS_USE_PATH_STYLE_ENDPOINT', false),
+            'visibility' => 'public',
+            'throw' => false,
+            'report' => false,
+        ] : [
             'driver' => 'local',
             'root' => storage_path('app/public'),
             'url' => env('APP_URL').'/storage',

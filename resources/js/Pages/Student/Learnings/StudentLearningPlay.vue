@@ -235,13 +235,13 @@ function contentTypeLabel(contentType: string | null): string {
                     <div v-if="currentChapter">
                         <section
                             v-if="currentSectionState?.needs_exam"
-                            class="mb-6 flex flex-col gap-4 border border-amber-400/30 bg-amber-400/10 p-5 sm:flex-row sm:items-center sm:justify-between"
+                            class="learning-state-warning mb-6 flex flex-col gap-4 border p-5 sm:flex-row sm:items-center sm:justify-between"
                         >
                             <div class="flex items-start gap-3">
                                 <LearningIcon class="mt-0.5 size-6 shrink-0 brightness-0 invert" name="academic-cap"/>
                                 <div>
                                     <h3 class="text-base font-semibold text-white">Section terminée — évaluez vos acquis</h3>
-                                    <p class="mt-1 text-sm text-amber-100/80">
+                                    <p class="mt-1 text-sm text-[color:var(--learning-warning-text)]">
                                         Réussissez l'examen de cette section pour débloquer la suivante.
                                     </p>
                                 </div>
@@ -256,7 +256,7 @@ function contentTypeLabel(contentType: string | null): string {
                             </button>
                         </section>
 
-                        <div class="sticky top-0 z-20 -mx-4 border-b border-white/10 bg-[#071525]/95 px-4 pb-5 pt-1 backdrop-blur sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
+                        <div class="learning-header sticky top-0 z-20 -mx-4 border-b px-4 pb-5 pt-1 backdrop-blur sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
                             <p class="text-[11px] font-semibold uppercase text-[#ff79a5]">
                                 {{ contentTypeLabel(currentChapter.content_type) }}
                             </p>
@@ -441,11 +441,11 @@ function contentTypeLabel(contentType: string | null): string {
                         v-if="finalAssessment.required"
                         :disabled="!finalAssessment.ready || finalAssessment.exam_missing || finalAssessment.passed"
                         :class="finalAssessment.passed
-                            ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-200'
+                            ? 'learning-assessment-success'
                             : finalAssessment.needs_exam
-                                ? 'border-amber-400/40 bg-amber-400/10 text-amber-100'
-                                : 'border-white/10 text-slate-400'"
-                        class="mt-5 flex w-full items-center gap-3 border px-3 py-3 text-left enabled:hover:bg-white/5 disabled:cursor-not-allowed disabled:opacity-55"
+                                ? 'learning-assessment-warning'
+                                : 'learning-assessment-muted'"
+                        class="learning-assessment-button mt-5 flex w-full items-center gap-3 border px-3 py-3 text-left enabled:hover:bg-white/5 disabled:cursor-not-allowed"
                         type="button"
                         @click="takeFinalExam"
                     >

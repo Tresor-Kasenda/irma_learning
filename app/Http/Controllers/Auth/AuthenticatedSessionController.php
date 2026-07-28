@@ -7,10 +7,12 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
 use App\Models\User;
+use App\Services\Auth\ActiveSessionGuard;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -34,13 +36,23 @@ final class AuthenticatedSessionController extends Controller
     /**
      * Handle an incoming authentication request.
      */
-    public function store(LoginRequest $request): RedirectResponse
+    public function store(LoginRequest $request, ActiveSessionGuard $sessionGuard): RedirectResponse
     {
         $request->authenticate();
 
+        $user = $request->user();
+
+        if ($user instanceof User && $user->isStudent()
+            && $sessionGuard->hasActiveSessionElsewhere($user, $request->session()->getId())) {
+            Auth::guard('web')->logout();
+
+            throw ValidationException::withMessages([
+                'email' => 'Ce compte est déjà connecté sur un autre appareil. Déconnectez-vous ailleurs avant de continuer.',
+            ]);
+        }
+
         $request->session()->regenerate();
 
-        $user = $request->user();
         $destination = $user instanceof User && $user->canAccessAdministration()
             ? route('admin.dashboard', absolute: false)
             : route('dashboard', absolute: false);

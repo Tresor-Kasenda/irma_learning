@@ -203,7 +203,7 @@ function paginationLabel(label: string): string {
                     />
                     <input
                         :value="searchValue"
-                        class="h-11 w-full border border-white/15 bg-[#0b1d31] pl-10 pr-3 text-sm text-white outline-none placeholder:text-slate-500 focus:border-[#d24376]"
+                        class="learning-field h-11 w-full border pl-10 pr-3 text-sm outline-none focus:border-[#d24376]"
                         placeholder="Rechercher une formation..."
                         type="search"
                         @input="onSearchInput"

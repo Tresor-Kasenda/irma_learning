@@ -53,11 +53,22 @@
     background-color: var(--learning-panel);
 }
 
-:root:not(.dark) .learning-shell .bg-\[\#261a29\],
-:root:not(.dark) .learning-shell .bg-\[\#29231b\],
-:root:not(.dark) .learning-shell .bg-\[\#17243a\],
 :root:not(.dark) .learning-shell .bg-white\/5 {
     background-color: var(--learning-panel-muted);
+}
+
+/* Keep the content-format badges recognisable in light mode instead of
+ * flattening them into the same neutral surface. */
+:root:not(.dark) .learning-shell .bg-\[\#261a29\] {
+    background-color: #fbeaf1;
+}
+
+:root:not(.dark) .learning-shell .bg-\[\#29231b\] {
+    background-color: #fff3df;
+}
+
+:root:not(.dark) .learning-shell .bg-\[\#17243a\] {
+    background-color: #eaf2ff;
 }
 
 :root:not(.dark) .learning-shell .bg-white\/10 {
@@ -88,6 +99,43 @@
 :root:not(.dark) .learning-shell .text-slate-900,
 :root:not(.dark) .learning-shell .text-white {
     color: var(--learning-heading);
+}
+
+/* Semantic feedback colours need darker foregrounds on white surfaces. */
+:root:not(.dark) .learning-shell :is(
+    .text-emerald-50,
+    .text-emerald-100,
+    .text-emerald-200,
+    .text-emerald-300
+) {
+    color: var(--learning-success-text);
+}
+
+:root:not(.dark) .learning-shell :is(
+    .text-rose-50,
+    .text-rose-100,
+    .text-rose-200,
+    .text-rose-300
+) {
+    color: var(--learning-danger-text);
+}
+
+:root:not(.dark) .learning-shell :is(
+    .text-amber-50,
+    .text-amber-100,
+    .text-amber-200,
+    .text-amber-300
+) {
+    color: var(--learning-warning-text);
+}
+
+:root:not(.dark) .learning-shell :is(
+    .text-sky-50,
+    .text-sky-100,
+    .text-sky-200,
+    .text-sky-300
+) {
+    color: var(--learning-info-text);
 }
 
 :root:not(.dark) .learning-shell .hover\:bg-white\/5:hover,
@@ -160,19 +208,34 @@
     --admin-muted: #64748b;
     --admin-faint: #94a3b8;
     --admin-hover: #f1f5f9;
-    --learning-page: #f4f7fb;
+    --learning-page: #f1f5f9;
     --learning-sidebar: #ffffff;
-    --learning-header: rgb(255 255 255 / 0.92);
+    --learning-header: rgb(255 255 255 / 0.96);
     --learning-panel: #ffffff;
-    --learning-panel-muted: #eef4f8;
+    --learning-panel-muted: #e8eff6;
     --learning-field: #ffffff;
-    --learning-border: #d8e2ec;
-    --learning-heading: #12243a;
-    --learning-text: #40536c;
-    --learning-muted: #6c7f95;
-    --learning-faint: #8fa0b2;
-    --learning-hover: #edf3f8;
+    --learning-border: #c8d5e3;
+    --learning-heading: #102a43;
+    --learning-text: #334e68;
+    --learning-muted: #526d88;
+    --learning-faint: #7186a0;
+    --learning-hover: #e6eef6;
+    --learning-card-shadow: 0 8px 18px rgb(16 42 67 / 0.09);
+    --learning-accent-soft: #f9e7ef;
+    --learning-accent-border: #b53769;
     --learning-icon-filter: brightness(0) saturate(100%) invert(14%) sepia(18%) saturate(1640%) hue-rotate(170deg) brightness(91%) contrast(92%);
+    --learning-success-surface: #e8f7ef;
+    --learning-success-border: #72b990;
+    --learning-success-text: #17633f;
+    --learning-danger-surface: #fdecef;
+    --learning-danger-border: #dd7d9d;
+    --learning-danger-text: #9f214b;
+    --learning-warning-surface: #fff3dc;
+    --learning-warning-border: #d7a33c;
+    --learning-warning-text: #805800;
+    --learning-info-surface: #e9f3ff;
+    --learning-info-border: #75a8dd;
+    --learning-info-text: #1d5f9f;
 }
 
 :root.dark {
@@ -202,7 +265,22 @@
     --learning-muted: #94a3b8;
     --learning-faint: #64748b;
     --learning-hover: rgb(255 255 255 / 0.05);
+    --learning-card-shadow: 0 8px 18px rgb(0 0 0 / 0.2);
+    --learning-accent-soft: rgb(125 37 74 / 0.35);
+    --learning-accent-border: #a72f5d;
     --learning-icon-filter: brightness(0) invert(1);
+    --learning-success-surface: rgb(16 185 129 / 0.13);
+    --learning-success-border: rgb(52 211 153 / 0.42);
+    --learning-success-text: #bbf7d0;
+    --learning-danger-surface: rgb(244 63 94 / 0.13);
+    --learning-danger-border: rgb(251 113 133 / 0.42);
+    --learning-danger-text: #fecdd3;
+    --learning-warning-surface: rgb(251 191 36 / 0.13);
+    --learning-warning-border: rgb(251 191 36 / 0.48);
+    --learning-warning-text: #fde68a;
+    --learning-info-surface: rgb(56 189 248 / 0.13);
+    --learning-info-border: rgb(56 189 248 / 0.42);
+    --learning-info-text: #bae6fd;
 }
 
 @layer components {
@@ -322,6 +400,136 @@
 
     .learning-field::placeholder {
         color: var(--learning-faint);
+    }
+
+    .learning-card {
+        border-color: var(--learning-border);
+        background-color: var(--learning-panel);
+        transition: border-color 180ms ease, box-shadow 180ms ease, transform 180ms ease;
+    }
+
+    .learning-card:hover {
+        transform: translateY(-1px);
+        border-color: var(--learning-accent-border);
+        box-shadow: var(--learning-card-shadow);
+    }
+
+    .learning-featured-panel {
+        background-color: var(--learning-panel);
+        border-color: color-mix(in srgb, var(--learning-accent-border) 72%, var(--learning-border));
+    }
+
+    .learning-current-chapter {
+        border-color: var(--learning-accent-border);
+        background-color: var(--learning-accent-soft);
+        color: var(--learning-heading);
+    }
+
+    .learning-result-card,
+    .learning-answer-neutral {
+        border-color: var(--learning-border);
+        background-color: var(--learning-panel);
+        color: var(--learning-text);
+    }
+
+    .learning-state-success,
+    .learning-answer-success {
+        border-color: var(--learning-success-border);
+        background-color: var(--learning-success-surface);
+        color: var(--learning-success-text);
+    }
+
+    .learning-state-danger,
+    .learning-answer-danger {
+        border-color: var(--learning-danger-border);
+        background-color: var(--learning-danger-surface);
+        color: var(--learning-danger-text);
+    }
+
+    .learning-state-warning {
+        border-color: var(--learning-warning-border);
+        background-color: var(--learning-warning-surface);
+        color: var(--learning-warning-text);
+    }
+
+    .learning-state-info,
+    .learning-explanation {
+        border-color: var(--learning-info-border);
+        background-color: var(--learning-info-surface);
+        color: var(--learning-info-text);
+    }
+
+    .learning-result-hero-success,
+    .learning-result-hero-danger {
+        border-color: color-mix(in srgb, currentColor 35%, var(--learning-border));
+    }
+
+    .learning-result-hero-success {
+        background-color: var(--learning-success-surface);
+        color: var(--learning-success-text);
+    }
+
+    .learning-result-hero-danger {
+        background-color: var(--learning-danger-surface);
+        color: var(--learning-danger-text);
+    }
+
+    .learning-result-hero-success :is(.text-white, .text-slate-300),
+    .learning-result-hero-danger :is(.text-white, .text-slate-300) {
+        color: var(--learning-heading);
+    }
+
+    .learning-result-chip-success {
+        background-color: var(--learning-success-surface);
+        color: var(--learning-success-text);
+    }
+
+    .learning-result-chip-danger {
+        background-color: var(--learning-danger-surface);
+        color: var(--learning-danger-text);
+    }
+
+    .learning-result-chip-neutral {
+        background-color: var(--learning-panel-muted);
+        color: var(--learning-text);
+    }
+
+    .learning-assessment-button {
+        border-color: var(--learning-border);
+        color: var(--learning-muted);
+        transition: background-color 150ms ease, border-color 150ms ease, color 150ms ease;
+    }
+
+    .learning-assessment-button:disabled {
+        opacity: 1;
+    }
+
+    .learning-assessment-success {
+        border-color: var(--learning-success-border);
+        background-color: var(--learning-success-surface);
+        color: var(--learning-success-text);
+    }
+
+    .learning-assessment-warning {
+        border-color: var(--learning-warning-border);
+        background-color: var(--learning-warning-surface);
+        color: var(--learning-warning-text);
+    }
+
+    .learning-assessment-muted {
+        border-color: var(--learning-border);
+        background-color: var(--learning-panel-muted);
+        color: var(--learning-muted);
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .learning-card {
+            transition: border-color 150ms ease, box-shadow 150ms ease;
+        }
+
+        .learning-card:hover {
+            transform: none;
+        }
     }
 
     .rich-markdown {

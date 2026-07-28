@@ -10,6 +10,7 @@ use App\Services\ReadingDurationCalculatorService;
 use Illuminate\Contracts\Queue\ShouldBeUnique;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Throwable;
@@ -68,10 +69,17 @@ final class ExtractChapterPdf implements ShouldBeUnique, ShouldQueue
             mb_substr(hash('sha256', $this->mediaPath), 0, 16),
             Str::uuid()->toString(),
         );
-        $result = $extractionService->extract(
-            Storage::disk('public')->path($this->mediaPath),
-            $assetDirectory,
-        );
+        // Le driver S3 ne fournit pas de chemin absolu ; le PDF source est donc toujours
+        // téléchargé vers un fichier local temporaire avant d'être passé au script Python.
+        $localPdfPath = storage_path('app/temp/pdf-extraction/'.Str::uuid()->toString().'-'.basename($this->mediaPath));
+        File::ensureDirectoryExists(dirname($localPdfPath));
+        File::put($localPdfPath, Storage::disk('public')->get($this->mediaPath));
+
+        try {
+            $result = $extractionService->extract($localPdfPath, $assetDirectory);
+        } finally {
+            File::delete($localPdfPath);
+        }
 
         $markdown = $result['markdown'];
         $markdownFile = $assetDirectory.'/content.md';

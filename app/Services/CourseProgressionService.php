@@ -212,6 +212,10 @@ final class CourseProgressionService
 
     public function sectionExam(Section $section): ?Exam
     {
+        // This service is also called with a section resolved through an exam
+        // attempt. Do not rely on Eloquent's implicit relation loading here.
+        $section->loadMissing('exam');
+
         $exam = $section->exam;
 
         return $exam && $exam->is_active ? $exam : null;
@@ -306,6 +310,10 @@ final class CourseProgressionService
 
     public function formationExam(Formation $formation): ?Exam
     {
+        // Results pages can arrive here from a section exam, where the
+        // formation itself was loaded without its final assessment.
+        $formation->loadMissing('exam');
+
         $exam = $formation->exam;
 
         return $exam && $exam->is_active ? $exam : null;

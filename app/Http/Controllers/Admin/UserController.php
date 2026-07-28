@@ -14,6 +14,7 @@ use App\Services\UsernameGenerator;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -66,11 +67,12 @@ final class UserController extends Controller
 
     public function store(StoreAdminUserRequest $request, UsernameGenerator $usernames): RedirectResponse
     {
-        User::create([
-            ...$request->safe()->except(['password', 'password_confirmation']),
-            'username' => $usernames->forEmail($request->validated('email')),
-            'password' => Hash::make($request->validated('password')),
-        ]);
+        User::query()
+            ->create([
+                ...$request->safe()->except(['password', 'password_confirmation']),
+                'username' => $usernames->forEmail($request->validated('email')),
+                'password' => Hash::make($request->validated('password')),
+            ]);
 
         return back()->with('success', 'Utilisateur créé.');
     }
@@ -92,5 +94,14 @@ final class UserController extends Controller
         $user->delete();
 
         return back()->with('success', 'Utilisateur supprimé.');
+    }
+
+    public function terminateSessions(User $user): RedirectResponse
+    {
+        DB::table(config()->string('session.table', 'sessions'))
+            ->where('user_id', $user->id)
+            ->delete();
+
+        return back()->with('success', 'Les sessions actives de cet utilisateur ont été déconnectées.');
     }
 }

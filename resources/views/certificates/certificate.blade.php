@@ -17,17 +17,21 @@
         @page {
             margin: 0;
         }
+        html,
         body {
-            font-family: 'DejaVu Sans', sans-serif;
             margin: 0;
             padding: 0;
+        }
+        body {
+            font-family: 'DejaVu Sans', sans-serif;
             background: #f5f0e8;
         }
         .certificate {
-            width: 100%;
-            height: 100%;
+            width: 297mm;
+            min-height: 208mm;
             position: relative;
             overflow: hidden;
+            text-align: center;
         }
         .border-frame {
             position: absolute;
@@ -48,16 +52,7 @@
             pointer-events: none;
         }
         .content {
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            padding: 60px 80px;
+            padding: 38px 80px 70px;
             text-align: center;
         }
         .logo {
@@ -101,8 +96,10 @@
             margin-bottom: 25px;
         }
         .details {
-            display: flex;
-            gap: 40px;
+            border-collapse: separate;
+            border-spacing: 14px 0;
+            margin-left: auto;
+            margin-right: auto;
             margin-bottom: 30px;
         }
         .detail-box {
@@ -174,16 +171,18 @@
         <div class="completion-text">pour avoir complété avec succès la formation</div>
         <div class="formation-title">{{ $certificate->formation->title }}</div>
 
-        <div class="details">
-            <div class="detail-box">
-                <div class="detail-label">Score</div>
-                <div class="detail-value">{{ round($certificate->final_score ?? 0) }}%</div>
-            </div>
-            <div class="detail-box">
-                <div class="detail-label">Délivré le</div>
-                <div class="detail-value">{{ $certificate->issue_date?->format('d/m/Y') ?? now()->format('d/m/Y') }}</div>
-            </div>
-        </div>
+        <table class="details" role="presentation">
+            <tr>
+                <td class="detail-box">
+                    <div class="detail-label">Score</div>
+                    <div class="detail-value">{{ round($certificate->final_score ?? 0) }}%</div>
+                </td>
+                <td class="detail-box">
+                    <div class="detail-label">Délivré le</div>
+                    <div class="detail-value">{{ $certificate->issue_date?->format('d/m/Y') ?? now()->format('d/m/Y') }}</div>
+                </td>
+            </tr>
+        </table>
 
         <div class="issuer">{{ $signatureName }}</div>
         <div class="issuer-subtitle">{{ $companyName }}</div>

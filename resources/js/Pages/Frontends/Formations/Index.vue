@@ -2,7 +2,7 @@
 import PublicLayout from "@/Layouts/PublicLayout.vue";
 import type {LearningFormation} from "@/types/learning";
 import {computed, ref, watch} from "vue";
-import {Head, Link, router} from "@inertiajs/vue3";
+import {Link, router} from "@inertiajs/vue3";
 import {useCurrencyFormatter} from '@/composables/useCurrencyFormatter';
 
 interface LearningCatalogStats {
@@ -174,10 +174,10 @@ function imageUrl(image: unknown): string | null {
 </script>
 
 <template>
-    <Head title="Nos formations"/>
     <PublicLayout
         title="Nos formations"
         meta-description="Découvrez toutes nos formations et certifications professionnelles en BTP, artisanat et gestion de projet."
+        :canonical-url="route('certifications')"
     >
         <section class="pt-32">
             <div class="mx-auto flex w-full max-w-7xl flex-col items-start gap-16 px-5 py-20 sm:px-10 lg:flex-row">

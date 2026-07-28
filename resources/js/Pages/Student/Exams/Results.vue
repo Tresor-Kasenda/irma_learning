@@ -127,14 +127,14 @@ function optionClasses(answer: UserAnswer, option: QuestionOption): string {
     const selected = isOptionSelected(answer, option.id);
 
     if (option.is_correct) {
-        return 'border-emerald-400/35 bg-emerald-400/10 text-emerald-50';
+        return 'learning-answer-success';
     }
 
     if (selected) {
-        return 'border-rose-400/35 bg-rose-400/10 text-rose-50';
+        return 'learning-answer-danger';
     }
 
-    return 'border-white/10 bg-[#0b1929] text-slate-300';
+    return 'learning-answer-neutral';
 }
 
 function optionMeta(answer: UserAnswer, option: QuestionOption): string {
@@ -217,7 +217,7 @@ function formatMinutes(value: number | null): string {
                         <LearningIcon class="size-5 brightness-0 invert" name="arrow-left"/>
                     </Link>
                     <div class="min-w-0">
-                        <p class="text-[11px] font-semibold uppercase tracking-[0.08em] text-[#ff79a5]">
+                        <p class="text-[11px] font-semibold uppercase tracking-[0.08em] text-[color:var(--learning-accent-border)]">
                             Résultats · {{ examContext.label }}
                         </p>
                         <h1 class="truncate text-sm font-semibold text-white sm:text-base">{{ exam.title }}</h1>
@@ -227,7 +227,7 @@ function formatMinutes(value: number | null): string {
                 <div class="flex shrink-0 items-center gap-3">
                     <LearningThemeToggle/>
                     <div
-                        :class="attempt.passed ? 'border-emerald-400/30 text-emerald-200' : 'border-rose-400/30 text-rose-200'"
+                        :class="attempt.passed ? 'learning-result-chip-success' : 'learning-result-chip-danger'"
                         class="border px-3 py-1.5 text-xs font-semibold"
                     >
                         {{ resultLabel }}
@@ -239,12 +239,15 @@ function formatMinutes(value: number | null): string {
         <main class="min-w-0 flex-1">
             <div class="mx-auto max-w-5xl px-4 py-7 sm:px-6 lg:px-8">
                 <section
-                    :class="resultTone === 'success' ? 'border-emerald-400/30 bg-emerald-400/10' : 'border-[#df3e75]/35 bg-[#3a1530]'"
+                    :class="resultTone === 'success' ? 'learning-result-hero-success' : 'learning-result-hero-danger'"
                     class="border p-5 sm:p-6"
                 >
                     <div class="grid gap-5 lg:grid-cols-[1fr_auto] lg:items-end">
                         <div>
-                            <p class="text-xs font-semibold uppercase tracking-[0.08em] text-[#ff79a5]">
+                            <p
+                                :class="resultTone === 'success' ? 'text-[color:var(--learning-success-text)]' : 'text-[color:var(--learning-danger-text)]'"
+                                class="text-xs font-semibold uppercase tracking-[0.08em]"
+                            >
                                 {{ resultLabel }}
                             </p>
                             <h2 class="mt-2 text-2xl font-semibold text-white sm:text-3xl">{{ exam.title }}</h2>
@@ -269,7 +272,7 @@ function formatMinutes(value: number | null): string {
                 </section>
 
                 <section class="mt-5 grid gap-3 md:grid-cols-3">
-                    <div class="border border-white/10 bg-[#101d2d] p-4">
+                    <div class="learning-result-card border p-4">
                         <div class="flex items-center gap-3">
                             <span class="grid size-10 place-items-center bg-emerald-400/15">
                                 <LearningIcon class="size-5 brightness-0 invert" name="check"/>
@@ -280,7 +283,7 @@ function formatMinutes(value: number | null): string {
                             </div>
                         </div>
                     </div>
-                    <div class="border border-white/10 bg-[#101d2d] p-4">
+                    <div class="learning-result-card border p-4">
                         <div class="flex items-center gap-3">
                             <span class="grid size-10 place-items-center bg-[#df3e75]/15">
                                 <LearningIcon class="size-5 brightness-0 invert" name="x-mark"/>
@@ -291,7 +294,7 @@ function formatMinutes(value: number | null): string {
                             </div>
                         </div>
                     </div>
-                    <div class="border border-white/10 bg-[#101d2d] p-4">
+                    <div class="learning-result-card border p-4">
                         <div class="flex items-center gap-3">
                             <span class="grid size-10 place-items-center bg-sky-400/15">
                                 <LearningIcon class="size-5 brightness-0 invert" name="clock"/>
@@ -307,7 +310,7 @@ function formatMinutes(value: number | null): string {
                 <section class="mt-8">
                     <div class="mb-4 flex items-center justify-between gap-3">
                         <div>
-                            <p class="text-xs font-semibold uppercase tracking-[0.08em] text-[#ff79a5]">Correction</p>
+                            <p class="text-xs font-semibold uppercase tracking-[0.08em] text-[color:var(--learning-accent-border)]">Correction</p>
                             <h2 class="mt-1 text-xl font-semibold text-white">Détail des réponses</h2>
                         </div>
                         <p class="text-sm text-slate-500">{{ userAnswers.length }} question(s)</p>
@@ -318,13 +321,13 @@ function formatMinutes(value: number | null): string {
                             v-for="(answer, index) in userAnswers"
                             :key="answer.id"
                             :class="answer.is_correct === true ? 'border-l-emerald-400' : answer.is_correct === false ? 'border-l-[#df3e75]' : 'border-l-slate-500'"
-                            class="border border-l-4 border-white/10 bg-[#101d2d]"
+                            class="learning-result-card border border-l-4"
                         >
                             <div class="grid gap-4 p-4 sm:grid-cols-[1fr_auto]">
                                 <div class="min-w-0">
                                     <div class="flex flex-wrap items-center gap-2">
                                         <span
-                                            :class="answer.is_correct === true ? 'bg-emerald-400/15 text-emerald-200' : answer.is_correct === false ? 'bg-[#df3e75]/15 text-rose-200' : 'bg-white/10 text-slate-300'"
+                                            :class="answer.is_correct === true ? 'learning-result-chip-success' : answer.is_correct === false ? 'learning-result-chip-danger' : 'learning-result-chip-neutral'"
                                             class="px-2.5 py-1 text-xs font-semibold"
                                         >
                                             Question {{ index + 1 }} · {{ questionStatusLabel(answer) }}
@@ -372,16 +375,16 @@ function formatMinutes(value: number | null): string {
                                     </div>
                                 </template>
 
-                                <div v-else class="border border-white/10 bg-[#0b1929] px-3 py-2.5 text-sm text-slate-300">
+                                <div v-else class="learning-answer-neutral border px-3 py-2.5 text-sm">
                                     {{ answer.answer_text || 'Aucune réponse fournie' }}
                                 </div>
 
                                 <div
                                     v-if="answer.question.explanation"
-                                    class="mt-2 border border-sky-400/25 bg-sky-400/10 px-3 py-3 text-sm leading-6 text-sky-100"
+                                    class="learning-explanation mt-2 border px-3 py-3 text-sm leading-6"
                                 >
-                                    <p class="font-semibold text-sky-200">Explication</p>
-                                    <p class="mt-1 text-slate-300">{{ answer.question.explanation }}</p>
+                                    <p class="font-semibold">Explication</p>
+                                    <p class="mt-1 text-[color:var(--learning-text)]">{{ answer.question.explanation }}</p>
                                 </div>
                             </div>
                         </article>
@@ -453,14 +456,14 @@ function formatMinutes(value: number | null): string {
 
                 <p
                     v-if="attempt.passed && nextStep?.type === 'final_exam_missing'"
-                    class="mt-5 border border-rose-400/30 bg-rose-400/10 px-4 py-3 text-sm text-rose-100"
+                    class="learning-state-danger mt-5 border px-4 py-3 text-sm"
                 >
                     L’examen final n’est pas encore configuré. Contactez l’administration.
                 </p>
 
                 <p
                     v-if="attempt.passed && nextStep?.type === 'completed' && certificate"
-                    class="mt-5 border border-emerald-400/30 bg-emerald-400/10 px-4 py-3 text-sm text-emerald-100"
+                    class="learning-state-success mt-5 border px-4 py-3 text-sm"
                 >
                     Félicitations. Le certificat
                     <span class="font-semibold">{{ certificate.certificate_number }}</span>

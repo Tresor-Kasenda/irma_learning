@@ -19,7 +19,7 @@ function applyApplicationTheme(settings: unknown): void {
 window.confetti = confetti;
 initializeUiTheme();
 
-const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
+const appName = import.meta.env.VITE_APP_NAME || 'IRMA Learning';
 
 createInertiaApp({
     title: (title) => `${title} - ${appName}`,

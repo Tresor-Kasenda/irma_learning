@@ -12,7 +12,10 @@ final class SitemapController extends Controller
     {
         $formations = Formation::query()->active()->get(['slug', 'updated_at']);
 
-        $content = view('sitemap', ['formations' => $formations])->render();
+        $content = view('sitemap', [
+            'formations' => $formations,
+            'latestFormationUpdate' => $formations->max('updated_at'),
+        ])->render();
 
         return response($content, 200, ['Content-Type' => 'application/xml']);
     }

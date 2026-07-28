@@ -7,6 +7,7 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use App\Models\ApplicationSetting;
 use App\Models\User;
+use App\Services\Auth\ActiveSessionGuard;
 use App\Services\LearnerNotificationService;
 use App\Services\UsernameGenerator;
 use Illuminate\Http\RedirectResponse;
@@ -59,6 +60,7 @@ final class SocialAuthenticationController extends Controller
         string $provider,
         LearnerNotificationService $notifications,
         UsernameGenerator $usernames,
+        ActiveSessionGuard $sessionGuard,
     ): RedirectResponse {
         $definition = $this->definitionFor($provider);
         $providerLabel = $definition['label'];
@@ -104,7 +106,7 @@ final class SocialAuthenticationController extends Controller
                     return $this->redirectToLoginWithError('Les inscriptions sont actuellement fermées.');
                 }
 
-                $user = User::create([
+                $user = User::query()->create([
                     'name' => $this->nameFor($socialUser->getName(), $email),
                     'username' => $usernames->forEmail($email),
                     'email' => $email,
@@ -123,6 +125,11 @@ final class SocialAuthenticationController extends Controller
                     'password' => $user->hasVerifiedEmail() ? $user->password : Str::random(64),
                 ]);
             }
+        }
+
+        if ($user->isStudent()
+            && $sessionGuard->hasActiveSessionElsewhere($user, $request->session()->getId())) {
+            return $this->redirectToLoginWithError('Ce compte est déjà connecté sur un autre appareil. Déconnectez-vous ailleurs avant de continuer.');
         }
 
         Auth::login($user, remember: true);

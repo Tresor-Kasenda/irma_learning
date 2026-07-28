@@ -8,7 +8,6 @@ use App\DTOs\ChapterContentDTO;
 use Exception;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
-use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
 
 final class ChapterContentService
 {
@@ -20,7 +19,7 @@ final class ChapterContentService
     /**
      * Extrait le contenu d'un fichier PDF et retourne un DTO.
      *
-     * @param  string|TemporaryUploadedFile  $file  Fichier uploadé ou chemin vers le PDF
+     * @param  string  $file  Chemin vers le PDF
      */
     public function extractFromPdf(mixed $file): ChapterContentDTO
     {
@@ -65,17 +64,12 @@ final class ChapterContentService
     /**
      * Résout le chemin absolu du fichier depuis différentes sources possibles.
      *
-     * Gère trois cas :
-     * 1. Objet TemporaryUploadedFile Livewire  → getRealPath()
-     * 2. Chemin absolu déjà valide             → utilisé tel quel
-     * 3. Chemin relatif au disque "public"     → converti en chemin absolu via Storage
+     * Gère deux cas :
+     * 1. Chemin absolu déjà valide          → utilisé tel quel
+     * 2. Chemin relatif au disque "public"  → converti en chemin absolu via Storage
      */
     private function resolveFilePath(mixed $file): string
     {
-        if ($file instanceof TemporaryUploadedFile) {
-            return $file->getRealPath();
-        }
-
         if (is_string($file)) {
             if (file_exists($file)) {
                 return $file;
@@ -94,10 +88,6 @@ final class ChapterContentService
 
     private function resolveOriginalFileName(mixed $file): ?string
     {
-        if ($file instanceof TemporaryUploadedFile) {
-            return pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
-        }
-
         if (is_string($file)) {
             return pathinfo($file, PATHINFO_FILENAME);
         }

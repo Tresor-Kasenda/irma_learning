@@ -44,7 +44,7 @@ function replaceBrokenImage(event: Event): void {
 </script>
 
 <template>
-    <section class="grid overflow-hidden border border-[#8f355d]/55 bg-[#151a2a] md:grid-cols-[240px_1fr_auto]">
+    <section class="learning-featured-panel grid overflow-hidden border md:grid-cols-[240px_1fr_auto]">
         <div class="relative min-h-44 md:min-h-0">
             <img
                 :src="imageUrl()"
@@ -91,4 +91,3 @@ function replaceBrokenImage(event: Event): void {
         </div>
     </section>
 </template>
-

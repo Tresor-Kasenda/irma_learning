@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Enums\UserRoleEnum;
 use App\Enums\UserStatusEnum;
 use App\Models\User;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Inertia\Testing\AssertableInertia as Assert;
 
@@ -161,6 +162,26 @@ test('an administrator can suspend and delete another user', function () {
         ->assertRedirect();
 
     expect($student->fresh())->toBeNull();
+});
+
+test('an administrator can terminate a student’s active sessions', function () {
+    $admin = User::factory()->create(['role' => UserRoleEnum::ADMIN]);
+    $student = User::factory()->create(['role' => UserRoleEnum::STUDENT]);
+
+    DB::table(config()->string('session.table', 'sessions'))->insert([
+        'id' => 'a-device-session',
+        'user_id' => $student->id,
+        'ip_address' => '127.0.0.1',
+        'user_agent' => 'Testing',
+        'payload' => base64_encode(serialize([])),
+        'last_activity' => now()->getTimestamp(),
+    ]);
+
+    $this->actingAs($admin)
+        ->post(route('admin.users.terminate-sessions', $student))
+        ->assertRedirect();
+
+    expect(DB::table('sessions')->where('user_id', $student->id)->exists())->toBeFalse();
 });
 
 test('an administrator cannot delete their own account or a root account', function () {

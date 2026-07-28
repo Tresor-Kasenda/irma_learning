@@ -61,3 +61,30 @@ it('returns chapter context after a chapter exam', function () {
             ->where('courseCompletion.chapter_title', $chapter->title)
             ->etc());
 });
+
+it('loads the final assessment before preparing the next step after a section exam', function () {
+    $user = User::factory()->create();
+    $formation = Formation::factory()->create(['is_certifying' => true]);
+    $section = Section::factory()->for($formation)->create();
+    $sectionExam = Exam::factory()->forSection($section)->active()->create();
+    $finalExam = Exam::factory()->forFormation($formation)->active()->create();
+
+    $attempt = ExamAttempt::factory()
+        ->for($sectionExam)
+        ->for($user)
+        ->create([
+            'status' => ExamAttemptEnum::COMPLETED,
+            'completed_at' => now(),
+            'score' => 8,
+            'max_score' => 10,
+            'percentage' => 80,
+        ]);
+
+    $this->actingAs($user)
+        ->get(route('exam.results', $attempt))
+        ->assertSuccessful()
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('nextStep.type', 'final_exam')
+            ->where('nextStep.exam_id', $finalExam->id)
+            ->etc());
+});

@@ -49,7 +49,7 @@ final class HandleInertiaRequests extends Middleware
             'appSettings' => [
                 'name' => $settings->app_name,
                 'tagline' => $settings->app_tagline,
-                'logo_url' => $settings->logo_path ? '/storage/'.$settings->logo_path : '/images/irma-logo-base.svg',
+                'logo_url' => $settings->logoUrl(),
                 'primary_color' => $settings->primary_color,
                 'default_currency' => $settings->default_currency,
                 'allow_registration' => $settings->allow_registration,

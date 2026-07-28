@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import {Head, Link, router, usePage} from '@inertiajs/vue3';
+import {Head, Link, usePage} from '@inertiajs/vue3';
 import {computed} from 'vue';
 import LearningLayout from '@/Layouts/LearningLayout.vue';
 import LearningIcon from '@/Components/Learning/LearningIcon.vue';
@@ -44,9 +44,6 @@ function printCertificate(): void {
     window.print();
 }
 
-function downloadCertificate(): void {
-    router.post(props.certificate.download_url);
-}
 </script>
 
 <template>
@@ -79,14 +76,13 @@ function downloadCertificate(): void {
                         <LearningIcon class="size-4 brightness-0 invert opacity-80" name="document-text"/>
                         Imprimer
                     </button>
-                    <button
+                    <a
+                        :href="certificate.download_url"
                         class="inline-flex h-10 items-center gap-2 bg-irma-primary px-4 text-sm font-semibold text-white transition hover:opacity-90"
-                        type="button"
-                        @click="downloadCertificate"
                     >
                         <LearningIcon class="size-4 brightness-0 invert opacity-80" name="arrow-down-tray"/>
                         Télécharger
-                    </button>
+                    </a>
                 </div>
             </div>
 

@@ -17,7 +17,7 @@ const tones = {
 </script>
 
 <template>
-    <div class="flex min-h-28 items-center gap-3 border border-white/10 bg-[#101d2d] p-3 sm:gap-4 sm:p-4">
+    <div class="learning-panel flex min-h-28 items-center gap-3 border p-3 sm:gap-4 sm:p-4">
         <span class="grid size-10 shrink-0 place-items-center sm:size-11" :class="tones[tone]">
             <LearningIcon :name="icon" class="size-5 brightness-0 invert" />
         </span>

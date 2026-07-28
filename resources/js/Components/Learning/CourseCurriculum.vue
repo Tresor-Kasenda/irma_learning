@@ -81,7 +81,7 @@ function sectionState(sectionId: number): SectionState | null {
                     class="w-full border px-3 py-3 text-left transition"
                     :class="[
                         currentChapterId === chapter.id
-                            ? 'border-[#a72f5d] bg-[#7d254a]/35'
+                            ? 'learning-current-chapter'
                             : 'border-transparent text-slate-400 hover:border-white/10 hover:bg-white/5 hover:text-white',
                         isLocked(section.id) ? 'cursor-not-allowed opacity-40 hover:border-transparent hover:bg-transparent' : '',
                     ]"
@@ -91,10 +91,10 @@ function sectionState(sectionId: number): SectionState | null {
                         <span
                             class="mt-0.5 grid size-6 shrink-0 place-items-center"
                             :class="isCompleted(chapter.id)
-                                ? 'bg-emerald-500/20 text-emerald-300'
+                                ? 'learning-state-success'
                                 : currentChapterId === chapter.id
                                     ? 'bg-[#d24376] text-white'
-                                    : 'bg-white/5 text-slate-500'"
+                                    : 'learning-panel-muted text-slate-500'"
                         >
                             <LearningIcon
                                 :name="isCompleted(chapter.id) ? 'check' : 'play'"
@@ -105,8 +105,8 @@ function sectionState(sectionId: number): SectionState | null {
                             <span class="block text-sm font-medium text-slate-100">{{ chapter.title }}</span>
                             <span class="mt-1 flex flex-wrap items-center gap-2 text-[11px] text-slate-500">
                                 <span>{{ formatMinutes(chapter.duration_minutes) }}</span>
-                                <span v-if="isCompleted(chapter.id)" class="text-emerald-300">Terminé</span>
-                                <span v-else-if="currentChapterId === chapter.id" class="text-[#ff79a5]">En cours</span>
+                                <span v-if="isCompleted(chapter.id)" class="text-[color:var(--learning-success-text)]">Terminé</span>
+                                <span v-else-if="currentChapterId === chapter.id" class="text-[color:var(--learning-accent-border)]">En cours</span>
                             </span>
                         </span>
                     </span>
@@ -116,11 +116,11 @@ function sectionState(sectionId: number): SectionState | null {
                     v-if="sectionState(section.id)?.exam_id"
                     :disabled="!sectionState(section.id)?.chapters_complete"
                     :class="sectionState(section.id)?.exam_passed
-                        ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-200'
+                        ? 'learning-assessment-success'
                         : sectionState(section.id)?.needs_exam
-                            ? 'border-amber-400/40 bg-amber-400/10 text-amber-100'
-                            : 'border-white/10 text-slate-400'"
-                    class="mt-1 flex w-full items-center gap-3 border px-3 py-3 text-left transition enabled:hover:bg-white/5 disabled:cursor-not-allowed disabled:opacity-45"
+                            ? 'learning-assessment-warning'
+                            : 'learning-assessment-muted'"
+                    class="learning-assessment-button mt-1 flex w-full items-center gap-3 border px-3 py-3 text-left enabled:hover:bg-white/5 disabled:cursor-not-allowed"
                     type="button"
                     @click="sectionState(section.id)?.exam_id && emit('selectExam', sectionState(section.id)!.exam_id!)"
                 >
@@ -135,7 +135,7 @@ function sectionState(sectionId: number): SectionState | null {
                     </span>
                 </button>
 
-                <div v-else class="mt-1 flex items-start gap-3 border border-rose-400/30 bg-rose-400/10 px-3 py-3 text-rose-200">
+                <div v-else class="learning-state-danger mt-1 flex items-start gap-3 border px-3 py-3">
                     <LearningIcon class="mt-0.5 size-4 shrink-0 brightness-0 invert" name="x-mark"/>
                     <p class="text-xs leading-5">Évaluation obligatoire non configurée. Contactez l’administration.</p>
                 </div>

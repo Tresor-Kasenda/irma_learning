@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use JsonException;
 use Log;
 use RuntimeException;
@@ -28,21 +30,11 @@ final class PythonPdfExtractionService
             throw new RuntimeException("Le script Python est introuvable : {$scriptPath}");
         }
 
-        $outputPath = Storage::disk('public')->path($assetDirectory);
-        if ($outputPath === null || $outputPath === '') {
-            throw new RuntimeException("Le répertoire de sortie n'a pas pu être déterminé : {$assetDirectory}");
-        }
-
-        if (! is_string($outputPath)) {
-            throw new RuntimeException('Le chemin de sortie doit être une chaîne, reçu : '.gettype($outputPath));
-        }
-
-        Storage::disk('public')->deleteDirectory($assetDirectory);
-        Storage::disk('public')->makeDirectory($assetDirectory);
-
-        if (! is_dir($outputPath)) {
-            throw new RuntimeException("Impossible de créer le répertoire de sortie : {$outputPath}");
-        }
+        // Python écrit toujours dans un répertoire de travail local, même quand le
+        // disque « public » est S3 (le driver S3 ne supporte pas de chemin absolu).
+        // Le contenu est publié vers le disque une fois l'extraction terminée.
+        $workingDirectory = storage_path('app/temp/pdf-extraction/'.Str::uuid()->toString());
+        File::ensureDirectoryExists($workingDirectory);
 
         $maxPages = (int) config('learning.pdf_extraction.max_pages', 0);
         $batchSize = (int) config('learning.pdf_extraction.batch_size', 50);
@@ -57,9 +49,9 @@ final class PythonPdfExtractionService
             '--input',
             $pdfPath,
             '--output-dir',
-            $outputPath,
+            $workingDirectory,
             '--public-prefix',
-            '/storage/'.mb_ltrim($assetDirectory, '/'),
+            $this->publicPrefixFor($assetDirectory),
             '--max-pages',
             (string) $maxPages,
             '--image-dpi',
@@ -78,7 +70,7 @@ final class PythonPdfExtractionService
             'python' => $pythonBinary,
             'script' => $scriptPath,
             'input' => $pdfPath,
-            'output' => $outputPath,
+            'output' => $workingDirectory,
         ]);
 
         $process = new Process($command, base_path());
@@ -87,7 +79,7 @@ final class PythonPdfExtractionService
 
         if (! $process->isSuccessful()) {
             $message = $this->extractErrorMessage($process->getErrorOutput());
-            Storage::disk('public')->deleteDirectory($assetDirectory);
+            File::deleteDirectory($workingDirectory);
 
             throw new RuntimeException($message);
         }
@@ -95,16 +87,19 @@ final class PythonPdfExtractionService
         try {
             $result = json_decode($process->getOutput(), true, flags: JSON_THROW_ON_ERROR);
         } catch (JsonException $exception) {
-            Storage::disk('public')->deleteDirectory($assetDirectory);
+            File::deleteDirectory($workingDirectory);
 
             throw new RuntimeException('La réponse du convertisseur Python est invalide.', previous: $exception);
         }
 
         if (! is_array($result) || ! isset($result['markdown'], $result['cover_file'])) {
-            Storage::disk('public')->deleteDirectory($assetDirectory);
+            File::deleteDirectory($workingDirectory);
 
             throw new RuntimeException('Le convertisseur Python n’a pas retourné le contenu attendu.');
         }
+
+        $this->publishExtractedAssets($workingDirectory, $assetDirectory);
+        File::deleteDirectory($workingDirectory);
 
         return [
             'markdown' => (string) $result['markdown'],
@@ -120,6 +115,38 @@ final class PythonPdfExtractionService
             'warnings' => array_values(array_map('strval', $result['warnings'] ?? [])),
             'asset_directory' => $assetDirectory,
         ];
+    }
+
+    /**
+     * Le préfixe utilisé par Python pour construire les liens d'images dans le Markdown.
+     * En local, un chemin relatif suffit ; sur un disque distant (S3), l'URL publique
+     * réelle du disque est nécessaire.
+     */
+    private function publicPrefixFor(string $assetDirectory): string
+    {
+        if (config()->string('filesystems.disks.public.driver', 'local') === 'local') {
+            return '/storage/'.mb_ltrim($assetDirectory, '/');
+        }
+
+        return Storage::disk('public')->url($assetDirectory);
+    }
+
+    /**
+     * Envoie le contenu extrait par Python (écrit localement) vers le disque « public »
+     * configuré, qu'il s'agisse du disque local ou de S3.
+     */
+    private function publishExtractedAssets(string $workingDirectory, string $assetDirectory): void
+    {
+        Storage::disk('public')->deleteDirectory($assetDirectory);
+
+        foreach (File::allFiles($workingDirectory) as $file) {
+            $relativePath = str_replace('\\', '/', $file->getRelativePathname());
+
+            Storage::disk('public')->put(
+                $assetDirectory.'/'.$relativePath,
+                (string) file_get_contents($file->getPathname()),
+            );
+        }
     }
 
     private function extractErrorMessage(string $errorOutput): string
