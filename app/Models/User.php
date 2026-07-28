@@ -112,7 +112,12 @@ final class User extends Authenticatable implements MustVerifyEmail
 
     public function isAdmin(): bool
     {
-        return $this->role->value === UserRoleEnum::ADMIN->value;
+        return $this->role === UserRoleEnum::ADMIN;
+    }
+
+    public function canAccessAdministration(): bool
+    {
+        return in_array($this->role, [UserRoleEnum::ADMIN, UserRoleEnum::ROOT], true);
     }
 
     public function isSuperAdmin(): bool
@@ -122,7 +127,7 @@ final class User extends Authenticatable implements MustVerifyEmail
 
     public function isRoot(): bool
     {
-        return $this->role->value === UserRoleEnum::ROOT->value;
+        return $this->role === UserRoleEnum::ROOT;
     }
 
     public function hasStudent(): bool
@@ -136,7 +141,7 @@ final class User extends Authenticatable implements MustVerifyEmail
 
     public function isStudent(): bool
     {
-        return $this->role->value === UserRoleEnum::STUDENT->value;
+        return $this->role === UserRoleEnum::STUDENT;
     }
 
     /**

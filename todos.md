@@ -1,0 +1,2 @@
+- ajouter le captcha afin d'eviter que le robot accede a l'applicatio
+- inspiration de dyma.fr

@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Enums\UserRoleEnum;
 use App\Models\ApplicationSetting;
 use App\Models\User;
 use Laravel\Socialite\Facades\Socialite;
@@ -54,6 +55,7 @@ test('Google authentication links a local account with the same verified email a
     $user = User::factory()->create([
         'email' => 'existing@example.com',
         'google_id' => null,
+        'role' => UserRoleEnum::STUDENT,
     ]);
 
     Socialite::fake('google', SocialiteUser::fake([
@@ -68,6 +70,25 @@ test('Google authentication links a local account with the same verified email a
     $response->assertRedirect(route('dashboard', absolute: false));
     $this->assertAuthenticatedAs($user);
     expect($user->refresh()->google_id)->toBe('google-user-456');
+});
+
+test('Google authentication sends an administrator to the administration dashboard', function () {
+    $administrator = User::factory()->create([
+        'role' => UserRoleEnum::ADMIN,
+        'google_id' => 'google-admin-123',
+    ]);
+
+    Socialite::fake('google', SocialiteUser::fake([
+        'id' => 'google-admin-123',
+        'email' => $administrator->email,
+        'email_verified' => true,
+        'name' => $administrator->name,
+    ]));
+
+    $response = $this->get(route('social.callback', ['provider' => 'google']));
+
+    $this->assertAuthenticatedAs($administrator);
+    $response->assertRedirect(route('admin.dashboard', absolute: false));
 });
 
 test('Google authentication rejects an unverified email address', function () {
@@ -156,6 +177,7 @@ test('GitHub authentication links a local account with the same verified email a
     $user = User::factory()->create([
         'email' => 'existing.github@example.com',
         'github_id' => null,
+        'role' => UserRoleEnum::STUDENT,
     ]);
 
     Socialite::fake('github', SocialiteUser::fake([

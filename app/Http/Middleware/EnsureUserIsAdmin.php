@@ -15,7 +15,7 @@ final class EnsureUserIsAdmin
         $user = $request->user();
 
         abort_unless(
-            $user && ($user->isAdmin() || $user->isRoot()),
+            $user && $user->canAccessAdministration(),
             403,
             'Accès refusé. Vous devez avoir un rôle administrateur pour accéder à cette section.',
         );
