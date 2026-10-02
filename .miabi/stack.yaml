@@ -21,8 +21,6 @@
 #   miabi secrets set SHWARY_MERCHANT_KEY "..."
 #   miabi secrets set GOOGLE_CLIENT_ID "..."
 #   miabi secrets set GOOGLE_CLIENT_SECRET "..."
-#   miabi secrets set GITHUB_CLIENT_ID "..."
-#   miabi secrets set GITHUB_CLIENT_SECRET "..."
 apiVersion: miabi.io/v1
 kind: Project
 metadata:
