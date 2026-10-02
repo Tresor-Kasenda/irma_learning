@@ -71,7 +71,7 @@ spec:
         name: btpcma-formations
       spec:
         image: docker.io/kasenda/btpcma-formations
-        tag: "latest" # réécrit par la CI avec le SHA du commit déployé
+        tag: "23591a092459794b425945523651f34424e67246" # réécrit par la CI avec le SHA du commit déployé
         registry: dockerhub
         ports:
           - container: 8080
