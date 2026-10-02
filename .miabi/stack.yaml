@@ -29,7 +29,7 @@ spec:
     - apiVersion: miabi.io/v1
       kind: Registry
       metadata:
-        name: dockerhub
+        name: dockerhub-formations
       spec:
         server: docker.io
         username: kasenda
@@ -68,7 +68,7 @@ spec:
       spec:
         image: docker.io/kasenda/btpcma-formations
         tag: "1b6fc7c5947d3be3f8a859a8e1cafd82cdb9056d" # réécrit par la CI avec le SHA du commit déployé
-        registry: dockerhub
+        registry: dockerhub-formations
         ports:
           - container: 8080
             scheme: http

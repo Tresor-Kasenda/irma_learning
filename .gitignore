@@ -25,3 +25,5 @@ yarn-error.log
 /.venv-pdf
 
 .DS_Store
+/database/dumps
+/lasogsyh_*.sql
