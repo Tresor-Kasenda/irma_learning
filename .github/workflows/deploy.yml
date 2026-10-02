@@ -1,0 +1,92 @@
+name: Deploy
+
+# Build de l'image, push sur Docker Hub, puis bump du tag dans le manifeste
+# GitOps : c'est ce commit que Miabi réconcilie pour déployer.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-formations-main
+  cancel-in-progress: false
+
+# Variable de dépôt DOCKERHUB_USERNAME (Settings > Secrets and variables > Actions).
+# La cohérence avec Application.spec.image du manifeste est vérifiée ci-dessous.
+env:
+  IMAGE: docker.io/${{ vars.DOCKERHUB_USERNAME }}/btpcma-formations
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0 # 'git pull --rebase' a besoin de l'historique
+
+      # Une variable absente donnerait un namespace vide (docker.io//btpcma-formations),
+      # et une valeur divergente pousserait une image que Miabi ne tirera jamais.
+      - name: Vérifier le compte Docker Hub
+        run: |
+          if [ -z "$DOCKERHUB_USERNAME" ]; then
+            echo "::error::La variable de dépôt DOCKERHUB_USERNAME n'est pas définie."
+            exit 1
+          fi
+          if ! grep -qF "image: $IMAGE" .miabi/stack.yaml; then
+            echo "::error::$IMAGE ne correspond pas à Application.spec.image dans .miabi/stack.yaml."
+            exit 1
+          fi
+        env:
+          DOCKERHUB_USERNAME: ${{ vars.DOCKERHUB_USERNAME }}
+
+      - uses: docker/setup-buildx-action@v3
+
+      - uses: docker/login-action@v3
+        with:
+          username: ${{ vars.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: |
+            ${{ env.IMAGE }}:${{ github.sha }}
+            ${{ env.IMAGE }}:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      # Le tag est la seule chose que la CI possède dans le manifeste.
+      # [skip ci] évite que ce commit redéclenche le workflow.
+      - name: Bump image tag in GitOps manifest
+        env:
+          SHA: ${{ github.sha }}
+        run: |
+          python3 - <<'PY'
+          import os, pathlib, re
+          p = pathlib.Path(".miabi/stack.yaml")
+          s = p.read_text()
+          s, n = re.subn(
+              r'(?m)^(\s*tag:\s*)"[^"]*"(.*)$',
+              lambda m: f'{m.group(1)}"{os.environ["SHA"]}"{m.group(2)}',
+              s,
+              count=1,
+          )
+          if n != 1:
+              raise SystemExit("tag: introuvable dans .miabi/stack.yaml")
+          p.write_text(s)
+          PY
+          if git diff --quiet -- .miabi/stack.yaml; then
+            echo "Tag déjà à jour, rien à committer."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add .miabi/stack.yaml
+          git commit -m "chore(deploy): image ${SHA} [skip ci]"
+          git pull --rebase --autostash
+          git push

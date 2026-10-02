@@ -98,3 +98,65 @@ COPY docker/nginx/default.conf /etc/nginx/conf.d/default.conf
 COPY --from=app-production /var/www/html/public /var/www/html/public
 
 WORKDIR /var/www/html
+
+# ---------------------------------------------------------------------------
+# Miabi runtime: FrankenPHP (Caddy + PHP) + queue worker + scheduler dans un
+# seul conteneur supervisé. Dernière étape = cible par défaut de `docker build`.
+# ---------------------------------------------------------------------------
+FROM dunglas/frankenphp:1-php8.4-bookworm AS runtime
+
+RUN install-php-extensions \
+        bcmath \
+        exif \
+        gd \
+        imagick \
+        intl \
+        opcache \
+        pcntl \
+        pdo_mysql \
+        pdo_sqlite \
+        redis \
+        zip
+
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+        curl \
+        ghostscript \
+        python3 \
+        python3-pip \
+        supervisor \
+        tesseract-ocr \
+        tesseract-ocr-fra \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY resources/python/requirements.txt /tmp/python-requirements.txt
+RUN python3 -m pip install --no-cache-dir --break-system-packages -r /tmp/python-requirements.txt \
+    && rm /tmp/python-requirements.txt
+
+ENV APP_ENV=production \
+    APP_DEBUG=false
+
+RUN cp /usr/local/etc/php/php.ini-production /usr/local/etc/php/php.ini
+
+WORKDIR /app
+
+COPY docker/php/production.ini /usr/local/etc/php/conf.d/zz-app.ini
+COPY docker/frankenphp/Caddyfile /etc/caddy/Caddyfile
+COPY docker/frankenphp/supervisord.conf /etc/supervisor/supervisord.conf
+COPY docker/frankenphp/entrypoint.sh /usr/local/bin/entrypoint
+
+COPY . .
+COPY --from=vendor-production /var/www/html/vendor ./vendor
+COPY --from=frontend-build /var/www/html/public/build ./public/build
+
+RUN chmod +x /usr/local/bin/entrypoint \
+    && mkdir -p storage/app/public storage/framework/cache/data storage/framework/sessions storage/framework/views storage/logs bootstrap/cache \
+    && ln -sfn ../storage/app/public public/storage \
+    && chown -R www-data:www-data /app/storage /app/bootstrap/cache /data /config
+
+EXPOSE 8080
+
+HEALTHCHECK --interval=30s --timeout=5s --start-period=60s --retries=3 \
+    CMD curl -fsS http://127.0.0.1:8080/up || exit 1
+
+ENTRYPOINT ["entrypoint"]

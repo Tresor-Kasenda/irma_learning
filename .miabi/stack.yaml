@@ -1,0 +1,163 @@
+# Bundle GitOps Miabi — état désiré de la plateforme BTP-CMA Formations
+# (https://formations.btpcma.org).
+#
+#   miabi apply -f .miabi/stack.yaml --dry-run   # prévisualiser
+#   miabi apply -f .miabi/stack.yaml             # converger
+#
+# Déclarer ce fichier comme GitOps source (repo + path .miabi, ref main,
+# sync auto) : chaque push sur main reconcilie le workspace.
+#
+# Le champ Application.spec.tag est réécrit automatiquement par
+# .github/workflows/deploy.yml après le push de l'image sur Docker Hub —
+# ne pas l'éditer à la main.
+#
+# Avant le premier apply, créer les secrets référencés :
+#   miabi secrets set APP_KEY "$(php artisan key:generate --show)"
+#   miabi secrets set MAIL_PASSWORD "..."
+#   miabi secrets set DOCKERHUB_TOKEN --from-file -   # token Docker Hub, scope Read
+#   miabi secrets set STRIPE_SECRET "..."
+#   miabi secrets set STRIPE_WEBHOOK_SECRET "..."
+#   miabi secrets set SHWARY_MERCHANT_ID "..."
+#   miabi secrets set SHWARY_MERCHANT_KEY "..."
+#   miabi secrets set GOOGLE_CLIENT_ID "..."
+#   miabi secrets set GOOGLE_CLIENT_SECRET "..."
+#   miabi secrets set GITHUB_CLIENT_ID "..."
+#   miabi secrets set GITHUB_CLIENT_SECRET "..."
+apiVersion: miabi.io/v1
+kind: Project
+metadata:
+  name: btpcma-formations
+spec:
+  description: "Plateforme de formations BTP-CMA : application Laravel/Inertia, MariaDB, Redis"
+  resources:
+    - apiVersion: miabi.io/v1
+      kind: Registry
+      metadata:
+        name: dockerhub
+      spec:
+        server: docker.io
+        username: kasenda
+        password: "{{ .secrets.DOCKERHUB_TOKEN }}"
+
+    - apiVersion: miabi.io/v1
+      kind: Database
+      metadata:
+        name: formations-db
+      spec:
+        engine: mariadb
+        version: "11"
+        placement: auto
+
+    - apiVersion: miabi.io/v1
+      kind: Database
+      metadata:
+        name: formations-cache
+      spec:
+        engine: redis
+        version: "7-alpine"
+        placement: auto
+
+    # Uploads, PDF extraits, logs. Sans ce volume, tout est perdu à chaque déploiement.
+    - apiVersion: miabi.io/v1
+      kind: Volume
+      metadata:
+        name: formations-storage
+      spec:
+        size: 20Gi
+
+    - apiVersion: miabi.io/v1
+      kind: Application
+      metadata:
+        name: btpcma-formations
+      spec:
+        image: docker.io/kasenda/btpcma-formations
+        tag: "latest" # réécrit par la CI avec le SHA du commit déployé
+        registry: dockerhub
+        ports:
+          - container: 8080
+            scheme: http
+        resources:
+          memory: 2Gi
+          cpu: "1"
+        mounts:
+          - volume: formations-storage
+            path: /app/storage
+        env:
+          APP_NAME: "BTP CMA Formations"
+          APP_ENV: production
+          APP_DEBUG: "false"
+          APP_URL: https://formations.btpcma.org
+          APP_LOCALE: fr
+          APP_FALLBACK_LOCALE: fr
+          APP_KEY: "{{ .secrets.APP_KEY }}"
+
+          LOG_CHANNEL: stack
+          LOG_STACK: single
+          LOG_LEVEL: warning
+
+          DB_CONNECTION: mysql
+          DB_HOST: "{{ .databases.formations-db.host }}"
+          DB_PORT: "{{ .databases.formations-db.port }}"
+          DB_DATABASE: "{{ .databases.formations-db.name }}"
+          DB_USERNAME: "{{ .databases.formations-db.user }}"
+          DB_PASSWORD: "{{ .databases.formations-db.password }}"
+
+          REDIS_CLIENT: phpredis
+          REDIS_HOST: "{{ .databases.formations-cache.host }}"
+          REDIS_PORT: "{{ .databases.formations-cache.port }}"
+          REDIS_PASSWORD: "{{ .databases.formations-cache.password }}"
+
+          CACHE_STORE: redis
+          SESSION_DRIVER: redis
+          QUEUE_CONNECTION: redis
+          BROADCAST_CONNECTION: log
+          FILESYSTEM_DISK: local
+
+          PDF_EXTRACTION_TIMEOUT: "300"
+          PDF_EXTRACTION_OCR_LANGUAGE: fra+eng
+
+          MAIL_MAILER: smtp
+          MAIL_HOST: business110.web-hosting.com
+          MAIL_PORT: "465"
+          MAIL_SCHEME: smtps
+          MAIL_USERNAME: noreply@btpcma.org
+          MAIL_PASSWORD: "{{ .secrets.MAIL_PASSWORD }}"
+          MAIL_FROM_ADDRESS: noreply@btpcma.org
+          MAIL_FROM_NAME: "BTP CMA Formations"
+
+          STRIPE_SECRET: "{{ .secrets.STRIPE_SECRET }}"
+          STRIPE_WEBHOOK_SECRET: "{{ .secrets.STRIPE_WEBHOOK_SECRET }}"
+          SHWARY_MERCHANT_ID: "{{ .secrets.SHWARY_MERCHANT_ID }}"
+          SHWARY_MERCHANT_KEY: "{{ .secrets.SHWARY_MERCHANT_KEY }}"
+          SHWARY_SANDBOX: "false"
+          GOOGLE_CLIENT_ID: "{{ .secrets.GOOGLE_CLIENT_ID }}"
+          GOOGLE_CLIENT_SECRET: "{{ .secrets.GOOGLE_CLIENT_SECRET }}"
+          GOOGLE_REDIRECT_URI: https://formations.btpcma.org/auth/google/callback
+          GITHUB_CLIENT_ID: "{{ .secrets.GITHUB_CLIENT_ID }}"
+          GITHUB_CLIENT_SECRET: "{{ .secrets.GITHUB_CLIENT_SECRET }}"
+          GITHUB_REDIRECT_URI: https://formations.btpcma.org/auth/github/callback
+        secretEnv:
+          - APP_KEY
+          - DB_PASSWORD
+          - REDIS_PASSWORD
+          - MAIL_PASSWORD
+          - STRIPE_SECRET
+          - STRIPE_WEBHOOK_SECRET
+          - SHWARY_MERCHANT_ID
+          - SHWARY_MERCHANT_KEY
+          - GOOGLE_CLIENT_ID
+          - GOOGLE_CLIENT_SECRET
+          - GITHUB_CLIENT_ID
+          - GITHUB_CLIENT_SECRET
+
+    - apiVersion: miabi.io/v1
+      kind: Route
+      metadata:
+        name: btpcma-formations-web
+      spec:
+        hosts:
+          - formations.btpcma.org
+        app: btpcma-formations
+        port: 8080
+        path: /
+        tls: acme

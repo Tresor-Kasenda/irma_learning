@@ -19,3 +19,9 @@ docker-compose*.yml
 README.md
 docs
 tests
+*.sql
+.github
+.miabi
+.claude
+.codex
+.agents
