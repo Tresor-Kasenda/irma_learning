@@ -18,6 +18,7 @@ RUN apt-get update \
         libmagickwand-dev \
         libonig-dev \
         libpng-dev \
+        libsqlite3-dev \
         libwebp-dev \
         libzip-dev \
         python3 \
