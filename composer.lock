@@ -4,11 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-<<<<<<< HEAD
     "content-hash": "6d59d256f7177a049a4a177847835ec8",
-=======
-    "content-hash": "f0dee5ab8e000ec032bf9a4c026f42cf",
->>>>>>> c8a05f8 (wipo)
     "packages": [
         {
             "name": "aws/aws-crt-php",
@@ -3019,8 +3015,6 @@
             "time": "2026-03-08T20:05:35+00:00"
         },
         {
-<<<<<<< HEAD
-=======
             "name": "livewire/livewire",
             "version": "v4.3.3",
             "source": {
@@ -3097,7 +3091,6 @@
             "time": "2026-06-27T03:16:11+00:00"
         },
         {
->>>>>>> c8a05f8 (wipo)
             "name": "masterminds/html5",
             "version": "2.10.1",
             "source": {
