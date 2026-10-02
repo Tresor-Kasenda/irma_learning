@@ -131,9 +131,6 @@ spec:
           GOOGLE_CLIENT_ID: "{{ .secrets.GOOGLE_CLIENT_ID }}"
           GOOGLE_CLIENT_SECRET: "{{ .secrets.GOOGLE_CLIENT_SECRET }}"
           GOOGLE_REDIRECT_URI: https://formations.btpcma.org/auth/google/callback
-          GITHUB_CLIENT_ID: "{{ .secrets.GITHUB_CLIENT_ID }}"
-          GITHUB_CLIENT_SECRET: "{{ .secrets.GITHUB_CLIENT_SECRET }}"
-          GITHUB_REDIRECT_URI: https://formations.btpcma.org/auth/github/callback
         secretEnv:
           - APP_KEY
           - DB_PASSWORD
@@ -145,8 +142,6 @@ spec:
           - SHWARY_MERCHANT_KEY
           - GOOGLE_CLIENT_ID
           - GOOGLE_CLIENT_SECRET
-          - GITHUB_CLIENT_ID
-          - GITHUB_CLIENT_SECRET
 
     - apiVersion: miabi.io/v1
       kind: Route
