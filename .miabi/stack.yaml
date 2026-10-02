@@ -17,8 +17,6 @@
 #   miabi secrets set DOCKERHUB_TOKEN --from-file -   # token Docker Hub, scope Read
 #   miabi secrets set STRIPE_SECRET "..."
 #   miabi secrets set STRIPE_WEBHOOK_SECRET "..."
-#   miabi secrets set SHWARY_MERCHANT_ID "..."
-#   miabi secrets set SHWARY_MERCHANT_KEY "..."
 #   miabi secrets set GOOGLE_CLIENT_ID "..."
 #   miabi secrets set GOOGLE_CLIENT_SECRET "..."
 apiVersion: miabi.io/v1
@@ -125,9 +123,6 @@ spec:
 
           STRIPE_SECRET: "{{ .secrets.STRIPE_SECRET }}"
           STRIPE_WEBHOOK_SECRET: "{{ .secrets.STRIPE_WEBHOOK_SECRET }}"
-          SHWARY_MERCHANT_ID: "{{ .secrets.SHWARY_MERCHANT_ID }}"
-          SHWARY_MERCHANT_KEY: "{{ .secrets.SHWARY_MERCHANT_KEY }}"
-          SHWARY_SANDBOX: "false"
           GOOGLE_CLIENT_ID: "{{ .secrets.GOOGLE_CLIENT_ID }}"
           GOOGLE_CLIENT_SECRET: "{{ .secrets.GOOGLE_CLIENT_SECRET }}"
           GOOGLE_REDIRECT_URI: https://formations.btpcma.org/auth/google/callback
@@ -138,8 +133,6 @@ spec:
           - MAIL_PASSWORD
           - STRIPE_SECRET
           - STRIPE_WEBHOOK_SECRET
-          - SHWARY_MERCHANT_ID
-          - SHWARY_MERCHANT_KEY
           - GOOGLE_CLIENT_ID
           - GOOGLE_CLIENT_SECRET
 
